@@ -1,7 +1,9 @@
+import './css/LoginButton.css';
+
 export const LoginButton = () => {
     return (
 
-        <button className="LoginButton">
+        <button className="loginButton">
             <div className="body">
                 <p> Login</p>
             </div>
