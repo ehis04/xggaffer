@@ -1,4 +1,4 @@
-import { LoginButton } from "../components/Buttons/LoginButton";
+import { LoginButton } from "../../components/Buttons/LoginButton";
 
 const LandingPage = () => {
     return (
