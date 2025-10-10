@@ -1,13 +1,10 @@
-import { LoginButton } from "../../components/Buttons/LoginButton";
-
+import { LandingNavbar } from "../../components/Navigation/LandingNavbar";
+import './css/LandingPage.css';
 const LandingPage = () => {
     return (
-        <div>
-            <div>
-                <p> Welcome to the Landing Page </p>
-            </div>
-            <div className="Buttons">
-                <LoginButton/>
+        <div className="landingPage">
+            <div className="landingNav">
+                <LandingNavbar/>
             </div>
         </div>
     )
