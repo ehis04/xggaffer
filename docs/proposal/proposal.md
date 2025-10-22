@@ -60,7 +60,7 @@ IoT Devices: For some types of data collection, wearable devices will feed data 
 We will have to learn how to train prediction models and integrate them into our application. 
 We will have to learn how scrape data.
 We will have to learn how to connect our application to pre-exisitng API's.
-We will have to learn how to intergate a LLM into our application to interpret the predictions.
+We will have to learn how to work with Scikit-learn. 
 
 ### Breakdown of work
 Elizabeth:
@@ -84,7 +84,7 @@ Both students will work on developing the machine learning aspects of the applic
 |  1 | **Insufficient or low-quality data for prediction models**    | Licensed feeds don’t cover target leagues/levels; club uploads are sparse/inconsistent → models can’t learn reliable patterns. | **Medium–High (40–60%)** | **High**     | Secure tiered data providers early; define strict ingest schemas & validators; start with heuristics/baselines; run data gap analysis per league; create data-collection UX (CSV templates, coach prompts) to improve coverage. |
 |  2 | **Model underperforms or drifts in production**               | Offline metrics look good but real-world recommendations don’t translate; opponent behavior changes → degraded advice.         | **Medium (30–40%)**      | **High**     | A/B test vs heuristics; set acceptance KPIs (engagement, success proxies); monitor drift & recalibrate cadence; champion–challenger setup; include explainable rules as backstop; allow coaches to give feedback to retrain.    |
 |  3 | **Licensing/compliance breach from scraping or data use**     | Terms of use or GDPR constraints violated (e.g., scraping without permission, profiling minors).                               | **Medium (25–35%)**      | **Critical** | Prioritize licensed APIs; legal review of sources; scraper allowlists & robots.txt respect; data processing agreements with clubs; age-gating & parental consent flows; PII minimization and DSR automation.                    |
-|  4 | **Matchday traffic spikes overwhelm realtime features**       | Sudden surges during big games impact chat, tactics boards, and RAG queries (timeouts, message loss).                          | **Medium (30–50%)**      | **High**     | Load test with k6; autoscaling with per-service SLOs; Redis + CDN caching; degrade gracefully (queue heavy jobs, cap RAG calls, fallback to cached insights); sharded WebSocket clusters; circuit breakers and rate limits.     |
+|  4 | **Matchday traffic spikes overwhelm realtime features**       | Sudden surges during big games impact chat, tactics boards.                                                                    | **Medium (30–50%)**      | **High**     | Load test with k6; autoscaling with per-service SLOs; Redis + CDN caching; degrade gracefully (queue heavy jobs, cap RAG calls, fallback to cached insights); sharded WebSocket clusters; circuit breakers and rate limits.     |
 |  5 | **Safety/moderation failure in social & mental-health areas** | Toxic content or harmful advice slips through; reputational and user-safety impact.                                            | **Low–Medium (15–25%)**  | **Critical** | Multi-layer moderation (keyword rules + ML + human review), crisis-resource surfacing (no diagnosis), report/block tools, audit trails, age-appropriate defaults, periodic red-team reviews, and clear community guidelines.    |
 
 
