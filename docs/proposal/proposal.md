@@ -93,14 +93,3 @@ Programming Tools/Tech Stack, Hardware, Learning Challenges, Risk Register
 
 #### Student 2
 Introduction, Outline, Background, Achievements, Justification, Programming Languages, Breakdown of work
-
-## Example
-
-> Example: Here's how you can include images in markdown documents...
-
-<!-- Basically, just use HTML! -->
-
-<p align="center">
-  <img src="./res/cat.png" width="300px">
-</p>
-
