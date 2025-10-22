@@ -18,8 +18,7 @@ This project covers sports analysis, education, and social interaction. It is a 
 
 ### Outline
 
-> Outline the proposed project.
-The proposed project is a sports-based web application/mobile application where fans, players, parents, referees and coaches can interact with a variety of features related to the sport. The project aims to close the gap between the popularity of football in the country and the resources available to participants of the game. The first area this project tackles is the lack of community spaces for people to engage with. Our application will provide group and private messaging features for people to connect with each other and discuss topics. We will also enable users to create discussion threads where users can share their thoughts on current, past or future events. Increased conversation sparks ideas, ultimately leading to the standard of knowledge and enthusiasm surrounding the game to increase. 
+This project is a sports-based web application/mobile application where fans, players, parents, referees and coaches can interact with a variety of features related to the sport. The project aims to close the gap between the popularity of football in the country and the resources available to participants of the game. The first area this project tackles is the lack of community spaces for people to engage with. Our application will provide group and private messaging features for people to connect with each other and discuss topics. We will also enable users to create discussion threads where users can share their thoughts on current, past or future events. Increased conversation sparks ideas, ultimately leading to the standard of knowledge and enthusiasm surrounding the game to increase. 
 This project will also offer referees a space to hone their skills. Referees are often crticised for being out of touch with general fan bases and improve their communication skills, knowledge of the games laws and fitness will enable them to level up as officials and control games. A referee that communicates their thoughts clearly, is composed and calm, and can keep up with the ran of play is appreciated by fans and players alike. A higher standard for our officials means a higher standard for our games.
 A area of focus for this project is for coach development, tactical improvement and analysis and game-relevant predictions driven by data. Our application will connect to numerous data sources that provide information based on player and team performances. We will train prediction models on these data sets and use a LLM to interpret the predictions and provide accurate data-backed interpretations to users. For the users this will look like entering questions, queries or opinions into an interface, sometimes with accompaning figures and receiving a detailed and accurate response. This project will assist coaches in developing proven ideas and will cut out time wasted experimenting and what we know is destined to fail. This assistance along with the range of helpful features we have available will raise the bar in terms of what is seen to be a competent and knowledgable coach. Coach's will have access to features such as tactics boards, teamsheets, on-site club management, stats-trackers, suggested articles and videos, powerpoint and file uploads, and pre and user made learning courses.    
 
@@ -56,7 +55,6 @@ IoT Devices: For some types of data collection, wearable devices will feed data 
 
 ### Learning Challenges
 
-> List the main new things (technologies, languages, tools, etc) that you will have to learn.
 We will have to learn how to train prediction models and integrate them into our application. 
 We will have to learn how scrape data.
 We will have to learn how to connect our application to pre-exisitng API's.
@@ -68,7 +66,11 @@ Elizabeth will focus on developing the social section of the application. She ha
 Elizabeth will also format the LOG quizzes in order to make the quizzes engaging for users. 
 Ehis:
 Ehis will focus on developing the coaching and reffing section of the app. He has experience using and developing football-based tools and will implement the tactics boards, teamsheets, stats trackers and other features. He will also work on the coaching courses, referee fitness drills and situational videos.
-Both students will work on developing the machine learning aspects of the application and training prediction models that will be used for providing insights. 
+Both students will work on developing the machine learning aspects of the application and training prediction models that will be used for providing insights.
+
+### Testing
+
+Our testing strategy will cover all layers of our application. At the unit level, we will write tests in python using pytest for the backend components. For the frontend components, we will use the React testing library. Integration testing will validate API endpoints and database operations. Model validation will be performed for our prediction models to evaluate their performance and reliability. To maintain code quality throughout development, we will implement CI/CD pipelines in Gitlab to automatically run our test suites on every push to our develoopment branch. Passing of all tests will be required before any code is merged.
 
 ### Risk Register
 
