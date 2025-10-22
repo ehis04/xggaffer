@@ -47,7 +47,7 @@ Python, TypeScript, CSS, HTML
 ### Programming tools / Tech stack
 Frontend: Typescript(React)
 Backend: Python(Djano) + DRF(Django REST Framework), Celery for async
-ML: Python services (FastAPI) on Docker, models via SageMaker, LLM via Bedrock/OpenAI 
+ML: Python services (FastAPI) on Docker, models via SageMaker, Python scikit-learn(decision trees, logistic regression)
 
 
 ### Hardware
