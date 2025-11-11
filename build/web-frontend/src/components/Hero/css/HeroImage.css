@@ -1,3 +1,30 @@
 .heroImg {
-    height: 100px;
+    height: 100%;
+    display: block;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    width: 100%;
+    object-fit: cover;
+}
+
+.heroCard {
+    position: relative;
+    padding: 9px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.603) 0px 5px 30px;
+    width: 100%;
+}
+
+.heroCard-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+@media (max-width: 227px) {
+    .heroCard {
+        display: none;
+    }
 }

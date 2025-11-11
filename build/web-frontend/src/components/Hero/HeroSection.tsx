@@ -6,15 +6,15 @@ import "./css/HeroSection.css";
 
 export const HeroSection = () => {
   return (
-    <>
+    <div className="heroSection">
       <div className="heroSectionLeft">
         <PrimaryHeader />
         <SecondaryHeader />
         <GetStartedButton />
       </div>
       <div className="heroSectionRight">
-        {/* <HeroImage/> */}
+        <HeroImage/>
       </div>
-    </>
+    </div>
   );
 };
