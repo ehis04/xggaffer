@@ -205,7 +205,7 @@ External data sources (Understat, FBref, Sofascore, Fotmob, Football‑Data.org,
 
 This architecture ensures scalability, modularity, and extensibility. Each subsystem contributes to the overall mission: improving football knowledge, performance, and community engagement.
 
-![][image1]
+![Product Perspective Venn](images/iFoot_product_perspective_venn_diagram.png)
 
 ### *2.1 Product / System Functions* {#2.1-product-/-system-functions}
 
@@ -310,7 +310,7 @@ The system will cover several core objectives:
 | **Exceptions** | **Step** | **Action** |
 |  | 1 | Network failure \- if the save fails, the system queues the action and retries when the connection is reestablished |
 
-###### *![][image2]*
+###### *![AWS Framework 2](images/AWS__2025__horizontal_framework__2_.png)*
 
 ###### *Use Case Diagram: Use Case 1*
 
@@ -334,7 +334,7 @@ The system will cover several core objectives:
 | **Exceptions** | **Step** | **Action** |
 |  | 1 | Failed answer validation \- System presents error “Error processing response.” |
 
-![][image3]
+![AWS Framework 1](images/AWS__2025__horizontal_framework__1_.png)
 
 ###### *Use Case Diagram: Use Case 2*
 
@@ -356,7 +356,7 @@ The system will cover several core objectives:
 | **Exceptions** | **Step** | **Action** |
 |  | 1 | Insufficient Data \- If less than 3 matches are available, system displays error: ‘Minimum 3 matches are required for performance analysis’ |
 
-![][image4] 
+![Screenshot](images/Screenshot_2025-11-29_001202.png)
 
 ###### *Use Case Diagram: Use Case 3*
 
@@ -642,7 +642,7 @@ The system should send in-app notifications to users for community interactions.
 
 ### *4.1 System Architecture Diagram* {#4.1-system-architecture-diagram}
 
-### *![][image5]4.2 Backend* {#4.2-backend}
+### *![Sequence Diagram](images/Sequence_diagram.png)]4.2 Backend* {#4.2-backend}
 
 Django Rest Framework exposes RESTful API endpoints for all application features, implements JWT authentication and role-based access control, enforces business logic, validates incoming data, integrates external APIs and performs database operations.
 
@@ -680,29 +680,29 @@ External football-data APIs and licensed data sources to retrieve match statisti
 
 ### *4.9 System Architecture Overview* {#4.9-system-architecture-overview}
 
-### *![][image6]*
+### *![AWS Web App Structural Flow](images/AWS_web_app_structural_flow.png)*
 
 ## **5\. High-Level Design** {#5.-high-level-design}
 
 ### *5.1 Data Flow Diagram* {#5.1-data-flow-diagram}
 
-![][image7]
+![Data Flow Diagram](images/Data_flow_diagram_ifoot__1_.png)
 
 ### *5.2 High-Level Design Diagram* {#5.2-high-level-design-diagram}
 
-![][image8]
+![High-Level System Design](images/High-level_design_diagram_ifoot.png)
 
 ### *5.3 UML Diagram* {#5.3-uml-diagram}
 
-![][image9]
+![UML Class Diagram](images/UML_class.png)
 
 6. ## **Preliminary Schedule** {#preliminary-schedule}
 
 The initial project plan spans from September 2024 to April 2025 and is structured into four distinct phases. Phase 1 (red) focuses on foundational setup and infrastructure, including project initiation, supervisor assignment, and early technical configuration, such as authentication systems and UI scaffolding, scheduled for September and October. Phase 2 (blue) encompasses MVP development from November to mid-February, featuring milestones such as testing the prediction model, drafting and submitting the functional specification, and conducting early system integration. Phase 3 (grey) runs from mid-February to the end of March and emphasises feature refinement, bug fixing, performance testing, and finalising code. Phase 4 (green) in April centres on testing, documentation, and final presentation preparation, culminating in project submission and expo presentation. Tasks are interdependent, with supervisor meetings and proposal approvals gating development, and testing phases contingent on prior feature completion. Hardware requirements include personal laptops and mobile devices for cross-platform testing, while software tools span Django, React, PostgreSQL, and Docker. Wetware resources involve weekly supervisor guidance and peer collaboration, ensuring consistent progress and quality assurance throughout the development lifecycle.
 
-## **![][image10]**
+## **![Semester 1 Gantt Chart](images/Sem1_Ganatt_Chart_-_ifoot.png)**
 
-![][image11]
+![Semester 2 Gantt Chart](images/Sem2_Ganatt_Chart_-_ifoot.png)
 
 ## 
 
