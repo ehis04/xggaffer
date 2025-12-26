@@ -14,7 +14,7 @@
   max-width: 500px;
   padding: 10px;
   margin-left: 100px;
-  margin-right: 150px;
+  margin-right: 330px;
 }
 
 .heroSectionRight {
@@ -23,10 +23,11 @@
     justify-content: right;
     padding: 10px;
     max-width: 500px;
+    min-width: 200px;
     margin-right: 20px;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 1200px) {
   .heroSectionRight {
       display: none;
   }

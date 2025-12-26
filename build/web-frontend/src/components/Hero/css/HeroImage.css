@@ -23,7 +23,7 @@
     pointer-events: none;
 }
 
-@media (max-width: 227px) {
+@media (max-width: 900px) {
     .heroCard {
         display: none;
     }
