@@ -1,0 +1,123 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+*.cover
+.hypothesis/
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Django specific
+*.pot
+*.pyc
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+local_settings.py
+/static/
+
+# Frontend (Node/React)
+node_modules/
+frontend/build/
+frontend/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+yarn-error.log.*
+package-lock.json
+yarn.lock
+.pnp
+.pnp.js
+pnpm-lock.yaml
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/*
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.production.local
+
+# IDE personal settings
+*.sublime-workspace
+*.sublime-project
+
+# Migrations pycache
+*/migrations/__pycache__/
+*/migrations/*.pyc
+
+# Celery
+celerybeat-schedule
+
+# Test coverage
+htmlcov/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Local database backups
+*.bak
+*.backup
+
+# Temporary files
+*.tmp
+*.temp
+.~*
+
+# MacOS specific
+.AppleDouble
+.LSOverride
+
+# Windows specific
+$RECYCLE.BIN/
+
+# IDE plugin files
+*.iml
+.gradle/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Models and data (optional - uncomment if you want to ignore these)
+# models/*.joblib
+# data/raw/

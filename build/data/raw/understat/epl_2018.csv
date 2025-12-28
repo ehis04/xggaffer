@@ -1,0 +1,381 @@
+source,match_id,season,date,home_team,away_team,home_goals,away_goals,home_xg,away_xg
+understat,understat_9197,2018,2018-08-10,Manchester United,Leicester,2,1,1.5137,1.73813
+understat,understat_9198,2018,2018-08-11,Newcastle United,Tottenham,1,2,0.974497,2.58097
+understat,understat_9199,2018,2018-08-11,Watford,Brighton,2,0,1.42372,0.45504
+understat,understat_9200,2018,2018-08-11,Huddersfield,Chelsea,0,3,0.396115,2.31427
+understat,understat_9201,2018,2018-08-11,Fulham,Crystal Palace,0,2,0.638076,1.07816
+understat,understat_9202,2018,2018-08-11,Bournemouth,Cardiff,2,0,2.60022,1.50693
+understat,understat_9203,2018,2018-08-11,Wolverhampton Wanderers,Everton,2,2,0.891038,0.715382
+understat,understat_9204,2018,2018-08-12,Southampton,Burnley,0,0,1.01994,1.40827
+understat,understat_9205,2018,2018-08-12,Liverpool,West Ham,4,0,4.34421,0.404253
+understat,understat_9206,2018,2018-08-12,Arsenal,Manchester City,0,2,0.445187,2.0178
+understat,understat_9207,2018,2018-08-18,Cardiff,Newcastle United,0,0,1.15521,1.55405
+understat,understat_9208,2018,2018-08-18,West Ham,Bournemouth,1,2,1.10275,1.69077
+understat,understat_9209,2018,2018-08-18,Tottenham,Fulham,3,1,3.26713,1.44253
+understat,understat_9210,2018,2018-08-18,Leicester,Wolverhampton Wanderers,2,0,0.222843,1.09349
+understat,understat_9211,2018,2018-08-18,Everton,Southampton,2,1,2.02004,1.77471
+understat,understat_9212,2018,2018-08-18,Chelsea,Arsenal,3,2,1.71799,2.45798
+understat,understat_9213,2018,2018-08-19,Manchester City,Huddersfield,6,1,4.60356,0.663731
+understat,understat_9214,2018,2018-08-19,Burnley,Watford,1,3,0.392642,1.9171
+understat,understat_9215,2018,2018-08-19,Brighton,Manchester United,3,2,1.63672,1.56579
+understat,understat_9216,2018,2018-08-20,Crystal Palace,Liverpool,0,2,0.368608,2.82183
+understat,understat_9217,2018,2018-08-25,Wolverhampton Wanderers,Manchester City,1,1,1.26376,1.84293
+understat,understat_9218,2018,2018-08-25,Southampton,Leicester,1,2,0.542494,0.517935
+understat,understat_9219,2018,2018-08-25,Huddersfield,Cardiff,0,0,0.203453,1.06351
+understat,understat_9221,2018,2018-08-25,Bournemouth,Everton,2,2,2.5887,0.543665
+understat,understat_9222,2018,2018-08-25,Arsenal,West Ham,3,1,1.7852,1.17924
+understat,understat_9223,2018,2018-08-25,Liverpool,Brighton,1,0,1.81412,0.535616
+understat,understat_9224,2018,2018-08-26,Watford,Crystal Palace,2,1,1.14596,1.21905
+understat,understat_9220,2018,2018-08-26,Fulham,Burnley,4,2,1.92459,1.56882
+understat,understat_9225,2018,2018-08-26,Newcastle United,Chelsea,1,2,0.209337,1.49669
+understat,understat_9226,2018,2018-08-27,Manchester United,Tottenham,0,3,1.40321,1.80811
+understat,understat_9227,2018,2018-09-01,Leicester,Liverpool,1,2,0.981217,1.22722
+understat,understat_9228,2018,2018-09-01,West Ham,Wolverhampton Wanderers,0,1,0.888887,1.22301
+understat,understat_9229,2018,2018-09-01,Everton,Huddersfield,1,1,0.616013,0.660035
+understat,understat_9230,2018,2018-09-01,Crystal Palace,Southampton,0,2,2.35193,3.13612
+understat,understat_9231,2018,2018-09-01,Chelsea,Bournemouth,2,0,1.16408,0.950959
+understat,understat_9233,2018,2018-09-01,Brighton,Fulham,2,2,2.68216,1.51555
+understat,understat_9234,2018,2018-09-01,Manchester City,Newcastle United,2,1,2.46904,0.554763
+understat,understat_9235,2018,2018-09-02,Cardiff,Arsenal,2,3,0.77426,1.41005
+understat,understat_9232,2018,2018-09-02,Burnley,Manchester United,0,2,1.09923,2.90359
+understat,understat_9236,2018,2018-09-02,Watford,Tottenham,2,1,0.454309,0.582521
+understat,understat_9237,2018,2018-09-15,Tottenham,Liverpool,1,2,0.788168,3.01015
+understat,understat_9238,2018,2018-09-15,Newcastle United,Arsenal,1,2,0.412121,0.90461
+understat,understat_9239,2018,2018-09-15,Manchester City,Fulham,3,0,4.91621,0.342698
+understat,understat_9240,2018,2018-09-15,Huddersfield,Crystal Palace,0,1,0.87744,0.746631
+understat,understat_9241,2018,2018-09-15,Chelsea,Cardiff,4,1,2.67145,0.8276
+understat,understat_9242,2018,2018-09-15,Bournemouth,Leicester,4,2,2.22726,1.82502
+understat,understat_9243,2018,2018-09-15,Watford,Manchester United,1,2,1.17523,1.64902
+understat,understat_9244,2018,2018-09-16,Wolverhampton Wanderers,Burnley,1,0,3.3916,0.208994
+understat,understat_9245,2018,2018-09-16,Everton,West Ham,1,3,1.26774,1.52437
+understat,understat_9246,2018,2018-09-17,Southampton,Brighton,2,2,2.19521,1.97094
+understat,understat_9247,2018,2018-09-22,Fulham,Watford,1,1,1.77245,1.76133
+understat,understat_9248,2018,2018-09-22,Manchester United,Wolverhampton Wanderers,1,1,0.62283,1.1185
+understat,understat_9249,2018,2018-09-22,Liverpool,Southampton,3,0,1.77893,0.310467
+understat,understat_9250,2018,2018-09-22,Leicester,Huddersfield,3,1,1.80404,0.688176
+understat,understat_9251,2018,2018-09-22,Crystal Palace,Newcastle United,0,0,0.930793,0.229309
+understat,understat_9252,2018,2018-09-22,Cardiff,Manchester City,0,5,0.0980726,3.08415
+understat,understat_9253,2018,2018-09-22,Burnley,Bournemouth,4,0,2.29417,0.976413
+understat,understat_9254,2018,2018-09-22,Brighton,Tottenham,1,2,0.817174,2.11655
+understat,understat_9255,2018,2018-09-23,West Ham,Chelsea,0,0,1.0177,1.88344
+understat,understat_9256,2018,2018-09-23,Arsenal,Everton,2,0,0.930544,1.06523
+understat,understat_9257,2018,2018-09-29,West Ham,Manchester United,3,1,1.3029,0.865739
+understat,understat_9258,2018,2018-09-29,Wolverhampton Wanderers,Southampton,2,0,1.42507,0.679627
+understat,understat_9259,2018,2018-09-29,Newcastle United,Leicester,0,2,0.397301,1.34341
+understat,understat_9260,2018,2018-09-29,Manchester City,Brighton,2,0,2.90697,0.23023
+understat,understat_9261,2018,2018-09-29,Huddersfield,Tottenham,0,2,0.339245,2.33733
+understat,understat_9262,2018,2018-09-29,Everton,Fulham,3,0,2.31538,0.536317
+understat,understat_9263,2018,2018-09-29,Arsenal,Watford,2,0,1.57061,2.62141
+understat,understat_9264,2018,2018-09-29,Chelsea,Liverpool,1,1,1.77638,1.74071
+understat,understat_9265,2018,2018-09-30,Cardiff,Burnley,1,2,1.56707,0.111527
+understat,understat_9266,2018,2018-10-01,Bournemouth,Crystal Palace,2,1,1.97143,0.385841
+understat,understat_9267,2018,2018-10-05,Brighton,West Ham,1,0,1.02566,1.43652
+understat,understat_9268,2018,2018-10-06,Watford,Bournemouth,0,4,1.06613,3.28471
+understat,understat_9269,2018,2018-10-06,Tottenham,Cardiff,1,0,2.6517,1.13843
+understat,understat_9270,2018,2018-10-06,Leicester,Everton,1,2,1.10472,1.14952
+understat,understat_9271,2018,2018-10-06,Crystal Palace,Wolverhampton Wanderers,0,1,1.03714,0.755654
+understat,understat_9272,2018,2018-10-06,Burnley,Huddersfield,1,1,0.353128,1.02549
+understat,understat_9273,2018,2018-10-06,Manchester United,Newcastle United,3,2,2.40631,1.55962
+understat,understat_9274,2018,2018-10-07,Fulham,Arsenal,1,5,1.31588,1.13706
+understat,understat_9275,2018,2018-10-07,Southampton,Chelsea,0,3,1.487,3.54699
+understat,understat_9276,2018,2018-10-07,Liverpool,Manchester City,0,0,0.433994,1.07481
+understat,understat_9277,2018,2018-10-20,Chelsea,Manchester United,2,2,2.21163,1.11454
+understat,understat_9278,2018,2018-10-20,Wolverhampton Wanderers,Watford,0,2,0.47391,1.0684
+understat,understat_9279,2018,2018-10-20,West Ham,Tottenham,0,1,0.544268,1.11777
+understat,understat_9280,2018,2018-10-20,Newcastle United,Brighton,0,1,1.71169,0.675798
+understat,understat_9281,2018,2018-10-20,Manchester City,Burnley,5,0,4.48577,0.370236
+understat,understat_9282,2018,2018-10-20,Cardiff,Fulham,4,2,1.7562,0.947712
+understat,understat_9283,2018,2018-10-20,Bournemouth,Southampton,0,0,0.840403,0.589633
+understat,understat_9284,2018,2018-10-20,Huddersfield,Liverpool,0,1,0.638341,0.663819
+understat,understat_9285,2018,2018-10-21,Everton,Crystal Palace,2,0,1.92794,1.50174
+understat,understat_9286,2018,2018-10-22,Arsenal,Leicester,3,1,2.91637,0.932491
+understat,understat_9288,2018,2018-10-27,Liverpool,Cardiff,4,1,2.30176,0.643117
+understat,understat_9289,2018,2018-10-27,Fulham,Bournemouth,0,3,0.383833,2.10555
+understat,understat_9290,2018,2018-10-27,Brighton,Wolverhampton Wanderers,1,0,1.01337,1.38027
+understat,understat_9291,2018,2018-10-27,Watford,Huddersfield,3,0,2.29622,0.479655
+understat,understat_9292,2018,2018-10-27,Southampton,Newcastle United,0,0,1.19216,0.297646
+understat,understat_9293,2018,2018-10-27,Leicester,West Ham,1,1,1.95344,1.56009
+understat,understat_9294,2018,2018-10-28,Crystal Palace,Arsenal,2,2,2.38115,0.845197
+understat,understat_9295,2018,2018-10-28,Burnley,Chelsea,0,4,0.269828,3.01621
+understat,understat_9287,2018,2018-10-28,Manchester United,Everton,2,1,2.51393,1.67348
+understat,understat_9296,2018,2018-10-29,Tottenham,Manchester City,0,1,0.442436,1.93588
+understat,understat_9297,2018,2018-11-03,Bournemouth,Manchester United,1,2,1.928,3.29249
+understat,understat_9298,2018,2018-11-03,West Ham,Burnley,4,2,2.55739,0.882514
+understat,understat_9299,2018,2018-11-03,Newcastle United,Watford,1,0,0.691575,2.5452
+understat,understat_9301,2018,2018-11-03,Everton,Brighton,3,1,2.59305,0.676348
+understat,understat_9302,2018,2018-11-03,Cardiff,Leicester,0,1,0.922262,2.18288
+understat,understat_9303,2018,2018-11-03,Arsenal,Liverpool,1,1,1.62321,1.19558
+understat,understat_9304,2018,2018-11-03,Wolverhampton Wanderers,Tottenham,2,3,2.40643,1.63123
+understat,understat_9300,2018,2018-11-04,Manchester City,Southampton,6,1,2.76272,1.81466
+understat,understat_9305,2018,2018-11-04,Chelsea,Crystal Palace,3,1,1.88741,0.454547
+understat,understat_9306,2018,2018-11-05,Huddersfield,Fulham,1,0,0.51433,0.354166
+understat,understat_9307,2018,2018-11-10,Cardiff,Brighton,2,1,1.94297,0.767044
+understat,understat_9308,2018,2018-11-10,Southampton,Watford,1,1,1.20211,1.07573
+understat,understat_9309,2018,2018-11-10,Newcastle United,Bournemouth,2,1,2.57545,1.91687
+understat,understat_9310,2018,2018-11-10,Leicester,Burnley,0,0,1.5091,0.368393
+understat,understat_9311,2018,2018-11-10,Huddersfield,West Ham,1,1,1.17524,1.44113
+understat,understat_9312,2018,2018-11-10,Crystal Palace,Tottenham,0,1,0.688016,1.55381
+understat,understat_9313,2018,2018-11-11,Liverpool,Fulham,2,0,2.22417,0.571301
+understat,understat_9314,2018,2018-11-11,Chelsea,Everton,0,0,1.16298,0.198027
+understat,understat_9315,2018,2018-11-11,Manchester City,Manchester United,3,1,2.02764,0.97089
+understat,understat_9316,2018,2018-11-11,Arsenal,Wolverhampton Wanderers,1,1,0.965843,1.86549
+understat,understat_9317,2018,2018-11-24,West Ham,Manchester City,0,4,0.829504,2.95852
+understat,understat_9318,2018,2018-11-24,Watford,Liverpool,0,3,0.673382,1.45314
+understat,understat_9319,2018,2018-11-24,Manchester United,Crystal Palace,0,0,1.34245,1.05292
+understat,understat_9320,2018,2018-11-24,Fulham,Southampton,3,2,1.3875,1.67163
+understat,understat_9321,2018,2018-11-24,Everton,Cardiff,1,0,2.48066,0.879108
+understat,understat_9322,2018,2018-11-24,Brighton,Leicester,1,1,0.862315,1.12521
+understat,understat_9323,2018,2018-11-24,Tottenham,Chelsea,3,1,3.34649,0.962804
+understat,understat_9324,2018,2018-11-25,Bournemouth,Arsenal,1,2,0.650884,1.71044
+understat,understat_9325,2018,2018-11-25,Wolverhampton Wanderers,Huddersfield,0,2,0.701036,0.627281
+understat,understat_9326,2018,2018-11-26,Burnley,Newcastle United,1,2,1.49487,1.67701
+understat,understat_9335,2018,2018-11-30,Cardiff,Wolverhampton Wanderers,2,1,1.09264,0.987623
+understat,understat_9328,2018,2018-12-01,Newcastle United,West Ham,0,3,1.12583,2.62697
+understat,understat_9329,2018,2018-12-01,Manchester City,Bournemouth,3,1,2.83557,0.715009
+understat,understat_9331,2018,2018-12-01,Leicester,Watford,2,0,1.41758,1.19923
+understat,understat_9332,2018,2018-12-01,Huddersfield,Brighton,1,2,0.558083,1.67998
+understat,understat_9333,2018,2018-12-01,Crystal Palace,Burnley,2,0,2.03785,0.302477
+understat,understat_9327,2018,2018-12-01,Southampton,Manchester United,2,2,0.623954,0.904803
+understat,understat_9334,2018,2018-12-02,Chelsea,Fulham,2,0,2.17105,0.285256
+understat,understat_9336,2018,2018-12-02,Arsenal,Tottenham,4,2,2.71421,1.0926
+understat,understat_9330,2018,2018-12-02,Liverpool,Everton,1,0,3.07574,1.23014
+understat,understat_9337,2018,2018-12-04,Brighton,Crystal Palace,3,1,1.2521,1.5329
+understat,understat_9338,2018,2018-12-04,Bournemouth,Huddersfield,2,1,1.07393,1.5631
+understat,understat_9340,2018,2018-12-04,West Ham,Cardiff,3,1,1.57488,1.93448
+understat,understat_9341,2018,2018-12-04,Watford,Manchester City,1,2,1.672,2.51933
+understat,understat_9339,2018,2018-12-05,Wolverhampton Wanderers,Chelsea,2,1,0.682893,1.10702
+understat,understat_9342,2018,2018-12-05,Fulham,Leicester,1,1,1.47593,1.21575
+understat,understat_9343,2018,2018-12-05,Burnley,Liverpool,1,3,1.05809,2.73897
+understat,understat_9345,2018,2018-12-05,Everton,Newcastle United,1,1,2.10943,1.52214
+understat,understat_9344,2018,2018-12-05,Manchester United,Arsenal,2,2,1.33679,1.73226
+understat,understat_9346,2018,2018-12-05,Tottenham,Southampton,3,1,1.73642,1.82434
+understat,understat_9355,2018,2018-12-08,Bournemouth,Liverpool,0,4,0.279142,1.80619
+understat,understat_9347,2018,2018-12-08,West Ham,Crystal Palace,3,2,1.53635,0.934613
+understat,understat_9349,2018,2018-12-08,Manchester United,Fulham,4,1,3.15444,1.23251
+understat,understat_9353,2018,2018-12-08,Cardiff,Southampton,1,0,1.55832,0.501128
+understat,understat_9354,2018,2018-12-08,Burnley,Brighton,1,0,1.81251,0.951507
+understat,understat_9356,2018,2018-12-08,Arsenal,Huddersfield,1,0,2.02156,0.308361
+understat,understat_9352,2018,2018-12-08,Chelsea,Manchester City,2,0,0.526329,0.740048
+understat,understat_9350,2018,2018-12-08,Leicester,Tottenham,0,2,0.357742,0.917968
+understat,understat_9348,2018,2018-12-09,Newcastle United,Wolverhampton Wanderers,1,2,0.4601,1.57799
+understat,understat_9351,2018,2018-12-10,Everton,Watford,2,2,1.72686,1.63043
+understat,understat_9361,2018,2018-12-15,Manchester City,Everton,3,1,1.79848,1.6235
+understat,understat_9357,2018,2018-12-15,Wolverhampton Wanderers,Bournemouth,2,0,2.02223,0.52685
+understat,understat_9358,2018,2018-12-15,Watford,Cardiff,3,2,1.64998,0.485768
+understat,understat_9359,2018,2018-12-15,Tottenham,Burnley,1,0,1.74625,0.451196
+understat,understat_9363,2018,2018-12-15,Huddersfield,Newcastle United,0,1,0.671382,0.931041
+understat,understat_9365,2018,2018-12-15,Crystal Palace,Leicester,1,0,0.39698,0.895305
+understat,understat_9364,2018,2018-12-15,Fulham,West Ham,0,2,1.03424,0.75325
+understat,understat_9360,2018,2018-12-16,Southampton,Arsenal,3,2,1.21163,1.85763
+understat,understat_9366,2018,2018-12-16,Brighton,Chelsea,1,2,0.26126,1.6111
+understat,understat_9362,2018,2018-12-16,Liverpool,Manchester United,3,1,2.60435,0.658049
+understat,understat_9367,2018,2018-12-21,Wolverhampton Wanderers,Liverpool,0,2,0.763821,2.16356
+understat,understat_9376,2018,2018-12-22,Arsenal,Burnley,3,1,1.4656,1.03237
+understat,understat_9368,2018,2018-12-22,West Ham,Watford,0,2,2.06507,2.32983
+understat,understat_9369,2018,2018-12-22,Newcastle United,Fulham,0,0,0.289508,0.245408
+understat,understat_9370,2018,2018-12-22,Manchester City,Crystal Palace,2,3,1.27118,1.14609
+understat,understat_9371,2018,2018-12-22,Huddersfield,Southampton,1,3,1.0038,2.60172
+understat,understat_9373,2018,2018-12-22,Chelsea,Leicester,0,1,2.40458,0.456492
+understat,understat_9375,2018,2018-12-22,Bournemouth,Brighton,2,0,0.892502,0.825478
+understat,understat_9374,2018,2018-12-22,Cardiff,Manchester United,1,5,1.27173,2.72523
+understat,understat_9372,2018,2018-12-23,Everton,Tottenham,2,6,1.00121,2.55514
+understat,understat_9383,2018,2018-12-26,Fulham,Wolverhampton Wanderers,1,1,1.2769,1.35896
+understat,understat_9378,2018,2018-12-26,Tottenham,Bournemouth,5,0,2.23457,1.21736
+understat,understat_9380,2018,2018-12-26,Manchester United,Huddersfield,3,1,1.79848,1.40594
+understat,understat_9381,2018,2018-12-26,Liverpool,Newcastle United,4,0,3.24988,0.456309
+understat,understat_9382,2018,2018-12-26,Leicester,Manchester City,2,1,1.55714,1.34781
+understat,understat_9384,2018,2018-12-26,Crystal Palace,Cardiff,0,0,2.43202,1.05926
+understat,understat_9385,2018,2018-12-26,Burnley,Everton,1,5,1.88646,1.8875
+understat,understat_9386,2018,2018-12-26,Brighton,Arsenal,1,1,1.38502,0.789138
+understat,understat_9377,2018,2018-12-26,Watford,Chelsea,1,2,1.24414,2.1956
+understat,understat_9379,2018,2018-12-27,Southampton,West Ham,1,2,1.28665,1.26973
+understat,understat_9387,2018,2018-12-29,Watford,Newcastle United,1,1,1.05566,0.661713
+understat,understat_9388,2018,2018-12-29,Tottenham,Wolverhampton Wanderers,1,3,0.277704,1.20867
+understat,understat_9392,2018,2018-12-29,Leicester,Cardiff,0,1,1.51648,0.493212
+understat,understat_9393,2018,2018-12-29,Fulham,Huddersfield,1,0,1.72386,0.276791
+understat,understat_9396,2018,2018-12-29,Brighton,Everton,1,0,1.60311,0.655851
+understat,understat_9391,2018,2018-12-29,Liverpool,Arsenal,5,1,3.7053,1.08186
+understat,understat_9394,2018,2018-12-30,Crystal Palace,Chelsea,0,1,0.199002,0.741471
+understat,understat_9389,2018,2018-12-30,Southampton,Manchester City,1,3,0.221381,2.96802
+understat,understat_9395,2018,2018-12-30,Burnley,West Ham,2,0,2.89884,0.656044
+understat,understat_9390,2018,2018-12-30,Manchester United,Bournemouth,4,1,3.41874,0.705549
+understat,understat_9402,2018,2019-01-01,Everton,Leicester,0,1,0.871304,0.644144
+understat,understat_9406,2018,2019-01-01,Arsenal,Fulham,4,1,4.43325,1.71312
+understat,understat_9404,2018,2019-01-01,Cardiff,Tottenham,0,3,1.0789,1.38282
+understat,understat_9397,2018,2019-01-02,Wolverhampton Wanderers,Crystal Palace,0,2,0.656255,1.94658
+understat,understat_9398,2018,2019-01-02,West Ham,Brighton,2,2,0.639356,0.686806
+understat,understat_9401,2018,2019-01-02,Huddersfield,Burnley,1,2,0.621818,2.66309
+understat,understat_9403,2018,2019-01-02,Chelsea,Southampton,0,0,0.850791,0.158168
+understat,understat_9405,2018,2019-01-02,Bournemouth,Watford,3,3,2.84828,0.977046
+understat,understat_9399,2018,2019-01-02,Newcastle United,Manchester United,0,2,0.691878,2.6754
+understat,understat_9400,2018,2019-01-03,Manchester City,Liverpool,2,1,1.00357,1.3801
+understat,understat_9407,2018,2019-01-12,West Ham,Arsenal,1,0,0.669394,0.685895
+understat,understat_9410,2018,2019-01-12,Leicester,Southampton,1,2,1.75983,1.41659
+understat,understat_9412,2018,2019-01-12,Crystal Palace,Watford,1,2,1.1617,1.56262
+understat,understat_9414,2018,2019-01-12,Cardiff,Huddersfield,0,0,0.124558,0.39468
+understat,understat_9415,2018,2019-01-12,Burnley,Fulham,2,1,0.809801,0.903255
+understat,understat_9416,2018,2019-01-12,Brighton,Liverpool,0,1,0.384198,2.2665
+understat,understat_9413,2018,2019-01-12,Chelsea,Newcastle United,2,1,1.32355,0.395148
+understat,understat_9411,2018,2019-01-13,Everton,Bournemouth,2,0,1.7814,1.52828
+understat,understat_9408,2018,2019-01-13,Tottenham,Manchester United,0,1,1.80359,0.957777
+understat,understat_9409,2018,2019-01-14,Manchester City,Wolverhampton Wanderers,3,0,3.11947,0.0985446
+understat,understat_9417,2018,2019-01-19,Wolverhampton Wanderers,Leicester,4,3,2.21719,1.33831
+understat,understat_9418,2018,2019-01-19,Watford,Burnley,0,0,1.06981,1.97256
+understat,understat_9419,2018,2019-01-19,Southampton,Everton,2,1,1.06009,1.31169
+understat,understat_9420,2018,2019-01-19,Newcastle United,Cardiff,3,0,2.518,0.255727
+understat,understat_9421,2018,2019-01-19,Manchester United,Brighton,2,1,2.64005,0.635111
+understat,understat_9422,2018,2019-01-19,Liverpool,Crystal Palace,4,3,2.8299,0.695213
+understat,understat_9425,2018,2019-01-19,Bournemouth,West Ham,2,0,1.24835,0.971813
+understat,understat_9426,2018,2019-01-19,Arsenal,Chelsea,2,0,2.09412,0.755304
+understat,understat_9423,2018,2019-01-20,Huddersfield,Manchester City,0,3,0.764264,2.01376
+understat,understat_9424,2018,2019-01-20,Fulham,Tottenham,1,2,0.937902,1.93316
+understat,understat_9427,2018,2019-01-29,Wolverhampton Wanderers,West Ham,3,0,2.0363,0.130179
+understat,understat_9428,2018,2019-01-29,Huddersfield,Everton,0,1,0.73078,1.05995
+understat,understat_9429,2018,2019-01-29,Fulham,Brighton,4,2,3.46113,2.36867
+understat,understat_9431,2018,2019-01-29,Arsenal,Cardiff,2,1,2.69339,0.597893
+understat,understat_9432,2018,2019-01-29,Manchester United,Burnley,2,2,3.23417,0.934603
+understat,understat_9434,2018,2019-01-29,Newcastle United,Manchester City,2,1,0.992326,1.33896
+understat,understat_9430,2018,2019-01-30,Bournemouth,Chelsea,4,0,2.15094,0.718873
+understat,understat_9433,2018,2019-01-30,Southampton,Crystal Palace,1,1,1.33257,1.53294
+understat,understat_9435,2018,2019-01-30,Tottenham,Watford,2,1,1.36248,0.479838
+understat,understat_9436,2018,2019-01-30,Liverpool,Leicester,1,1,0.576336,1.1272
+understat,understat_9438,2018,2019-02-02,Tottenham,Newcastle United,1,0,3.10409,0.400152
+understat,understat_9441,2018,2019-02-02,Everton,Wolverhampton Wanderers,1,3,1.36252,1.85729
+understat,understat_9442,2018,2019-02-02,Crystal Palace,Fulham,2,0,2.19582,0.560836
+understat,understat_9443,2018,2019-02-02,Chelsea,Huddersfield,5,0,2.94236,0.260391
+understat,understat_9445,2018,2019-02-02,Burnley,Southampton,1,1,2.00175,0.787747
+understat,understat_9446,2018,2019-02-02,Brighton,Watford,0,0,1.83528,0.279297
+understat,understat_9444,2018,2019-02-02,Cardiff,Bournemouth,2,0,2.53093,0.35199
+understat,understat_9440,2018,2019-02-03,Leicester,Manchester United,0,1,1.40067,1.49717
+understat,understat_9439,2018,2019-02-03,Manchester City,Arsenal,3,1,3.03102,0.703542
+understat,understat_9437,2018,2019-02-04,West Ham,Liverpool,1,1,0.791319,1.12475
+understat,understat_9461,2018,2019-02-06,Everton,Manchester City,0,2,0.111559,2.60922
+understat,understat_9447,2018,2019-02-09,Fulham,Manchester United,0,3,2.18741,2.13209
+understat,understat_9448,2018,2019-02-09,Crystal Palace,West Ham,1,1,2.68412,1.74711
+understat,understat_9451,2018,2019-02-09,Watford,Everton,1,0,1.53311,0.641094
+understat,understat_9453,2018,2019-02-09,Southampton,Cardiff,1,2,1.70666,0.980673
+understat,understat_9455,2018,2019-02-09,Liverpool,Bournemouth,3,0,2.53003,0.390995
+understat,understat_9456,2018,2019-02-09,Huddersfield,Arsenal,1,2,1.96816,1.46751
+understat,understat_9449,2018,2019-02-09,Brighton,Burnley,1,3,1.31614,1.83041
+understat,understat_9452,2018,2019-02-10,Tottenham,Leicester,3,1,1.21144,3.02164
+understat,understat_9454,2018,2019-02-10,Manchester City,Chelsea,6,0,4.04218,0.901867
+understat,understat_9450,2018,2019-02-11,Wolverhampton Wanderers,Newcastle United,1,1,2.30998,0.435263
+understat,understat_9457,2018,2019-02-22,West Ham,Fulham,3,1,2.72871,1.23555
+understat,understat_9463,2018,2019-02-22,Cardiff,Watford,1,5,1.90045,2.75798
+understat,understat_9464,2018,2019-02-23,Burnley,Tottenham,2,1,1.08514,0.845211
+understat,understat_9458,2018,2019-02-23,Newcastle United,Huddersfield,2,0,3.03313,0.133934
+understat,understat_9465,2018,2019-02-23,Bournemouth,Wolverhampton Wanderers,1,1,2.13291,1.20286
+understat,understat_9460,2018,2019-02-23,Leicester,Crystal Palace,1,4,0.946697,1.57739
+understat,understat_9459,2018,2019-02-24,Manchester United,Liverpool,0,0,0.474869,0.380519
+understat,understat_9466,2018,2019-02-24,Arsenal,Southampton,2,0,2.35088,0.613167
+understat,understat_9467,2018,2019-02-26,Leicester,Brighton,2,1,1.92171,1.20566
+understat,understat_9468,2018,2019-02-26,Huddersfield,Wolverhampton Wanderers,1,0,1.46224,0.573166
+understat,understat_9469,2018,2019-02-26,Cardiff,Everton,0,3,0.219359,1.14212
+understat,understat_9473,2018,2019-02-26,Newcastle United,Burnley,2,0,1.70312,1.74201
+understat,understat_9470,2018,2019-02-27,Arsenal,Bournemouth,5,1,3.18716,0.88618
+understat,understat_9472,2018,2019-02-27,Southampton,Fulham,2,0,1.15823,0.798715
+understat,understat_9471,2018,2019-02-27,Crystal Palace,Manchester United,1,3,1.69334,1.54089
+understat,understat_9474,2018,2019-02-27,Chelsea,Tottenham,2,0,0.625978,0.722229
+understat,understat_9475,2018,2019-02-27,Manchester City,West Ham,1,0,3.67741,0.400125
+understat,understat_9476,2018,2019-02-27,Liverpool,Watford,5,0,2.74266,0.630423
+understat,understat_9480,2018,2019-03-02,Tottenham,Arsenal,1,1,1.76818,3.45713
+understat,understat_9477,2018,2019-03-02,Wolverhampton Wanderers,Cardiff,2,0,3.2075,0.702261
+understat,understat_9481,2018,2019-03-02,Manchester United,Southampton,3,2,2.54216,0.578485
+understat,understat_9484,2018,2019-03-02,Burnley,Crystal Palace,1,3,1.90872,0.706284
+understat,understat_9485,2018,2019-03-02,Brighton,Huddersfield,1,0,1.39896,0.2014
+understat,understat_9486,2018,2019-03-02,Bournemouth,Manchester City,0,1,0.0,1.59515
+understat,understat_9478,2018,2019-03-02,West Ham,Newcastle United,2,0,1.88895,1.18549
+understat,understat_9479,2018,2019-03-03,Watford,Leicester,2,1,1.36515,0.794683
+understat,understat_9482,2018,2019-03-03,Fulham,Chelsea,1,2,0.898469,1.53632
+understat,understat_9483,2018,2019-03-03,Everton,Liverpool,0,0,0.241879,0.811272
+understat,understat_9493,2018,2019-03-09,Crystal Palace,Brighton,1,2,1.44291,0.129312
+understat,understat_9487,2018,2019-03-09,Southampton,Tottenham,2,1,2.07772,1.26876
+understat,understat_9488,2018,2019-03-09,Newcastle United,Everton,3,2,2.37896,1.15114
+understat,understat_9491,2018,2019-03-09,Leicester,Fulham,3,1,2.13494,0.15103
+understat,understat_9492,2018,2019-03-09,Huddersfield,Bournemouth,0,2,0.339087,2.16389
+understat,understat_9495,2018,2019-03-09,Cardiff,West Ham,2,0,3.49275,0.295869
+understat,understat_9489,2018,2019-03-09,Manchester City,Watford,3,1,3.75714,0.407168
+understat,understat_9490,2018,2019-03-10,Liverpool,Burnley,4,2,4.12341,0.471571
+understat,understat_9494,2018,2019-03-10,Chelsea,Wolverhampton Wanderers,1,1,1.0471,0.609079
+understat,understat_9496,2018,2019-03-10,Arsenal,Manchester United,2,0,1.52723,2.3703
+understat,understat_9498,2018,2019-03-16,West Ham,Huddersfield,4,3,1.88114,1.66909
+understat,understat_9504,2018,2019-03-16,Burnley,Leicester,1,2,1.17008,0.608954
+understat,understat_9506,2018,2019-03-16,Bournemouth,Newcastle United,2,2,1.61666,1.02847
+understat,understat_9502,2018,2019-03-17,Fulham,Liverpool,1,2,0.915765,2.73437
+understat,understat_9503,2018,2019-03-17,Everton,Chelsea,2,0,2.24031,1.24394
+understat,understat_9512,2018,2019-03-30,Fulham,Manchester City,0,2,0.661491,2.31513
+understat,understat_9509,2018,2019-03-30,Manchester United,Watford,2,1,1.98052,1.35208
+understat,understat_9511,2018,2019-03-30,Leicester,Bournemouth,2,0,1.8935,0.790333
+understat,understat_9513,2018,2019-03-30,Crystal Palace,Huddersfield,2,0,2.84701,0.926991
+understat,understat_9515,2018,2019-03-30,Burnley,Wolverhampton Wanderers,2,0,0.572695,0.397928
+understat,understat_9516,2018,2019-03-30,Brighton,Southampton,0,1,0.560521,0.857436
+understat,understat_9508,2018,2019-03-30,West Ham,Everton,0,2,0.0891639,2.65983
+understat,understat_9514,2018,2019-03-31,Cardiff,Chelsea,1,2,0.446122,2.07834
+understat,understat_9510,2018,2019-03-31,Liverpool,Tottenham,2,1,1.0931,1.04822
+understat,understat_9507,2018,2019-04-01,Arsenal,Newcastle United,2,0,1.04458,0.0441445
+understat,understat_9517,2018,2019-04-02,Wolverhampton Wanderers,Manchester United,2,1,1.65044,2.03847
+understat,understat_9518,2018,2019-04-02,Watford,Fulham,4,1,1.59338,1.90917
+understat,understat_9462,2018,2019-04-03,Chelsea,Brighton,3,0,3.12416,0.440898
+understat,understat_9500,2018,2019-04-03,Tottenham,Crystal Palace,2,0,2.57376,0.564317
+understat,understat_9522,2018,2019-04-03,Manchester City,Cardiff,2,0,3.53913,0.135788
+understat,understat_9520,2018,2019-04-05,Southampton,Liverpool,1,3,0.718394,2.00654
+understat,understat_9521,2018,2019-04-06,Newcastle United,Crystal Palace,0,1,0.943175,0.907988
+understat,understat_9523,2018,2019-04-06,Huddersfield,Leicester,1,4,1.62301,3.61876
+understat,understat_9526,2018,2019-04-06,Bournemouth,Burnley,1,3,1.20888,1.38919
+understat,understat_9524,2018,2019-04-07,Everton,Arsenal,1,0,2.69396,0.201885
+understat,understat_9525,2018,2019-04-08,Chelsea,West Ham,2,0,2.23287,0.471195
+understat,understat_9532,2018,2019-04-12,Leicester,Newcastle United,0,1,0.877377,0.945804
+understat,understat_9528,2018,2019-04-13,Tottenham,Huddersfield,4,0,2.78596,0.983527
+understat,understat_9529,2018,2019-04-13,Southampton,Wolverhampton Wanderers,3,1,3.80842,0.642825
+understat,understat_9533,2018,2019-04-13,Fulham,Everton,2,0,1.66303,1.29107
+understat,understat_9535,2018,2019-04-13,Burnley,Cardiff,2,0,2.84358,0.872224
+understat,understat_9536,2018,2019-04-13,Brighton,Bournemouth,0,5,0.206731,2.76885
+understat,understat_9530,2018,2019-04-13,Manchester United,West Ham,2,1,2.65125,1.42817
+understat,understat_9534,2018,2019-04-14,Crystal Palace,Manchester City,1,3,0.318169,2.86236
+understat,understat_9531,2018,2019-04-14,Liverpool,Chelsea,2,0,1.30839,0.873177
+understat,understat_9527,2018,2019-04-15,Watford,Arsenal,0,1,1.12595,2.2668
+understat,understat_9505,2018,2019-04-16,Brighton,Cardiff,0,2,0.588539,0.819472
+understat,understat_9540,2018,2019-04-20,Manchester City,Tottenham,1,0,2.06185,1.19894
+understat,understat_9537,2018,2019-04-20,Wolverhampton Wanderers,Brighton,0,0,2.60447,0.115051
+understat,understat_9538,2018,2019-04-20,West Ham,Leicester,2,2,1.36558,0.8065
+understat,understat_9541,2018,2019-04-20,Huddersfield,Watford,1,2,1.09072,1.08462
+understat,understat_9545,2018,2019-04-20,Bournemouth,Fulham,0,1,2.83739,2.61689
+understat,understat_9539,2018,2019-04-20,Newcastle United,Southampton,3,1,1.23033,1.27102
+understat,understat_9542,2018,2019-04-21,Everton,Manchester United,4,0,1.5204,0.305982
+understat,understat_9544,2018,2019-04-21,Cardiff,Liverpool,0,2,1.1187,2.42404
+understat,understat_9546,2018,2019-04-21,Arsenal,Crystal Palace,2,3,1.54245,2.56216
+understat,understat_9543,2018,2019-04-22,Chelsea,Burnley,2,2,1.28197,0.788788
+understat,understat_9499,2018,2019-04-23,Watford,Southampton,1,1,1.27253,2.11999
+understat,understat_9519,2018,2019-04-23,Tottenham,Brighton,1,0,1.0032,0.143138
+understat,understat_9497,2018,2019-04-24,Wolverhampton Wanderers,Arsenal,3,1,0.982018,0.939754
+understat,understat_9501,2018,2019-04-24,Manchester United,Manchester City,0,2,0.514509,0.530481
+understat,understat_9551,2018,2019-04-26,Liverpool,Huddersfield,5,0,3.58922,0.1624
+understat,understat_9548,2018,2019-04-27,Tottenham,West Ham,0,1,1.35378,0.991558
+understat,understat_9547,2018,2019-04-27,Watford,Wolverhampton Wanderers,1,2,0.896093,2.44357
+understat,understat_9549,2018,2019-04-27,Southampton,Bournemouth,3,3,2.73537,2.62214
+understat,understat_9553,2018,2019-04-27,Fulham,Cardiff,1,0,0.519072,1.11322
+understat,understat_9554,2018,2019-04-27,Crystal Palace,Everton,0,0,0.261344,1.15217
+understat,understat_9556,2018,2019-04-27,Brighton,Newcastle United,1,1,1.20482,0.43797
+understat,understat_9552,2018,2019-04-28,Leicester,Arsenal,3,0,3.6797,0.600697
+understat,understat_9555,2018,2019-04-28,Burnley,Manchester City,0,1,0.0899809,2.34878
+understat,understat_9550,2018,2019-04-28,Manchester United,Chelsea,1,1,1.12483,1.6298
+understat,understat_9562,2018,2019-05-03,Everton,Burnley,2,0,1.76461,0.473292
+understat,understat_9565,2018,2019-05-04,Bournemouth,Tottenham,1,0,2.22622,0.713362
+understat,understat_9557,2018,2019-05-04,Wolverhampton Wanderers,Fulham,1,0,2.09397,0.512477
+understat,understat_9558,2018,2019-05-04,West Ham,Southampton,3,0,1.99866,0.443686
+understat,understat_9564,2018,2019-05-04,Cardiff,Crystal Palace,2,3,1.4996,1.80991
+understat,understat_9559,2018,2019-05-04,Newcastle United,Liverpool,2,3,1.29707,1.48081
+understat,understat_9561,2018,2019-05-05,Huddersfield,Manchester United,1,1,0.73663,1.88049
+understat,understat_9563,2018,2019-05-05,Chelsea,Watford,3,0,2.96478,1.2712
+understat,understat_9566,2018,2019-05-05,Arsenal,Brighton,1,1,2.36178,1.90585
+understat,understat_9560,2018,2019-05-06,Manchester City,Leicester,1,0,1.08617,0.537307
+understat,understat_9567,2018,2019-05-12,Watford,West Ham,1,4,2.06986,3.20094
+understat,understat_9568,2018,2019-05-12,Tottenham,Everton,2,2,0.882608,2.06851
+understat,understat_9569,2018,2019-05-12,Southampton,Huddersfield,1,1,0.941018,0.857152
+understat,understat_9570,2018,2019-05-12,Manchester United,Cardiff,0,2,1.89555,1.71095
+understat,understat_9571,2018,2019-05-12,Liverpool,Wolverhampton Wanderers,2,0,1.70197,0.883861
+understat,understat_9572,2018,2019-05-12,Leicester,Chelsea,0,0,0.345306,1.26735
+understat,understat_9573,2018,2019-05-12,Fulham,Newcastle United,0,4,0.569845,1.95921
+understat,understat_9574,2018,2019-05-12,Crystal Palace,Bournemouth,5,3,2.85899,1.8981
+understat,understat_9575,2018,2019-05-12,Burnley,Arsenal,1,3,1.72939,2.87276
+understat,understat_9576,2018,2019-05-12,Brighton,Manchester City,1,4,0.595313,2.22234

@@ -1,0 +1,381 @@
+source,match_id,season,date,home_team,away_team,home_goals,away_goals,home_xg,away_xg
+understat,understat_26602,2024,2024-08-16,Manchester United,Fulham,1,0,2.04268,0.418711
+understat,understat_26603,2024,2024-08-17,Ipswich,Liverpool,0,2,0.342601,3.92906
+understat,understat_26604,2024,2024-08-17,Arsenal,Wolverhampton Wanderers,2,0,1.6283,0.575835
+understat,understat_26605,2024,2024-08-17,Everton,Brighton,0,3,0.405325,1.79083
+understat,understat_26606,2024,2024-08-17,Newcastle United,Southampton,1,0,0.433489,1.95483
+understat,understat_26607,2024,2024-08-17,Nottingham Forest,Bournemouth,1,1,1.24405,1.90915
+understat,understat_26608,2024,2024-08-17,West Ham,Aston Villa,1,2,2.8047,2.6703
+understat,understat_26609,2024,2024-08-18,Brentford,Crystal Palace,2,1,1.38064,1.14757
+understat,understat_26610,2024,2024-08-18,Chelsea,Manchester City,0,2,1.06123,1.18038
+understat,understat_26611,2024,2024-08-19,Leicester,Tottenham,1,1,1.02614,1.40775
+understat,understat_26612,2024,2024-08-24,Brighton,Manchester United,2,1,2.14153,1.28556
+understat,understat_26613,2024,2024-08-24,Crystal Palace,West Ham,0,2,1.3761,1.53421
+understat,understat_26614,2024,2024-08-24,Fulham,Leicester,2,1,1.96218,0.857005
+understat,understat_26615,2024,2024-08-24,Manchester City,Ipswich,4,1,3.07818,0.479999
+understat,understat_26616,2024,2024-08-24,Southampton,Nottingham Forest,0,1,0.214952,2.86475
+understat,understat_26617,2024,2024-08-24,Tottenham,Everton,4,0,2.61143,0.648869
+understat,understat_26618,2024,2024-08-24,Aston Villa,Arsenal,0,2,1.31664,1.41399
+understat,understat_26619,2024,2024-08-25,Wolverhampton Wanderers,Chelsea,2,6,2.4181,2.02935
+understat,understat_26620,2024,2024-08-25,Bournemouth,Newcastle United,1,1,2.53513,1.89287
+understat,understat_26621,2024,2024-08-25,Liverpool,Brentford,2,0,2.71877,0.457239
+understat,understat_26622,2024,2024-08-31,Arsenal,Brighton,1,1,2.41798,1.81748
+understat,understat_26623,2024,2024-08-31,Brentford,Southampton,3,1,3.86281,1.64713
+understat,understat_26624,2024,2024-08-31,Everton,Bournemouth,2,3,2.55629,2.95688
+understat,understat_26625,2024,2024-08-31,Ipswich,Fulham,1,1,0.707048,1.18883
+understat,understat_26626,2024,2024-08-31,Leicester,Aston Villa,1,2,0.774741,2.16385
+understat,understat_26627,2024,2024-08-31,Nottingham Forest,Wolverhampton Wanderers,1,1,1.41069,0.937632
+understat,understat_26628,2024,2024-08-31,West Ham,Manchester City,1,3,0.947201,3.19297
+understat,understat_26629,2024,2024-09-01,Newcastle United,Tottenham,2,1,1.58694,1.63304
+understat,understat_26630,2024,2024-09-01,Chelsea,Crystal Palace,1,1,2.97743,0.459708
+understat,understat_26631,2024,2024-09-01,Manchester United,Liverpool,0,3,1.50087,2.10397
+understat,understat_26632,2024,2024-09-14,Southampton,Manchester United,0,3,1.35593,3.02693
+understat,understat_26633,2024,2024-09-14,Brighton,Ipswich,0,0,1.75696,0.721323
+understat,understat_26634,2024,2024-09-14,Fulham,West Ham,1,1,2.88601,0.682719
+understat,understat_26635,2024,2024-09-14,Liverpool,Nottingham Forest,0,1,1.17044,0.589532
+understat,understat_26636,2024,2024-09-14,Crystal Palace,Leicester,2,2,2.88716,1.65187
+understat,understat_26637,2024,2024-09-14,Manchester City,Brentford,2,1,1.55279,1.05094
+understat,understat_26638,2024,2024-09-14,Aston Villa,Everton,3,2,3.15876,0.852158
+understat,understat_26639,2024,2024-09-14,Bournemouth,Chelsea,0,1,1.53731,0.932726
+understat,understat_26640,2024,2024-09-15,Tottenham,Arsenal,0,1,0.792595,1.1209
+understat,understat_26641,2024,2024-09-15,Wolverhampton Wanderers,Newcastle United,1,2,1.46969,1.48343
+understat,understat_26642,2024,2024-09-21,West Ham,Chelsea,0,3,0.758267,2.39727
+understat,understat_26643,2024,2024-09-21,Southampton,Ipswich,1,1,2.89813,1.645
+understat,understat_26644,2024,2024-09-21,Leicester,Everton,1,1,1.33793,1.82377
+understat,understat_26645,2024,2024-09-21,Liverpool,Bournemouth,3,0,2.43731,1.46979
+understat,understat_26646,2024,2024-09-21,Fulham,Newcastle United,3,1,3.21141,1.09768
+understat,understat_26647,2024,2024-09-21,Aston Villa,Wolverhampton Wanderers,3,1,2.37351,0.520117
+understat,understat_26648,2024,2024-09-21,Tottenham,Brentford,3,1,3.89481,0.893565
+understat,understat_26649,2024,2024-09-21,Crystal Palace,Manchester United,0,0,1.66928,2.35056
+understat,understat_26650,2024,2024-09-22,Brighton,Nottingham Forest,2,2,1.56836,1.36923
+understat,understat_26651,2024,2024-09-22,Manchester City,Arsenal,2,2,2.75588,1.28411
+understat,understat_26652,2024,2024-09-28,Newcastle United,Manchester City,1,1,1.34344,1.26516
+understat,understat_26653,2024,2024-09-28,Nottingham Forest,Fulham,0,1,0.614351,1.43592
+understat,understat_26654,2024,2024-09-28,Everton,Crystal Palace,2,1,1.10959,1.12358
+understat,understat_26655,2024,2024-09-28,Arsenal,Leicester,4,2,6.05305,0.337909
+understat,understat_26656,2024,2024-09-28,Brentford,West Ham,1,1,0.370222,0.878617
+understat,understat_26657,2024,2024-09-28,Chelsea,Brighton,4,2,3.65839,1.20712
+understat,understat_26658,2024,2024-09-28,Wolverhampton Wanderers,Liverpool,1,2,0.748925,2.11724
+understat,understat_26659,2024,2024-09-29,Ipswich,Aston Villa,2,2,1.84608,1.14494
+understat,understat_26660,2024,2024-09-29,Manchester United,Tottenham,0,3,0.600721,5.4072
+understat,understat_26661,2024,2024-09-30,Bournemouth,Southampton,3,1,1.44215,0.696068
+understat,understat_26662,2024,2024-10-05,Crystal Palace,Liverpool,0,1,0.609481,2.07332
+understat,understat_26663,2024,2024-10-05,Leicester,Bournemouth,1,0,0.912063,1.94963
+understat,understat_26664,2024,2024-10-05,Manchester City,Fulham,3,2,1.36684,2.75846
+understat,understat_26665,2024,2024-10-05,West Ham,Ipswich,4,1,4.39402,1.18463
+understat,understat_26666,2024,2024-10-05,Arsenal,Southampton,3,1,3.25165,1.27313
+understat,understat_26667,2024,2024-10-05,Brentford,Wolverhampton Wanderers,5,3,4.13513,0.696254
+understat,understat_26669,2024,2024-10-05,Everton,Newcastle United,0,0,0.692214,1.79048
+understat,understat_26668,2024,2024-10-06,Chelsea,Nottingham Forest,1,1,2.27752,1.66654
+understat,understat_26670,2024,2024-10-06,Aston Villa,Manchester United,0,0,0.532809,0.448537
+understat,understat_26671,2024,2024-10-06,Brighton,Tottenham,3,2,1.97217,1.09279
+understat,understat_26672,2024,2024-10-19,Tottenham,West Ham,4,1,1.44052,0.858803
+understat,understat_26673,2024,2024-10-19,Fulham,Aston Villa,1,3,2.63074,1.43595
+understat,understat_26674,2024,2024-10-19,Ipswich,Everton,0,2,1.174,1.60804
+understat,understat_26675,2024,2024-10-19,Manchester United,Brentford,2,1,1.76555,0.892843
+understat,understat_26676,2024,2024-10-19,Newcastle United,Brighton,0,1,1.93657,1.6779
+understat,understat_26678,2024,2024-10-19,Southampton,Leicester,2,3,2.42776,2.83826
+understat,understat_26680,2024,2024-10-19,Bournemouth,Arsenal,2,0,2.18419,0.740758
+understat,understat_26681,2024,2024-10-20,Wolverhampton Wanderers,Manchester City,1,2,0.761217,1.36569
+understat,understat_26679,2024,2024-10-20,Liverpool,Chelsea,2,1,2.22517,1.33904
+understat,understat_26677,2024,2024-10-21,Nottingham Forest,Crystal Palace,1,0,1.88573,0.835001
+understat,understat_26682,2024,2024-10-25,Leicester,Nottingham Forest,1,3,0.832415,2.54488
+understat,understat_26683,2024,2024-10-26,Manchester City,Southampton,1,0,3.16286,0.369989
+understat,understat_26684,2024,2024-10-26,Aston Villa,Bournemouth,1,1,1.974,0.328651
+understat,understat_26685,2024,2024-10-26,Brentford,Ipswich,4,3,4.09663,1.65698
+understat,understat_26686,2024,2024-10-26,Brighton,Wolverhampton Wanderers,2,2,1.51347,1.11074
+understat,understat_26687,2024,2024-10-26,Everton,Fulham,1,1,0.884845,1.49531
+understat,understat_26688,2024,2024-10-27,Chelsea,Newcastle United,2,1,1.61794,1.74225
+understat,understat_26689,2024,2024-10-27,Crystal Palace,Tottenham,1,0,0.978611,1.0192
+understat,understat_26690,2024,2024-10-27,West Ham,Manchester United,2,1,2.99312,2.62598
+understat,understat_26691,2024,2024-10-27,Arsenal,Liverpool,2,2,1.0883,1.35346
+understat,understat_26694,2024,2024-11-02,Newcastle United,Arsenal,1,0,0.859715,0.911305
+understat,understat_26692,2024,2024-11-02,Bournemouth,Manchester City,2,1,2.4493,2.3527
+understat,understat_26695,2024,2024-11-02,Ipswich,Leicester,1,1,1.33617,2.33858
+understat,understat_26696,2024,2024-11-02,Liverpool,Brighton,2,1,1.81037,1.01568
+understat,understat_26698,2024,2024-11-02,Nottingham Forest,West Ham,3,0,2.35011,0.132317
+understat,understat_26699,2024,2024-11-02,Southampton,Everton,1,0,0.540345,1.78581
+understat,understat_26701,2024,2024-11-02,Wolverhampton Wanderers,Crystal Palace,2,2,1.65018,2.64849
+understat,understat_26700,2024,2024-11-03,Tottenham,Aston Villa,4,1,2.09751,2.48749
+understat,understat_26697,2024,2024-11-03,Manchester United,Chelsea,1,1,2.1605,1.21071
+understat,understat_26693,2024,2024-11-04,Fulham,Brentford,2,1,1.43017,0.739231
+understat,understat_26702,2024,2024-11-09,Brentford,Bournemouth,3,2,1.56474,2.49234
+understat,understat_26706,2024,2024-11-09,Crystal Palace,Fulham,0,2,1.96037,2.25331
+understat,understat_26710,2024,2024-11-09,West Ham,Everton,0,0,1.1237,0.865983
+understat,understat_26711,2024,2024-11-09,Wolverhampton Wanderers,Southampton,2,0,0.912781,0.792655
+understat,understat_26703,2024,2024-11-09,Brighton,Manchester City,2,1,2.87116,2.60334
+understat,understat_26707,2024,2024-11-09,Liverpool,Aston Villa,2,0,2.68196,1.66337
+understat,understat_26704,2024,2024-11-10,Nottingham Forest,Newcastle United,1,3,1.17852,1.86904
+understat,understat_26708,2024,2024-11-10,Manchester United,Leicester,3,0,1.2369,0.417295
+understat,understat_26709,2024,2024-11-10,Tottenham,Ipswich,1,2,1.75088,2.18392
+understat,understat_26705,2024,2024-11-10,Chelsea,Arsenal,1,1,1.24067,1.9605
+understat,understat_26719,2024,2024-11-23,Leicester,Chelsea,1,2,0.967987,2.81658
+understat,understat_26712,2024,2024-11-23,Bournemouth,Brighton,1,2,1.91157,1.23059
+understat,understat_26714,2024,2024-11-23,Arsenal,Nottingham Forest,3,0,1.66016,0.403136
+understat,understat_26715,2024,2024-11-23,Everton,Brentford,0,0,1.5951,1.34314
+understat,understat_26716,2024,2024-11-23,Aston Villa,Crystal Palace,2,2,3.04455,1.61437
+understat,understat_26717,2024,2024-11-23,Fulham,Wolverhampton Wanderers,1,4,0.717158,1.33903
+understat,understat_26720,2024,2024-11-23,Manchester City,Tottenham,0,4,2.15899,3.30449
+understat,understat_26721,2024,2024-11-24,Southampton,Liverpool,2,3,1.53985,3.18835
+understat,understat_26718,2024,2024-11-24,Ipswich,Manchester United,1,1,1.98714,1.26912
+understat,understat_26713,2024,2024-11-25,Newcastle United,West Ham,0,2,1.49781,0.942824
+understat,understat_26723,2024,2024-11-29,Brighton,Southampton,1,1,1.86986,0.934969
+understat,understat_26722,2024,2024-11-30,Brentford,Leicester,4,1,2.21885,0.907555
+understat,understat_26725,2024,2024-11-30,Crystal Palace,Newcastle United,1,1,2.29595,0.020989
+understat,understat_26728,2024,2024-11-30,Nottingham Forest,Ipswich,1,0,1.76587,0.462771
+understat,understat_26731,2024,2024-11-30,Wolverhampton Wanderers,Bournemouth,2,4,0.866034,3.07901
+understat,understat_26730,2024,2024-11-30,West Ham,Arsenal,2,5,1.23539,3.99935
+understat,understat_26724,2024,2024-12-01,Chelsea,Aston Villa,3,0,1.94939,0.875443
+understat,understat_26727,2024,2024-12-01,Manchester United,Everton,4,0,1.76161,0.766749
+understat,understat_26729,2024,2024-12-01,Tottenham,Fulham,1,1,1.01086,1.57274
+understat,understat_26726,2024,2024-12-01,Liverpool,Manchester City,2,0,3.70054,0.745015
+understat,understat_26737,2024,2024-12-03,Ipswich,Crystal Palace,0,1,0.471708,1.65422
+understat,understat_26738,2024,2024-12-03,Leicester,West Ham,3,1,2.78061,2.87716
+understat,understat_26735,2024,2024-12-04,Everton,Wolverhampton Wanderers,4,0,1.49904,0.847724
+understat,understat_26739,2024,2024-12-04,Manchester City,Nottingham Forest,3,0,3.20169,0.802155
+understat,understat_26740,2024,2024-12-04,Newcastle United,Liverpool,3,3,1.52057,2.22766
+understat,understat_26741,2024,2024-12-04,Southampton,Chelsea,1,5,1.91014,5.8331
+understat,understat_26733,2024,2024-12-04,Arsenal,Manchester United,2,0,2.96684,0.256083
+understat,understat_26734,2024,2024-12-04,Aston Villa,Brentford,3,1,3.21673,1.13266
+understat,understat_26736,2024,2024-12-05,Fulham,Brighton,3,1,0.666644,1.09939
+understat,understat_26732,2024,2024-12-05,Bournemouth,Tottenham,1,0,3.27716,0.623934
+understat,understat_26742,2024,2024-12-07,Aston Villa,Southampton,1,0,2.51338,0.385832
+understat,understat_26743,2024,2024-12-07,Brentford,Newcastle United,4,2,1.746,1.95645
+understat,understat_26747,2024,2024-12-07,Crystal Palace,Manchester City,2,2,1.21476,1.5846
+understat,understat_26744,2024,2024-12-07,Manchester United,Nottingham Forest,2,3,1.4697,0.651217
+understat,understat_26749,2024,2024-12-08,Fulham,Arsenal,1,1,0.150988,2.4333
+understat,understat_26750,2024,2024-12-08,Ipswich,Bournemouth,1,2,1.5668,3.49127
+understat,understat_26751,2024,2024-12-08,Leicester,Brighton,2,2,1.42438,1.12184
+understat,understat_26745,2024,2024-12-08,Tottenham,Chelsea,3,4,3.25488,2.57326
+understat,understat_26746,2024,2024-12-09,West Ham,Wolverhampton Wanderers,2,1,1.19808,1.47567
+understat,understat_26752,2024,2024-12-14,Liverpool,Fulham,2,2,2.09698,1.2862
+understat,understat_26755,2024,2024-12-14,Arsenal,Everton,0,0,1.30865,0.132166
+understat,understat_26758,2024,2024-12-14,Wolverhampton Wanderers,Ipswich,1,2,1.23748,1.73349
+understat,understat_26760,2024,2024-12-14,Newcastle United,Leicester,4,0,3.95461,0.186759
+understat,understat_26761,2024,2024-12-14,Nottingham Forest,Aston Villa,2,1,2.2861,0.389423
+understat,understat_26756,2024,2024-12-15,Brighton,Crystal Palace,1,3,1.32323,3.00618
+understat,understat_26753,2024,2024-12-15,Manchester City,Manchester United,1,2,0.638103,2.04662
+understat,understat_26757,2024,2024-12-15,Chelsea,Brentford,2,1,2.59146,1.65861
+understat,understat_26759,2024,2024-12-15,Southampton,Tottenham,0,5,1.27356,3.89322
+understat,understat_26754,2024,2024-12-16,Bournemouth,West Ham,1,1,2.04842,1.81827
+understat,understat_26762,2024,2024-12-21,Aston Villa,Manchester City,2,1,2.05988,1.09627
+understat,understat_26766,2024,2024-12-21,Brentford,Nottingham Forest,0,2,0.769004,0.964897
+understat,understat_26767,2024,2024-12-21,West Ham,Brighton,1,1,1.22937,1.34379
+understat,understat_26771,2024,2024-12-21,Ipswich,Newcastle United,0,4,1.06427,3.23386
+understat,understat_26765,2024,2024-12-21,Crystal Palace,Arsenal,1,5,1.6052,3.05434
+understat,understat_26763,2024,2024-12-22,Fulham,Southampton,0,0,1.25255,0.280031
+understat,understat_26764,2024,2024-12-22,Everton,Chelsea,0,0,1.07081,1.51591
+understat,understat_26769,2024,2024-12-22,Manchester United,Bournemouth,0,3,2.28533,1.82831
+understat,understat_26770,2024,2024-12-22,Leicester,Wolverhampton Wanderers,0,3,0.78868,1.13531
+understat,understat_26768,2024,2024-12-22,Tottenham,Liverpool,3,6,1.20245,5.20214
+understat,understat_26777,2024,2024-12-26,Manchester City,Everton,1,1,2.51965,0.653289
+understat,understat_26772,2024,2024-12-26,Bournemouth,Crystal Palace,0,0,1.20189,0.500066
+understat,understat_26775,2024,2024-12-26,Chelsea,Fulham,1,2,1.55626,1.77929
+understat,understat_26778,2024,2024-12-26,Newcastle United,Aston Villa,3,0,2.82867,0.225522
+understat,understat_26779,2024,2024-12-26,Nottingham Forest,Tottenham,1,0,1.30018,1.05758
+understat,understat_26780,2024,2024-12-26,Southampton,West Ham,0,1,2.19833,1.90111
+understat,understat_26781,2024,2024-12-26,Wolverhampton Wanderers,Manchester United,2,0,0.826489,0.358876
+understat,understat_26776,2024,2024-12-26,Liverpool,Leicester,3,1,1.89935,0.22097
+understat,understat_26774,2024,2024-12-27,Brighton,Brentford,0,0,1.33538,0.961233
+understat,understat_26773,2024,2024-12-27,Arsenal,Ipswich,1,0,2.16462,0.0783327
+understat,understat_26788,2024,2024-12-29,Leicester,Manchester City,0,2,1.84208,1.58002
+understat,understat_26784,2024,2024-12-29,Crystal Palace,Southampton,2,1,3.05417,1.21853
+understat,understat_26785,2024,2024-12-29,Everton,Nottingham Forest,0,2,0.615191,2.02753
+understat,understat_26786,2024,2024-12-29,Fulham,Bournemouth,2,2,0.961566,1.70692
+understat,understat_26790,2024,2024-12-29,Tottenham,Wolverhampton Wanderers,2,2,2.28433,0.640697
+understat,understat_26791,2024,2024-12-29,West Ham,Liverpool,0,5,0.518279,3.29868
+understat,understat_26782,2024,2024-12-30,Aston Villa,Brighton,2,2,1.87997,0.938042
+understat,understat_26787,2024,2024-12-30,Ipswich,Chelsea,2,0,1.50093,1.60622
+understat,understat_26789,2024,2024-12-30,Manchester United,Newcastle United,0,2,1.00073,2.2424
+understat,understat_26783,2024,2025-01-01,Brentford,Arsenal,1,3,0.272604,1.99848
+understat,understat_26800,2024,2025-01-04,Tottenham,Newcastle United,1,2,1.00333,2.42963
+understat,understat_26792,2024,2025-01-04,Bournemouth,Everton,1,0,2.61852,0.561015
+understat,understat_26793,2024,2025-01-04,Aston Villa,Leicester,2,1,2.3456,0.81548
+understat,understat_26795,2024,2025-01-04,Crystal Palace,Chelsea,1,1,1.2766,1.51541
+understat,understat_26798,2024,2025-01-04,Manchester City,West Ham,4,1,1.97986,1.53286
+understat,understat_26799,2024,2025-01-04,Southampton,Brentford,0,5,0.249614,5.54874
+understat,understat_26794,2024,2025-01-04,Brighton,Arsenal,1,1,1.76513,1.81142
+understat,understat_26796,2024,2025-01-05,Fulham,Ipswich,2,2,2.65469,1.4434
+understat,understat_26797,2024,2025-01-05,Liverpool,Manchester United,2,2,2.862,1.67469
+understat,understat_26801,2024,2025-01-06,Wolverhampton Wanderers,Nottingham Forest,0,3,1.90463,2.57227
+understat,understat_26803,2024,2025-01-14,Brentford,Manchester City,2,2,2.39088,2.65315
+understat,understat_26808,2024,2025-01-14,West Ham,Fulham,3,2,0.937322,2.83581
+understat,understat_26809,2024,2025-01-14,Chelsea,Bournemouth,2,2,2.53808,1.14845
+understat,understat_26807,2024,2025-01-14,Nottingham Forest,Liverpool,1,1,0.5292,2.72291
+understat,understat_26804,2024,2025-01-15,Everton,Aston Villa,0,1,1.23126,1.28522
+understat,understat_26806,2024,2025-01-15,Leicester,Crystal Palace,0,2,2.09904,2.2647
+understat,understat_26810,2024,2025-01-15,Newcastle United,Wolverhampton Wanderers,3,0,2.13327,1.47433
+understat,understat_26802,2024,2025-01-15,Arsenal,Tottenham,2,1,2.25501,0.777071
+understat,understat_26805,2024,2025-01-16,Ipswich,Brighton,0,2,0.268127,1.06343
+understat,understat_26811,2024,2025-01-16,Manchester United,Southampton,3,1,3.10847,1.36705
+understat,understat_26819,2024,2025-01-18,Newcastle United,Bournemouth,1,4,0.837801,2.70174
+understat,understat_26813,2024,2025-01-18,Brentford,Liverpool,0,2,1.20021,4.16249
+understat,understat_26817,2024,2025-01-18,Leicester,Fulham,0,2,0.676934,2.36823
+understat,understat_26821,2024,2025-01-18,West Ham,Crystal Palace,0,2,0.221062,1.62561
+understat,understat_26812,2024,2025-01-18,Arsenal,Aston Villa,2,2,1.64458,1.20602
+understat,understat_26815,2024,2025-01-19,Everton,Tottenham,3,2,2.56089,1.35719
+understat,understat_26818,2024,2025-01-19,Manchester United,Brighton,1,3,1.31823,2.17172
+understat,understat_26820,2024,2025-01-19,Nottingham Forest,Southampton,3,2,2.36419,1.25922
+understat,understat_26816,2024,2025-01-19,Ipswich,Manchester City,0,6,0.795637,3.20228
+understat,understat_26814,2024,2025-01-20,Chelsea,Wolverhampton Wanderers,3,1,3.14882,1.06726
+understat,understat_26822,2024,2025-01-25,Bournemouth,Nottingham Forest,5,0,2.8254,0.996166
+understat,understat_26824,2024,2025-01-25,Brighton,Everton,0,1,0.64378,0.870883
+understat,understat_26827,2024,2025-01-25,Liverpool,Ipswich,4,1,2.16809,0.804707
+understat,understat_26829,2024,2025-01-25,Southampton,Newcastle United,1,3,0.825621,3.08319
+understat,understat_26831,2024,2025-01-25,Wolverhampton Wanderers,Arsenal,0,1,0.514724,0.887358
+understat,understat_26828,2024,2025-01-25,Manchester City,Chelsea,3,1,2.23213,1.49843
+understat,understat_26825,2024,2025-01-26,Crystal Palace,Brentford,1,2,1.23177,1.92037
+understat,understat_26830,2024,2025-01-26,Tottenham,Leicester,1,2,1.27483,1.40469
+understat,understat_26823,2024,2025-01-26,Aston Villa,West Ham,1,1,0.907851,1.67886
+understat,understat_26826,2024,2025-01-26,Fulham,Manchester United,0,1,0.560571,0.201988
+understat,understat_26840,2024,2025-02-01,Nottingham Forest,Brighton,7,0,4.0677,0.756296
+understat,understat_26832,2024,2025-02-01,Bournemouth,Liverpool,0,2,1.65273,2.7219
+understat,understat_26836,2024,2025-02-01,Everton,Leicester,4,0,3.11261,0.447136
+understat,understat_26837,2024,2025-02-01,Ipswich,Southampton,1,2,1.94845,1.17566
+understat,understat_26839,2024,2025-02-01,Newcastle United,Fulham,1,2,1.22716,1.60881
+understat,understat_26841,2024,2025-02-01,Wolverhampton Wanderers,Aston Villa,2,0,2.00146,0.742809
+understat,understat_26834,2024,2025-02-02,Brentford,Tottenham,0,2,1.66475,0.945355
+understat,understat_26838,2024,2025-02-02,Manchester United,Crystal Palace,0,2,1.50706,2.44633
+understat,understat_26833,2024,2025-02-02,Arsenal,Manchester City,5,1,1.53202,0.743191
+understat,understat_26835,2024,2025-02-03,Chelsea,West Ham,2,1,1.39066,1.1868
+understat,understat_26748,2024,2025-02-12,Everton,Liverpool,2,2,0.910523,0.929103
+understat,understat_26843,2024,2025-02-14,Brighton,Chelsea,3,0,2.06892,0.649788
+understat,understat_26846,2024,2025-02-15,Leicester,Arsenal,0,2,0.233209,1.75
+understat,understat_26842,2024,2025-02-15,Aston Villa,Ipswich,1,1,2.89841,0.332864
+understat,understat_26845,2024,2025-02-15,Fulham,Nottingham Forest,2,1,2.20993,0.331301
+understat,understat_26848,2024,2025-02-15,Manchester City,Newcastle United,4,0,2.12004,0.157211
+understat,understat_26849,2024,2025-02-15,Southampton,Bournemouth,1,3,0.974418,2.08722
+understat,understat_26851,2024,2025-02-15,West Ham,Brentford,0,1,0.673466,1.96499
+understat,understat_26844,2024,2025-02-15,Crystal Palace,Everton,1,2,2.30646,1.01565
+understat,understat_26847,2024,2025-02-16,Liverpool,Wolverhampton Wanderers,2,1,1.86758,1.05329
+understat,understat_26850,2024,2025-02-16,Tottenham,Manchester United,1,0,1.97109,1.42652
+understat,understat_26884,2024,2025-02-19,Aston Villa,Liverpool,2,2,1.02269,2.04279
+understat,understat_26858,2024,2025-02-21,Leicester,Brentford,0,4,0.727901,2.03465
+understat,understat_26855,2024,2025-02-22,Everton,Manchester United,2,2,2.10444,0.645685
+understat,understat_26852,2024,2025-02-22,Bournemouth,Wolverhampton Wanderers,0,1,0.629691,2.10124
+understat,understat_26853,2024,2025-02-22,Arsenal,West Ham,0,1,1.37264,1.02684
+understat,understat_26856,2024,2025-02-22,Fulham,Crystal Palace,0,2,0.23426,1.46203
+understat,understat_26857,2024,2025-02-22,Ipswich,Tottenham,1,4,1.15389,1.58741
+understat,understat_26861,2024,2025-02-22,Southampton,Brighton,0,4,0.154147,5.12018
+understat,understat_26854,2024,2025-02-22,Aston Villa,Chelsea,2,1,2.69413,2.17418
+understat,understat_26860,2024,2025-02-23,Newcastle United,Nottingham Forest,4,3,3.45858,2.38603
+understat,understat_26859,2024,2025-02-23,Manchester City,Liverpool,0,2,0.58248,0.807058
+understat,understat_26863,2024,2025-02-25,Brighton,Bournemouth,2,1,2.57927,1.70169
+understat,understat_26867,2024,2025-02-25,Wolverhampton Wanderers,Fulham,1,2,0.928973,1.43473
+understat,understat_26868,2024,2025-02-25,Crystal Palace,Aston Villa,4,1,4.02522,0.667217
+understat,understat_26869,2024,2025-02-25,Chelsea,Southampton,4,0,2.98234,0.845039
+understat,understat_26862,2024,2025-02-26,Brentford,Everton,1,1,1.34009,1.44955
+understat,understat_26864,2024,2025-02-26,Nottingham Forest,Arsenal,0,0,0.508611,1.31766
+understat,understat_26865,2024,2025-02-26,Tottenham,Manchester City,0,1,1.28426,2.38641
+understat,understat_26871,2024,2025-02-26,Manchester United,Ipswich,3,2,1.40202,1.04498
+understat,understat_26870,2024,2025-02-26,Liverpool,Newcastle United,2,0,1.40027,0.45882
+understat,understat_26866,2024,2025-02-27,West Ham,Leicester,2,0,1.70437,0.289578
+understat,understat_26878,2024,2025-03-08,Nottingham Forest,Manchester City,1,0,0.501476,0.721234
+understat,understat_26873,2024,2025-03-08,Brighton,Fulham,2,1,1.94417,0.708227
+understat,understat_26875,2024,2025-03-08,Crystal Palace,Ipswich,1,0,3.13879,1.63282
+understat,understat_26876,2024,2025-03-08,Liverpool,Southampton,3,1,4.98996,0.511566
+understat,understat_26872,2024,2025-03-08,Brentford,Aston Villa,0,1,0.637743,1.29638
+understat,understat_26881,2024,2025-03-08,Wolverhampton Wanderers,Everton,1,1,0.812432,1.3672
+understat,understat_26874,2024,2025-03-09,Chelsea,Leicester,1,0,1.76844,0.108487
+understat,understat_26879,2024,2025-03-09,Tottenham,Bournemouth,2,2,1.35053,2.22536
+understat,understat_26877,2024,2025-03-09,Manchester United,Arsenal,1,1,1.31107,1.82996
+understat,understat_26880,2024,2025-03-10,West Ham,Newcastle United,0,1,0.823986,1.62976
+understat,understat_26885,2024,2025-03-15,Everton,West Ham,1,1,1.189,0.516029
+understat,understat_26887,2024,2025-03-15,Ipswich,Nottingham Forest,2,4,0.520839,1.30722
+understat,understat_26889,2024,2025-03-15,Manchester City,Brighton,2,2,2.02642,2.11119
+understat,understat_26891,2024,2025-03-15,Southampton,Wolverhampton Wanderers,1,2,1.2821,0.540718
+understat,understat_26882,2024,2025-03-15,Bournemouth,Brentford,1,2,2.02714,1.60321
+understat,understat_26883,2024,2025-03-16,Arsenal,Chelsea,1,0,0.695725,0.286036
+understat,understat_26886,2024,2025-03-16,Fulham,Tottenham,2,0,1.03966,1.40865
+understat,understat_26888,2024,2025-03-16,Leicester,Manchester United,0,3,1.30455,1.13892
+understat,understat_26892,2024,2025-04-01,Arsenal,Fulham,2,1,2.30189,1.44206
+understat,understat_26895,2024,2025-04-01,Wolverhampton Wanderers,West Ham,1,0,1.10359,1.73057
+understat,understat_26894,2024,2025-04-01,Nottingham Forest,Manchester United,1,0,0.512063,1.86688
+understat,understat_26893,2024,2025-04-02,Brighton,Aston Villa,0,3,0.558009,1.20715
+understat,understat_26896,2024,2025-04-02,Bournemouth,Ipswich,1,2,1.99637,1.41263
+understat,understat_26898,2024,2025-04-02,Manchester City,Leicester,2,0,2.07165,0.104741
+understat,understat_26899,2024,2025-04-02,Newcastle United,Brentford,2,1,2.26584,1.53201
+understat,understat_26900,2024,2025-04-02,Southampton,Crystal Palace,1,1,0.687304,0.93776
+understat,understat_26901,2024,2025-04-02,Liverpool,Everton,1,0,1.29718,0.823136
+understat,understat_26897,2024,2025-04-03,Chelsea,Tottenham,1,0,1.30443,1.40274
+understat,understat_26905,2024,2025-04-05,Everton,Arsenal,1,1,1.22875,1.4031
+understat,understat_26904,2024,2025-04-05,Crystal Palace,Brighton,2,1,0.443965,1.27226
+understat,understat_26907,2024,2025-04-05,Ipswich,Wolverhampton Wanderers,1,2,0.872356,2.8096
+understat,understat_26911,2024,2025-04-05,West Ham,Bournemouth,2,2,0.907832,1.94869
+understat,understat_26902,2024,2025-04-05,Aston Villa,Nottingham Forest,2,1,2.63349,0.96769
+understat,understat_26903,2024,2025-04-06,Brentford,Chelsea,0,0,1.36123,1.47829
+understat,understat_26906,2024,2025-04-06,Fulham,Liverpool,3,2,1.72764,1.40638
+understat,understat_26910,2024,2025-04-06,Tottenham,Southampton,3,1,2.648,0.780439
+understat,understat_26909,2024,2025-04-06,Manchester United,Manchester City,0,0,1.23317,0.687894
+understat,understat_26908,2024,2025-04-07,Leicester,Newcastle United,0,3,0.354575,3.44111
+understat,understat_26917,2024,2025-04-12,Manchester City,Crystal Palace,5,2,4.59724,1.33808
+understat,understat_26914,2024,2025-04-12,Brighton,Leicester,2,2,3.6978,1.98444
+understat,understat_26920,2024,2025-04-12,Nottingham Forest,Everton,0,1,0.423949,1.26036
+understat,understat_26921,2024,2025-04-12,Southampton,Aston Villa,0,3,0.412256,2.99927
+understat,understat_26913,2024,2025-04-12,Arsenal,Brentford,1,1,0.767369,0.588583
+understat,understat_26915,2024,2025-04-13,Chelsea,Ipswich,2,2,2.90758,1.60301
+understat,understat_26916,2024,2025-04-13,Liverpool,West Ham,2,1,1.42902,1.46598
+understat,understat_26919,2024,2025-04-13,Wolverhampton Wanderers,Tottenham,4,2,2.22977,1.62887
+understat,understat_26918,2024,2025-04-13,Newcastle United,Manchester United,4,1,2.6383,0.786568
+understat,understat_26912,2024,2025-04-14,Bournemouth,Fulham,1,0,1.8577,1.07203
+understat,understat_26890,2024,2025-04-16,Newcastle United,Crystal Palace,5,0,2.32947,2.37548
+understat,understat_26923,2024,2025-04-19,Brentford,Brighton,4,2,2.95516,1.24107
+understat,understat_26924,2024,2025-04-19,Crystal Palace,Bournemouth,0,0,0.337818,0.664093
+understat,understat_26925,2024,2025-04-19,Everton,Manchester City,0,2,0.81683,1.87989
+understat,understat_26931,2024,2025-04-19,West Ham,Southampton,1,1,0.98423,0.922877
+understat,understat_26922,2024,2025-04-19,Aston Villa,Newcastle United,4,1,3.05371,1.27176
+understat,understat_26926,2024,2025-04-20,Fulham,Chelsea,1,2,0.306122,0.75172
+understat,understat_26927,2024,2025-04-20,Ipswich,Arsenal,0,4,0.192879,2.81362
+understat,understat_26929,2024,2025-04-20,Manchester United,Wolverhampton Wanderers,0,1,1.13966,0.187814
+understat,understat_26928,2024,2025-04-20,Leicester,Liverpool,0,1,0.232205,4.52706
+understat,understat_26930,2024,2025-04-21,Tottenham,Nottingham Forest,1,2,2.4024,0.557682
+understat,understat_26937,2024,2025-04-22,Manchester City,Aston Villa,2,1,1.36232,1.85906
+understat,understat_26933,2024,2025-04-23,Arsenal,Crystal Palace,2,2,1.92149,2.50515
+understat,understat_26935,2024,2025-04-26,Chelsea,Everton,1,0,0.768313,0.916838
+understat,understat_26934,2024,2025-04-26,Brighton,West Ham,3,2,1.29433,1.24134
+understat,understat_26938,2024,2025-04-26,Newcastle United,Ipswich,3,0,4.11539,0.127203
+understat,understat_26940,2024,2025-04-26,Southampton,Fulham,1,2,0.935581,1.9956
+understat,understat_26941,2024,2025-04-26,Wolverhampton Wanderers,Leicester,3,0,2.57666,1.04978
+understat,understat_26932,2024,2025-04-27,Bournemouth,Manchester United,1,1,0.60995,1.91039
+understat,understat_26936,2024,2025-04-27,Liverpool,Tottenham,5,1,2.51104,0.512812
+understat,understat_26939,2024,2025-05-01,Nottingham Forest,Brentford,0,2,0.670607,1.52054
+understat,understat_26942,2024,2025-05-02,Manchester City,Wolverhampton Wanderers,1,0,0.859463,0.622455
+understat,understat_26946,2024,2025-05-03,Aston Villa,Fulham,1,0,1.29013,0.702787
+understat,understat_26950,2024,2025-05-03,Everton,Ipswich,2,2,0.808481,1.14351
+understat,understat_26951,2024,2025-05-03,Leicester,Southampton,2,0,1.60739,0.550774
+understat,understat_26945,2024,2025-05-03,Arsenal,Bournemouth,1,2,2.05484,1.41783
+understat,understat_26943,2024,2025-05-04,West Ham,Tottenham,1,1,1.15166,0.847022
+understat,understat_26944,2024,2025-05-04,Brighton,Newcastle United,1,1,0.687863,1.63777
+understat,understat_26947,2024,2025-05-04,Brentford,Manchester United,4,3,3.58737,1.13404
+understat,understat_26948,2024,2025-05-04,Chelsea,Liverpool,3,1,3.51944,1.4267
+understat,understat_26949,2024,2025-05-05,Crystal Palace,Nottingham Forest,1,1,2.34037,0.63684
+understat,understat_26953,2024,2025-05-10,Fulham,Everton,1,3,1.20869,1.32604
+understat,understat_26954,2024,2025-05-10,Ipswich,Brentford,0,1,0.717433,1.32077
+understat,understat_26959,2024,2025-05-10,Southampton,Manchester City,0,0,0.136995,1.58463
+understat,understat_26961,2024,2025-05-10,Wolverhampton Wanderers,Brighton,0,2,0.73395,1.41254
+understat,understat_26955,2024,2025-05-10,Bournemouth,Aston Villa,0,1,1.02272,1.12376
+understat,understat_26957,2024,2025-05-11,Newcastle United,Chelsea,2,0,1.6703,0.646426
+understat,understat_26956,2024,2025-05-11,Manchester United,West Ham,0,2,2.31287,2.15985
+understat,understat_26958,2024,2025-05-11,Nottingham Forest,Leicester,2,2,1.76909,1.22949
+understat,understat_26960,2024,2025-05-11,Tottenham,Crystal Palace,0,2,0.806792,3.98546
+understat,understat_26952,2024,2025-05-11,Liverpool,Arsenal,2,2,2.74682,2.18795
+understat,understat_26963,2024,2025-05-16,Aston Villa,Tottenham,2,0,1.69061,0.523016
+understat,understat_26966,2024,2025-05-16,Chelsea,Manchester United,1,0,1.29571,0.337632
+understat,understat_26968,2024,2025-05-18,Everton,Southampton,2,0,2.67793,1.05025
+understat,understat_26971,2024,2025-05-18,West Ham,Nottingham Forest,1,2,0.850457,2.14756
+understat,understat_26964,2024,2025-05-18,Brentford,Fulham,2,3,2.43045,1.61741
+understat,understat_26969,2024,2025-05-18,Leicester,Ipswich,2,0,0.788544,1.36957
+understat,understat_26962,2024,2025-05-18,Arsenal,Newcastle United,1,0,1.15958,2.24634
+understat,understat_26965,2024,2025-05-19,Brighton,Liverpool,3,2,2.17789,3.065
+understat,understat_26967,2024,2025-05-20,Crystal Palace,Wolverhampton Wanderers,4,2,1.68451,1.42886
+understat,understat_26970,2024,2025-05-20,Manchester City,Bournemouth,3,1,1.59779,0.962014
+understat,understat_26972,2024,2025-05-25,Nottingham Forest,Chelsea,0,1,1.58014,1.30874
+understat,understat_26973,2024,2025-05-25,Newcastle United,Everton,0,1,1.1591,1.07279
+understat,understat_26974,2024,2025-05-25,Manchester United,Aston Villa,2,0,2.96259,0.335222
+understat,understat_26975,2024,2025-05-25,Liverpool,Crystal Palace,1,1,1.92122,1.4144
+understat,understat_26976,2024,2025-05-25,Tottenham,Brighton,1,4,1.85265,3.11624
+understat,understat_26977,2024,2025-05-25,Southampton,Arsenal,1,2,0.598144,2.40711
+understat,understat_26978,2024,2025-05-25,Wolverhampton Wanderers,Brentford,1,1,1.10889,1.97196
+understat,understat_26979,2024,2025-05-25,Bournemouth,Leicester,2,0,2.72449,0.156702
+understat,understat_26980,2024,2025-05-25,Ipswich,West Ham,1,3,0.893095,0.967379
+understat,understat_26981,2024,2025-05-25,Fulham,Manchester City,0,2,2.21797,2.45923
