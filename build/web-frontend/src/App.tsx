@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { useState } from 'react'
 import './App.css'
 
 
@@ -28,15 +27,16 @@ const TeamsheetCreate = () => {
 };
 import TeamsheetDetail from './components/pages/coaching/teamsheets/TeamsheetDetail';
 import TeamsheetList from './components/pages/coaching/teamsheets/TeamsheetList';
+import LandingPage from './pages/setup/LandingPage'
+import RefBase from './pages/reffing/RefBase'
+import { SocialPage } from './pages/social/SocialPage';
 
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/predictions" element={<Predictions />} />
         <Route path="/refbase" element={<RefBase />} />
         <Route path="/quizbase" element={<QuizBase />} />
         <Route path="/controlBase" element={<ControlBase />} /> 
@@ -49,6 +49,7 @@ function App() {
         <Route path="/coaching/teamsheets" element={<TeamsheetList />} />
         <Route path='/coaching/teamsheets/create' element={<TeamsheetCreate />} />
         <Route path='/coaching/teamsheets/:id' element={<TeamsheetDetail />} />
+        <Route path="/social" element={< SocialPage/>} />
       </Routes>
     </BrowserRouter>
   )

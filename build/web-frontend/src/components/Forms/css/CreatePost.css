@@ -1,0 +1,71 @@
+.createPost-container {
+    width: 100%;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.create-text-box {
+    width: 100%;
+    padding: 16px;
+}
+
+.create-text-box-container {
+  width: 100%;
+}
+
+.create-text-box textarea {
+    width: 93%;
+    min-height: 60px;
+    resize: none;
+    border: none;
+    background: transparent;
+    padding: 10px;
+    font-size: 13px;
+    outline: none;
+    caret-color: #022a15;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+
+.attachments {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 2px;
+}
+
+.send-post {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #022a15;
+  transition: all 0.2s ease;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.create-text-box .attachments button {
+    width: 30px;
+    height: 30px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border-radius: 50%;
+    border: 0;
+    outline: none; 
+}
+
+.create-text-box .attachments button:hover {
+    background-color: #f1f1f1;
+    cursor: pointer;
+}
+
+.create-text-box .attachments .send-post:hover {
+    color: #026eda;
+}
