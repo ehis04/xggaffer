@@ -1,4 +1,5 @@
 import "./css/LoginForm.css";
+import googleIcon from "../../images/logos/google-svg.svg";
 
 export const LoginForm = () => {
   return (
@@ -37,8 +38,10 @@ export const LoginForm = () => {
         Don't have an account? <span className="span"> Sign Up </span>
       </p>
       <p className="p line"> Or With </p>
-      <div className="flex-row">
-        <button className="btn google">Google</button>
+      <div className="google-flex-row">
+        <button className="btn-google">
+          <img src={googleIcon} alt="Google logo" width={24} height={30} />
+        </button>
       </div>
     </form>
   );

@@ -5,7 +5,6 @@ import { SearchBar } from "../../components/Navigation/SearchBar";
 import { Sidebar } from "../../components/Navigation/SideBar";
 import { SocialUserButtons } from "../../components/Social/SocialUserButtons";
 import "./css/SocialPage.css";
-import { Post, type PostData } from "../../components/Social/Post";
 import { PostList } from "../../components/Social/PostList";
 
 const pdata = [{
