@@ -1,0 +1,71 @@
+.feed-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 85;
+  width: 100%;
+}
+
+.feed-tabs-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  max-width: 600px;
+  margin: 0 auto;
+  height: 56px;
+}
+
+.feed-tab {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #71767b;
+  font-size: 15px;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  padding: 0 16px;
+}
+
+.feed-tab:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.feed-tab.active {
+  color: #000000;
+  font-weight: 600;
+}
+
+.feed-tab-text {
+  position: relative;
+  z-index: 1;
+  transition: color 0.2s ease;
+}
+
+.feed-tab-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  background: #022a15;
+  border-radius: 4px 4px 0 0;
+  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideIn {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+  to {
+    width: 60px;
+    opacity: 1;
+  }
+}

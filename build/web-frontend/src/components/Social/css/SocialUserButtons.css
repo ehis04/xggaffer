@@ -1,0 +1,33 @@
+.socialuserbuttons {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.notifications-button a,
+.chat-button a, .logout-button a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #000000;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.social-button-icon {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.2s ease;
+}
+
+.notifications-button:hover a,
+.chat-button:hover a, .logout-button:hover a {
+    background-color: #022a156c;
+    color: #022a15;
+}
