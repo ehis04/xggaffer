@@ -1,0 +1,26 @@
+Django>=4.2
+
+# Environment & config
+python-decouple
+dj-database-url
+
+# CORS
+django-cors-headers
+
+# Background tasks
+celery
+redis
+
+# PDF processing
+pdf2image
+PyPDF2
+Pillow
+
+# AI / LLM
+anthropic
+
+# Production helpers (commonly used)
+whitenoise
+
+# Database (PostgreSQL support)
+psycopg2-binary
