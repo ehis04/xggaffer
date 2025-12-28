@@ -1,29 +1,45 @@
-const LoginForm = () => {
-    return (
-        <div className="login-form">
-            {error && <p className="error-message">{error}</p>}
-            
+import "./css/LoginForm.css";
 
-
-
-
-
-
-
-
-
-            <p> Login Form Component </p>
-            <form>
-                <label>Username:</label>
-                <input type="text" name="username" />
-                <br />  
-                <label>Password:</label>
-                <input type="password" name="password" />
-                <br />
-                <button type="submit">Login</button>
-            </form>
+export const LoginForm = () => {
+  return (
+    <form className="form">
+      <div className="flex-column">
+        <label htmlFor="email"> Email </label>
+      </div>
+      <div className="inputForm">
+        <input
+          id="email"
+          type="text"
+          className="input"
+          placeholder="Enter your Email"
+        />
+      </div>
+      <div className="flex-column">
+        <label htmlFor="password"> Password </label>
+      </div>
+      <div className="inputForm">
+        <input
+          id="password"
+          type="password"
+          className="input"
+          placeholder="Enter your Password"
+        />
+      </div>
+      <div className="flex-row">
+        <div>
+          <input id="rememberMe" type="checkbox" />
+          <label htmlFor="rememberMe"> Remember me </label>
         </div>
-    )
-}   
-
-export default LoginForm;
+        <span className="span"> Forgot your password? </span>
+      </div>
+      <button className="button-submit">Sign In</button>
+      <p className="p">
+        Don't have an account? <span className="span"> Sign Up </span>
+      </p>
+      <p className="p line"> Or With </p>
+      <div className="flex-row">
+        <button className="btn google">Google</button>
+      </div>
+    </form>
+  );
+};

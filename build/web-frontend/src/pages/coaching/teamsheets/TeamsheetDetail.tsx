@@ -1,8 +1,8 @@
 // src/components/pages/coaching/teamsheets/TeamsheetDetail.tsx
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { teamsheetApi } from '../../../../services/api/teamsheetApi';
-import type { Teamsheet } from '../../../../types/teamsheet';
+import { teamsheetApi } from '../../../services/api/teamsheetApi';
+import type { Teamsheet } from '../../../types/teamsheet';
 
 export const TeamsheetDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,7 +14,7 @@ export const TeamsheetDetail = () => {
   useEffect(() => {
     // Only attempt to load when id is a numeric string to avoid NaN fetches
     if (id && /^\d+$/.test(id)) {
-      loadTeamsheet(parseInt(id));
+      loadTeamsheet(Number.parseInt(id));
     }
   }, [id]);
 

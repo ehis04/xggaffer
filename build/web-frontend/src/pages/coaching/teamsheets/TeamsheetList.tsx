@@ -1,8 +1,8 @@
 // src/components/pages/coaching/teamsheets/TeamsheetList.tsx
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { teamsheetApi } from '../../../../services/api/teamsheetApi';
-import type { Teamsheet } from '../../../../types/teamsheet';
+import { teamsheetApi } from '../../../services/api/teamsheetApi';
+import type { Teamsheet } from '../../../types/teamsheet';
 
 export const TeamsheetList = () => {
   const [teamsheets, setTeamsheets] = useState<Teamsheet[]>([]);

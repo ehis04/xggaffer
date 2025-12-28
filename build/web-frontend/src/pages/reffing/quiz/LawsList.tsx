@@ -1,7 +1,7 @@
 // frontend/src/components/laws/LawsList.tsx
 import React, { useEffect, useState } from 'react';
-import { lawsApi } from '../../../../services/api/lawsApi';
-import type { LawListItem, LawEdition } from '../../../../types/laws';
+import { lawsApi } from '../../../services/api/lawsApi';
+import type { LawListItem, LawEdition } from '../../../types/laws';
 
 export const LawsList: React.FC = () => {
   const [laws, setLaws] = useState<LawListItem[]>([]);
@@ -71,7 +71,7 @@ export const LawsList: React.FC = () => {
             <h3>Law {law.number}</h3>
             <h4>{law.title}</h4>
             <p className="clause-count">{law.clause_count} clauses</p>
-            <button onClick={() => window.location.href = `/laws/${law.number}`}>
+            <button onClick={() => globalThis.location.href = `/laws/${law.number}`}>
               View Details
             </button>
           </div>

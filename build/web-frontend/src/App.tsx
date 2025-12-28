@@ -4,16 +4,14 @@ import './App.css'
 
 
 //Pages
-import LandingPage from './components/pages/setup/LandingPage';
-import RefBase from './components/pages/reffing/RefBase';
-import QuizBase from './components/pages/reffing/quiz/QuizBase';
-import ControlBase from './components/pages/reffing/controlTraining/ControlBase';
-import ArticleBase from './components/pages/reffing/article/ArticleBase';
-import FitnessBase from './components/pages/reffing/fitness/FitnessBase';
-import SituationBase from './components/pages/reffing/situation/SituationBase';
-import ChangesTimeline from './components/pages/reffing/quiz/ChangesTimeLine';
-import LawDetail from './components/pages/reffing/quiz/LawDetails';
-import LawsList from './components/pages/reffing/quiz/LawsList';
+import QuizBase from './pages/reffing/quiz/QuizBase';
+import ControlBase from './pages/reffing/controlTraining/ControlBase';
+import ArticleBase from './pages/reffing/article/ArticleBase';
+import FitnessBase from './pages/reffing/fitness/FitnessBase';
+import SituationBase from './pages/reffing/situation/SituationBase';
+import ChangesTimeline from './pages/reffing/quiz/ChangesTimeLine';
+import LawDetail from './pages/reffing/quiz/LawDetails';
+import LawsList from './pages/reffing/quiz/LawsList';
 
 // Coaching - teamsheets
 // Temporary local TeamsheetCreate component to satisfy the import until the real file exists
@@ -25,8 +23,8 @@ const TeamsheetCreate = () => {
     </div>
   );
 };
-import TeamsheetDetail from './components/pages/coaching/teamsheets/TeamsheetDetail';
-import TeamsheetList from './components/pages/coaching/teamsheets/TeamsheetList';
+import TeamsheetDetail from './pages/coaching/teamsheets/TeamsheetDetail';
+import TeamsheetList from './pages/coaching/teamsheets/TeamsheetList';
 import LandingPage from './pages/setup/LandingPage'
 import RefBase from './pages/reffing/RefBase'
 import { SocialPage } from './pages/social/SocialPage';
