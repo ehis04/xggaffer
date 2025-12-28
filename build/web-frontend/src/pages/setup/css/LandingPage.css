@@ -1,0 +1,23 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+.landingPage {
+    display: flex;
+    background: url('../../../images/background/pitch.png') center center/cover no-repeat;
+    min-height: 100vh;
+    flex-direction: column;
+}
+.landingNav {
+    width: 100%;
+}
+
+.landingHero {
+    display: flex;
+    width: 100%;
+    flex: 1;
+    align-items: center;
+    justify-content: left;
+}

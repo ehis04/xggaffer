@@ -1,10 +1,16 @@
-import { LoginButton } from "../../../components/Buttons/LoginButton";
+import { HeroSection } from "../../components/Hero/HeroSection";
+import { LandingNavbar } from "../../components/Navigation/LandingNavbar";
+import './css/LandingPage.css';
 
 const LandingPage = () => {
     return (
-        <div>
-            <p> Welcome to the Landing Page </p>
-            <LoginButton/>
+        <div className="landingPage">
+            <div className="landingNav">
+                <LandingNavbar/>
+            </div>
+            <div className="landingHero">
+                <HeroSection/>
+            </div>
         </div>
     )
 }

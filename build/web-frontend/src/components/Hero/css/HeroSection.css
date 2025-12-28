@@ -1,0 +1,34 @@
+.heroSection {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 80px;
+  align-items: center;
+}
+
+.heroSectionLeft {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 37%;
+  max-width: 500px;
+  padding: 10px;
+  margin-left: 100px;
+  margin-right: 330px;
+}
+
+.heroSectionRight {
+    display: flex;
+    flex: 1;
+    justify-content: right;
+    padding: 10px;
+    max-width: 500px;
+    min-width: 200px;
+    margin-right: 20px;
+}
+
+@media (max-width: 1200px) {
+  .heroSectionRight {
+      display: none;
+  }
+}
