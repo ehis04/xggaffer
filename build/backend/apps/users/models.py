@@ -90,7 +90,7 @@ class Follow(models.Model):
         unique_together = ('follower', 'following')
         constraints = [
             models.CheckConstraint(
-                check=~Q(follower=F("following")),
+                condition=~Q(follower=F("following")),
                 name='prevent_self_follow'
             )
         ]

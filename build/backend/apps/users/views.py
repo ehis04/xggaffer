@@ -264,7 +264,7 @@ class UserRoleView(APIView):
                 }, status=status.HTTP_200_OK
             )
             
-        def delete(self, request):
+    def delete(self, request):
             try:
                 profile = request.user.profile
             except UserProfile.DoesNotExist:

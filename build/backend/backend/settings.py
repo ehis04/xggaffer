@@ -81,8 +81,10 @@ INSTALLED_APPS = [
     'apps.users',
     'apps.predictions',
     'apps.community',
+    'apps.coaching.coachProfile',
     'apps.coaching',
     'apps.players',
+    'apps.players.playerProfile',
     'corsheaders',
 ]
 

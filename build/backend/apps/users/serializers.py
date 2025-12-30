@@ -40,19 +40,19 @@ class UserSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     roles = UserRoleSerializer(many=True, read_only=True)
-    display_name = serializers.SerializerMethodField()
+    user_display_name = serializers.SerializerMethodField()
     is_following = serializers.SerializerMethodField()
     followed_by = serializers.SerializerMethodField()
     
     class Meta:
         model = UserProfile
-        fields = ['id', 'user', 'display_name', 'bio', 'gender',
+        fields = ['id', 'user', 'display_name', 'user_display_name', 'bio', 'gender',
                   'date_of_birth', 'visibility', 'followers_count', 
                   'following_count', 'created_at', 'updated_at', 
                   'roles', 'is_following', 'followed_by']
         read_only_fields = ['id', 'user', 'followers_count', 'following_count', 'created_at', 'updated_at']
     
-    def get_display_name(self, obj):
+    def get_user_display_name(self, obj):
         return obj.get_display_name()
 
     def get_is_following(self, obj):
