@@ -29,6 +29,7 @@ import LandingPage from './pages/setup/LandingPage'
 import RefBase from './pages/reffing/RefBase'
 import { SocialPage } from './pages/social/SocialPage';
 import { PostDetailPage } from './pages/social/PostDetailPage';
+import ProfileCreationPage from './pages/setup/ProfileCreationPage';
 
 function App() {
 
@@ -49,7 +50,8 @@ function App() {
         <Route path='/coaching/teamsheets/create' element={<TeamsheetCreate />} />
         <Route path='/coaching/teamsheets/:id' element={<TeamsheetDetail />} />
         <Route path="/social" element={< SocialPage/>} />
-        <Route path='social/post/:postId' element={<PostDetailPage />} />
+        <Route path='/social/post/:postId' element={<PostDetailPage />} />
+        <Route path="/create/profile" element={<ProfileCreationPage />} />
       </Routes>
     </BrowserRouter>
   )

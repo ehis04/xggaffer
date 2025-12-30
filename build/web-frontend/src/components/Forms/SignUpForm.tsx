@@ -77,7 +77,7 @@ export const SignUpForm = () => {
       localStorage.setItem("user", JSON.stringify(data.user));
 
       console.log("Registration successful: ", data);
-      globalThis.location.href = "http://localhost:5173/social";
+      globalThis.location.href = "http://localhost:5173/create/profile";
     } catch (error) {
       setError(
         error instanceof Error
