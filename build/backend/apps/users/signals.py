@@ -28,9 +28,6 @@ def follow_created(sender, instance, created: bool, **kwargs):
     _bump_following_count(instance.follower_id, 1)
     
 @receiver(post_delete, sender=Follow)
-def follow_deleted(sender, instance, created: bool, **kwargs):
-    if not created:
-        return
-        
+def follow_deleted(sender, instance: Follow, **kwargs):
     _bump_follower_count(instance.following_id, -1)
     _bump_following_count(instance.follower_id, -1)
