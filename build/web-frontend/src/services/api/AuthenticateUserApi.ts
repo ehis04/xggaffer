@@ -3,6 +3,10 @@ const base_url = "http://localhost:8000/api";
 export const Api_Endpoints = {
   LOGIN: `${base_url}/users/login/`,
   LOGOUT: `${base_url}/users/logout/`,
+  REGISTER: `${base_url}/users/register/`,
+  PROFILE_CREATE: `${base_url}/users/profile/create/`,
+  USER_PROFILE: `${base_url}/users/profile/`,
+  GET_PROFILE: (username: string) => `${base_url}/users/profile/${username}/`,
   REFRESH_TOKEN: `${base_url}/users/api/token/refresh/`,
   CREATE_POST: `${base_url}/community/create/post/`,
   CREATE_COMMENT: (postId: number) => `${base_url}/community/post/${postId}/create/comment/`,
