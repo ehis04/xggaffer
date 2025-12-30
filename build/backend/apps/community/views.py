@@ -376,3 +376,6 @@ class LikeCommentView(APIView):
             return Response({'detail': 'Comment unliked.', 'liked': False}, status=status.HTTP_200_OK)
         
 #TODO get all notifications for authenticated user
+
+# TODO search for posts with potentially various filters
+# TODO search by text, author, hashtags
