@@ -8,6 +8,16 @@
   min-height: 100vh;
 }
 
+.post-detail-page {
+  display: grid;
+  grid-template-columns: auto 1fr 290px;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "sidebar search right"
+    "sidebar main right";
+  min-height: 100vh;
+}
+
 .sidebar-section {
   grid-area: sidebar;
   position: sticky;

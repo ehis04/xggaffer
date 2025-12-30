@@ -5,7 +5,7 @@ import "./css/Post.css";
 
 export interface PostAuthor {
   id: number;
-  username: string;
+  username?: string;
   profile_image?: string;
   display_name?: string;
 }
@@ -60,7 +60,7 @@ export const Post: React.FC<PostProps> = ({
     const postDate = new Date(dateString);
     const diffInSec = Math.floor((now.getTime() - postDate.getTime()) / 1000);
 
-    if (diffInSec < 60) return `${diffInSec}`;
+    if (diffInSec < 60) return `${diffInSec}s`;
     if (diffInSec < 3600) return `${Math.floor(diffInSec / 60)}m`;
     if (diffInSec < 86400) return `${Math.floor(diffInSec / 3600)}h`;
     if (diffInSec < 604800) return `${Math.floor(diffInSec / 86400)}d`;
@@ -126,10 +126,10 @@ export const Post: React.FC<PostProps> = ({
       {showReplyLine && <div className="reply-line" />}
       <div className="profile-picture" onClick={handleProfileClick}>
         {post.author.profile_image ? (
-          <img src={post.author.profile_image} alt={post.author.username} />
+          <img src={post.author.profile_image} alt={post.author.username || "User"} />
         ) : (
           <div className="profile-picture-placeholder">
-            {post.author.username[0].toUpperCase()}
+            {post.author.username ? post.author.username[0].toUpperCase() : "?"}
           </div>
         )}
       </div>
@@ -137,7 +137,7 @@ export const Post: React.FC<PostProps> = ({
       <div className="post-content">
         <div className="post-header">
           <div className="post-author-details" onClick={handleProfileClick}>
-            <span className="post-author-name">@{post.author.username}</span>
+            <span className="post-author-name">@{post.author.username || "User"}</span>
             <span className="post-separator">.</span>
             <span className="post-timestamp">
               {formatTime(post.created_at)}
