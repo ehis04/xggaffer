@@ -22,7 +22,7 @@ class CreateCoachProfileView(CreateAPIView):
                 "You have to create a user profile before creating a coach profile."
             )
         
-        if hasattr(user_profile, 'coach_profile'):
+        if CoachProfile.objects.filter(user_profile=user_profile).exists():
             raise serializers.ValidationError(
                 "Coach profile already exists for this user."
             )

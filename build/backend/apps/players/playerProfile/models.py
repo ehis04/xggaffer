@@ -16,6 +16,7 @@ class Positions(models.TextChoices):
     WM = 'wm', 'Wide Midefielder/Winger'
     CF = 'cf', 'Centre Forward/Striker'
     SS = 'ss', 'Second Striker/Support Striker'
+    ST = 'st', 'Striker'
     
 class DominantFoot(models.TextChoices):
     RIGHT = 'r', 'Right'

@@ -21,7 +21,7 @@ class CreatePlayerProfileView(CreateAPIView):
                 "You have to create a user profile before creating a Player profile."
             )
         
-        if hasattr(user_profile, 'player_profile'):
+        if PlayerProfile.objects.filter(user_profile=user_profile).exists():
             raise serializers.ValidationError(
                 "Player profile already exists for this user."
             )
