@@ -109,6 +109,17 @@
     color: black;
 }
 
+.sidebar-profile {
+    padding: 12px;
+    margin-bottom: 15px;
+}
+
+
+
+.sidebar-profile:hover {
+    transform: translateX(2px);
+}
+
 .sidebar-item:hover .sidebar-item-icon {
   transform: scale(1.08);
 }

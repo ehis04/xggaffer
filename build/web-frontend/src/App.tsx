@@ -30,6 +30,8 @@ import RefBase from './pages/reffing/RefBase'
 import { SocialPage } from './pages/social/SocialPage';
 import { PostDetailPage } from './pages/social/PostDetailPage';
 import ProfileCreationPage from './pages/setup/ProfileCreationPage';
+import { RoleAssignForm } from './components/Forms/RoleAssignForm';
+import { RoleProfilePage } from './pages/setup/RoleProfilePage';
 
 function App() {
 
@@ -52,6 +54,8 @@ function App() {
         <Route path="/social" element={< SocialPage/>} />
         <Route path='/social/post/:postId' element={<PostDetailPage />} />
         <Route path="/create/profile" element={<ProfileCreationPage />} />
+        <Route path="/create/profile/role" element={<RoleAssignForm />} />
+        <Route path="/create/profile/role/details" element={<RoleProfilePage />} />
       </Routes>
     </BrowserRouter>
   )

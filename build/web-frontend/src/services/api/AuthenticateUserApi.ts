@@ -1,13 +1,21 @@
 const base_url = "http://localhost:8000/api";
 
 export const Api_Endpoints = {
+  // User registration and auth
   LOGIN: `${base_url}/users/login/`,
   LOGOUT: `${base_url}/users/logout/`,
   REGISTER: `${base_url}/users/register/`,
+  REFRESH_TOKEN: `${base_url}/users/api/token/refresh/`,
+
+  // Profiles
   PROFILE_CREATE: `${base_url}/users/profile/create/`,
+  ASSIGN_ROLE: `${base_url}/users/profile/role/`,
   USER_PROFILE: `${base_url}/users/profile/`,
   GET_PROFILE: (username: string) => `${base_url}/users/profile/${username}/`,
-  REFRESH_TOKEN: `${base_url}/users/api/token/refresh/`,
+  CREATE_COACH_PROFILE: `${base_url}/coaching/profile/create/`,
+  CREATE_PLAYER_PROFILE: `${base_url}/players/profile/create/`,
+  
+  // Community
   CREATE_POST: `${base_url}/community/create/post/`,
   CREATE_COMMENT: (postId: number) => `${base_url}/community/post/${postId}/create/comment/`,
   EXPLORE_POSTS: `${base_url}/community/explore/?order_by=ranked/`,

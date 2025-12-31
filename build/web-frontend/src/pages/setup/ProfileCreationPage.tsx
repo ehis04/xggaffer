@@ -1,6 +1,6 @@
 import { ProfileCreation } from '../../components/Forms/ProfileCreation';
 import './css/ProfileCreationPage.css';
-import React from 'react'
+
 
 export default function ProfileCreationPage() {
   return (

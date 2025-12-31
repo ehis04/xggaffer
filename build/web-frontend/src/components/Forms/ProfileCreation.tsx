@@ -56,7 +56,7 @@ export const ProfileCreation = () => {
       const data = await response.json();
 
       console.log("Profile creation successful: ", data);
-      globalThis.location.href = "http://localhost:5173/social";
+      globalThis.location.href = "http://localhost:5173/create/profile/role";
     } catch (error) {
       setError(
         error instanceof Error
