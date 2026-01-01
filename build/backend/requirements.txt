@@ -24,3 +24,9 @@ whitenoise
 
 # Database (PostgreSQL support)
 psycopg2-binary
+
+djangorestframework-simplejwt
+
+joblib
+
+pandas

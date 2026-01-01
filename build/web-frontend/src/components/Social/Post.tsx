@@ -1,11 +1,12 @@
 import { useState } from "react";
 import "./css/Post.css";
+import { ProfileButton } from "../Buttons/ProfileButton";
 
 // This component is for comments, posts, replies. It is using the general name post to refer to everything
 
 export interface PostAuthor {
   id: number;
-  username: string;
+  username?: string;
   profile_image?: string;
   display_name?: string;
 }
@@ -14,7 +15,7 @@ export interface PostData {
   id: number;
   author: PostAuthor;
   post_id?: number;
-  parent_id?: number; 
+  parent_id?: number;
   text_body: string;
   created_at: string;
   no_of_likes: number;
@@ -60,7 +61,7 @@ export const Post: React.FC<PostProps> = ({
     const postDate = new Date(dateString);
     const diffInSec = Math.floor((now.getTime() - postDate.getTime()) / 1000);
 
-    if (diffInSec < 60) return `${diffInSec}`;
+    if (diffInSec < 60) return `${diffInSec}s`;
     if (diffInSec < 3600) return `${Math.floor(diffInSec / 60)}m`;
     if (diffInSec < 86400) return `${Math.floor(diffInSec / 3600)}h`;
     if (diffInSec < 604800) return `${Math.floor(diffInSec / 86400)}d`;
@@ -87,7 +88,7 @@ export const Post: React.FC<PostProps> = ({
 
   const handleProfileClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onProfileClick) onProfileClick(post.author.username);
+    if (onProfileClick && post.author.username) onProfileClick(post.author.username);
   };
 
   const handlePostClick = () => {
@@ -124,20 +125,19 @@ export const Post: React.FC<PostProps> = ({
       style={{ paddingLeft: `${depth * 40}px` }}
     >
       {showReplyLine && <div className="reply-line" />}
-      <div className="profile-picture" onClick={handleProfileClick}>
-        {post.author.profile_image ? (
-          <img src={post.author.profile_image} alt={post.author.username} />
-        ) : (
-          <div className="profile-picture-placeholder">
-            {post.author.username[0].toUpperCase()}
-          </div>
-        )}
+      <div className="profile-picture">
+        <ProfileButton
+          username={post.author.username || "User"}
+          size="medium"
+        />
       </div>
 
       <div className="post-content">
         <div className="post-header">
           <div className="post-author-details" onClick={handleProfileClick}>
-            <span className="post-author-name">@{post.author.username}</span>
+            <span className="post-author-name">
+              @{post.author.username || "User"}
+            </span>
             <span className="post-separator">.</span>
             <span className="post-timestamp">
               {formatTime(post.created_at)}

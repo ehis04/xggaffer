@@ -7,65 +7,6 @@ import { SocialUserButtons } from "../../components/Social/SocialUserButtons";
 import "./css/SocialPage.css";
 import { PostList } from "../../components/Social/PostList";
 
-const pdata = [{
-    id: 123,
-    author: {
-        id: 1,
-        username: "testuser",
-        display_name: "Test User"
-    },
-    text_body: "This is a test post #first this is the first hashtag @admin hope this works",
-    created_at: "2025-12-27T10:00:00Z",
-    no_of_likes: 3,
-    no_of_comments: 3,
-    visibility: 'PB',
-    moderation_status: 'OK',
-    type: 'post',
-    hashtags: ['first'],
-    mentions: ['admin'],
-    is_liked: false,
-    is_reposted: false
-},
-{
-    id: 124,
-    author: {
-        id: 1,
-        username: "testuser",
-        display_name: "Test User"
-    },
-    text_body: "This is a test post #first this is the first hashtag @admin hope this works",
-    created_at: "2025-12-27T10:00:00Z",
-    no_of_likes: 3,
-    no_of_comments: 3,
-    visibility: 'PB',
-    moderation_status: 'OK',
-    type: 'post',
-    hashtags: ['first'],
-    mentions: ['admin'],
-    is_liked: false,
-    is_reposted: false
-},
-{
-    id: 125,
-    author: {
-        id: 1,
-        username: "testuser",
-        display_name: "Test User"
-    },
-    post_id: 123,
-    text_body: "This is a test post #first this is the first hashtag @admin hope this works",
-    created_at: "2025-12-27T10:00:00Z",
-    no_of_likes: 3,
-    no_of_comments: 3,
-    visibility: 'PB',
-    moderation_status: 'OK',
-    type: 'comment',
-    hashtags: ['first'],
-    mentions: ['admin'],
-    is_liked: false,
-    is_reposted: false
-},]
-
 export const SocialPage = () => {
   const handleTabChange = (tab: "forYou" | "following") => {
     console.log("Active tab:", tab);
@@ -95,7 +36,7 @@ export const SocialPage = () => {
         </div>
         <CreatePost onPost={handlePost} />
         <div className="feed-content">
-          <PostList postList={pdata} />
+          <PostList />
         </div>
       </div>
     </div>

@@ -28,6 +28,10 @@ import TeamsheetList from './pages/coaching/teamsheets/TeamsheetList';
 import LandingPage from './pages/setup/LandingPage'
 import RefBase from './pages/reffing/RefBase'
 import { SocialPage } from './pages/social/SocialPage';
+import { PostDetailPage } from './pages/social/PostDetailPage';
+import ProfileCreationPage from './pages/setup/ProfileCreationPage';
+import { RoleAssignForm } from './components/Forms/RoleAssignForm';
+import { RoleProfilePage } from './pages/setup/RoleProfilePage';
 
 function App() {
 
@@ -48,6 +52,10 @@ function App() {
         <Route path='/coaching/teamsheets/create' element={<TeamsheetCreate />} />
         <Route path='/coaching/teamsheets/:id' element={<TeamsheetDetail />} />
         <Route path="/social" element={< SocialPage/>} />
+        <Route path='/social/post/:postId' element={<PostDetailPage />} />
+        <Route path="/create/profile" element={<ProfileCreationPage />} />
+        <Route path="/create/profile/role" element={<RoleAssignForm />} />
+        <Route path="/create/profile/role/details" element={<RoleProfilePage />} />
       </Routes>
     </BrowserRouter>
   )

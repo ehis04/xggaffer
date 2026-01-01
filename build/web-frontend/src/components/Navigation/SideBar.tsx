@@ -1,5 +1,7 @@
+import { ProfileButton } from "../Buttons/ProfileButton";
 import "./css/SideBar.css";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { getUserProfile } from "./functions/getUserProfile";
 
 interface NavItem {
   id: string;
@@ -16,6 +18,11 @@ interface SidebarProps {
   bottomItems?: NavItem[];
 }
 
+export interface UserData {
+  username: string;
+  profile_image?: string;
+}
+
 const http = 'http://localhost:5173/';
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -24,6 +31,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
   bottomItems,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [userData, setUserData] = useState<UserData | null>(null);
+
+  useEffect(() => {
+    getUserProfile(setUserData);
+  }, [])
+
+  const handleProfileClick = (username: string) => {
+    globalThis.location.href = `/profile/${username}`;
+  }
 
   const defaultItems: NavItem[] = [
     {
@@ -160,6 +176,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="sidebar-content">
         <div className="sidebar-logo">
           <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-ball-football"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M12 7l4.76 3.45l-1.76 5.55h-6l-1.76 -5.55z" /><path d="M12 7v-4m3 13l2.5 3m-.74 -8.55l3.74 -1.45m-11.44 7.05l-2.56 2.95m.74 -8.55l-3.74 -1.45" /></svg>
+        </div>
+
+        <div className="sidebar-profile">
+          {userData && <ProfileButton username={userData.username} size="small" showLabel={isHovered} onClick={handleProfileClick}/>}
         </div>
         <nav className="sidebar-nav">
           {navItems.map((item) => (

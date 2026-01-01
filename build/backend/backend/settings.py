@@ -80,6 +80,11 @@ INSTALLED_APPS = [
     'apps.teamsheets',
     'apps.users',
     'apps.predictions',
+    'apps.community',
+    'apps.coaching.coachProfile',
+    'apps.coaching',
+    'apps.players',
+    'apps.players.playerProfile',
     'corsheaders',
 ]
 
@@ -100,6 +105,12 @@ MIDDLEWARE = [
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+    ),
 }
 
 ROOT_URLCONF = 'backend.urls'
@@ -129,11 +140,11 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'database',
-        'USER': 'eo4',
-        'PASSWORD': 'eo4',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT'),
     }
 }
 
