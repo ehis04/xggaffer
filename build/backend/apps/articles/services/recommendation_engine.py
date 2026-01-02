@@ -28,7 +28,7 @@ class RecommendationEngine:
             self.user_profile = UserProfile.objects.create(user=user)
     
     def generate_recommendations(self, count: int = 50) -> List[Article]:
-        logger.info(f"Generating {count} recommendations for {self.user.username}")
+        logger.info(f"Generating {count} recommendations for {self.user.email}")
         
         candidates = self._get_candidate_articles()
         
@@ -217,7 +217,7 @@ class RecommendationEngine:
         self.user_profile.last_recommendation_refresh = timezone.now()
         self.user_profile.save(update_fields=['last_recommendation_refresh'])
         
-        logger.info(f"Saved {len(recommendations)} recommendations for {self.user.username}")
+        logger.info(f"Saved {len(recommendations)} recommendations for {self.user.email}")
     
     def _generate_recommendation_reason(self, article: Article) -> str:
         reasons = []
