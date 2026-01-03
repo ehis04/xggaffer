@@ -1,7 +1,7 @@
 // frontend/src/components/laws/LawsList.tsx
 import React, { useEffect, useState } from 'react';
-import { lawsApi } from '../../../services/api/lawsApi';
-import type { LawListItem, LawEdition } from '../../../types/laws';
+import { lawsApi } from '../../../../services/api';
+import type { LawListItem, LawEdition } from '../../../../types/laws';
 
 export const LawsList: React.FC = () => {
   const [laws, setLaws] = useState<LawListItem[]>([]);

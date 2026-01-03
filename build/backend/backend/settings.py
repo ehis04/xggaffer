@@ -56,13 +56,14 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
-CORS_ALLOW_ALL_ORIGINS = True 
+CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:8000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
+CORS_ALLOW_CREDENTIALS = True
 
 # Application definition
 
@@ -85,6 +86,8 @@ INSTALLED_APPS = [
     'apps.coaching',
     'apps.players',
     'apps.players.playerProfile',
+    'apps.clubs',
+    'apps.tactics',
     'corsheaders',
 ]
 
@@ -103,6 +106,15 @@ MIDDLEWARE = [
 ]
 
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',  # Temporarily disabled authentication for development
+    ],
+
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
     "DEFAULT_AUTHENTICATION_CLASSES": (

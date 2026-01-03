@@ -173,7 +173,7 @@ class ArticleRating(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.user.username} - {self.article.title[:50]} ({self.rating}⭐)"
+        return f"{self.user.email} - {self.article.title[:50]} ({self.rating}⭐)"
 
 class UserFeedback(models.Model):
     FEEDBACK_TYPES = [
@@ -205,7 +205,7 @@ class UserFeedback(models.Model):
 
     def __str__(self):
         target = self.article or self.author or self.site
-        return f"{self.user.username} - {self.feedback_type}s {target}"
+        return f"{self.user.email} - {self.feedback_type}s {target}"
 
 class UserRecommendation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='recommendations')
@@ -232,7 +232,7 @@ class UserRecommendation(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.user.username} - {self.article[:50]} ({self.score:.2f})"
+        return f"{self.user.email} - {self.article[:50]} ({self.score:.2f})"
 
 class ReadingHistory(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reading_histories')
@@ -250,7 +250,7 @@ class ReadingHistory(models.Model):
         verbose_name_plural = "Reading Histories"
 
     def __str__(self):
-        return f"{self.user.username} read {self.article.title[:50]}"
+        return f"{self.user.email} read {self.article.title[:50]}"
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='article_profile')
@@ -275,5 +275,5 @@ class UserProfile(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Profile of {self.user.username}"
+        return f"Profile of {self.user.email}"
 """

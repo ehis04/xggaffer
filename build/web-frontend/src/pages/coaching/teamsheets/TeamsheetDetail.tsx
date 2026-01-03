@@ -1,27 +1,27 @@
 // src/components/pages/coaching/teamsheets/TeamsheetDetail.tsx
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { teamsheetApi } from '../../../services/api/teamsheetApi';
-import type { Teamsheet } from '../../../types/teamsheet';
+import { teamsheetApi } from '../../../../services/api';
+import type { Teamsheet } from '../../../../types/teamsheet';
 
 export const TeamsheetDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const { clubId, id } = useParams<{ clubId: string; id: string }>();
   const [teamsheet, setTeamsheet] = useState<Teamsheet | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Only attempt to load when id is a numeric string to avoid NaN fetches
-    if (id && /^\d+$/.test(id)) {
-      loadTeamsheet(Number.parseInt(id));
+    // Only attempt to load when both clubId and id are numeric strings
+    if (clubId && id && /^\d+$/.test(clubId) && /^\d+$/.test(id)) {
+      loadTeamsheet(Number.parseInt(clubId), Number.parseInt(id));
     }
-  }, [id]);
+  }, [clubId, id]);
 
-  const loadTeamsheet = async (teamsheetId: number) => {
+  const loadTeamsheet = async (clubId: number, teamsheetId: number) => {
     try {
       setLoading(true);
-      const data = await teamsheetApi.getTeamsheet(teamsheetId);
+      const data = await teamsheetApi.get(clubId, teamsheetId);
       setTeamsheet(data);
       setError(null);
     } catch (err) {
@@ -33,7 +33,7 @@ export const TeamsheetDetail = () => {
   };
 
   const handleBack = () => {
-    navigate('/coaching/teamsheets');
+    navigate(`/clubs/${clubId}/teamsheets`);
   };
 
   if (loading) return <div>Loading teamsheet...</div>;
@@ -62,9 +62,9 @@ export const TeamsheetDetail = () => {
           <tbody>
             {teamsheet.players.map((player) => (
               <tr key={player.id}>
-                <td style={{ border: '1px solid #ccc', padding: '8px' }}>{player.number}</td>
-                <td style={{ border: '1px solid #ccc', padding: '8px' }}>{player.name}</td>
-                <td style={{ border: '1px solid #ccc', padding: '8px' }}>{player.position}</td>
+                <td style={{ border: '1px solid #ccc', padding: '8px' }}>{player.display_number}</td>
+                <td style={{ border: '1px solid #ccc', padding: '8px' }}>{player.display_name}</td>
+                <td style={{ border: '1px solid #ccc', padding: '8px' }}>{player.position_label}</td>
               </tr>
             ))}
           </tbody>

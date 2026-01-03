@@ -28,21 +28,25 @@ export const TrendingBox: React.FC<TrendingBoxProps> = ({
 }) => {
   const [expanded, setExpanded] = useState(false);
 
-  const defaultItems: TrendingHashtag[] = [
+  const defaultItems: TrendingItem[] = [
     {
       id: "1",
+      category: "Football",
       title: "#RealMadrid",
     },
     {
       id: "2",
+      category: "Football",
       title: "#BarcelonaFC",
     },
     {
       id: "3",
+      category: "Football",
       title: "#Chelsea",
     },
     {
       id: "4",
+      category: "Football",
       title: "#Arsenal",
     },
   ];
@@ -53,7 +57,6 @@ export const TrendingBox: React.FC<TrendingBoxProps> = ({
     : trendingItems.slice(0, maxVisible);
 
   const handleItemClick = (item: TrendingItem) => {
-    e.stopPropagation();
     if (onMoreClick) {
       onMoreClick(item);
     }

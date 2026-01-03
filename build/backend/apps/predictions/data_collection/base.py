@@ -5,7 +5,7 @@ from pathlib import Path
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from .schema import MatchRecord, REQUIRED_COLUMNS
+from .schema import *
 
 logger = logging.getLogger(__name__)
 

@@ -1,23 +1,25 @@
-// src/components/pages/coaching/teamsheets/TeamsheetList.tsx
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { teamsheetApi } from '../../../services/api/teamsheetApi';
-import type { Teamsheet } from '../../../types/teamsheet';
+import { useNavigate, useParams } from 'react-router-dom';
+import { teamsheetApi } from '../../../../services/api';
+import type { TeamsheetListItem } from '../../../../types/teamsheet';
 
 export const TeamsheetList = () => {
-  const [teamsheets, setTeamsheets] = useState<Teamsheet[]>([]);
+  const [teamsheets, setTeamsheets] = useState<TeamsheetListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { clubId } = useParams<{ clubId: string }>();
 
   useEffect(() => {
-    loadTeamsheets();
-  }, []);
+    if (clubId) {
+      loadTeamsheets();
+    }
+  }, [clubId]);
 
   const loadTeamsheets = async () => {
     try {
       setLoading(true);
-      const data = await teamsheetApi.getAllTeamsheets();
+      const data = await teamsheetApi.list(Number(clubId));
       setTeamsheets(data);
       setError(null);
     } catch (err) {
@@ -52,8 +54,8 @@ export const TeamsheetList = () => {
             <div key={teamsheet.id} style={{ border: '1px solid #ccc', padding: '10px', margin: '10px 0' }}>
               <h3>{teamsheet.title}</h3>
               <p>Formation: {teamsheet.formation}</p>
-              <p>Created: {new Date(teamsheet.created_at!).toLocaleDateString()}</p>
-              <button onClick={() => handleViewTeamsheet(teamsheet.id!)}>View Details</button>
+              <p>Updated: {new Date(teamsheet.updated_at).toLocaleDateString()}</p>
+              <button onClick={() => handleViewTeamsheet(teamsheet.id)}>View Details</button>
             </div>
           ))}
         </div>

@@ -32,11 +32,16 @@ import { PostDetailPage } from './pages/social/PostDetailPage';
 import ProfileCreationPage from './pages/setup/ProfileCreationPage';
 import { RoleAssignForm } from './components/Forms/RoleAssignForm';
 import { RoleProfilePage } from './pages/setup/RoleProfilePage';
+import TeamsheetListPage from './pages/coaching/teamsheets/TeamsheetListPage';
+import TeamsheetCreatePage from './pages/coaching/teamsheets/TeamsheetCreatePage';
+import TeamsheetDetailPage from './pages/coaching/teamsheets/TeamsheetDetailPage';
+import { Navigate } from 'react-router-dom';
 
 function App() {
 
   return (
     <BrowserRouter>
+    <div className='app'>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/refbase" element={<RefBase />} />
@@ -56,7 +61,12 @@ function App() {
         <Route path="/create/profile" element={<ProfileCreationPage />} />
         <Route path="/create/profile/role" element={<RoleAssignForm />} />
         <Route path="/create/profile/role/details" element={<RoleProfilePage />} />
+        <Route path="/clubs/:clubId/teamsheets" element={<TeamsheetListPage />} />
+        <Route path="/clubs/:clubId/teamsheets/new" element={<TeamsheetCreatePage />} />
+        <Route path="/clubs/:clubId/teamsheets/:teamsheetId" element={<TeamsheetDetailPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+    </div>
     </BrowserRouter>
   )
 }

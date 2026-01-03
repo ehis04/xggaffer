@@ -1,45 +1,91 @@
-import type { Teamsheet } from '../../types/teamsheet';
-
-const API_BASE_URL = 'http://localhost:8000/api/teamsheets';
+import apiClient from './client';
+import type {
+  Teamsheet,
+  TeamsheetListItem,
+  TeamsheetChoices,
+  BulkPositionUpdate,
+  TeamsheetPlayer,
+  AvailablePlayer,
+  CreateTeamsheetPayload,
+} from '../../types/teamsheet';
 
 export const teamsheetApi = {
-    getAllTeamsheets: async (): Promise<Teamsheet[]> => {
-        const response = await fetch(`${API_BASE_URL}/teamsheets/`);
-        const data = await response.json();
-        // DRF may return a paginated response { results: [...] }
-        if (Array.isArray(data)) return data as Teamsheet[];
-        if (data && Array.isArray((data as any).results)) return (data as any).results as Teamsheet[];
-        // Fallback: return empty array
-        return [];
-    },
+  list: (clubId: number) => 
+    apiClient.get<TeamsheetListItem[]>(`/clubs/${clubId}/teamsheets/`),
 
+  get: (clubId: number, teamsheetId: number) =>
+    apiClient.get<Teamsheet>(`/clubs/${clubId}/teamsheets/${teamsheetId}/`),
 
-    getTeamsheet: async (id: number): Promise<Teamsheet> => {
-        const response = await fetch(`${API_BASE_URL}/teamsheets/${id}/`)
-        return response.json();
-    },
+  create: (clubId: number, data: Partial<Teamsheet>) =>
+    apiClient.post<Teamsheet>(`/clubs/${clubId}/teamsheets/`, data),
 
-    createTeamsheet: async (data: Omit<Teamsheet, 'id' | 'created_at' | 'updated_at'>): Promise<Teamsheet> => {
-        const response = await fetch(`${API_BASE_URL}/teamsheets/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        return response.json();
-    },
+  createWithPlayers: (clubId: number, data: CreateTeamsheetPayload) =>
+    apiClient.post<Teamsheet>(`/clubs/${clubId}/teamsheets/create_with_players/`, data),
 
-    updateTeamsheet: async (id: number, data: Partial<Teamsheet>): Promise<Teamsheet> => {
-        const response = await fetch(`${API_BASE_URL}/teamsheets/${id}/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        return response.json();
-    },
+  update: (clubId: number, teamsheetId: number, data: Partial<Teamsheet>) =>
+    apiClient.patch<Teamsheet>(`/clubs/${clubId}/teamsheets/${teamsheetId}/`, data),
 
-    deleteTeamsheet: async (id: number): Promise<void> => {
-        await fetch(`${API_BASE_URL}/teamsheets/${id}/`, {
-            method: 'DELETE'
-        });
-    }
+  delete: (clubId: number, teamsheetId: number) =>
+    apiClient.delete(`/clubs/${clubId}/teamsheets/${teamsheetId}/`),
+
+  getChoices: (clubId: number) =>
+    apiClient.get<TeamsheetChoices>(`/clubs/${clubId}/teamsheets/choices/`),
+
+  duplicate: (clubId: number, teamsheetId: number, newTitle: string, includePlayers = true) =>
+    apiClient.post<Teamsheet>(`/clubs/${clubId}/teamsheets/${teamsheetId}/duplicate/`, {
+      new_title: newTitle,
+      include_players: includePlayers,
+    }),
+
+  resetToFormation: (clubId: number, teamsheetId: number) =>
+    apiClient.post<Teamsheet>(`/clubs/${clubId}/teamsheets/${teamsheetId}/reset_to_formation/`),
+
+  getAvailablePlayers: (
+    clubId: number, 
+    options?: { position?: string; search?: string; exclude?: number[] }
+  ) => {
+    const params: Record<string, string> = {};
+    if (options?.position) params.position = options.position;
+    if (options?.search) params.search = options.search;
+    if (options?.exclude?.length) params.exclude = options.exclude.join(',');
+    
+    return apiClient.get<AvailablePlayer[]>(
+      `/clubs/${clubId}/teamsheets/available_players/`,
+      Object.keys(params).length > 0 ? params : undefined
+    );
+  },
 };
+
+export const teamsheetPlayerApi = {
+  list: (clubId: number, teamsheetId: number) =>
+    apiClient.get<TeamsheetPlayer[]>(`/clubs/${clubId}/teamsheets/${teamsheetId}/players/`),
+
+  get: (clubId: number, teamsheetId: number, playerId: number) =>
+    apiClient.get<TeamsheetPlayer>(`/clubs/${clubId}/teamsheets/${teamsheetId}/players/${playerId}/`),
+
+  updatePosition: (clubId: number, teamsheetId: number, playerId: number, x: number, y: number, label?: string) =>
+    apiClient.patch<TeamsheetPlayer>(
+      `/clubs/${clubId}/teamsheets/${teamsheetId}/players/${playerId}/update_position/`,
+      { position_x: x, position_y: y, ...(label && { position_label: label }) }
+    ),
+
+  bulkUpdatePositions: (clubId: number, teamsheetId: number, updates: BulkPositionUpdate) =>
+    apiClient.post<{ updated_count: number; players: TeamsheetPlayer[] }>(
+      `/clubs/${clubId}/teamsheets/${teamsheetId}/players/bulk_update_positions/`,
+      updates
+    ),
+
+  assignPlayer: (clubId: number, teamsheetId: number, slotId: number, clubPlayerId: number | null) =>
+    apiClient.post<TeamsheetPlayer>(
+      `/clubs/${clubId}/teamsheets/${teamsheetId}/players/${slotId}/assign_player/`,
+      { player_profile_id: clubPlayerId }
+    ),
+
+  swapPositions: (clubId: number, teamsheetId: number, playerId: number, targetPlayerId: number) =>
+    apiClient.post<{ swapped: TeamsheetPlayer[] }>(
+      `/clubs/${clubId}/teamsheets/${teamsheetId}/players/${playerId}/swap_positions/`,
+      { target_player_id: targetPlayerId }
+    ),
+};
+
+export default teamsheetApi;

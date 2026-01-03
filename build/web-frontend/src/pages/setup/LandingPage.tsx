@@ -1,5 +1,6 @@
 import { HeroSection } from "../../components/Hero/HeroSection";
 import { LandingNavbar } from "../../components/Navigation/LandingNavbar";
+
 import './css/LandingPage.css';
 
 const LandingPage = () => {

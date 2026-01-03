@@ -1,5 +1,5 @@
 from rest_framework.permissions import BasePermission
-from .models import UserRole, Roles
+from .models import *
 
 message = "You have the incorrect role to access this resource."
 

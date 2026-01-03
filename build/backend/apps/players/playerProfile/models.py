@@ -5,18 +5,33 @@ from apps.users.models import UserProfile
 # Create your models here.
 
 class Positions(models.TextChoices):
-    NONE = 'n/a', 'N/A'
-    GK = 'gk', 'Goal Keeper'
-    CB = 'cb', 'Center-Backs'
-    FB = 'fb', 'Full Backs'
-    WB = 'wb', 'Wide Backs'
-    SW = 'sw', 'Sweepers'
-    DM = 'dm', 'Defensive Midfielder'
-    CM = 'cm', 'Central Midfielder'
-    WM = 'wm', 'Wide Midefielder/Winger'
-    CF = 'cf', 'Centre Forward/Striker'
-    SS = 'ss', 'Second Striker/Support Striker'
-    ST = 'st', 'Striker'
+    NONE = '', 'Not Specified'
+
+    GK = 'GK', 'Goalkeeper'
+
+    RB = 'RB', 'Right Back'
+    RWB = 'RWB', 'Right Wing Back'
+    CB = 'CB', 'Centre Back'
+    RCB = 'RCB', 'Right Centre Back'
+    CCB = 'CCB', 'Central Centre Back'
+    LCB = 'LCB', 'Left Centre Back'
+    LB = 'LB', 'Left Back'
+    LWB = 'LWB', 'Left Wing Back'
+
+    RDM = 'RDM', 'Right Defensive Midfielder'
+    CDM = 'CDM', 'Central Defensive Midfielder'
+    LDM = 'LDM', 'Left Defensive Midfielder'
+    CM = 'CM', 'Central Midfielder'
+    RM = 'RM', 'Right Midfielder'
+    LM = 'LM', 'Left Midfielder'
+
+    RAM = 'RAM', 'Right Attacking Midfielder'
+    CAM = 'CAM', 'Central Attacking Midfielder'
+    LAM = 'LAM', 'Left Attacking Midfielder'
+    RW = 'RW', 'Right Winger'
+    LW = 'LW', 'Left Winger'
+    CF = 'CF', 'Centre Forward'
+    ST = 'ST', 'Striker'
     
 class DominantFoot(models.TextChoices):
     RIGHT = 'r', 'Right'
