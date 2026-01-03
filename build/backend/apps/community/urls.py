@@ -1,0 +1,16 @@
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import CreateNewPostView, ExplorePostsView, MarkPostViewedView, BulkMarkPostViewedView, CreateNewCommentView, GetPostView, CommentPostView, LikeCommentView, LikePostView, UserPostView
+
+urlpatterns = [
+    path('create/post/', CreateNewPostView.as_view(), name='create-post'),
+    path('post/<int:post_id>/', GetPostView.as_view(), name='get-post'),
+    path('explore/', ExplorePostsView.as_view(), name='explore-posts'),
+    path('posts/<int:post_id>/mark-viewed/', MarkPostViewedView.as_view(), name='mark_post_viewed'),
+    path('posts/bulk-mark-viewed/', BulkMarkPostViewedView.as_view(), name='bulk_mark_posts_viewed'),
+    path('post/<int:post_id>/create/comment/', CreateNewCommentView.as_view(), name='create-comment'),
+    path('posts/<int:post_id>/comments/', CommentPostView.as_view(), name='post-comment'),
+    path('posts/<int:post_id>/like/', LikePostView.as_view(), name='like_post'), 
+    path('comment/<int:comment_id>/like/', LikeCommentView.as_view(), name='like-comment'),
+    path('my-post/<int:post_id>/', UserPostView.as_view(), name='user-post'),
+]

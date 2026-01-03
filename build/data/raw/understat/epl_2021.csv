@@ -1,0 +1,381 @@
+source,match_id,season,date,home_team,away_team,home_goals,away_goals,home_xg,away_xg
+understat,understat_16376,2021,2021-08-13,Brentford,Arsenal,2,0,1.88818,1.02385
+understat,understat_16377,2021,2021-08-14,Manchester United,Leeds,5,1,1.64248,0.568342
+understat,understat_16378,2021,2021-08-14,Burnley,Brighton,1,2,1.79548,1.6853
+understat,understat_16379,2021,2021-08-14,Chelsea,Crystal Palace,3,0,1.18709,0.321701
+understat,understat_16380,2021,2021-08-14,Everton,Southampton,3,1,2.38863,0.580601
+understat,understat_16381,2021,2021-08-14,Leicester,Wolverhampton Wanderers,1,0,0.668082,1.32714
+understat,understat_16382,2021,2021-08-14,Watford,Aston Villa,3,2,1.35036,1.13718
+understat,understat_16383,2021,2021-08-14,Norwich,Liverpool,0,3,1.3333,1.78728
+understat,understat_16384,2021,2021-08-15,Newcastle United,West Ham,2,4,1.67926,3.00939
+understat,understat_16385,2021,2021-08-15,Tottenham,Manchester City,1,0,1.06014,2.10585
+understat,understat_16386,2021,2021-08-21,Liverpool,Burnley,2,0,2.63945,0.690464
+understat,understat_16387,2021,2021-08-21,Manchester City,Norwich,5,0,2.43928,0.0250088
+understat,understat_16388,2021,2021-08-21,Aston Villa,Newcastle United,2,0,1.18426,0.63163
+understat,understat_16389,2021,2021-08-21,Crystal Palace,Brentford,0,0,0.606313,0.712439
+understat,understat_16390,2021,2021-08-21,Leeds,Everton,2,2,0.966093,1.85713
+understat,understat_16391,2021,2021-08-21,Brighton,Watford,2,0,1.77896,0.407224
+understat,understat_16392,2021,2021-08-22,Southampton,Manchester United,1,1,0.587526,2.26173
+understat,understat_16393,2021,2021-08-22,Wolverhampton Wanderers,Tottenham,0,1,1.51127,1.72636
+understat,understat_16394,2021,2021-08-22,Arsenal,Chelsea,0,2,0.630099,3.64132
+understat,understat_16395,2021,2021-08-23,West Ham,Leicester,4,1,2.28613,0.62676
+understat,understat_16396,2021,2021-08-28,Manchester City,Arsenal,5,0,4.47273,0.116805
+understat,understat_16397,2021,2021-08-28,Newcastle United,Southampton,2,2,1.19077,3.46036
+understat,understat_16398,2021,2021-08-28,Norwich,Leicester,1,2,1.44084,1.27371
+understat,understat_16399,2021,2021-08-28,Aston Villa,Brentford,1,1,0.431464,1.13312
+understat,understat_16400,2021,2021-08-28,Brighton,Everton,0,2,0.701622,1.54868
+understat,understat_16401,2021,2021-08-28,West Ham,Crystal Palace,2,2,1.44748,1.67658
+understat,understat_16402,2021,2021-08-28,Liverpool,Chelsea,1,1,2.08462,0.573638
+understat,understat_16403,2021,2021-08-29,Burnley,Leeds,1,1,1.71102,1.52078
+understat,understat_16404,2021,2021-08-29,Tottenham,Watford,1,0,0.920963,0.596016
+understat,understat_16405,2021,2021-08-29,Wolverhampton Wanderers,Manchester United,0,1,1.79575,0.944083
+understat,understat_16406,2021,2021-09-11,Crystal Palace,Tottenham,3,0,2.89372,0.0775646
+understat,understat_16407,2021,2021-09-11,Arsenal,Norwich,1,0,2.68515,0.577292
+understat,understat_16408,2021,2021-09-11,Brentford,Brighton,0,1,0.729786,0.287902
+understat,understat_16409,2021,2021-09-11,Leicester,Manchester City,0,1,0.8001,2.75058
+understat,understat_16410,2021,2021-09-11,Manchester United,Newcastle United,4,1,2.77326,0.622042
+understat,understat_16411,2021,2021-09-11,Southampton,West Ham,0,0,0.692135,0.725407
+understat,understat_16412,2021,2021-09-11,Watford,Wolverhampton Wanderers,0,2,0.185407,2.55922
+understat,understat_16413,2021,2021-09-11,Chelsea,Aston Villa,3,0,1.22153,1.17349
+understat,understat_16414,2021,2021-09-12,Leeds,Liverpool,0,3,0.652514,4.4016
+understat,understat_16415,2021,2021-09-13,Everton,Burnley,3,1,1.80386,1.82061
+understat,understat_16416,2021,2021-09-17,Newcastle United,Leeds,1,1,1.17668,1.42995
+understat,understat_16417,2021,2021-09-18,Wolverhampton Wanderers,Brentford,0,2,1.02316,2.32741
+understat,understat_16418,2021,2021-09-18,Norwich,Watford,1,3,0.782665,2.42487
+understat,understat_16419,2021,2021-09-18,Burnley,Arsenal,0,1,0.775574,1.09928
+understat,understat_16420,2021,2021-09-18,Liverpool,Crystal Palace,3,0,2.76793,0.644168
+understat,understat_16421,2021,2021-09-18,Manchester City,Southampton,0,0,1.22451,0.490923
+understat,understat_16422,2021,2021-09-18,Aston Villa,Everton,3,0,0.777716,0.755035
+understat,understat_16423,2021,2021-09-19,Brighton,Leicester,2,1,1.47438,1.25373
+understat,understat_16424,2021,2021-09-19,West Ham,Manchester United,1,2,1.6671,1.8954
+understat,understat_16425,2021,2021-09-19,Tottenham,Chelsea,0,3,0.70567,2.5869
+understat,understat_16426,2021,2021-09-25,Chelsea,Manchester City,0,1,0.194202,1.69244
+understat,understat_16431,2021,2021-09-25,Manchester United,Aston Villa,0,1,1.9251,1.57249
+understat,understat_16427,2021,2021-09-25,Watford,Newcastle United,1,1,0.904061,2.52338
+understat,understat_16428,2021,2021-09-25,Everton,Norwich,2,0,2.26681,0.800903
+understat,understat_16429,2021,2021-09-25,Leeds,West Ham,1,2,1.1967,1.98962
+understat,understat_16430,2021,2021-09-25,Leicester,Burnley,2,2,2.16233,0.428866
+understat,understat_16432,2021,2021-09-25,Brentford,Liverpool,3,3,2.94058,2.25736
+understat,understat_16433,2021,2021-09-26,Southampton,Wolverhampton Wanderers,0,1,0.909342,0.909833
+understat,understat_16434,2021,2021-09-26,Arsenal,Tottenham,3,1,1.44499,0.980166
+understat,understat_16435,2021,2021-09-27,Crystal Palace,Brighton,1,1,1.36836,0.649566
+understat,understat_16442,2021,2021-10-02,Manchester United,Everton,1,1,1.0496,1.32211
+understat,understat_16437,2021,2021-10-02,Burnley,Norwich,0,0,0.584725,0.673617
+understat,understat_16438,2021,2021-10-02,Chelsea,Southampton,3,1,3.79243,1.52634
+understat,understat_16440,2021,2021-10-02,Leeds,Watford,1,0,1.57388,0.192794
+understat,understat_16445,2021,2021-10-02,Wolverhampton Wanderers,Newcastle United,2,1,1.15849,0.865217
+understat,understat_16436,2021,2021-10-02,Brighton,Arsenal,0,0,1.11551,0.36431
+understat,understat_16439,2021,2021-10-03,Crystal Palace,Leicester,2,2,1.1703,1.04322
+understat,understat_16443,2021,2021-10-03,Tottenham,Aston Villa,2,1,1.78187,1.07395
+understat,understat_16444,2021,2021-10-03,West Ham,Brentford,1,2,1.37258,1.30098
+understat,understat_16441,2021,2021-10-03,Liverpool,Manchester City,2,2,0.949368,1.04319
+understat,understat_16455,2021,2021-10-16,Watford,Liverpool,0,5,0.302302,3.65553
+understat,understat_16447,2021,2021-10-16,Aston Villa,Wolverhampton Wanderers,2,3,1.21276,2.19633
+understat,understat_16450,2021,2021-10-16,Leicester,Manchester United,4,2,2.96611,1.02494
+understat,understat_16451,2021,2021-10-16,Manchester City,Burnley,2,0,2.15712,1.07719
+understat,understat_16453,2021,2021-10-16,Norwich,Brighton,0,0,1.16088,1.17572
+understat,understat_16454,2021,2021-10-16,Southampton,Leeds,1,0,1.83082,0.446173
+understat,understat_16448,2021,2021-10-16,Brentford,Chelsea,0,1,1.62169,0.248256
+understat,understat_16449,2021,2021-10-17,Everton,West Ham,0,1,0.854165,2.03034
+understat,understat_16452,2021,2021-10-17,Newcastle United,Tottenham,2,3,0.645658,1.55008
+understat,understat_16446,2021,2021-10-18,Arsenal,Crystal Palace,2,2,1.7436,0.492239
+understat,understat_16456,2021,2021-10-22,Arsenal,Aston Villa,3,1,3.4984,1.41088
+understat,understat_16459,2021,2021-10-23,Chelsea,Norwich,7,0,3.10509,0.267429
+understat,understat_16460,2021,2021-10-23,Crystal Palace,Newcastle United,1,1,2.25588,0.721813
+understat,understat_16461,2021,2021-10-23,Everton,Watford,2,5,1.84089,3.10344
+understat,understat_16462,2021,2021-10-23,Leeds,Wolverhampton Wanderers,1,1,1.71313,0.858644
+understat,understat_16464,2021,2021-10-23,Southampton,Burnley,2,2,1.42567,0.673195
+understat,understat_16458,2021,2021-10-23,Brighton,Manchester City,1,4,1.1695,3.57376
+understat,understat_16457,2021,2021-10-24,Brentford,Leicester,1,2,1.16789,1.00254
+understat,understat_16465,2021,2021-10-24,West Ham,Tottenham,1,0,1.73468,0.672198
+understat,understat_16463,2021,2021-10-24,Manchester United,Liverpool,0,5,1.35584,4.04765
+understat,understat_16468,2021,2021-10-30,Leicester,Arsenal,0,2,1.98801,1.10288
+understat,understat_16467,2021,2021-10-30,Burnley,Brentford,3,1,2.72901,0.834312
+understat,understat_16469,2021,2021-10-30,Liverpool,Brighton,2,2,1.39778,1.51032
+understat,understat_16470,2021,2021-10-30,Manchester City,Crystal Palace,0,2,0.65739,1.05029
+understat,understat_16471,2021,2021-10-30,Newcastle United,Chelsea,0,3,0.157616,2.16608
+understat,understat_16474,2021,2021-10-30,Watford,Southampton,0,1,0.852556,1.90757
+understat,understat_16473,2021,2021-10-30,Tottenham,Manchester United,0,3,1.15787,1.38612
+understat,understat_16472,2021,2021-10-31,Norwich,Leeds,1,2,0.661887,1.16855
+understat,understat_16466,2021,2021-10-31,Aston Villa,West Ham,1,4,0.687551,2.66391
+understat,understat_16475,2021,2021-11-01,Wolverhampton Wanderers,Everton,2,1,1.69344,1.69767
+understat,understat_16484,2021,2021-11-05,Southampton,Aston Villa,1,0,0.89818,0.536077
+understat,understat_16483,2021,2021-11-06,Manchester United,Manchester City,0,2,0.759561,2.04202
+understat,understat_16477,2021,2021-11-06,Brentford,Norwich,1,2,2.79229,1.15797
+understat,understat_16479,2021,2021-11-06,Chelsea,Burnley,1,1,3.00585,0.674072
+understat,understat_16480,2021,2021-11-06,Crystal Palace,Wolverhampton Wanderers,2,0,2.65161,0.25416
+understat,understat_16478,2021,2021-11-06,Brighton,Newcastle United,1,1,1.43123,0.227321
+understat,understat_16476,2021,2021-11-07,Arsenal,Watford,1,0,1.49208,0.491659
+understat,understat_16481,2021,2021-11-07,Everton,Tottenham,0,0,0.597906,0.801798
+understat,understat_16482,2021,2021-11-07,Leeds,Leicester,1,1,1.96551,0.795292
+understat,understat_16485,2021,2021-11-07,West Ham,Liverpool,3,2,1.25298,1.45641
+understat,understat_16488,2021,2021-11-20,Leicester,Chelsea,0,3,0.499504,2.57178
+understat,understat_16486,2021,2021-11-20,Aston Villa,Brighton,2,0,1.06946,0.582787
+understat,understat_16487,2021,2021-11-20,Burnley,Crystal Palace,3,3,1.04224,1.74839
+understat,understat_16491,2021,2021-11-20,Newcastle United,Brentford,3,3,2.18388,1.23275
+understat,understat_16492,2021,2021-11-20,Norwich,Southampton,2,1,0.43778,1.13118
+understat,understat_16494,2021,2021-11-20,Watford,Manchester United,4,1,2.73393,1.66794
+understat,understat_16495,2021,2021-11-20,Wolverhampton Wanderers,West Ham,1,0,1.31903,0.436331
+understat,understat_16489,2021,2021-11-20,Liverpool,Arsenal,4,0,3.97374,0.268025
+understat,understat_16490,2021,2021-11-21,Manchester City,Everton,3,0,2.61302,0.266894
+understat,understat_16493,2021,2021-11-21,Tottenham,Leeds,2,1,2.31744,1.46689
+understat,understat_16496,2021,2021-11-27,Arsenal,Newcastle United,2,0,2.84493,0.185383
+understat,understat_16501,2021,2021-11-27,Crystal Palace,Aston Villa,1,2,0.962129,0.454305
+understat,understat_16503,2021,2021-11-27,Liverpool,Southampton,4,0,3.07278,0.966132
+understat,understat_16505,2021,2021-11-27,Norwich,Wolverhampton Wanderers,0,0,1.4047,0.297157
+understat,understat_16498,2021,2021-11-27,Brighton,Leeds,0,0,1.90498,0.864829
+understat,understat_16497,2021,2021-11-28,Brentford,Everton,1,0,1.19813,0.968075
+understat,understat_16502,2021,2021-11-28,Leicester,Watford,4,2,2.16027,2.38383
+understat,understat_16504,2021,2021-11-28,Manchester City,West Ham,2,1,2.72187,0.171763
+understat,understat_16500,2021,2021-11-28,Chelsea,Manchester United,1,1,2.34525,0.563367
+understat,understat_16513,2021,2021-11-30,Newcastle United,Norwich,1,1,1.15636,1.51084
+understat,understat_16508,2021,2021-11-30,Leeds,Crystal Palace,1,0,1.9818,0.707328
+understat,understat_16509,2021,2021-12-01,Watford,Chelsea,1,2,0.990877,0.908574
+understat,understat_16510,2021,2021-12-01,West Ham,Brighton,1,1,1.14679,1.2607
+understat,understat_16511,2021,2021-12-01,Wolverhampton Wanderers,Burnley,0,0,0.711691,0.195537
+understat,understat_16514,2021,2021-12-01,Southampton,Leicester,2,2,1.91169,1.4401
+understat,understat_16506,2021,2021-12-01,Aston Villa,Manchester City,1,2,0.772083,1.01897
+understat,understat_16507,2021,2021-12-01,Everton,Liverpool,1,4,0.512263,2.86067
+understat,understat_16515,2021,2021-12-02,Tottenham,Brentford,2,0,2.07248,0.225492
+understat,understat_16512,2021,2021-12-02,Manchester United,Arsenal,3,2,1.85597,1.16638
+understat,understat_16524,2021,2021-12-04,West Ham,Chelsea,3,2,2.0174,1.37049
+understat,understat_16520,2021,2021-12-04,Newcastle United,Burnley,1,0,1.70609,0.604599
+understat,understat_16521,2021,2021-12-04,Southampton,Brighton,1,1,1.34236,1.4872
+understat,understat_16525,2021,2021-12-04,Wolverhampton Wanderers,Liverpool,0,1,0.095167,2.42332
+understat,understat_16523,2021,2021-12-04,Watford,Manchester City,1,3,0.675105,4.03223
+understat,understat_16518,2021,2021-12-05,Leeds,Brentford,2,2,1.41896,1.19959
+understat,understat_16519,2021,2021-12-05,Manchester United,Crystal Palace,1,0,0.870376,0.520593
+understat,understat_16522,2021,2021-12-05,Tottenham,Norwich,3,0,2.00668,1.06562
+understat,understat_16516,2021,2021-12-05,Aston Villa,Leicester,2,1,1.84818,0.982614
+understat,understat_16517,2021,2021-12-06,Everton,Arsenal,2,1,1.06108,1.05723
+understat,understat_16527,2021,2021-12-10,Brentford,Watford,2,1,1.82799,0.561554
+understat,understat_16534,2021,2021-12-11,Manchester City,Wolverhampton Wanderers,1,0,2.99915,0.0762839
+understat,understat_16526,2021,2021-12-11,Arsenal,Southampton,3,0,2.08429,0.502215
+understat,understat_16530,2021,2021-12-11,Chelsea,Leeds,3,2,2.74844,1.72934
+understat,understat_16533,2021,2021-12-11,Liverpool,Aston Villa,1,0,2.71181,0.140573
+understat,understat_16535,2021,2021-12-11,Norwich,Manchester United,0,1,0.986107,2.09817
+understat,understat_16529,2021,2021-12-12,Burnley,West Ham,0,0,0.54801,0.998813
+understat,understat_16532,2021,2021-12-12,Leicester,Newcastle United,4,0,2.05771,0.511934
+understat,understat_16531,2021,2021-12-12,Crystal Palace,Everton,3,1,2.09864,1.27556
+understat,understat_16541,2021,2021-12-14,Norwich,Aston Villa,0,2,0.502647,1.96261
+understat,understat_16545,2021,2021-12-14,Manchester City,Leeds,7,0,3.31349,0.227498
+understat,understat_16538,2021,2021-12-15,Brighton,Wolverhampton Wanderers,0,1,1.20118,1.11736
+understat,understat_16542,2021,2021-12-15,Crystal Palace,Southampton,2,2,1.49244,0.625183
+understat,understat_16536,2021,2021-12-15,Arsenal,West Ham,2,0,2.81482,0.338855
+understat,understat_16543,2021,2021-12-16,Chelsea,Everton,1,1,3.20239,0.627528
+understat,understat_16544,2021,2021-12-16,Liverpool,Newcastle United,3,1,2.93912,0.2064
+understat,understat_16548,2021,2021-12-18,Leeds,Arsenal,1,4,1.31408,3.69008
+understat,understat_16555,2021,2021-12-19,Wolverhampton Wanderers,Chelsea,0,0,0.321371,0.793952
+understat,understat_16550,2021,2021-12-19,Newcastle United,Manchester City,0,4,0.174208,3.64686
+understat,understat_16552,2021,2021-12-19,Tottenham,Liverpool,2,2,2.79777,1.54944
+understat,understat_16560,2021,2021-12-26,Manchester City,Leicester,6,3,3.82869,2.43425
+understat,understat_16562,2021,2021-12-26,Norwich,Arsenal,0,5,0.154212,2.87539
+understat,understat_16563,2021,2021-12-26,Tottenham,Crystal Palace,3,0,2.82148,0.178324
+understat,understat_16564,2021,2021-12-26,West Ham,Southampton,2,3,1.53745,1.35643
+understat,understat_16556,2021,2021-12-26,Aston Villa,Chelsea,1,3,0.474029,2.8285
+understat,understat_16557,2021,2021-12-26,Brighton,Brentford,2,0,0.943363,1.10342
+understat,understat_16561,2021,2021-12-27,Newcastle United,Manchester United,1,1,1.26586,1.75587
+understat,understat_16569,2021,2021-12-28,Watford,West Ham,1,4,1.0143,2.84084
+understat,understat_16570,2021,2021-12-28,Crystal Palace,Norwich,3,0,2.38978,0.594134
+understat,understat_16575,2021,2021-12-28,Southampton,Tottenham,1,1,0.353043,2.80917
+understat,understat_16573,2021,2021-12-28,Leicester,Liverpool,1,0,0.615892,2.72682
+understat,understat_16568,2021,2021-12-29,Chelsea,Brighton,1,1,0.763458,0.78663
+understat,understat_16567,2021,2021-12-29,Brentford,Manchester City,0,1,0.238829,1.01763
+understat,understat_16574,2021,2021-12-30,Manchester United,Burnley,3,1,1.80776,0.871738
+understat,understat_16576,2021,2022-01-01,Arsenal,Manchester City,1,2,0.836949,1.94623
+understat,understat_16585,2021,2022-01-01,Watford,Tottenham,0,1,0.303514,1.93752
+understat,understat_16579,2021,2022-01-01,Crystal Palace,West Ham,2,3,2.69204,2.23146
+understat,understat_16577,2021,2022-01-02,Brentford,Aston Villa,2,1,0.501329,1.13821
+understat,understat_16580,2021,2022-01-02,Everton,Brighton,2,3,1.82698,1.48397
+understat,understat_16581,2021,2022-01-02,Leeds,Burnley,3,1,2.04186,0.960493
+understat,understat_16578,2021,2022-01-02,Chelsea,Liverpool,2,2,1.389,1.78897
+understat,understat_16583,2021,2022-01-03,Manchester United,Wolverhampton Wanderers,0,1,0.768752,0.840925
+understat,understat_16551,2021,2022-01-11,Southampton,Brentford,4,1,1.59306,0.621466
+understat,understat_16554,2021,2022-01-12,West Ham,Norwich,2,0,2.89217,0.343347
+understat,understat_16587,2021,2022-01-14,Brighton,Crystal Palace,1,1,2.18053,0.509681
+understat,understat_16590,2021,2022-01-15,Manchester City,Chelsea,1,0,0.901703,0.613757
+understat,understat_16591,2021,2022-01-15,Newcastle United,Watford,1,1,1.03855,1.49623
+understat,understat_16592,2021,2022-01-15,Norwich,Everton,2,1,1.00153,0.541027
+understat,understat_16595,2021,2022-01-15,Wolverhampton Wanderers,Southampton,3,1,2.29917,0.91728
+understat,understat_16586,2021,2022-01-15,Aston Villa,Manchester United,2,2,1.82784,1.35378
+understat,understat_16589,2021,2022-01-16,Liverpool,Brentford,3,0,3.49099,0.376656
+understat,understat_16594,2021,2022-01-16,West Ham,Leeds,2,3,2.3549,2.26884
+understat,understat_16607,2021,2022-01-18,Brighton,Chelsea,1,1,0.747557,0.572994
+understat,understat_16540,2021,2022-01-19,Leicester,Tottenham,2,3,1.95031,4.24711
+understat,understat_16537,2021,2022-01-19,Brentford,Manchester United,1,3,2.081,2.05969
+understat,understat_16605,2021,2022-01-21,Watford,Norwich,0,3,1.30606,0.925212
+understat,understat_16600,2021,2022-01-22,Everton,Aston Villa,0,1,1.2384,0.860245
+understat,understat_16597,2021,2022-01-22,Brentford,Wolverhampton Wanderers,1,2,0.742573,0.218211
+understat,understat_16601,2021,2022-01-22,Leeds,Newcastle United,0,1,1.12992,1.15904
+understat,understat_16603,2021,2022-01-22,Manchester United,West Ham,1,0,1.75857,0.238027
+understat,understat_16604,2021,2022-01-22,Southampton,Manchester City,1,1,1.00222,1.62907
+understat,understat_16596,2021,2022-01-23,Arsenal,Burnley,0,0,1.35507,0.388963
+understat,understat_16599,2021,2022-01-23,Crystal Palace,Liverpool,1,3,1.62615,1.49697
+understat,understat_16602,2021,2022-01-23,Leicester,Brighton,1,1,1.70979,1.19738
+understat,understat_16598,2021,2022-01-23,Chelsea,Tottenham,2,0,1.04212,0.328818
+understat,understat_16539,2021,2022-02-05,Burnley,Watford,0,0,0.765905,0.933965
+understat,understat_16610,2021,2022-02-08,West Ham,Watford,1,0,0.905143,0.335474
+understat,understat_16612,2021,2022-02-08,Newcastle United,Everton,3,1,2.68732,0.823607
+understat,understat_16608,2021,2022-02-08,Burnley,Manchester United,1,1,0.772721,1.83387
+understat,understat_16609,2021,2022-02-09,Norwich,Crystal Palace,1,1,0.296411,1.22883
+understat,understat_16613,2021,2022-02-09,Tottenham,Southampton,2,3,1.74286,1.73293
+understat,understat_16615,2021,2022-02-09,Manchester City,Brentford,2,0,1.98246,0.461305
+understat,understat_16606,2021,2022-02-09,Aston Villa,Leeds,3,3,1.5013,2.52914
+understat,understat_16611,2021,2022-02-10,Wolverhampton Wanderers,Arsenal,0,1,0.641359,1.45247
+understat,understat_16614,2021,2022-02-10,Liverpool,Leicester,2,0,2.72997,0.544954
+understat,understat_16621,2021,2022-02-12,Manchester United,Southampton,1,1,2.99207,0.677386
+understat,understat_16616,2021,2022-02-12,Brentford,Crystal Palace,0,0,1.97576,0.49802
+understat,understat_16619,2021,2022-02-12,Everton,Leeds,3,0,2.58561,0.242668
+understat,understat_16625,2021,2022-02-12,Watford,Brighton,0,2,0.532979,1.80456
+understat,understat_16623,2021,2022-02-12,Norwich,Manchester City,0,4,0.356755,4.44653
+understat,understat_16617,2021,2022-02-13,Burnley,Liverpool,0,1,1.16081,1.95722
+understat,understat_16622,2021,2022-02-13,Newcastle United,Aston Villa,1,0,0.527571,0.455206
+understat,understat_16624,2021,2022-02-13,Tottenham,Wolverhampton Wanderers,0,2,0.838197,1.87026
+understat,understat_16620,2021,2022-02-13,Leicester,West Ham,2,2,1.40693,0.745068
+understat,understat_16549,2021,2022-02-15,Manchester United,Brighton,2,0,2.74936,1.26179
+understat,understat_16634,2021,2022-02-19,West Ham,Newcastle United,1,1,0.847948,0.932574
+understat,understat_16626,2021,2022-02-19,Arsenal,Brentford,2,1,1.52247,0.640726
+understat,understat_16627,2021,2022-02-19,Aston Villa,Watford,0,1,1.0267,1.82051
+understat,understat_16628,2021,2022-02-19,Brighton,Burnley,0,3,0.44587,0.821228
+understat,understat_16629,2021,2022-02-19,Crystal Palace,Chelsea,0,1,0.624023,1.12339
+understat,understat_16631,2021,2022-02-19,Liverpool,Norwich,3,1,3.15449,0.66975
+understat,understat_16633,2021,2022-02-19,Southampton,Everton,2,0,2.72851,0.19991
+understat,understat_16632,2021,2022-02-19,Manchester City,Tottenham,2,3,2.31773,2.00235
+understat,understat_16630,2021,2022-02-20,Leeds,Manchester United,2,4,1.74476,2.60999
+understat,understat_16635,2021,2022-02-20,Wolverhampton Wanderers,Leicester,2,1,0.472777,1.55048
+understat,understat_16499,2021,2022-02-23,Burnley,Tottenham,1,0,1.55576,0.691655
+understat,understat_16553,2021,2022-02-23,Watford,Crystal Palace,1,4,1.71917,0.818403
+understat,understat_16559,2021,2022-02-23,Liverpool,Leeds,6,0,5.3303,0.141547
+understat,understat_16566,2021,2022-02-24,Arsenal,Wolverhampton Wanderers,2,1,2.50961,1.10934
+understat,understat_16644,2021,2022-02-25,Southampton,Norwich,2,0,3.08863,0.424877
+understat,understat_16642,2021,2022-02-26,Leeds,Tottenham,0,4,1.89569,2.47025
+understat,understat_16637,2021,2022-02-26,Brentford,Newcastle United,0,2,0.494232,2.25373
+understat,understat_16640,2021,2022-02-26,Crystal Palace,Burnley,1,1,1.03765,0.255988
+understat,understat_16643,2021,2022-02-26,Manchester United,Watford,0,0,2.41457,0.437185
+understat,understat_16638,2021,2022-02-26,Brighton,Aston Villa,0,2,0.627107,1.3027
+understat,understat_16641,2021,2022-02-26,Everton,Manchester City,0,1,0.770819,1.93422
+understat,understat_16645,2021,2022-02-27,West Ham,Wolverhampton Wanderers,1,0,1.62241,0.892018
+understat,understat_16588,2021,2022-03-01,Burnley,Leicester,0,2,1.04214,1.79558
+understat,understat_16648,2021,2022-03-05,Leicester,Leeds,1,0,0.359129,2.14389
+understat,understat_16646,2021,2022-03-05,Aston Villa,Southampton,4,0,2.85379,1.32947
+understat,understat_16647,2021,2022-03-05,Burnley,Chelsea,0,4,0.849232,2.2868
+understat,understat_16651,2021,2022-03-05,Newcastle United,Brighton,2,1,1.58028,1.64995
+understat,understat_16652,2021,2022-03-05,Norwich,Brentford,1,3,0.77334,2.22064
+understat,understat_16655,2021,2022-03-05,Wolverhampton Wanderers,Crystal Palace,0,2,0.710865,2.53759
+understat,understat_16649,2021,2022-03-05,Liverpool,West Ham,1,0,2.18865,1.33829
+understat,understat_16654,2021,2022-03-06,Watford,Arsenal,2,3,1.29603,1.00457
+understat,understat_16650,2021,2022-03-06,Manchester City,Manchester United,4,1,2.74434,0.361782
+understat,understat_16653,2021,2022-03-07,Tottenham,Everton,5,0,3.24279,0.208263
+understat,understat_16565,2021,2022-03-10,Wolverhampton Wanderers,Watford,4,0,1.55037,0.498696
+understat,understat_16584,2021,2022-03-10,Southampton,Newcastle United,1,2,1.79835,0.812233
+understat,understat_16672,2021,2022-03-10,Norwich,Chelsea,1,3,0.965723,2.1308
+understat,understat_16572,2021,2022-03-10,Leeds,Aston Villa,0,3,0.194028,1.2729
+understat,understat_16658,2021,2022-03-12,Brighton,Liverpool,0,2,0.629316,2.48312
+understat,understat_16657,2021,2022-03-12,Brentford,Burnley,2,0,1.82002,0.825311
+understat,understat_16663,2021,2022-03-12,Manchester United,Tottenham,3,2,1.0181,1.62374
+understat,understat_16659,2021,2022-03-13,Chelsea,Newcastle United,1,0,1.07072,0.246037
+understat,understat_16661,2021,2022-03-13,Everton,Wolverhampton Wanderers,0,1,0.397268,0.712135
+understat,understat_16662,2021,2022-03-13,Leeds,Norwich,2,1,3.11755,1.40148
+understat,understat_16664,2021,2022-03-13,Southampton,Watford,1,2,1.25696,1.29385
+understat,understat_16665,2021,2022-03-13,West Ham,Aston Villa,2,1,1.58468,1.05391
+understat,understat_16656,2021,2022-03-13,Arsenal,Leicester,2,0,2.93665,0.54911
+understat,understat_16660,2021,2022-03-14,Crystal Palace,Manchester City,0,0,0.474002,2.04021
+understat,understat_16528,2021,2022-03-16,Brighton,Tottenham,0,2,1.04171,2.05196
+understat,understat_16636,2021,2022-03-16,Arsenal,Liverpool,0,2,0.534265,1.27681
+understat,understat_16571,2021,2022-03-17,Everton,Newcastle United,1,0,0.708809,0.75803
+understat,understat_16675,2021,2022-03-18,Wolverhampton Wanderers,Leeds,2,3,1.24075,2.82103
+understat,understat_16666,2021,2022-03-19,Aston Villa,Arsenal,0,1,0.309375,1.14522
+understat,understat_16668,2021,2022-03-20,Leicester,Brentford,2,1,1.27865,1.72466
+understat,understat_16673,2021,2022-03-20,Tottenham,West Ham,3,1,2.54795,0.644964
+understat,understat_16680,2021,2022-04-02,Liverpool,Watford,2,0,2.23651,0.753307
+understat,understat_16676,2021,2022-04-02,Wolverhampton Wanderers,Aston Villa,2,1,1.62151,1.91256
+understat,understat_16681,2021,2022-04-02,Leeds,Southampton,1,1,1.50715,2.06387
+understat,understat_16683,2021,2022-04-02,Chelsea,Brentford,1,4,1.29014,2.43422
+understat,understat_16684,2021,2022-04-02,Burnley,Manchester City,0,2,0.0591223,1.62008
+understat,understat_16685,2021,2022-04-02,Brighton,Norwich,0,0,2.38297,0.494112
+understat,understat_16679,2021,2022-04-02,Manchester United,Leicester,1,1,0.902127,1.07638
+understat,understat_16677,2021,2022-04-03,West Ham,Everton,2,1,1.49657,0.657846
+understat,understat_16678,2021,2022-04-03,Tottenham,Newcastle United,5,1,3.6081,0.538152
+understat,understat_16682,2021,2022-04-04,Crystal Palace,Arsenal,3,0,1.39707,1.05199
+understat,understat_16558,2021,2022-04-06,Burnley,Everton,3,2,2.24439,2.31574
+understat,understat_16689,2021,2022-04-08,Newcastle United,Wolverhampton Wanderers,1,0,1.43878,0.306867
+understat,understat_16692,2021,2022-04-09,Everton,Manchester United,1,0,0.357295,0.762357
+understat,understat_16686,2021,2022-04-09,Watford,Leeds,0,3,1.07422,0.895612
+understat,understat_16687,2021,2022-04-09,Southampton,Chelsea,0,6,0.564726,4.39683
+understat,understat_16695,2021,2022-04-09,Arsenal,Brighton,1,2,2.35153,0.596106
+understat,understat_16694,2021,2022-04-09,Aston Villa,Tottenham,0,4,1.48712,0.983601
+understat,understat_16688,2021,2022-04-10,Norwich,Burnley,2,0,1.6723,1.44652
+understat,understat_16691,2021,2022-04-10,Leicester,Crystal Palace,2,1,0.879235,1.52767
+understat,understat_16693,2021,2022-04-10,Brentford,West Ham,2,0,1.85534,0.244824
+understat,understat_16690,2021,2022-04-10,Manchester City,Liverpool,2,2,1.34647,1.29983
+understat,understat_16699,2021,2022-04-16,Tottenham,Brighton,0,1,0.58624,0.711155
+understat,understat_16698,2021,2022-04-16,Watford,Brentford,1,2,1.50381,2.12457
+understat,understat_16700,2021,2022-04-16,Southampton,Arsenal,1,0,1.04007,1.35002
+understat,understat_16702,2021,2022-04-16,Manchester United,Norwich,3,2,1.66737,1.79754
+understat,understat_16697,2021,2022-04-17,West Ham,Burnley,1,1,2.79175,1.88137
+understat,understat_16701,2021,2022-04-17,Newcastle United,Leicester,2,1,2.54294,0.541084
+understat,understat_16669,2021,2022-04-19,Liverpool,Manchester United,4,0,2.25967,0.110227
+understat,understat_16547,2021,2022-04-20,Everton,Leicester,1,1,1.68819,0.786333
+understat,understat_16618,2021,2022-04-20,Chelsea,Arsenal,2,4,0.593801,1.87331
+understat,understat_16671,2021,2022-04-20,Newcastle United,Crystal Palace,1,0,0.767855,0.432788
+understat,understat_16670,2021,2022-04-20,Manchester City,Brighton,3,0,1.52844,0.117354
+understat,understat_16667,2021,2022-04-21,Burnley,Southampton,2,0,2.14743,1.31837
+understat,understat_16715,2021,2022-04-23,Arsenal,Manchester United,3,1,2.54173,2.04244
+understat,understat_16706,2021,2022-04-23,Norwich,Newcastle United,0,3,0.657661,1.87558
+understat,understat_16707,2021,2022-04-23,Manchester City,Watford,5,1,3.68,0.42632
+understat,understat_16709,2021,2022-04-23,Leicester,Aston Villa,0,0,0.235635,0.593202
+understat,understat_16714,2021,2022-04-23,Brentford,Tottenham,0,0,1.3153,0.517755
+understat,understat_16711,2021,2022-04-24,Chelsea,West Ham,1,0,2.34959,0.388975
+understat,understat_16712,2021,2022-04-24,Burnley,Wolverhampton Wanderers,1,0,1.27298,0.592902
+understat,understat_16713,2021,2022-04-24,Brighton,Southampton,2,2,1.87343,0.926764
+understat,understat_16708,2021,2022-04-24,Liverpool,Everton,2,0,1.70397,0.424961
+understat,understat_16710,2021,2022-04-25,Crystal Palace,Leeds,0,0,1.61656,0.374044
+understat,understat_16742,2021,2022-04-28,Manchester United,Chelsea,1,1,0.618456,2.46868
+understat,understat_16721,2021,2022-04-30,Newcastle United,Liverpool,0,1,0.115353,2.73435
+understat,understat_16716,2021,2022-04-30,Wolverhampton Wanderers,Brighton,0,3,0.525912,2.90679
+understat,understat_16718,2021,2022-04-30,Watford,Burnley,1,2,0.785742,1.37022
+understat,understat_16720,2021,2022-04-30,Southampton,Crystal Palace,1,2,0.650256,0.756217
+understat,understat_16725,2021,2022-04-30,Aston Villa,Norwich,2,0,2.31192,0.352212
+understat,understat_16723,2021,2022-04-30,Leeds,Manchester City,0,4,1.03608,3.01431
+understat,understat_16719,2021,2022-05-01,Tottenham,Leicester,3,1,1.65338,0.274133
+understat,understat_16724,2021,2022-05-01,Everton,Chelsea,1,0,1.11712,1.21141
+understat,understat_16717,2021,2022-05-01,West Ham,Arsenal,1,2,0.451976,0.964564
+understat,understat_16722,2021,2022-05-02,Manchester United,Brentford,3,0,1.84111,0.681425
+understat,understat_16730,2021,2022-05-07,Crystal Palace,Watford,1,0,2.49142,0.255373
+understat,understat_16731,2021,2022-05-07,Chelsea,Wolverhampton Wanderers,2,2,1.82098,1.6842
+understat,understat_16732,2021,2022-05-07,Burnley,Aston Villa,1,3,1.31028,1.81256
+understat,understat_16734,2021,2022-05-07,Brentford,Southampton,3,0,3.68223,0.988574
+understat,understat_16733,2021,2022-05-07,Brighton,Manchester United,4,0,2.82636,0.930715
+understat,understat_16728,2021,2022-05-07,Liverpool,Tottenham,1,1,1.0481,0.982635
+understat,understat_16726,2021,2022-05-08,Norwich,West Ham,0,4,0.77895,3.25894
+understat,understat_16729,2021,2022-05-08,Leicester,Everton,1,2,1.47479,1.55635
+understat,understat_16735,2021,2022-05-08,Arsenal,Leeds,2,1,2.7227,0.696785
+understat,understat_16727,2021,2022-05-08,Manchester City,Newcastle United,5,0,4.05613,0.995099
+understat,understat_16705,2021,2022-05-10,Aston Villa,Liverpool,1,2,1.44726,1.75417
+understat,understat_16703,2021,2022-05-11,Leeds,Chelsea,0,3,0.499789,1.46853
+understat,understat_16582,2021,2022-05-11,Leicester,Norwich,3,0,2.57058,1.21966
+understat,understat_16674,2021,2022-05-11,Watford,Everton,0,0,0.232236,0.812193
+understat,understat_16696,2021,2022-05-11,Wolverhampton Wanderers,Manchester City,1,5,0.411857,3.39304
+understat,understat_16593,2021,2022-05-12,Tottenham,Arsenal,3,0,3.42522,0.387446
+understat,understat_16739,2021,2022-05-15,Tottenham,Burnley,1,0,2.39449,0.629888
+understat,understat_16736,2021,2022-05-15,Wolverhampton Wanderers,Norwich,1,1,0.999066,1.53212
+understat,understat_16737,2021,2022-05-15,West Ham,Manchester City,2,2,1.0088,2.14723
+understat,understat_16738,2021,2022-05-15,Watford,Leicester,1,5,2.58968,2.27297
+understat,understat_16743,2021,2022-05-15,Leeds,Brighton,1,1,2.22282,2.25898
+understat,understat_16745,2021,2022-05-15,Aston Villa,Crystal Palace,1,1,0.799443,1.39009
+understat,understat_16744,2021,2022-05-15,Everton,Brentford,2,3,2.69589,1.81626
+understat,understat_16741,2021,2022-05-16,Newcastle United,Arsenal,2,0,1.68299,0.492454
+understat,understat_16740,2021,2022-05-17,Southampton,Liverpool,1,2,0.121506,1.19178
+understat,understat_16704,2021,2022-05-19,Everton,Crystal Palace,3,2,0.813157,1.6023
+understat,understat_16546,2021,2022-05-19,Aston Villa,Burnley,1,1,0.996403,1.63117
+understat,understat_16639,2021,2022-05-19,Chelsea,Leicester,1,1,1.61996,0.0417972
+understat,understat_16746,2021,2022-05-22,Arsenal,Everton,5,1,4.35597,1.08601
+understat,understat_16747,2021,2022-05-22,Brentford,Leeds,1,2,0.844985,1.47786
+understat,understat_16748,2021,2022-05-22,Brighton,West Ham,3,1,1.67774,0.268845
+understat,understat_16749,2021,2022-05-22,Burnley,Newcastle United,1,2,1.49164,1.74291
+understat,understat_16750,2021,2022-05-22,Chelsea,Watford,2,1,2.59231,0.575755
+understat,understat_16751,2021,2022-05-22,Crystal Palace,Manchester United,1,0,0.354618,0.782005
+understat,understat_16752,2021,2022-05-22,Leicester,Southampton,4,1,3.42058,1.05141
+understat,understat_16753,2021,2022-05-22,Liverpool,Wolverhampton Wanderers,3,1,3.19385,1.11708
+understat,understat_16754,2021,2022-05-22,Manchester City,Aston Villa,3,2,3.3209,0.247841
+understat,understat_16755,2021,2022-05-22,Norwich,Tottenham,0,5,0.310789,3.815

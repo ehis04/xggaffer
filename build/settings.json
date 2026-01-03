@@ -1,0 +1,4 @@
+{
+  "remote.WSL.defaultDistro": "Ubuntu-22.04",
+  "python.defaultInterpreterPath": ".venv/bin/python"
+}
