@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Club, ClubMembership, PlayerProfile
+from .models import Club, ClubMembership, ClubPlayer
 
 
 class ClubMembershipInline(admin.TabularInline):
@@ -9,8 +9,8 @@ class ClubMembershipInline(admin.TabularInline):
     raw_id_fields = ['user', 'invited_by']
 
 
-class PlayerProfileInline(admin.TabularInline):
-    model = PlayerProfile
+class ClubPlayerInline(admin.TabularInline):
+    model = ClubPlayer
     extra = 0
     fields = ['first_name', 'last_name', 'squad_number', 'position', 'is_active']
     show_change_link = True
@@ -34,7 +34,7 @@ class ClubAdmin(admin.ModelAdmin):
     raw_id_fields = ['creator']
     readonly_fields = ['member_count', 'player_count', 'created_at', 'updated_at']
     ordering = ['name']
-    inlines = [ClubMembershipInline, PlayerProfileInline]
+    inlines = [ClubMembershipInline, ClubPlayerInline]
 
     fieldsets = [
         (None, {
@@ -71,8 +71,8 @@ class ClubMembershipAdmin(admin.ModelAdmin):
     ordering = ['club', 'role']
 
 
-@admin.register(PlayerProfile)
-class PlayerProfileAdmin(admin.ModelAdmin):
+@admin.register(ClubPlayer)
+class ClubPlayerAdmin(admin.ModelAdmin):
     list_display = [
         'full_name',
         'club',

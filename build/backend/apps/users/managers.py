@@ -2,16 +2,23 @@ from django.contrib.auth.models import BaseUserManager
 
 
 class UserManager(BaseUserManager):
-    """Custom manager for email-based authentication."""
     
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError('Users must have an email address')
         
-        email = self.normalize_email(email)
+        email = self.normalize_email(email.strip())
+        
+        if not email:
+            raise ValueError('Users must have an email address')
+        
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
+        
+        from .models import UserProfile
+        UserProfile.objects.create(user=user)
+        
         return user
     
     def create_superuser(self, email, password=None, **extra_fields):

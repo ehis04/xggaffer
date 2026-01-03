@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
-from apps.clubs.models import Club, ClubMembership, PlayerProfile
+from apps.clubs.models import Club, ClubMembership, ClubPlayer
 from apps.teamsheets.models import Teamsheet, TeamsheetPlayer
 from apps.teamsheets.formations import get_formation_template
 
@@ -76,7 +76,7 @@ class Command(BaseCommand):
 
         player_profiles = []
         for p_data in players_data:
-            player, created = PlayerProfile.objects.get_or_create(
+            player, created = ClubPlayer.objects.get_or_create(
                 club=club,
                 first_name=p_data['first_name'],
                 last_name=p_data['last_name'],

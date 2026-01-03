@@ -75,10 +75,10 @@ export const teamsheetPlayerApi = {
       updates
     ),
 
-  assignPlayer: (clubId: number, teamsheetId: number, slotId: number, playerProfileId: number | null) =>
+  assignPlayer: (clubId: number, teamsheetId: number, slotId: number, clubPlayerId: number | null) =>
     apiClient.post<TeamsheetPlayer>(
       `/clubs/${clubId}/teamsheets/${teamsheetId}/players/${slotId}/assign_player/`,
-      { player_profile_id: playerProfileId }
+      { player_profile_id: clubPlayerId }
     ),
 
   swapPositions: (clubId: number, teamsheetId: number, playerId: number, targetPlayerId: number) =>

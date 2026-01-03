@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 
+
 class Club(models.Model):
     # Visibility options 
     class Visibility(models.TextChoices):
@@ -142,24 +143,7 @@ class ClubMembership(models.Model):
         return self.role != self.Role.PLAYER  
 
 
-# clubs/models/player.py
-
-from django.db import models
-from django.conf import settings
-
-
-class PlayerProfile(models.Model):
-    """
-    Represents a player within a club.
-    
-    Can be either:
-    - Linked to a User (claimed profile)
-    - Unlinked (unclaimed, created by coach)
-    
-    When a new user joins and claims a profile, the existing data
-    transfers to their account.
-    """
-    
+class ClubPlayer(models.Model):
     class Position(models.TextChoices):
         GOALKEEPER = 'GK', 'Goalkeeper'
         DEFENDER = 'DEF', 'Defender'
@@ -373,7 +357,7 @@ class PlayerSeasonStats(models.Model):
     """
     
     player = models.ForeignKey(
-        'PlayerProfile',
+        'ClubPlayer',
         on_delete=models.CASCADE,
         related_name='season_stats'
     )

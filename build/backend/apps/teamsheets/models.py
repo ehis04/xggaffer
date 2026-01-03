@@ -134,7 +134,7 @@ class TeamsheetPlayer(models.Model):
         related_name='players'
     )
     player_profile = models.ForeignKey(
-        'clubs.PlayerProfile',
+        'clubs.ClubPlayer',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

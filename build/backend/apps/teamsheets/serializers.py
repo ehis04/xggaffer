@@ -296,7 +296,7 @@ class CreateTeamsheetWithPlayersSerializer(serializers.Serializer):
         return attrs
     
     def create(self, validated_data):
-        from apps.clubs.models import PlayerProfile
+        from apps.clubs.models import ClubPlayer
         
         player_assignments = validated_data.pop('player_assignments', [])
         club = self.context['club']
@@ -320,10 +320,10 @@ class CreateTeamsheetWithPlayersSerializer(serializers.Serializer):
                     player_profile = None
                     if assignment.get('player_profile_id'):
                         try:
-                            player_profile = PlayerProfile.objects.get(
+                            player_profile = ClubPlayer.objects.get(
                                 id=assignment['player_profile_id']
                             )
-                        except PlayerProfile.DoesNotExist:
+                        except ClubPlayer.DoesNotExist:
                             pass
                     
                     TeamsheetPlayer.objects.create(

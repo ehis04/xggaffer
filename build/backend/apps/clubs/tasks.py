@@ -1,5 +1,4 @@
-# integrations/tasks.py
-
+"""
 from celery import shared_task
 from django.db.models import Q
 from .services.google_calendar import GoogleCalendarService
@@ -7,7 +6,6 @@ from .services.google_calendar import GoogleCalendarService
 
 @shared_task
 def sync_event_to_google_calendar(event_id: int):
-    """Sync a single event to all relevant users' Google Calendars."""
     from clubs.models import ClubEvent, ClubMembership
     from .models import GoogleCalendarIntegration
     
@@ -16,7 +14,6 @@ def sync_event_to_google_calendar(event_id: int):
     except ClubEvent.DoesNotExist:
         return
     
-    # Find all club members with Google Calendar connected
     member_user_ids = ClubMembership.objects.filter(
         club=event.club,
         is_active=True
@@ -34,7 +31,6 @@ def sync_event_to_google_calendar(event_id: int):
 
 @shared_task
 def sync_fixture_to_google_calendar(fixture_id: int):
-    """Sync a fixture to all relevant users' Google Calendars."""
     from clubs.models import Fixture, ClubMembership
     from .models import GoogleCalendarIntegration
     
@@ -61,10 +57,6 @@ def sync_fixture_to_google_calendar(fixture_id: int):
 
 @shared_task
 def bulk_sync_club_calendar(club_id: int, user_id: int):
-    """
-    Sync all upcoming events for a club to a user's calendar.
-    Called when user first connects Google Calendar.
-    """
     from clubs.models import Club, ClubEvent, Fixture
     from .models import GoogleCalendarIntegration
     from django.utils import timezone
@@ -92,3 +84,4 @@ def bulk_sync_club_calendar(club_id: int, user_id: int):
     )
     for fixture in upcoming_fixtures:
         service.sync_fixture(fixture)
+"""

@@ -176,22 +176,22 @@ class TeamsheetViewSet(viewsets.ModelViewSet):
             except ValueError:
                 pass
         
-        club_players = PlayerProfile.objects.filter(
+        club_players = ClubPlayer.objects.filter(
             club=club,
             is_active=True
         )
-        
-        public_players = PlayerProfile.objects.none()
+
+        public_players = ClubPlayer.objects.none()
         if club.visibility == Club.Visibility.PUBLIC:
-            public_players = PlayerProfile.objects.filter(
+            public_players = ClubPlayer.objects.filter(
                 is_public=True,
                 is_active=True
             ).exclude(club=club)
-        
+
         all_player_ids = list(club_players.values_list('id', flat=True)) + \
                          list(public_players.values_list('id', flat=True))
-        
-        queryset = PlayerProfile.objects.filter(id__in=all_player_ids)
+
+        queryset = ClubPlayer.objects.filter(id__in=all_player_ids)
         
         if exclude_list:
             queryset = queryset.exclude(id__in=exclude_list)
@@ -333,11 +333,11 @@ class TeamsheetPlayerViewSet(viewsets.ModelViewSet):
         
         if player_profile_id:
             try:
-                player_profile = PlayerProfile.objects.get(id=player_profile_id)
+                player_profile = ClubPlayer.objects.get(id=player_profile_id)
                 slot.player_profile = player_profile
                 slot.custom_name = ''
                 slot.custom_number = None
-            except PlayerProfile.DoesNotExist:
+            except ClubPlayer.DoesNotExist:
                 return Response(
                     {'error': 'Player profile not found'},
                     status=status.HTTP_404_NOT_FOUND
@@ -476,21 +476,20 @@ class ChoicesView(permissions.IsAuthenticated):
 
 class AvailablePlayersView(permissions.IsAuthenticated):
     def get(self, request, club_pk, teamsheet_pk):
-        from apps.clubs.models import PlayerProfile
         if not ClubMembership.objects.filter(
             user=request.user,
             club_id=club_pk,
             is_active=True
         ).exists():
             raise PermissionDenied("You are not a member of this club.")
-        
+
         teamsheet = get_object_or_404(Teamsheet, pk=teamsheet_pk, club_id=club_pk)
-        
+
         assigned_ids = teamsheet.players.filter(
             player_profile__isnull=False
         ).values_list('player_profile_id', flat=True)
-        
-        available = PlayerProfile.objects.filter(
+
+        available = ClubPlayer.objects.filter(
             club_id=club_pk,
             is_active=True
         ).exclude(

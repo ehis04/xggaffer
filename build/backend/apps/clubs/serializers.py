@@ -1,6 +1,6 @@
 import re
 from rest_framework import serializers
-from .models import Club, ClubMembership, PlayerProfile
+from .models import Club, ClubMembership, ClubPlayer
 
 
 class ClubSerializer(serializers.ModelSerializer):
@@ -52,13 +52,13 @@ class ClubMembershipSerializer(serializers.ModelSerializer):
         read_only_fields = ['joined_at', 'updated_at']
 
 
-class PlayerProfileSerializer(serializers.ModelSerializer):
+class ClubPlayerSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(read_only=True)
     is_claimed = serializers.BooleanField(read_only=True)
     club_name = serializers.CharField(source='club.name', read_only=True)
 
     class Meta:
-        model = PlayerProfile
+        model = ClubPlayer
         fields = [
             'id',
             'club',
@@ -84,11 +84,11 @@ class PlayerProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ['user', 'is_claimed', 'claimed_at', 'created_at', 'updated_at']
 
 
-class PlayerProfileListSerializer(serializers.ModelSerializer):
+class ClubPlayerListSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(read_only=True)
 
     class Meta:
-        model = PlayerProfile
+        model = ClubPlayer
         fields = [
             'id',
             'first_name',
@@ -103,9 +103,9 @@ class PlayerProfileListSerializer(serializers.ModelSerializer):
         ]
 
 
-class PlayerProfileCreateSerializer(serializers.ModelSerializer):
+class ClubPlayerCreateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PlayerProfile
+        model = ClubPlayer
         fields = [
             'id',
             'club',
@@ -183,7 +183,7 @@ class AvailablePlayerSerializer(serializers.ModelSerializer):
     source_type = serializers.SerializerMethodField()
     
     class Meta:
-        model = PlayerProfile
+        model = ClubPlayer
         fields = [
             'id',
             'first_name',

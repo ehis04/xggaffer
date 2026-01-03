@@ -69,13 +69,13 @@ from django.db import models
 from rest_framework import viewsets, permissions, status
 
 
-from .models import Club, ClubMembership, PlayerProfile
+from .models import Club, ClubMembership, ClubPlayer
 from .serializers import (
     ClubSerializer, 
     ClubMembershipSerializer, 
-    PlayerProfileSerializer,
-    PlayerProfileListSerializer,
-    PlayerProfileCreateSerializer,
+    ClubPlayerSerializer,
+    ClubPlayerListSerializer,
+    ClubPlayerCreateSerializer,
     AvailablePlayerSerializer,
 )
 
@@ -111,14 +111,14 @@ class ClubViewSet(viewsets.ModelViewSet):
         position = request.query_params.get('position', None)
         search = request.query_params.get('search', None)
         
-        club_players = PlayerProfile.objects.filter(
+        club_players = ClubPlayer.objects.filter(
             club=club,
             is_active=True
         )
         
-        public_players = PlayerProfile.objects.none()
+        public_players = ClubPlayer.objects.none()
         if club.visibility == Club.Visibility.PUBLIC:
-            public_players = PlayerProfile.objects.filter(
+            public_players = ClubPlayer.objects.filter(
                 is_public=True,
                 is_active=True
             ).exclude(club=club)
@@ -126,7 +126,7 @@ class ClubViewSet(viewsets.ModelViewSet):
         all_players = club_players.union(public_players)
         
         all_player_ids = list(all_players.values_list('id', flat=True))
-        queryset = PlayerProfile.objects.filter(id__in=all_player_ids)
+        queryset = ClubPlayer.objects.filter(id__in=all_player_ids)
         
         if position:
             queryset = queryset.filter(
@@ -167,26 +167,26 @@ class ClubMembershipViewSet(viewsets.ModelViewSet):
         return ClubMembership.objects.filter(club_id=club_pk)
 
 
-class PlayerProfileViewSet(viewsets.ModelViewSet):
+class ClubPlayerViewSet(viewsets.ModelViewSet):
     #permission_classes = [permissions.IsAuthenticated]
     permission_classes = []
     def get_serializer_class(self):
         if self.action == 'create':
-            return PlayerProfileCreateSerializer
+            return ClubPlayerCreateSerializer
         if self.action == 'list':
-            return PlayerProfileListSerializer
-        return PlayerProfileSerializer
+            return ClubPlayerListSerializer
+        return ClubPlayerSerializer
 
     def get_queryset(self):
         club_pk = self.kwargs.get('club_pk')
         if club_pk:
-            return PlayerProfile.objects.filter(club_id=club_pk, is_active=True)
+            return ClubPlayer.objects.filter(club_id=club_pk, is_active=True)
         
         user_club_ids = ClubMembership.objects.filter(
             user=self.request.user,
             is_active=True
         ).values_list('club_id', flat=True)
-        return PlayerProfile.objects.filter(club_id__in=user_club_ids, is_active=True)
+        return ClubPlayer.objects.filter(club_id__in=user_club_ids, is_active=True)
 
     def perform_create(self, serializer):
         club_pk = self.kwargs.get('club_pk')
@@ -207,21 +207,21 @@ class PlayerProfileViewSet(viewsets.ModelViewSet):
             models.Q(position=position) | models.Q(secondary_position=position)
         )
         
-        serializer = PlayerProfileListSerializer(queryset, many=True)
+        serializer = ClubPlayerListSerializer(queryset, many=True)
         return Response(serializer.data)
-    serializer_class = PlayerProfileSerializer
+    serializer_class = ClubPlayerSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         club_pk = self.kwargs.get('club_pk')
         if club_pk:
-            return PlayerProfile.objects.filter(club_id=club_pk, is_active=True)
+            return ClubPlayer.objects.filter(club_id=club_pk, is_active=True)
         
         user_club_ids = ClubMembership.objects.filter(
             user=self.request.user,
             is_active=True
         ).values_list('club_id', flat=True)
-        return PlayerProfile.objects.filter(club_id__in=user_club_ids, is_active=True)
+        return ClubPlayer.objects.filter(club_id__in=user_club_ids, is_active=True)
 
     def perform_create(self, serializer):
         club_pk = self.kwargs.get('club_pk')
