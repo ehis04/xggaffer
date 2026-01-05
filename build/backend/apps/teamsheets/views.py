@@ -8,23 +8,7 @@ from django.shortcuts import get_object_or_404
 from apps.clubs.models import *
 from apps.clubs.serializers import *
 from .models import Teamsheet, TeamsheetPlayer, PitchPosition
-from .serializers import (
-    # Teamsheet serializers
-    TeamsheetReadSerializer,
-    TeamsheetWriteSerializer,
-    TeamsheetListSerializer,
-    TeamsheetDuplicateSerializer,
-    # Player serializers
-    TeamsheetPlayerReadSerializer,
-    TeamsheetPlayerWriteSerializer,
-    TeamsheetPlayerPositionUpdateSerializer,
-    BulkPlayerPositionUpdateSerializer,
-    CreateTeamsheetWithPlayersSerializer,
-    # Helper functions
-    get_pitch_position_choices,
-    get_formation_choices,
-    get_formation_with_templates,
-)
+from .serializers import *
 
 class IsClubMember(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -61,7 +45,7 @@ class CanCreateClubContent(permissions.BasePermission):
 class TeamsheetViewSet(viewsets.ModelViewSet):
     #permission_classes = [permissions.IsAuthenticated, IsClubMember, CanCreateClubContent]
     permission_classes = []
-    pagination_class = None  # Disable pagination to return plain array
+    pagination_class = None 
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -248,7 +232,6 @@ class TeamsheetViewSet(viewsets.ModelViewSet):
             context={
                 'club': club,
                 'user': user,
-                #'user': request.user,
             }
         )
         serializer.is_valid(raise_exception=True)
@@ -261,7 +244,7 @@ class TeamsheetViewSet(viewsets.ModelViewSet):
 class TeamsheetPlayerViewSet(viewsets.ModelViewSet):
     #permission_classes = [permissions.IsAuthenticated, IsClubMember, CanCreateClubContent]
     permission_classes = []
-    pagination_class = None  # Disable pagination to return plain array
+    pagination_class = None  
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
@@ -401,7 +384,7 @@ class CanCreateClubContent(permissions.BasePermission):
         )
         
         if not club_id:
-            return True  # Will be checked at object level
+            return True  
         
         membership = ClubMembership.objects.filter(
             user=request.user,
@@ -412,7 +395,6 @@ class CanCreateClubContent(permissions.BasePermission):
         return membership and membership.can_create_content()
     
     def has_object_permission(self, request, view, obj):
-        # Read operations allowed for members
         if request.method in permissions.SAFE_METHODS:
             return True
         
@@ -440,7 +422,6 @@ class ClubContextMixin:
         
         club = get_object_or_404(Club, pk=club_pk)
         
-        # Verify user is a member
         if not ClubMembership.objects.filter(
             user=self.request.user,
             club=club,

@@ -247,11 +247,9 @@ class TeamStatsAdmin(admin.ModelAdmin):
     ordering = ['-avg_xg_for']
     
     def avg_xg_display(self, obj):
-        """Display average xG for/against"""
         return f"{obj.avg_xg_for:.2f} / {obj.avg_xg_against:.2f}"
     avg_xg_display.short_description = 'Avg xG (For/Against)'
     
     def form_display(self, obj):
-        """Display recent form"""
         return f"{obj.last_5_xg_for:.2f} xGF (L5)"
     form_display.short_description = 'Recent Form'

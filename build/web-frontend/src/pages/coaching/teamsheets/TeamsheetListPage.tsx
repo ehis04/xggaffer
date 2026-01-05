@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { teamsheetApi } from '../../../../services/api/teamsheetApi';
-import type { TeamsheetListItem } from '../../../../types/teamsheet';
+import { teamsheetApi } from '../../../services/api';
+import type { TeamsheetListItem } from '../../../types/teamsheet';
 import styles from './TeamsheetListPage.module.css';
 
 const TeamsheetListPage: React.FC = () => {

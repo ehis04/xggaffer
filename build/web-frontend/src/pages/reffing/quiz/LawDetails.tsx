@@ -1,9 +1,7 @@
-
-// frontend/src/components/laws/LawDetail.tsx
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { lawsApi } from '../../../../services/api';
-import type { Law, LawChange } from '../../../../types/laws'; 
+import { lawsApi } from '../../../services/api';
+import type { Law, LawChange } from '../../../types/laws'; 
 
 export const LawDetail: React.FC = () => {
   const { lawNumber } = useParams<{ lawNumber: string }>();

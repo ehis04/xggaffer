@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { lawsApi } from '../../../../services/api';
-import type { LawChange, LawEdition } from '../../../../types/laws';
+import { lawsApi } from '../../../services/api';
+import type { LawChange, LawEdition } from '../../../types/laws';
 
 export const ChangesTimeline: React.FC = () => {
   const [changes, setChanges] = useState<LawChange[]>([]);

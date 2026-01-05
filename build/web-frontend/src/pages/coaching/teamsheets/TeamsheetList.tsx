@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { teamsheetApi } from '../../../../services/api';
-import type { TeamsheetListItem } from '../../../../types/teamsheet';
+import { teamsheetApi } from '../../../services/api';
+import type { TeamsheetListItem } from '../../../types/teamsheet';
 
 export const TeamsheetList = () => {
   const [teamsheets, setTeamsheets] = useState<TeamsheetListItem[]>([]);

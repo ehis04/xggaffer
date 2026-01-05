@@ -7,8 +7,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import serializers
 from rest_framework.generics import CreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListAPIView
 
-# Create your views here.
-
 class CreatePlayerProfileView(CreateAPIView):
     permission_classes = [IsAuthenticated, IsPlayer]
     serializer_class = PlayerProfileSerializer

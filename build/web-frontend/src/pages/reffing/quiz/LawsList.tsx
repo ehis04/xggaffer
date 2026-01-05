@@ -1,7 +1,6 @@
-// frontend/src/components/laws/LawsList.tsx
 import React, { useEffect, useState } from 'react';
-import { lawsApi } from '../../../../services/api';
-import type { LawListItem, LawEdition } from '../../../../types/laws';
+import { lawsApi } from '../../../services/api';
+import type { LawListItem, LawEdition } from '../../../types/laws';
 
 export const LawsList: React.FC = () => {
   const [laws, setLaws] = useState<LawListItem[]>([]);
@@ -22,8 +21,7 @@ export const LawsList: React.FC = () => {
     try {
       const data = await lawsApi.getEditions();
       setEditions(data);
-      
-      // Set current edition as default
+
       const current = data.find(e => e.is_current);
       if (current) setSelectedEdition(current.id);
     } catch (err) {

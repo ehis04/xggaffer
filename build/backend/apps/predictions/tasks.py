@@ -8,9 +8,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 @shared_task(
-    bind=True,           # Pass task instance as first arg
-    max_retries=3,       # Retry up to 3 times
-    default_retry_delay=300  # Wait 5 minutes between retries
+    bind=True,         
+    max_retries=3,     
+    default_retry_delay=300  
 )
 def scrape_all_leagues(self):
     try:

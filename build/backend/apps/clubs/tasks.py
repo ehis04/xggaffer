@@ -69,7 +69,6 @@ def bulk_sync_club_calendar(club_id: int, user_id: int):
     
     service = GoogleCalendarService(integration)
     
-    # Sync upcoming events
     upcoming_events = ClubEvent.objects.filter(
         club=club,
         start_datetime__gte=timezone.now()
@@ -77,7 +76,6 @@ def bulk_sync_club_calendar(club_id: int, user_id: int):
     for event in upcoming_events:
         service.sync_event(event)
     
-    # Sync upcoming fixtures
     upcoming_fixtures = Fixture.objects.filter(
         club=club,
         date__gte=timezone.now().date()

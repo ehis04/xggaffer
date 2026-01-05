@@ -14,8 +14,6 @@ from django.db.models import Q, F, FloatField, IntegerField, ExpressionWrapper
 from django.db.models.expressions import RawSQL
 from django.db import transaction
 
-# Create your views here.
-
 # Create New Post
 
 class CreateNewPostView(CreateAPIView):

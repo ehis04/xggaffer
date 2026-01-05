@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { teamsheetApi, teamsheetPlayerApi } from '../../../../services/api/teamsheetApi';
-import type { Teamsheet, TeamsheetPlayer, PlayerPositionUpdate } from '../../../../types/teamsheet';
+import { teamsheetApi, teamsheetPlayerApi } from '../../../services/api/teamsheetApi';
+import type { Teamsheet, TeamsheetPlayer, PlayerPositionUpdate } from '../../../types/teamsheet';
 import {
   Pitch,
   TeamsheetHeader,
   SubstitutesList,
   PlayerDetailPanel,
-} from '../../../teamsheets';
+} from '../../../components/teamsheets';
 import styles from './TeamsheetDetailPage.module.css';
 
 const TeamsheetDetailPage: React.FC = () => {

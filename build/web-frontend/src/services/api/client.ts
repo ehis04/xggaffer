@@ -1,7 +1,49 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string>;
+}
+
+function getCsrfToken(): string | null {
+  const cookies = document.cookie.split(';');
+  for (const cookie of cookies) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === 'csrftoken') {
+      return decodeURIComponent(value);
+    }
+  }
+  return null;
+}
+
+let isRefreshing = false;
+let refreshPromise: Promise<boolean> | null = null;
+
+async function attemptTokenRefresh(): Promise<boolean> {
+  if (isRefreshing && refreshPromise) {
+    return refreshPromise;
+  }
+
+  isRefreshing = true;
+  refreshPromise = (async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/auth/refresh/`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(getCsrfToken() && { 'X-CSRFToken': getCsrfToken()! }),
+        },
+      });
+      return response.ok;
+    } catch {
+      return false;
+    } finally {
+      isRefreshing = false;
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
 }
 
 class ApiClient {
@@ -11,30 +53,59 @@ class ApiClient {
     this.baseUrl = baseUrl;
   }
 
-  private async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+  private async request<T>(
+    endpoint: string,
+    options: RequestOptions = {},
+    isRetry = false
+  ): Promise<T> {
     const { params, ...fetchOptions } = options;
 
     let url = `${this.baseUrl}${endpoint}`;
-    
+
     if (params) {
       const searchParams = new URLSearchParams(params);
       url += `?${searchParams.toString()}`;
     }
 
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(fetchOptions.headers as Record<string, string>),
+    };
+
+    const method = (fetchOptions.method || 'GET').toUpperCase();
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+      const csrfToken = getCsrfToken();
+      if (csrfToken) {
+        headers['X-CSRFToken'] = csrfToken;
+      }
+    }
+
     const config: RequestInit = {
       ...fetchOptions,
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        ...fetchOptions.headers,
-      },
+      headers,
     };
 
     const response = await fetch(url, config);
 
+    if (response.status === 401 && !isRetry) {
+      if (!endpoint.includes('/auth/refresh')) {
+        const refreshed = await attemptTokenRefresh();
+        if (refreshed) {
+          return this.request<T>(endpoint, options, true);
+        }
+      }
+    }
+
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error(error.detail || error.message || `HTTP ${response.status}`);
+      const err = new Error(error.detail || error.message || `HTTP ${response.status}`) as Error & {
+        status?: number;
+        data?: unknown;
+      };
+      err.status = response.status;
+      err.data = error;
+      throw err;
     }
 
     if (response.status === 204) {

@@ -1,7 +1,5 @@
 from django.shortcuts import render
 
-# Create your views here.
-# clubs/views.py
 """
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -62,23 +60,10 @@ class FixtureViewSet(viewsets.ModelViewSet):
 
 from rest_framework.decorators import action
 from rest_framework.response import Response
-
-
-
 from django.db import models
 from rest_framework import viewsets, permissions, status
-
-
 from .models import Club, ClubMembership, ClubPlayer
-from .serializers import (
-    ClubSerializer, 
-    ClubMembershipSerializer, 
-    ClubPlayerSerializer,
-    ClubPlayerListSerializer,
-    ClubPlayerCreateSerializer,
-    AvailablePlayerSerializer,
-)
-
+from .serializers import *
 
 class ClubViewSet(viewsets.ModelViewSet):
     serializer_class = ClubSerializer
@@ -87,14 +72,18 @@ class ClubViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        member_club_ids = ClubMembership.objects.filter(
-            user=user,
-            is_active=True
-        ).values_list('club_id', flat=True)
-        
-        return Club.objects.filter(
-            models.Q(id__in=member_club_ids) | models.Q(visibility=Club.Visibility.PUBLIC)
-        ).distinct()
+
+        if user.is_authenticated:
+            member_club_ids = ClubMembership.objects.filter(
+                user=user,
+                is_active=True
+            ).values_list('club_id', flat=True)
+
+            return Club.objects.filter(
+                models.Q(id__in=member_club_ids) | models.Q(visibility=Club.Visibility.PUBLIC)
+            ).distinct()
+        else:
+            return Club.objects.filter(visibility=Club.Visibility.PUBLIC)
 
     def perform_create(self, serializer):
         club = serializer.save(creator=self.request.user)

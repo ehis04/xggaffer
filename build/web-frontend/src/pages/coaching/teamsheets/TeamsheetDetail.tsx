@@ -1,8 +1,7 @@
-// src/components/pages/coaching/teamsheets/TeamsheetDetail.tsx
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { teamsheetApi } from '../../../../services/api';
-import type { Teamsheet } from '../../../../types/teamsheet';
+import { teamsheetApi } from '../../../services/api';
+import type { Teamsheet } from '../../../types/teamsheet';
 
 export const TeamsheetDetail = () => {
   const { clubId, id } = useParams<{ clubId: string; id: string }>();
@@ -12,7 +11,6 @@ export const TeamsheetDetail = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Only attempt to load when both clubId and id are numeric strings
     if (clubId && id && /^\d+$/.test(clubId) && /^\d+$/.test(id)) {
       loadTeamsheet(Number.parseInt(clubId), Number.parseInt(id));
     }

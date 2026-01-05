@@ -1,40 +1,9 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { Post } from "./Post";
-import {
-  Api_Endpoints,
-  authenticatedFetch,
-} from "../../services/api/AuthenticateUserApi";
-import type { PostData } from "./Post";
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Post } from './Post';
+import { communityApi, type Comment } from '../../services/api/communityApi';
+import type { PostData } from './Post';
 import './css/PostDetail.css';
-
-interface CommentResponse {
-  id: number;
-  author: string;
-  text_body: string;
-  created_at: string;
-  no_of_likes: number;
-  no_of_replies: number;
-  post: number;
-  parent: number | null;
-  moderation_status: string;
-  children?: CommentResponse[];
-}
-
-interface PostResponse {
-  id: number;
-  author: {
-    id: number;
-    username: string;
-    email: string;
-  };
-  text_body: string;
-  created_at: string;
-  no_of_likes: number;
-  no_of_comments: number;
-  visibility: "PB" | "F" | "PR";
-  attachments_count: number;
-}
 
 export const PostDetail = () => {
   const { postId } = useParams<{ postId: string }>();
@@ -44,81 +13,59 @@ export const PostDetail = () => {
   const [comments, setComments] = useState<PostData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [commentText, setCommentText] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchPostAndComments = async () => {
-    if (!postId) return;
+      if (!postId) return;
 
-    try {
-      setLoading(true);
-      setError(null);
+      try {
+        setLoading(true);
+        setError(null);
 
-      const postResponse = await authenticatedFetch(
-        Api_Endpoints.POST_ID(parseInt(postId)),
-        {
-          method: "GET",
-        }
-      );
+        const postData = await communityApi.getPost(parseInt(postId));
 
-      if (!postResponse.ok) {
-        throw new Error("Failed to get post");
+        const transformedPost: PostData = {
+          id: postData.id,
+          author: {
+            id: postData.author.id,
+            username: postData.author.username,
+          },
+          text_body: postData.text_body,
+          created_at: postData.created_at,
+          no_of_likes: postData.no_of_likes,
+          no_of_comments: postData.no_of_comments,
+          visibility: postData.visibility,
+          moderation_status: 'OK',
+          type: 'post',
+          is_liked: postData.is_liked,
+        };
+
+        setPost(transformedPost);
+
+        const commentsData = await communityApi.getPostComments(parseInt(postId));
+        const transformedComments = commentsToPostData(commentsData);
+        setComments(transformedComments);
+      } catch (err) {
+        console.error("Couldn't get post details:", err);
+        setError(err instanceof Error ? err.message : 'Failed to load post');
+      } finally {
+        setLoading(false);
       }
+    };
 
-      const postData: PostResponse = await postResponse.json();
-
-      const transformedPost: PostData = {
-        id: postData.id,
-        author: {
-          id: postData.author.id,
-          username: postData.author.username,
-        },
-        text_body: postData.text_body,
-        created_at: postData.created_at,
-        no_of_likes: postData.no_of_likes,
-        no_of_comments: postData.no_of_comments,
-        visibility: postData.visibility,
-        moderation_status: "OK",
-        type: "post",
-        is_liked: false, // TODO: fetch actual like status
-      };
-
-      setPost(transformedPost);
-
-      const commentResponse = await authenticatedFetch(
-        Api_Endpoints.POST_COMMENTS(parseInt(postId)),
-        {
-          method: "GET",
-        }
-      );
-
-      if (!commentResponse.ok) {
-        throw new Error(`Couldn't get comments: ${commentResponse.status}`);
-      }
-
-      const commentsData = await commentResponse.json();
-      console.log(commentsData);
-      const transformedComments = commentsToPost(commentsData.results || []);
-      setComments(transformedComments);
-    } catch (error) {
-      console.error("Couldn't get post details: ", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  fetchPostAndComments();
+    fetchPostAndComments();
   }, [postId]);
 
-  const commentsToPost = (comments: CommentResponse[]): PostData[] => {
+  // Transform API Comment[] to component PostData[]
+  const commentsToPostData = (comments: Comment[]): PostData[] => {
     const result: PostData[] = [];
 
     comments.forEach((comment) => {
       result.push({
         id: comment.id,
         author: {
-          id: 0,
-          username: comment.author,
+          id: comment.author.id,
+          username: comment.author.username,
         },
         post_id: comment.post,
         parent_id: comment.parent || undefined,
@@ -127,10 +74,10 @@ export const PostDetail = () => {
         no_of_likes: comment.no_of_likes,
         no_of_comments: 0,
         no_of_replies: comment.no_of_replies,
-        visibility: "PB",
-        moderation_status: "OK",
-        type: "comment",
-        is_liked: false, // TODO: fetch actual like status
+        visibility: 'PB',
+        moderation_status: 'OK',
+        type: 'comment',
+        is_liked: false,
       });
 
       if (comment.children && comment.children.length > 0) {
@@ -138,8 +85,8 @@ export const PostDetail = () => {
           result.push({
             id: reply.id,
             author: {
-              id: 0,
-              username: reply.author,
+              id: reply.author.id,
+              username: reply.author.username,
             },
             post_id: reply.post,
             parent_id: reply.parent || undefined,
@@ -148,9 +95,9 @@ export const PostDetail = () => {
             no_of_likes: reply.no_of_likes,
             no_of_comments: 0,
             no_of_replies: reply.no_of_replies,
-            visibility: "PB",
-            moderation_status: "OK",
-            type: "comment",
+            visibility: 'PB',
+            moderation_status: 'OK',
+            type: 'comment',
             is_liked: false,
           });
         });
@@ -163,35 +110,46 @@ export const PostDetail = () => {
   const handleLike = async (id: number) => {
     try {
       if (id === post?.id) {
-        await authenticatedFetch(
-          Api_Endpoints.LIKE_POST(id),
-          {
-            method: "POST",
-          }
+        const result = await communityApi.likePost(id);
+        setPost((prev) =>
+          prev
+            ? {
+                ...prev,
+                is_liked: result.liked,
+                no_of_likes: result.no_of_likes,
+              }
+            : null
         );
       } else {
-        await authenticatedFetch(
-          Api_Endpoints.LIKE_COMMENT(id),
-          { method: "POST" }
+        const result = await communityApi.likeComment(id);
+        setComments((prev) =>
+          prev.map((comment) =>
+            comment.id === id
+              ? {
+                  ...comment,
+                  is_liked: result.liked,
+                  no_of_likes: result.no_of_likes,
+                }
+              : comment
+          )
         );
       }
-    //   await fetchPostAndComments();
-    } catch (error) {
-      console.error("Error liking: ", error);
+    } catch (err) {
+      console.error('Error liking:', err);
     }
   };
 
   const handleComment = () => {
-    console.log("comment clicked");
-  }
+    console.log('comment clicked');
+  };
 
   const handleProfileClick = () => {
-    console.log("profile clicked");
-  }
+    console.log('profile clicked');
+  };
 
   const handlePostClick = () => {
-    console.log("post clicked");
-  }
+    console.log('post clicked');
+  };
 
   const topLevelComments = comments.filter((c) => !c.parent_id);
   const repliesMap = new Map<number, PostData[]>();
@@ -204,15 +162,40 @@ export const PostDetail = () => {
     }
   });
 
-  console.log("Rendering - loading:", loading, "error:", error, "post:", post);
+  if (loading) {
+    return (
+      <div className="post-detail-container">
+        <div className="loading">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="post-detail-container">
+        <div className="error-message">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="post-detail-container">
       <div className="post-detail-header">
         <button className="back-button" onClick={() => navigate(-1)}>
-          <svg></svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+            viewBox="0 0 16 16"
+          >
+            <path
+              fillRule="evenodd"
+              d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"
+            />
+          </svg>
         </button>
-        <h2> Post </h2>
+        <h2>Post</h2>
       </div>
 
       <div className="post-detail-main">
@@ -230,7 +213,7 @@ export const PostDetail = () => {
       <div className="comment-section">
         {topLevelComments.length === 0 ? (
           <div className="empty-comments">
-            <p> No comments! Be the first to comment! </p>
+            <p>No comments! Be the first to comment!</p>
           </div>
         ) : (
           <div className="comment-list">

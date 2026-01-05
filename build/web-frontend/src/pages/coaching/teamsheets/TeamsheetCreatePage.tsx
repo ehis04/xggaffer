@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { teamsheetApi } from '../../../../services/api/teamsheetApi';
+import { teamsheetApi } from '../../../services/api';
 import type {
   TeamsheetChoices,
   FormationWithTemplate,
@@ -8,10 +8,8 @@ import type {
   SlotState,
   CreateTeamsheetPayload,
   PlayerSlotAssignment,
-} from '../../../../types/teamsheet';
-import { FormationPicker } from '../../../teamsheets';
-import PlayerSlotSelector from '../../../teamsheets/PlayerSlotSelector';
-import AvailablePlayersList from '../../../teamsheets/AvailablePlayersList';
+} from '../../../types/teamsheet';
+import { FormationPicker, PlayerSlotSelector, AvailablePlayersList } from '../../../components/teamsheets';
 import styles from './TeamsheetCreatePage.module.css';
 
 const TeamsheetCreatePage: React.FC = () => {

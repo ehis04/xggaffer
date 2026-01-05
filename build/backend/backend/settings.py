@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from celery.schedules import crontab
 from pathlib import Path
+from datetime import timedelta
 from decouple import config, Csv
 import dj_database_url
 import os
@@ -40,18 +41,18 @@ CELERY_TIMEZONE = 'UTC'
 CELERY_BEAT_SCHEDULE = {
     'scrape-all-leagues-daily': {
         'task': 'predictions.tasks.scrape_all_leagues',
-        'schedule': crontab(hour=2, minute=0),  # Daily at
+        'schedule': crontab(hour=2, minute=0),  
         'options': {
-            'expires': 3600,  # Task expires in 1 hour
+            'expires': 3600, 
         }
     },
     
     'scrape-premier-league-matchday': {
         'task': 'predictions.tasks.scrape_specific_league',
-        'schedule': crontab(hour='*/3', day_of_week='sat,sun'),  # Every 3 hours on weekends
-        'args': ('EPL', '2024'),  # Example for Premier League
+        'schedule': crontab(hour='*/3', day_of_week='sat,sun'),  
+        'args': ('EPL', '2024'),  
         'options': {
-            'expires': 1800,  # Task expires in 2 hours
+            'expires': 1800,  
         }
     },
 }
@@ -65,6 +66,16 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
+# CSRF Configuration
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = False # Set to True in production with HTTPS
+CSRF_COOKIE_HTTPONLY = False # So Javascript can read CSRF token
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
 # Application definition
 
 INSTALLED_APPS = [
@@ -78,6 +89,7 @@ INSTALLED_APPS = [
     'apps.quizzes',
     'apps.articles',
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
     'apps.teamsheets',
     'apps.users',
     'apps.predictions',
@@ -107,22 +119,18 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'apps.users.authentication.CookieJWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ],
 
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # Temporarily disabled authentication for development
+        'rest_framework.permissions.IsAuthenticated',
     ],
 
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ),
-    "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.IsAuthenticated",
-    ),
 }
 
 ROOT_URLCONF = 'backend.urls'
@@ -197,7 +205,45 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Session Cookie Configuration
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+
+# JWT Cookie Configuration
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+
+    'AUTH_HEADER_TYPES': ('Bearer',),
+
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+}
+
+AUTH_COOKIE_ACCESS = 'access_token'
+AUTH_COOKIE_REFRESH = 'refresh_token'
+AUTH_COOKIE_SECURE = False  # Set to True in production with HTTPS
+AUTH_COOKIE_HTTP_ONLY = True 
+AUTH_COOKIE_PATH = '/'
+AUTH_COOKIE_SAMESITE = 'Lax'
+
+AUTH_COOKIE_ACCESS_MAX_AGE = 60 * 15
+AUTH_COOKIE_REFRESH_MAX_AGE = 60 * 60 * 24 * 7
+AUTH_COOKIE_REFRESH_MAX_AGE_SESSION = None 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Email Configuration
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@labone.com')
+
+# Frontend Configuration
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')

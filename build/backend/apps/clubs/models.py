@@ -150,23 +150,21 @@ class ClubPlayer(models.Model):
         MIDFIELDER = 'MID', 'Midfielder'
         FORWARD = 'FWD', 'Forward'
     
-    # === Club Relationship ===
+
     club = models.ForeignKey(
         'Club',
         on_delete=models.CASCADE,
         related_name='player_profiles'
     )
     
-    # === User Link (Optional - for claimable profiles) ===
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,  # Keep profile if user deleted
+        on_delete=models.SET_NULL,  
         null=True,
         blank=True,
         related_name='player_profiles'
     )
     
-    # === Player Info (stored here, not on User) ===
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     display_name = models.CharField(
@@ -175,7 +173,6 @@ class ClubPlayer(models.Model):
         help_text="Nickname or preferred name"
     )
     
-    # === Football-Specific ===
     squad_number = models.PositiveSmallIntegerField(null=True, blank=True)
     position = models.CharField(
         max_length=3,
@@ -192,19 +189,16 @@ class ClubPlayer(models.Model):
         choices=[('left', 'Left'), ('right', 'Right'), ('both', 'Both')],
         blank=True
     )
-    
-    # === Physical Attributes ===
+
     date_of_birth = models.DateField(null=True, blank=True)
     height_cm = models.PositiveSmallIntegerField(null=True, blank=True)
-    
-    # === Profile Image ===
+
     photo = models.ImageField(
         upload_to='players/photos/',
         blank=True,
         null=True
     )
     
-    # === Status ===
     is_active = models.BooleanField(
         default=True,
         help_text="Active in current squad"
@@ -213,8 +207,7 @@ class ClubPlayer(models.Model):
         default=False,
         help_text="If true, this player profile can be used by other public clubs"
     )
-       
-    # === Claim Tracking ===
+
     claim_token = models.CharField(
         max_length=64,
         blank=True,
@@ -223,8 +216,7 @@ class ClubPlayer(models.Model):
         help_text="Token for claiming this profile"
     )
     claimed_at = models.DateTimeField(null=True, blank=True)
-    
-    # === Metadata ===
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(
@@ -242,7 +234,6 @@ class ClubPlayer(models.Model):
             models.Index(fields=['claim_token']),
         ]
         constraints = [
-            # Squad number unique within club
             models.UniqueConstraint(
                 fields=['club', 'squad_number'],
                 condition=models.Q(squad_number__isnull=False),
@@ -263,43 +254,26 @@ class ClubPlayer(models.Model):
         return f"{self.first_name} {self.last_name}"
     
     def generate_claim_token(self):
-        """Generate a unique token for claiming this profile."""
         import secrets
         self.claim_token = secrets.token_urlsafe(32)
         self.save(update_fields=['claim_token'])
         return self.claim_token
     
     def claim(self, user):
-        """
-        Link this profile to a user account.
-        Called when a user accepts an invitation.
-        """
         from django.utils import timezone
         
         self.user = user
         self.claimed_at = timezone.now()
-        self.claim_token = None  # Invalidate token
+        self.claim_token = None
         self.save(update_fields=['user', 'claimed_at', 'claim_token'])
-        
-        # Also create club membership if doesn't exist
+
         ClubMembership.objects.get_or_create(
             user=user,
             club=self.club,
             defaults={'role': ClubMembership.Role.PLAYER}
         )
 
-
-# clubs/models/season.py
-
-from django.db import models
-
-
 class Season(models.Model):
-    """
-    Represents a football season for a club.
-    Stats and records are tied to seasons.
-    """
-    
     club = models.ForeignKey(
         'Club',
         on_delete=models.CASCADE,
@@ -314,7 +288,6 @@ class Season(models.Model):
     end_date = models.DateField()
     is_current = models.BooleanField(default=False)
     
-    # === Aggregate Stats (denormalized for quick access) ===
     matches_played = models.PositiveSmallIntegerField(default=0)
     wins = models.PositiveSmallIntegerField(default=0)
     draws = models.PositiveSmallIntegerField(default=0)
@@ -341,7 +314,6 @@ class Season(models.Model):
         return (self.wins * 3) + self.draws
     
     def save(self, *args, **kwargs):
-        # Ensure only one current season per club
         if self.is_current:
             Season.objects.filter(
                 club=self.club, 
@@ -351,11 +323,6 @@ class Season(models.Model):
 
 
 class PlayerSeasonStats(models.Model):
-    """
-    Player statistics for a specific season.
-    This is where ML features get pulled from.
-    """
-    
     player = models.ForeignKey(
         'ClubPlayer',
         on_delete=models.CASCADE,
@@ -367,27 +334,22 @@ class PlayerSeasonStats(models.Model):
         related_name='player_stats'
     )
     
-    # === Appearance Stats ===
     appearances = models.PositiveSmallIntegerField(default=0)
     starts = models.PositiveSmallIntegerField(default=0)
     minutes_played = models.PositiveIntegerField(default=0)
     
-    # === Attacking Stats ===
     goals = models.PositiveSmallIntegerField(default=0)
     assists = models.PositiveSmallIntegerField(default=0)
     shots = models.PositiveSmallIntegerField(default=0)
     shots_on_target = models.PositiveSmallIntegerField(default=0)
     
-    # === Defensive Stats ===
     tackles = models.PositiveSmallIntegerField(default=0)
     interceptions = models.PositiveSmallIntegerField(default=0)
     clearances = models.PositiveSmallIntegerField(default=0)
     
-    # === Discipline ===
     yellow_cards = models.PositiveSmallIntegerField(default=0)
     red_cards = models.PositiveSmallIntegerField(default=0)
     
-    # === Passing (for ML features) ===
     passes_attempted = models.PositiveIntegerField(default=0)
     passes_completed = models.PositiveIntegerField(default=0)
     
@@ -412,21 +374,7 @@ class PlayerSeasonStats(models.Model):
 
 
 """
-=== COMMENTED OUT: DUPLICATE/FUTURE MODELS ===
-The following models are commented out to prevent Django registration warnings.
-They are kept for reference but will be implemented in separate apps.
-
-# clubs/models/fixture.py
-
-from django.db import models
-
-
 class Fixture(models.Model):
-    \"\"\"
-    A match involving the club.
-    Can be historical (with results) or upcoming.
-    \"\"\"
-    
     class Status(models.TextChoices):
         SCHEDULED = 'scheduled', 'Scheduled'
         IN_PROGRESS = 'in_progress', 'In Progress'
@@ -438,8 +386,7 @@ class Fixture(models.Model):
         HOME = 'home', 'Home'
         AWAY = 'away', 'Away'
         NEUTRAL = 'neutral', 'Neutral'
-    
-    # === Club & Season ===
+
     club = models.ForeignKey(
         'Club',
         on_delete=models.CASCADE,
@@ -450,8 +397,10 @@ class Fixture(models.Model):
         on_delete=models.CASCADE,
         related_name='fixtures'
     )
+        google_event_id = models.CharField(max_length=255, blank=True)
+    sync_status = models.CharField(max_length=20, default='pending')
+    last_synced_at = models.DateTimeField(null=True, blank=True)
     
-    # === Match Info ===
     opponent_name = models.CharField(max_length=100)
     venue = models.CharField(
         max_length=10,
@@ -463,12 +412,10 @@ class Fixture(models.Model):
         help_text="League, Cup, Friendly, etc."
     )
     
-    # === Schedule ===
     date = models.DateField()
     time = models.TimeField(null=True, blank=True)
     location = models.CharField(max_length=200, blank=True)
-    
-    # === Result (filled after match) ===
+
     status = models.CharField(
         max_length=15,
         choices=Status.choices,
@@ -476,8 +423,7 @@ class Fixture(models.Model):
     )
     goals_for = models.PositiveSmallIntegerField(null=True, blank=True)
     goals_against = models.PositiveSmallIntegerField(null=True, blank=True)
-    
-    # === Metadata ===
+
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -509,18 +455,7 @@ class Fixture(models.Model):
             return "vs"
         return f"{self.goals_for} - {self.goals_against}"
 
-# clubs/models/events.py
-
-from django.db import models
-from django.conf import settings
-
-
 class ClubEvent(models.Model):
-    \"\"\"
-    Any club event - training, meeting, social event, etc.
-    These populate the club calendar.
-    \"\"\"
-    
     class EventType(models.TextChoices):
         TRAINING = 'training', 'Training'
         MEETING = 'meeting', 'Meeting'
@@ -541,18 +476,14 @@ class ClubEvent(models.Model):
     )
     description = models.TextField(blank=True)
     
-    # === Schedule ===
     start_datetime = models.DateTimeField()
     end_datetime = models.DateTimeField(null=True, blank=True)
     is_all_day = models.BooleanField(default=False)
     
-    # === Location ===
     location = models.CharField(max_length=200, blank=True)
     
-    # === Attendance ===
     is_mandatory = models.BooleanField(default=False)
     
-    # === Metadata ===
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -571,64 +502,6 @@ class ClubEvent(models.Model):
     
     def __str__(self):
         return f"{self.title} - {self.club.name}"
-
-# users/models.py (or a new integrations app)
-
-from django.db import models
-from django.conf import settings
-
-
-class GoogleCalendarIntegration(models.Model):
-    \"\"\"
-    Stores a user's Google Calendar connection.
-    One per user - they can sync their clubs' events to their calendar.
-    \"\"\"
-    
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='google_calendar'
-    )
-    
-    # OAuth tokens (encrypted in production)
-    access_token = models.TextField()
-    refresh_token = models.TextField()
-    token_expiry = models.DateTimeField()
-    
-    # The dedicated calendar we created for iFoot events
-    ifoot_calendar_id = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text="Google Calendar ID for the iFoot calendar"
-    )
-    
-    # User preferences
-    sync_enabled = models.BooleanField(default=True)
-    sync_fixtures = models.BooleanField(default=True)
-    sync_training = models.BooleanField(default=True)
-    sync_meetings = models.BooleanField(default=True)
-    
-    # Status tracking
-    last_sync_at = models.DateTimeField(null=True, blank=True)
-    last_sync_error = models.TextField(blank=True)
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    def __str__(self):
-        return f"Google Calendar - {self.user.email}"
-    
-    @property
-    def is_token_expired(self):
-        from django.utils import timezone
-        return timezone.now() >= self.token_expiry
-
-# clubs/models/events.py (additions)
-
-class ClubEvent(models.Model):
-    # ... existing fields ...
-    
-    # === Google Calendar Sync ===
     google_event_id = models.CharField(
         max_length=255,
         blank=True,
@@ -646,14 +519,39 @@ class ClubEvent(models.Model):
     )
     last_synced_at = models.DateTimeField(null=True, blank=True)
 
-
-class Fixture(models.Model):
-    # ... existing fields ...
+class GoogleCalendarIntegration(models.Model):  
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='google_calendar'
+    )
     
-    # Same sync fields
-    google_event_id = models.CharField(max_length=255, blank=True)
-    sync_status = models.CharField(max_length=20, default='pending')
-    last_synced_at = models.DateTimeField(null=True, blank=True)
+    access_token = models.TextField()
+    refresh_token = models.TextField()
+    token_expiry = models.DateTimeField()
+    
+    ifoot_calendar_id = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Google Calendar ID for the iFoot calendar"
+    )
+
+    sync_enabled = models.BooleanField(default=True)
+    sync_fixtures = models.BooleanField(default=True)
+    sync_training = models.BooleanField(default=True)
+    sync_meetings = models.BooleanField(default=True)
+
+    last_sync_at = models.DateTimeField(null=True, blank=True)
+    last_sync_error = models.TextField(blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Google Calendar - {self.user.email}"
+    
+    @property
+    def is_token_expired(self):
+        from django.utils import timezone
+        return timezone.now() >= self.token_expiry
 """
-
-

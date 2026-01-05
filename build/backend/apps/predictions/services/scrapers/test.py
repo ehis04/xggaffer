@@ -1,6 +1,5 @@
 import pandas as pd
 
-# Load the CSV
 df = pd.read_csv('epl_2024_matches.csv')
 
 higher_xg_wins = 0
@@ -72,7 +71,6 @@ for _, row in home_games.iterrows():
             draw_ratio_very_big += 1
 
 
-# Print results
 print("=" * 50)
 print("xG VS ACTUAL RESULTS")
 print("=" * 50)

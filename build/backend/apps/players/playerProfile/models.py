@@ -1,9 +1,6 @@
 from django.db import models
 from apps.users.models import UserProfile
 
-
-# Create your models here.
-
 class Positions(models.TextChoices):
     NONE = '', 'Not Specified'
 

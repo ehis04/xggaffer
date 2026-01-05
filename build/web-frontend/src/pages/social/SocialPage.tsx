@@ -95,7 +95,7 @@ export const SocialPage = () => {
         </div>
         <CreatePost onPost={handlePost} />
         <div className="feed-content">
-          <PostList />
+          <PostList postList={pdata} />
         </div>
       </div>
     </div>

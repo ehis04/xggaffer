@@ -66,7 +66,7 @@ class UnderstatScraper(BaseScraper):
             'away_xg': float(raw_match['xG']['a']),
             'home_goals': int(raw_match['goals']['h']),
             'away_goals': int(raw_match['goals']['a']),
-            'raw_data': raw_match,  # Store everything
+            'raw_data': raw_match, 
         }     
 
 
