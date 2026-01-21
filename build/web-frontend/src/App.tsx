@@ -1,13 +1,9 @@
-// src/App.tsx
-
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 
-// Auth components
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { PublicOnlyRoute } from './components/auth/PublicOnlyRoute';
 
-// Pages
 import QuizBase from './pages/reffing/quiz/QuizBase';
 import ControlBase from './pages/reffing/controlTraining/ControlBase';
 import ArticleBase from './pages/reffing/article/ArticleBase';
@@ -28,6 +24,8 @@ import { RoleProfilePage } from './pages/setup/RoleProfilePage';
 import TeamsheetListPage from './pages/coaching/teamsheets/TeamsheetListPage';
 import TeamsheetCreatePage from './pages/coaching/teamsheets/TeamsheetCreatePage';
 import TeamsheetDetailPage from './pages/coaching/teamsheets/TeamsheetDetailPage';
+import { VerifyEmailPromptPage } from './pages/setup/VerifyEmailPromptPage';
+import { VerifyEmailCallbackPage } from './pages/setup/VerifyEmailCallbackPage';
 
 function App() {
   return (
@@ -37,12 +35,24 @@ function App() {
           <Route
             path="/"
             element={
-              <PublicOnlyRoute redirectTo="/create/profile" useFrom={false}>
+              <PublicOnlyRoute redirectTo="/social" useFrom={false}>
                 <LandingPage />
               </PublicOnlyRoute>
             }
           />
 
+          <Route
+            path="/verify-email"
+            element={
+              <ProtectedRoute requireVerified={false}>
+                <VerifyEmailPromptPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/verify-email/confirm"
+            element={<VerifyEmailCallbackPage />}
+          />
 
           <Route
             path="/social"
@@ -64,7 +74,7 @@ function App() {
           <Route
             path="/create/profile"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireVerified={false}>
                 <ProfileCreationPage />
               </ProtectedRoute>
             }
@@ -72,7 +82,7 @@ function App() {
           <Route
             path="/create/profile/role"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireVerified={false}>
                 <RoleAssignPage />
               </ProtectedRoute>
             }
@@ -80,7 +90,7 @@ function App() {
           <Route
             path="/create/profile/role/details"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireVerified={false}>
                 <RoleProfilePage />
               </ProtectedRoute>
             }
@@ -201,7 +211,6 @@ function App() {
             }
           />
 
-          {/* Catch all */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

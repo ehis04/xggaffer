@@ -38,6 +38,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     email_verified = models.BooleanField(default=False)
     verification_token = models.CharField(max_length=100, blank=True, null=True)
     token_created_at = models.DateTimeField(blank=True, null=True)
+    password_reset_token = models.CharField(max_length=100, blank=True, null=True)
+    password_reset_token_created_at = models.DateTimeField(blank=True, null=True)
 
     date_joined = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -69,8 +71,23 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def verify_email(self):
         self.email_verified = True
-        self.verification_token = None
-        self.token_created_at = None
+        self.save()
+
+    def generate_password_reset_token(self):
+        self.password_reset_token = secrets.token_urlsafe(32)
+        self.password_reset_token_created_at = timezone.now()
+        self.save()
+        return self.password_reset_token
+
+    def is_password_reset_token_valid(self):
+        if not self.password_reset_token or not self.password_reset_token_created_at:
+            return False
+        expiry_time = self.password_reset_token_created_at + timedelta(hours=1)
+        return timezone.now() < expiry_time
+
+    def clear_password_reset_token(self):
+        self.password_reset_token = None
+        self.password_reset_token_created_at = None
         self.save()
 
 

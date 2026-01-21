@@ -23,6 +23,10 @@ class UserRegisterView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
+        # Send verification email
+        from .services.email_service import send_verification_email
+        send_verification_email(user)
+
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)

@@ -120,9 +120,6 @@ MIDDLEWARE = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'apps.users.authentication.CookieJWTAuthentication',
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
     ],
 
     'DEFAULT_PERMISSION_CLASSES': [
@@ -199,6 +196,8 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Resend Email Service Configuration
+RESEND_API_KEY = config('RESEND_API_KEY', default='')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
@@ -242,8 +241,8 @@ AUTH_COOKIE_REFRESH_MAX_AGE_SESSION = None
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Email Configuration
-EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@labone.com')
+#EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+#DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@labone.com')
 
 # Frontend Configuration
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')

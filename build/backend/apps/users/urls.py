@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import *
 from .views_auth import *
+from .views_verification import *
 
 
 router = DefaultRouter()
@@ -18,13 +19,13 @@ urlpatterns = [
     path('register/', UserRegisterView.as_view(), name='register'),
 
     path('auth/verify-email/', VerifyEmailView.as_view(), name='verify-email'),
+    path('auth/send-verification/', SendVerificationEmailView.as_view(), name='send-verification'),
     path('auth/resend-verification/', ResendVerificationEmailView.as_view(), name='resend-verification'),
+    path('auth/verification-status/', VerificationStatusView.as_view(), name='verification-status'),
 
     path('profile/create/', UserCreateProfileView.as_view(), name='create-profile'),
     path('profile/', UserProfileView.as_view(), name='user-profile'),
 
-    # Explicit role endpoint must be before the dynamic username route so that
-    # '/profile/role/' isn't interpreted as a username == 'role'.
     path('profile/role/', UserRoleView.as_view(), name='user-role'),
 
     path('profile/<str:username>/', GetProfileView.as_view(), name='get-profile'),

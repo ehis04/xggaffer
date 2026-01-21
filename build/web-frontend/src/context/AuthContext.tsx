@@ -11,11 +11,14 @@ import { authApi, type User, type LoginCredentials, type RegisterData } from '..
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isEmailVerified: boolean;
   isLoading: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  sendVerificationEmail: () => Promise<void>;
+  resendVerificationEmail: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -68,16 +71,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const sendVerificationEmail = useCallback(async () => {
+    await authApi.sendVerificationEmail();
+  }, []);
+
+  const resendVerificationEmail = useCallback(async () => {
+    await authApi.resendVerificationEmail();
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
         user,
         isAuthenticated: !!user,
+        isEmailVerified: user?.email_verified ?? false,
         isLoading,
         login,
         register,
         logout,
         refreshUser,
+        sendVerificationEmail,
+        resendVerificationEmail,
       }}
     >
       {children}

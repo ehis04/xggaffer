@@ -6,6 +6,7 @@ export interface User {
   username: string | null;
   first_name: string;
   last_name: string;
+  email_verified: boolean;
 }
 
 export interface LoginCredentials {
@@ -27,6 +28,11 @@ export interface AuthResponse {
   message: string;
 }
 
+export interface VerificationStatus {
+  email_verified: boolean;
+  email: string;
+}
+
 export const authApi = {
   login: (credentials: LoginCredentials) =>
     apiClient.post<AuthResponse>('/users/auth/login/', credentials),
@@ -44,6 +50,18 @@ export const authApi = {
 
   refresh: () =>
     apiClient.post<{ message: string }>('/users/auth/refresh/'),
+
+  sendVerificationEmail: () =>
+    apiClient.post<{ message: string }>('/users/auth/send-verification/'),
+
+  resendVerificationEmail: () =>
+    apiClient.post<{ message: string }>('/users/auth/resend-verification/'),
+
+  verifyEmail: (token: string): Promise<{ message: string; already_verified: boolean }> =>
+    apiClient.post<{ message: string; already_verified: boolean }>('/users/auth/verify-email/', { token }),
+
+  getVerificationStatus: () =>
+    apiClient.get<VerificationStatus>('/users/auth/verification-status/'),
 };
 
 export default authApi;

@@ -5,10 +5,11 @@ import { usersApi } from '../../services/api/usersApi';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requireVerified?: boolean;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+export function ProtectedRoute({ children, requireVerified = true }: ProtectedRouteProps) {
+  const { isAuthenticated, isEmailVerified, isLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [checkingProfile, setCheckingProfile] = useState(true);
@@ -22,22 +23,24 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         return;
       }
 
-      // If user is already on profile creation routes, don't redirect
       if (location.pathname.startsWith('/create/profile')) {
+        if (mounted) setCheckingProfile(false);
+        return;
+      }
+
+      if (location.pathname === '/verify-email') {
         if (mounted) setCheckingProfile(false);
         return;
       }
 
       try {
         const profile = await usersApi.getMyProfile();
-        // profile exists — ensure a role is assigned
         if (!profile.roles || profile.roles.length === 0) {
           navigate('/create/profile/role', { replace: true });
         }
       } catch (err: any) {
         const status = err?.response?.status ?? err?.status;
         if (status === 404) {
-          // No profile found — send user to profile creation
           navigate('/create/profile', { replace: true });
         } else {
           console.error('Error verifying user profile:', err);
@@ -64,6 +67,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (!isAuthenticated) {
     return <Navigate to="/" state={{ from: location }} replace />;
+  }
+
+  if (requireVerified && !isEmailVerified && !location.pathname.startsWith('/create/profile')) {
+    return <Navigate to="/verify-email" replace />;
   }
 
   return <>{children}</>;

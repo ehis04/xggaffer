@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './css/RoleProfileForm.css';
 import apiClient from '../../services/api/client';
+import { useAuth } from '../../context/AuthContext';
 
 interface CoachProfileData {
   experience_level: string;
@@ -46,6 +47,7 @@ export const RoleProfileForm = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const navigate = useNavigate();
+  const { sendVerificationEmail } = useAuth();
 
   useEffect(() => {
     fetchUserRoles();
@@ -85,6 +87,15 @@ export const RoleProfileForm = () => {
     }));
   };
 
+  const completeOnboarding = async () => {
+    try {
+      await sendVerificationEmail();
+    } catch (err) {
+      console.error('Failed to send verification email:', err);
+    }
+    navigate('/verify-email');
+  };
+
   const handleCoachSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
@@ -98,7 +109,7 @@ export const RoleProfileForm = () => {
         club_name: coachFormData.club_name,
       });
 
-      navigate('/social');
+      await completeOnboarding();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred during coach profile creation');
     } finally {
@@ -120,7 +131,7 @@ export const RoleProfileForm = () => {
         weight_kg: Number(playerFormData.weight_kg),
       });
 
-      navigate('/social');
+      await completeOnboarding();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred during player profile creation');
     } finally {
@@ -253,27 +264,6 @@ export const RoleProfileForm = () => {
 
           <div className="profile-creation-form-group">
             <label htmlFor="primary_position">Primary Position</label>
-            {/*
-            <select
-              id="primary_position"
-              value={playerFormData.primary_position}
-              onChange={handlePlayerInputChange}
-              required
-            >
-              <option value="">Select Position</option>
-              <option value="gk">Goalkeeper</option>
-              <option value="cb">Center Back</option>
-              <option value="fb">Full Back</option>
-              <option value="wb">Wide Back</option>
-              <option value="sw">Sweeper</option>
-              <option value="dm">Defensive Midfielder</option>
-              <option value="cm">Central Midfielder</option>
-              <option value="wm">Wide Midfielder/Winger</option>
-              <option value="cf">Centre Forward/Striker</option>
-              <option value="ss">Second Striker/Support Striker</option>
-              <option value="st">Striker</option>
-            </select>
-            */}
             <select
               id="primary_position"
               value={playerFormData.primary_position}
@@ -282,7 +272,6 @@ export const RoleProfileForm = () => {
             >
               <option value="">Select Position</option>
               <option value="GK">Goalkeeper</option>
-
               <option value="RB">Right Back</option>
               <option value="RWB">Right Wing Back</option>
               <option value="CB">Centre Back</option>
@@ -291,14 +280,12 @@ export const RoleProfileForm = () => {
               <option value="LCB">Left Centre Back</option>
               <option value="LB">Left Back</option>
               <option value="LWB">Left Wing Back</option>
-
               <option value="RDM">Right Defensive Midfielder</option>
               <option value="CDM">Central Defensive Midfielder</option>
               <option value="LDM">Left Defensive Midfielder</option>
               <option value="CM">Central Midfielder</option>
               <option value="RM">Right Midfielder</option>
               <option value="LM">Left Midfielder</option>
-
               <option value="RAM">Right Attacking Midfielder</option>
               <option value="CAM">Central Attacking Midfielder</option>
               <option value="LAM">Left Attacking Midfielder</option>
@@ -308,8 +295,6 @@ export const RoleProfileForm = () => {
               <option value="ST">Striker</option>
             </select>
           </div>
-
-
 
           <div className="profile-creation-form-group">
             <label htmlFor="secondary_position">Secondary Position</label>
@@ -329,14 +314,12 @@ export const RoleProfileForm = () => {
               <option value="LCB">Left Centre Back</option>
               <option value="LB">Left Back</option>
               <option value="LWB">Left Wing Back</option>
-
               <option value="RDM">Right Defensive Midfielder</option>
               <option value="CDM">Central Defensive Midfielder</option>
               <option value="LDM">Left Defensive Midfielder</option>
               <option value="CM">Central Midfielder</option>
               <option value="RM">Right Midfielder</option>
               <option value="LM">Left Midfielder</option>
-
               <option value="RAM">Right Attacking Midfielder</option>
               <option value="CAM">Central Attacking Midfielder</option>
               <option value="LAM">Left Attacking Midfielder</option>
@@ -402,9 +385,9 @@ export const RoleProfileForm = () => {
           <button
             type="button"
             className="button-submit"
-            onClick={() => navigate('/social')}
+            onClick={() => completeOnboarding()}
           >
-            Continue to Social
+            Continue
           </button>
         </div>
       )}
@@ -416,9 +399,9 @@ export const RoleProfileForm = () => {
           <button
             type="button"
             className="button-submit"
-            onClick={() => navigate('/social')}
+            onClick={() => completeOnboarding()}
           >
-            Continue to Social
+            Continue
           </button>
         </div>
       )}
