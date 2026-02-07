@@ -4,6 +4,20 @@ import './App.css';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { PublicOnlyRoute } from './components/auth/PublicOnlyRoute';
 
+// Setup pages
+import LandingPage from './pages/setup/LandingPage';
+import ProfileCreationPage from './pages/setup/ProfileCreationPage';
+import { RoleAssignPage } from './pages/setup/RoleAssignPage';
+import { RoleProfilePage } from './pages/setup/RoleProfilePage';
+import { VerifyEmailPromptPage } from './pages/setup/VerifyEmailPromptPage';
+import { VerifyEmailCallbackPage } from './pages/setup/VerifyEmailCallbackPage';
+
+// Social pages
+import { SocialPage } from './pages/social/SocialPage';
+import { PostDetailPage } from './pages/social/PostDetailPage';
+
+// Reffing pages
+import RefBase from './pages/reffing/RefBase';
 import QuizBase from './pages/reffing/quiz/QuizBase';
 import ControlBase from './pages/reffing/controlTraining/ControlBase';
 import ArticleBase from './pages/reffing/article/ArticleBase';
@@ -12,205 +26,65 @@ import SituationBase from './pages/reffing/situation/SituationBase';
 import ChangesTimeline from './pages/reffing/quiz/ChangesTimeLine';
 import LawDetail from './pages/reffing/quiz/LawDetails';
 import LawsList from './pages/reffing/quiz/LawsList';
+
+// Coaching pages
+import { CoachingBase } from './pages/coaching/CoachingBase';
 import TeamsheetDetail from './pages/coaching/teamsheets/TeamsheetDetail';
 import TeamsheetList from './pages/coaching/teamsheets/TeamsheetList';
-import LandingPage from './pages/setup/LandingPage';
-import RefBase from './pages/reffing/RefBase';
-import { SocialPage } from './pages/social/SocialPage';
-import { PostDetailPage } from './pages/social/PostDetailPage';
-import ProfileCreationPage from './pages/setup/ProfileCreationPage';
-import { RoleAssignPage } from './pages/setup/RoleAssignPage';
-import { RoleProfilePage } from './pages/setup/RoleProfilePage';
 import TeamsheetListPage from './pages/coaching/teamsheets/TeamsheetListPage';
 import TeamsheetCreatePage from './pages/coaching/teamsheets/TeamsheetCreatePage';
 import TeamsheetDetailPage from './pages/coaching/teamsheets/TeamsheetDetailPage';
-import { VerifyEmailPromptPage } from './pages/setup/VerifyEmailPromptPage';
-import { VerifyEmailCallbackPage } from './pages/setup/VerifyEmailCallbackPage';
 
 function App() {
   return (
     <BrowserRouter>
       <div className="app">
         <Routes>
-          <Route
-            path="/"
-            element={
-              <PublicOnlyRoute redirectTo="/social" useFrom={false}>
-                <LandingPage />
-              </PublicOnlyRoute>
-            }
-          />
+          {/* Public only route */}
+          <Route path="/" element={
+            <PublicOnlyRoute redirectTo="/social" useFrom={false}>
+              <LandingPage />
+            </PublicOnlyRoute>
+          } />
 
-          <Route
-            path="/verify-email"
-            element={
-              <ProtectedRoute requireVerified={false}>
-                <VerifyEmailPromptPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/verify-email/confirm"
-            element={<VerifyEmailCallbackPage />}
-          />
+          {/* Unprotected route (verification callback) */}
+          <Route path="/verify-email/confirm" element={<VerifyEmailCallbackPage />} />
 
-          <Route
-            path="/social"
-            element={
-              <ProtectedRoute>
-                <SocialPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/social/post/:postId"
-            element={
-              <ProtectedRoute>
-                <PostDetailPage />
-              </ProtectedRoute>
-            }
-          />
+          {/* Protected routes - verification NOT required */}
+          <Route element={<ProtectedRoute requireVerified={false} />}>
+            <Route path="/verify-email" element={<VerifyEmailPromptPage />} />
+            <Route path="/create/profile" element={<ProfileCreationPage />} />
+            <Route path="/create/profile/role" element={<RoleAssignPage />} />
+            <Route path="/create/profile/role/details" element={<RoleProfilePage />} />
+          </Route>
 
-          <Route
-            path="/create/profile"
-            element={
-              <ProtectedRoute requireVerified={false}>
-                <ProfileCreationPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/create/profile/role"
-            element={
-              <ProtectedRoute requireVerified={false}>
-                <RoleAssignPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/create/profile/role/details"
-            element={
-              <ProtectedRoute requireVerified={false}>
-                <RoleProfilePage />
-              </ProtectedRoute>
-            }
-          />
+          {/* Protected routes - verification required */}
+          <Route element={<ProtectedRoute />}>
+            {/* Social */}
+            <Route path="/social" element={<SocialPage />} />
+            <Route path="/social/post/:postId" element={<PostDetailPage />} />
 
-          <Route
-            path="/refbase"
-            element={
-              <ProtectedRoute>
-                <RefBase />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/quizbase"
-            element={
-              <ProtectedRoute>
-                <QuizBase />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/controlBase"
-            element={
-              <ProtectedRoute>
-                <ControlBase />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/articleBase"
-            element={
-              <ProtectedRoute>
-                <ArticleBase />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/fitnessBase"
-            element={
-              <ProtectedRoute>
-                <FitnessBase />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/situationBase"
-            element={
-              <ProtectedRoute>
-                <SituationBase />
-              </ProtectedRoute>
-            }
-          />
+            {/* Reffing */}
+            <Route path="/refbase" element={<RefBase />} />
+            <Route path="/quizbase" element={<QuizBase />} />
+            <Route path="/controlBase" element={<ControlBase />} />
+            <Route path="/articleBase" element={<ArticleBase />} />
+            <Route path="/fitnessBase" element={<FitnessBase />} />
+            <Route path="/situationBase" element={<SituationBase />} />
+            <Route path="/laws" element={<LawsList />} />
+            <Route path="/laws/:lawNumber" element={<LawDetail />} />
+            <Route path="/laws/changes" element={<ChangesTimeline />} />
 
-          <Route 
-            path="/laws" 
-            element={
-              <ProtectedRoute>
-                <LawsList />
-              </ProtectedRoute>
-            }
-          />
-          <Route 
-            path="/laws/:lawNumber" 
-            element={
-            <ProtectedRoute>
-              <LawDetail />
-            </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/laws/changes" 
-            element={
-              <ProtectedRoute>
-                <ChangesTimeline />
-              </ProtectedRoute>
-            }
-          />
+            {/* Coaching */}
+            <Route path="/coaching" element={<CoachingBase />} />
+            <Route path="/coaching/teamsheets" element={<TeamsheetList />} />
+            <Route path="/coaching/teamsheets/:id" element={<TeamsheetDetail />} />
+            <Route path="/clubs/:clubId/teamsheets" element={<TeamsheetListPage />} />
+            <Route path="/clubs/:clubId/teamsheets/new" element={<TeamsheetCreatePage />} />
+            <Route path="/clubs/:clubId/teamsheets/:teamsheetId" element={<TeamsheetDetailPage />} />
+          </Route>
 
-          <Route
-            path="/coaching/teamsheets"
-            element={
-              <ProtectedRoute>
-                <TeamsheetList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/coaching/teamsheets/:id"
-            element={
-              <ProtectedRoute>
-                <TeamsheetDetail />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/clubs/:clubId/teamsheets"
-            element={
-              <ProtectedRoute>
-                <TeamsheetListPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/clubs/:clubId/teamsheets/new"
-            element={
-              <ProtectedRoute>
-                <TeamsheetCreatePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/clubs/:clubId/teamsheets/:teamsheetId"
-            element={
-              <ProtectedRoute>
-                <TeamsheetDetailPage />
-              </ProtectedRoute>
-            }
-          />
-
+          {/* Catch all */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

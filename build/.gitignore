@@ -121,3 +121,7 @@ npm-debug.log*
 # Models and data (optional - uncomment if you want to ignore these)
 # models/*.joblib
 # data/raw/
+data/
+*.joblib
+*.pkl
+*.csv

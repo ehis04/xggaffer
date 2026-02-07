@@ -1,10 +1,10 @@
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useEffect, useState } from 'react';
 import { usersApi } from '../../services/api/usersApi';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   requireVerified?: boolean;
 }
 
@@ -73,7 +73,7 @@ export function ProtectedRoute({ children, requireVerified = true }: ProtectedRo
     return <Navigate to="/verify-email" replace />;
   }
 
-  return <>{children}</>;
+  return children ? <>{children}</> : <Outlet />;
 }
 
 export default ProtectedRoute;

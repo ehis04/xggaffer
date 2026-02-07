@@ -46,7 +46,7 @@ export const LoginForm = () => {
         remember_me: formData.rememberMe,
       });
 
-      // Navigate to where they were trying to go, or /social
+
       navigate(from, { replace: true });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred during login';
