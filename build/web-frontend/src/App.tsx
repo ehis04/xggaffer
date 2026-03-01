@@ -32,6 +32,7 @@ import { PostDetailPage } from './pages/social/PostDetailPage';
 import ProfileCreationPage from './pages/setup/ProfileCreationPage';
 import { RoleAssignForm } from './components/Forms/RoleAssignForm';
 import { RoleProfilePage } from './pages/setup/RoleProfilePage';
+import { UserProfilePage } from './pages/user/UserProfilePage';
 
 function App() {
 
@@ -56,6 +57,7 @@ function App() {
         <Route path="/create/profile" element={<ProfileCreationPage />} />
         <Route path="/create/profile/role" element={<RoleAssignForm />} />
         <Route path="/create/profile/role/details" element={<RoleProfilePage />} />
+        <Route path="/profile/:username" element={<UserProfilePage />} />
       </Routes>
     </BrowserRouter>
   )

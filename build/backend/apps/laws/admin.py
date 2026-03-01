@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from django.urls import path, reverse
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .models import LawEdition, Law, LawClause, LawChange, ParsingJob
+from ..referee.Laws.models import LawEdition, Law, LawClause, LawChange, ParsingJob
 from .services.parsing_orchestrator import ParsingOrchestrator
 import json
 

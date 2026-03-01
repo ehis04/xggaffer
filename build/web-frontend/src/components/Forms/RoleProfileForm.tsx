@@ -6,14 +6,14 @@ import {
 } from "../../services/api/AuthenticateUserApi";
 import { fetchUserRoles } from "./functions/fetchUserRoles";
 
-interface CoachProfileData {
+export interface CoachProfileData {
   experience_level: string;
   formation_preferences: string;
   years_experience: number | string;
   club_name: string;
 }
 
-interface PlayerProfileData {
+export interface PlayerProfileData {
   primary_position: string;
   secondary_position: string;
   dominant_foot: string;
