@@ -1,4 +1,5 @@
-.social-page {
+.social-page,
+.quiz-page-container {
   display: grid;
   grid-template-columns: auto 1fr 290px;
   grid-template-rows: auto 1fr;

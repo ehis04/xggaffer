@@ -25,6 +25,9 @@ export const Api_Endpoints = {
   LIKE_POST: (postId: number) => `${base_url}/community/posts/${postId}/like/`,
   LIKE_COMMENT: (postId: number) => `${base_url}/community/comment/${postId}/like/`,
   POST_COMMENTS: (postId: number) => `${base_url}/community/posts/${postId}/comments/`,
+
+  // Quiz
+  GET_QUIZ: (quizId: number) => `${base_url}/referee/quizzes/${quizId}/`,
 };
 
 export const getAccessToken = (): string | null => {

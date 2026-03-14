@@ -13,14 +13,21 @@ import { ProfileButton } from "../Buttons/ProfileButton";
 import type { UserData } from "../Navigation/SideBar";
 import { getUserProfile } from "../Navigation/functions/getUserProfile";
 
-// /* ---- BackArrow ---- */
-// const BackArrow = () => (
-//   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-//     <path d="M19 12H5M12 5l-7 7 7 7" />
-//   </svg>
-// );
+const BackArrow = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M19 12H5M12 5l-7 7 7 7" />
+  </svg>
+);
 
-/* ---- Main component ---- */
 export const PostDetail = () => {
   const { postId } = useParams<{ postId: string }>();
   const navigate = useNavigate();
@@ -31,7 +38,6 @@ export const PostDetail = () => {
   const [error, setError] = useState<string | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
 
-  // Reply composer
   const [replyText, setReplyText] = useState("");
   const [replyingToId, setReplyingToId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,7 +48,6 @@ export const PostDetail = () => {
     getUserProfile(setUserData);
   }, []);
 
-  /* -- Fetch -- */
   useEffect(() => {
     if (!postId) return;
 
@@ -94,7 +99,6 @@ export const PostDetail = () => {
     load();
   }, [postId]);
 
-  /* -- Auto-grow textarea -- */
   const handleReplyChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setReplyText(e.target.value);
     const ta = e.target;
@@ -102,7 +106,6 @@ export const PostDetail = () => {
     ta.style.height = `${ta.scrollHeight}px`;
   };
 
-  /* -- Submit reply -- */
   const handleSubmitReply = async () => {
     if (!postId || !replyText.trim() || isSubmitting) return;
     setIsSubmitting(true);
@@ -123,7 +126,6 @@ export const PostDetail = () => {
       setReplyingToId(null);
       if (textareaRef.current) textareaRef.current.style.height = "auto";
 
-      // bump comment count on the post
       setPost((p) => (p ? { ...p, no_of_comments: p.no_of_comments + 1 } : p));
     } catch (err) {
       console.error(err);
@@ -132,13 +134,6 @@ export const PostDetail = () => {
     }
   };
 
-  /*
-   * -- Like handler --
-   * The Post component already manages its own isLiked/likeCount state
-   * and updates visually when the user clicks. All we need to do here
-   * is fire the API call. Doing a second optimistic update in the parent
-   * causes the two states to fight and permanently desync.
-   */
   const handleLike = async (id: number, type: "post" | "comment") => {
     try {
       const endpoint =
@@ -161,7 +156,6 @@ export const PostDetail = () => {
     navigate(`/profile/${username}`);
   const handlePostClick = () => {};
 
-  /* -- Build thread map -- */
   const topLevel = comments.filter((c) => !c.parent_id);
   const repliesMap = new Map<number, PostData[]>();
   comments.forEach((c) => {
@@ -176,15 +170,18 @@ export const PostDetail = () => {
     ? comments.find((c) => c.id === replyingToId)?.author.username
     : post?.author.username;
 
-  /* ---- Render ---- */
   return (
     <div className="post-detail-root">
-      {/* <header className="pd-header">
-        <button className="pd-back-btn" onClick={() => navigate(-1)} aria-label="Go back">
+      <header className="pd-header">
+        <button
+          className="pd-back-btn"
+          onClick={() => navigate(-1)}
+          aria-label="Go back"
+        >
           <BackArrow />
         </button>
         <span className="pd-header-title">Post</span>
-      </header> */}
+      </header>
 
       <main className="pd-main">
         {loading && (
@@ -218,7 +215,13 @@ export const PostDetail = () => {
             <div className="pd-composer">
               <div className="pd-composer-inner">
                 <div className="pd-composer-avatar">
-                  {userData && <ProfileButton username={userData.username} size="medium" onClick={handleProfileClick}/>}
+                  {userData && (
+                    <ProfileButton
+                      username={userData.username}
+                      size="medium"
+                      onClick={handleProfileClick}
+                    />
+                  )}
                 </div>
                 <div className="pd-composer-field">
                   {replyingToId && replyingToUsername && (
@@ -275,11 +278,7 @@ export const PostDetail = () => {
             <section className="pd-comments-section">
               {topLevel.length === 0 ? (
                 <div className="pd-empty-state">
-                  <div className="pd-empty-icon">💬</div>
                   <p className="pd-empty-title">No replies yet</p>
-                  <p className="pd-empty-sub">
-                    Be the first to reply to this post.
-                  </p>
                 </div>
               ) : (
                 topLevel.map((comment) => {

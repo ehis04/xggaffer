@@ -2,6 +2,7 @@ import { ProfileButton } from "../Buttons/ProfileButton";
 import "./css/SideBar.css";
 import React, { useEffect, useState } from "react";
 import { getUserProfile } from "./functions/getUserProfile";
+import { Navigate } from "react-router-dom";
 
 interface NavItem {
   id: string;
@@ -28,7 +29,7 @@ export interface UserData {
   profile_image?: string;
 }
 
-const http = 'http://localhost:5173/';
+const http = "http://localhost:5173/";
 
 export const Sidebar: React.FC<SidebarProps> = ({
   items,
@@ -40,11 +41,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   useEffect(() => {
     getUserProfile(setUserData);
-  }, [])
+  }, []);
 
   const handleProfileClick = (username: string) => {
     globalThis.location.href = `/profile/${username}`;
-  }
+  };
 
   const defaultItems: NavItem[] = [
     {
@@ -64,6 +65,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: "Home",
       onClick: () => console.log("Home clicked"),
       link: "",
+    },
+    {
+      id: "social",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          fill="currentColor"
+          className="bi bi-chat-square-quote"
+          viewBox="0 0 16 16"
+        >
+          <path d="M14 1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-2.5a2 2 0 0 0-1.6.8L8 14.333 6.1 11.8a2 2 0 0 0-1.6-.8H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM2 0a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2.5a1 1 0 0 1 .8.4l1.9 2.533a1 1 0 0 0 1.6 0l1.9-2.533a1 1 0 0 1 .8-.4H14a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z" />
+          <path d="M7.066 4.76A1.665 1.665 0 0 0 4 5.668a1.667 1.667 0 0 0 2.561 1.406c-.131.389-.375.804-.777 1.22a.417.417 0 1 0 .6.58c1.486-1.54 1.293-3.214.682-4.112zm4 0A1.665 1.665 0 0 0 8 5.668a1.667 1.667 0 0 0 2.561 1.406c-.131.389-.375.804-.777 1.22a.417.417 0 1 0 .6.58c1.486-1.54 1.293-3.214.682-4.112z" />
+        </svg>
+      ),
+      label: "Social",
+      onClick: () => console.log("Social clicked"),
+      link: "http://localhost:5173/social",
     },
     {
       id: "explore",
@@ -106,6 +126,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: "Coaching",
       onClick: () => console.log("Coaching clicked"),
       link: "",
+    },
+    {
+      id: "referee",
+      icon: null,
+      label: "Referee",
+      onClick: () => console.log("Referee clicked"),
+      link: "http://localhost:5173/referee",
     },
   ];
 
@@ -180,11 +207,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
     >
       <div className="sidebar-content">
         <div className="sidebar-logo">
-          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-ball-football"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M12 7l4.76 3.45l-1.76 5.55h-6l-1.76 -5.55z" /><path d="M12 7v-4m3 13l2.5 3m-.74 -8.55l3.74 -1.45m-11.44 7.05l-2.56 2.95m.74 -8.55l-3.74 -1.45" /></svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="30"
+            height="30"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="icon icon-tabler icons-tabler-outline icon-tabler-ball-football"
+          >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+            <path d="M12 7l4.76 3.45l-1.76 5.55h-6l-1.76 -5.55z" />
+            <path d="M12 7v-4m3 13l2.5 3m-.74 -8.55l3.74 -1.45m-11.44 7.05l-2.56 2.95m.74 -8.55l-3.74 -1.45" />
+          </svg>
         </div>
 
         <div className="sidebar-profile">
-          {userData && <ProfileButton username={userData.username} size="small" showLabel={isHovered} onClick={handleProfileClick}/>}
+          {userData && (
+            <ProfileButton
+              username={userData.username}
+              size="small"
+              showLabel={isHovered}
+              onClick={handleProfileClick}
+            />
+          )}
         </div>
         <nav className="sidebar-nav">
           {navItems.map((item) => (
@@ -202,7 +252,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   </span>
                 )}
               </div>
-              <span className="sidebar-item-label"><a href={item.link}>{item.label}</a></span>
+              <span className="sidebar-item-label">
+                <a href={item.link}>{item.label}</a>
+              </span>
             </button>
           ))}
         </nav>
@@ -215,8 +267,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onClick={item.onClick}
               aria-label={item.label}
             >
-              <div className="sidebar-item-icon"><a href={item.link}>{item.icon}</a></div>
-              <span className="sidebar-item-label"><a href={item.link}>{item.label}</a></span>
+              <div className="sidebar-item-icon">
+                <a href={item.link}>{item.icon}</a>
+              </div>
+              <span className="sidebar-item-label">
+                <a href={item.link}>{item.label}</a>
+              </span>
             </button>
           ))}
         </nav>

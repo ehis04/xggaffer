@@ -33,6 +33,8 @@ import ProfileCreationPage from './pages/setup/ProfileCreationPage';
 import { RoleAssignForm } from './components/Forms/RoleAssignForm';
 import { RoleProfilePage } from './pages/setup/RoleProfilePage';
 import { UserProfilePage } from './pages/user/UserProfilePage';
+import { RefereeHome } from './pages/referee/RefereeHome';
+import { QuizPage } from './pages/referee/QuizPage';
 
 function App() {
 
@@ -58,6 +60,8 @@ function App() {
         <Route path="/create/profile/role" element={<RoleAssignForm />} />
         <Route path="/create/profile/role/details" element={<RoleProfilePage />} />
         <Route path="/profile/:username" element={<UserProfilePage />} />
+        <Route path="/referee/" element={<RefereeHome />} />
+        <Route path="/referee/quiz/:quizId" element={<QuizPage />} />
       </Routes>
     </BrowserRouter>
   )
