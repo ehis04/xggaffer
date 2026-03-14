@@ -1,6 +1,7 @@
 import { useState } from "react";
 import "./css/Post.css";
 import { ProfileButton } from "../Buttons/ProfileButton";
+import { useNavigate } from "react-router-dom";
 
 // This component is for comments, posts, replies. It is using the general name post to refer to everything
 
@@ -53,6 +54,8 @@ export const Post: React.FC<PostProps> = ({
   const [isLiked, setIsLiked] = useState(post.is_liked || false);
   const [likeCount, setLikeCount] = useState(post.no_of_likes);
 
+  const navigate = useNavigate();
+
   const isComment = post.type === "comment";
   const commentCount = isComment ? post.no_of_replies : post.no_of_comments;
 
@@ -88,11 +91,14 @@ export const Post: React.FC<PostProps> = ({
 
   const handleProfileClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onProfileClick && post.author.username) onProfileClick(post.author.username);
+    if (onProfileClick && post.author.username)
+      onProfileClick(post.author.username);
   };
 
   const handlePostClick = () => {
-    if (onPostClick) onPostClick(post.id);
+    if (post.type == "post") {
+      navigate(`/social/post/${post.id}`);
+    }
   };
 
   const renderTextWithLinks = (text: string) => {
@@ -192,7 +198,7 @@ export const Post: React.FC<PostProps> = ({
                   viewBox="0 0 16 16"
                 >
                   <path
-                    fill-rule="evenodd"
+                    fillRule="evenodd"
                     d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"
                   />
                 </svg>

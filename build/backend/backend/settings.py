@@ -31,6 +31,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+FITBIT_CLIENT_ID = config('FITBIT_CLIENT_ID')
+FITBIT_CLIENT_SECRET = config('FITBIT_CLIENT_SECRET')
+FITBIT_REDIRECT_URL = config('FITBIT_REDIRECT_URL')
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
 AUTH_USER_MODEL = 'users.User'
 
@@ -74,7 +79,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'apps.laws',
-    'apps.quizzes',
     'apps.articles',
     'rest_framework',
     'apps.teamsheets',
@@ -85,6 +89,12 @@ INSTALLED_APPS = [
     'apps.coaching',
     'apps.players',
     'apps.players.playerProfile',
+    'apps.referee',
+    'apps.referee.progressTracking',
+    'apps.referee.learningTools',
+    'apps.referee.Laws',
+    'apps.referee.profile',
+    'apps.integrations',
     'corsheaders',
 ]
 

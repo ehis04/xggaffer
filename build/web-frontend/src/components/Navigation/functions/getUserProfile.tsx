@@ -9,6 +9,11 @@ export const getUserProfile = async (setUserData: (userData: UserData) => void) 
             const data = await response.json();
             setUserData({
                 username: data.user.username,
+                display_name: data.display_name,
+                bio: data.bio,
+                followers_count: data.followers_count,
+                following_count: data.following_count,
+                gender: data.gender,
                 // profile_image: data.profile_image,
             })
         }

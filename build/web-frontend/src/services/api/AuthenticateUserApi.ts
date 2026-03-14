@@ -19,6 +19,7 @@ export const Api_Endpoints = {
   CREATE_POST: `${base_url}/community/create/post/`,
   CREATE_COMMENT: (postId: number) => `${base_url}/community/post/${postId}/create/comment/`,
   EXPLORE_POSTS: `${base_url}/community/explore/?order_by=ranked/`,
+  FOLLOWING_POSTS: `${base_url}/community/following/`,
   POST_ID: (postId: number) => `${base_url}/community/post/${postId}/`,
   DELETE_POST: (postId: number) => `${base_url}/community/my-post/${postId}/`,
   LIKE_POST: (postId: number) => `${base_url}/community/posts/${postId}/like/`,

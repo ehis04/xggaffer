@@ -12,8 +12,8 @@ class LawEdition(models.Model):
 
     class Meta:
         ordering = ['-publication_date']
-        verbose_name = _("Law Edition")
-        verbose_name_plural = _("Law Editions")
+        verbose_name = ("Law Edition")
+        verbose_name_plural = ("Law Editions")
 
     def __str__(self):
         return f"Laws {self.year}"
@@ -56,8 +56,8 @@ class Law(models.Model):
     class Meta:
         unique_together = ('edition', 'number')
         ordering = ['number']
-        verbose_name = _("Law")
-        verbose_name_plural = _("Laws")
+        verbose_name = ("Law")
+        verbose_name_plural = ("Laws")
         indexes = [
             models.Index(fields=['edition', 'number']),
             models.Index(fields=['difficulty_level']),
@@ -97,8 +97,8 @@ class LawClause(models.Model):
 
     class Meta:
         ordering = ['order']
-        verbose_name = _("Law Clause")
-        verbose_name_plural = _("Law Clauses")
+        verbose_name = ("Law Clause")
+        verbose_name_plural = ("Law Clauses")
         indexes = [
             models.Index(fields=['law', 'order']),
         ]
@@ -126,8 +126,8 @@ class LawChange(models.Model):
 
     class Meta:
         ordering = ['law_number', 'clause_id']
-        verbose_name = _("Law Change")
-        verbose_name_plural = _("Law Changes")
+        verbose_name = ("Law Change")
+        verbose_name_plural = ("Law Changes")
 
     def __str__(self):
         return f"Law {self.law_number} - {self.get_change_type_display()}"
@@ -152,8 +152,8 @@ class ParsingJob(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = _("Parsing Job")
-        verbose_name_plural = _("Parsing Jobs")
+        verbose_name = ("Parsing Job")
+        verbose_name_plural = ("Parsing Jobs")
         ordering = ['-created_at']
 
     def __str__(self):
@@ -184,8 +184,8 @@ class KeyConcept(models.Model):
 
     class Meta:
         ordering = ['term']
-        verbose_name = _("Key Concept")
-        verbose_name_plural = _("Key Concepts")
+        verbose_name = ("Key Concept")
+        verbose_name_plural = ("Key Concepts")
         indexes = [
             models.Index(fields=['law']),
             models.Index(fields=['is_critical']),

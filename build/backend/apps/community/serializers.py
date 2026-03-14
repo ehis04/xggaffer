@@ -33,6 +33,31 @@ class CommentSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ['id', 'author', 'text_body', 'created_at', 'no_of_likes']
+        
+class CommentListSerializer(serializers.ModelSerializer):
+    author = serializers.CharField(source='author.username', read_only=True)
+    children = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Comment
+        fields = ['id', 'author', 'text_body', 'created_at', 'no_of_likes', 'no_of_replies', 'post', 'parent', 'moderation_status', 'children', 'is_liked']
+        
+    def get_children(self, obj):
+        qs = obj.children.select_related("author").filter(moderation_status="OK")
+        return CommentListSerializer(qs, many=True, context=self.context).data
+
+    def get_is_liked(self, obj):
+        request = self.context.get("request")
+        if request and request.user and request.user.is_authenticated:
+            from django.contrib.contenttypes.models import ContentType
+            content_type = ContentType.objects.get_for_model(Comment)
+            return Like.objects.filter(
+                user=request.user,
+                content_type=content_type,
+                object_id=obj.id
+            ).exists()
+        return False
 
 class PostAuthorSerializer(serializers.ModelSerializer):
     class Meta:
@@ -91,4 +116,11 @@ class ExplorePostSerializer(serializers.ModelSerializer):
             return f"{diff.seconds // 60}m"
         else:
             return "now"
+        
+class CommentResponseSerializer(serializers.ModelSerializer):
+    author = serializers.CharField(source='author.username', read_only=True)
+    
+    class Meta:
+        model = Comment
+        fields = ['id', 'author', 'text_body', 'created_at', 'no_of_likes', 'no_of_replies', 'post', 'parent', 'moderation_status']
         

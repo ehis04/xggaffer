@@ -14,7 +14,7 @@ urlpatterns = [
     # profile management endpoints
     path("profile/create/", UserCreateProfileView.as_view(), name='create-profile-view'),
     path("profile/", UserProfileView.as_view(), name='user-profile-view'),
-    path("profile/<str:username>", GetProfileView.as_view(), name='get-profile-view'),
+    path("profile/<str:username>/", GetProfileView.as_view(), name='get-profile-view'),
     
     # Follow/Unfollow endpoints
     path("profile/<str:username>/follow/", FollowUserView.as_view(), name='follow-user-view'),

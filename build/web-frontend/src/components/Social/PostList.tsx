@@ -8,7 +8,8 @@ import {
 import { useState, useEffect } from "react";
 
 interface PostListProps {
-  postList: PostData[];
+  postList?: PostData[];
+  refreshTrigger?: number;
   onLike?: (postId: number) => void;
   onComment?: (postId: number) => void;
   onProfileClick?: (username: string) => void;
@@ -32,9 +33,11 @@ export interface Post {
 }
 
 export const PostList: React.FC<PostListProps> = ({
+  refreshTrigger = 0,
   onComment,
   onProfileClick,
   onPostClick,
+  postListType = "EXPLORE_POSTS",
 }) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
@@ -47,7 +50,7 @@ export const PostList: React.FC<PostListProps> = ({
     setError(null);
 
     try {
-      const response = await authenticatedFetch(Api_Endpoints.EXPLORE_POSTS, {
+      const response = await authenticatedFetch(Api_Endpoints[postListType], {
         method: "GET",
       });
 
@@ -71,7 +74,7 @@ export const PostList: React.FC<PostListProps> = ({
 
   useEffect(() => {
     getPosts();
-  }, []);
+  }, [postListType, refreshTrigger]);
 
   const postsPB = posts.filter((item: any) => {
     if ("type" in item) {

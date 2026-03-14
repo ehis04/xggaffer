@@ -2,10 +2,11 @@ from django.shortcuts import render
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import PostSerializer, ExplorePostSerializer, CommentSerializer
+from .serializers import PostSerializer, ExplorePostSerializer, CommentSerializer, CommentListSerializer, CommentResponseSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Post, Visibility, ModerationStatus, PostView, Comment, Like, ContentType
+from apps.users.models import User, UserProfile, Follow
 from rest_framework.generics import CreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
 from django.shortcuts import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
@@ -33,7 +34,7 @@ class GetPostView(RetrieveAPIView):
         .select_related("author")
         .filter(moderation_status=ModerationStatus.OK, visibility=Visibility.PUBLIC)
     )
-    serializer_class = PostSerializer
+    serializer_class = ExplorePostSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "id"
     lookup_url_kwarg = "post_id"
@@ -41,6 +42,22 @@ class GetPostView(RetrieveAPIView):
     def get_queryset(self):
         queryset = super().get_queryset()
         return queryset.filter(visibility=Visibility.PUBLIC)
+
+class GetCommentView(RetrieveAPIView):
+    queryset = (
+        Comment.objects
+        .select_related("author")
+        .filter(moderation_status=ModerationStatus.OK)
+    )
+    serializer_class = CommentListSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = "id"
+    lookup_url_kwarg = "comment_id"
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset
+    
 
 # Update own posts, get, and delete
 
@@ -245,6 +262,40 @@ class ExplorePostsView(ListAPIView):
                 response.data['suggestion'] = 'Try adjusting your filters.'
         
         return response
+
+class FollowingPostsView(ListAPIView):
+    serializer_class = ExplorePostSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = ExplorePagination
+    
+    def get_queryset(self):
+        user = self.request.user
+        
+        try:
+            user_profile = user.profile
+        except UserProfile.DoesNotExist:
+            return Post.objects.none()
+        
+        followed_users_ids = Follow.objects.filter(follower=user_profile).values_list('following__user_id', flat=True)
+        
+        if not followed_users_ids:
+            return Post.objects.none()
+        
+        viewed_post_ids = PostView.objects.filter(user=user).values_list('post_id', flat=True)
+        
+        queryset = Post.objects.filter(
+            moderation_status=ModerationStatus.OK,
+            visibility__in=[Visibility.PUBLIC, Visibility.FOLLOWERS],
+            author_id__in=followed_users_ids
+        ).exclude(Q(id__in=viewed_post_ids)
+        ).select_related(
+            'author', 'author__profile'
+        ).prefetch_related(
+            'post_tags__hashtag',
+            'comments__author'
+        ).order_by('-created_at')
+        
+        return queryset
     
 class MarkPostViewedView(APIView):
     permission_classes = [IsAuthenticated]
@@ -306,9 +357,17 @@ class CreateNewCommentView(CreateAPIView):
         if parent_id:
             parent = get_object_or_404(Comment, pk=parent_id, post=post)
         serializer.save(author=self.request.user, post=post, parent=parent)
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        response_serializer = CommentResponseSerializer(serializer.instance)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        
         
 class CommentPostView(ListAPIView):
-    serializer_class = CommentSerializer
+    serializer_class = CommentListSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = CommentPagination
     
@@ -323,9 +382,9 @@ class CommentPostView(ListAPIView):
             moderation_status=ModerationStatus.OK,
             parent__isnull=True # Only top-level comments (no parent)
         ).select_related(
-            'author' # Optimize: get author info in same query
+            'author' # Optimise: get author info in same query
         ).prefetch_related(
-            'children__author' # Optimize: get all replies and their authors
+            'children__author' # Optimise: get all replies and their authors
         )
     
         queryset = self._apply_ordering(queryset)

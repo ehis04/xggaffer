@@ -57,6 +57,12 @@
     font-size: 20px;
 }
 
+.profile-button.extra-large .profile-button-pic .profile-placeholder {
+    width: 80px;
+    height: 80px;
+    font-size: 30px;
+}
+
 .profile-button-info {
     display: flex;
     flex-direction: column;
