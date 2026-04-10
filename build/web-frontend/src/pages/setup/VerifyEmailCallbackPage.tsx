@@ -1,12 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { authApi } from '../../services/api/auth';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 
 export function VerifyEmailCallbackPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { refreshUser, isAuthenticated } = useAuth();
+  const { refreshUser } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
   const [alreadyVerified, setAlreadyVerified] = useState(false);
@@ -30,21 +30,19 @@ export function VerifyEmailCallbackPage() {
         setStatus('success');
         setAlreadyVerified(response.already_verified || false);
 
-        if (isAuthenticated) {
-          await refreshUser();
-        }
+        await refreshUser();
 
         setTimeout(() => {
           navigate('/social', { replace: true });
         }, 2000);
-      } catch (err: any) {
+      } catch (err: unknown) {
         setStatus('error');
-        setError(err?.response?.data?.error || 'Verification failed');
+        setError((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Verification failed');
       }
     };
 
     verifyEmail();
-  }, []);
+  }, [navigate, refreshUser, searchParams]);
 
   if (status === 'loading') {
     return (

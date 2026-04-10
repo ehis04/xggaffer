@@ -203,9 +203,12 @@
 }
 
 @keyframes likeAnimation {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.2);
   }
@@ -216,5 +219,3 @@
   font-weight: 400;
   min-width: 16px;
 }
-
-/*TODO comment and replies styling */

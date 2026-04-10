@@ -2,7 +2,7 @@ import './css/LoginForm.css';
 import googleIcon from '../../images/logos/google-svg.svg';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 import type { FormEvent } from 'react';
 
 interface RegisterFormData {
@@ -52,8 +52,13 @@ export const SignUpForm = () => {
       // New users should always start the setup flow at profile creation.
       navigate('/create/profile', { replace: true });
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred during registration';
-      setError(errorMessage);
+      const apiError = err as Error & { data?: Record<string, string[]> };
+      if (apiError.data && typeof apiError.data === 'object') {
+        const messages = Object.values(apiError.data).flat().join(' ');
+        setError(messages || apiError.message);
+      } else {
+        setError(apiError.message || 'An error occurred during registration');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -133,6 +138,7 @@ export const SignUpForm = () => {
           placeholder="Enter your Password"
           value={formData.password}
           onChange={handleInputChange}
+          minLength={8}
           required
         />
       </div>

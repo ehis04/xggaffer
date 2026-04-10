@@ -72,8 +72,6 @@ export const Post: React.FC<PostProps> = ({
     });
   };
 
-  //TODO maybe add number formatting for numbers over 1m or 1000
-
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsLiked(!isLiked);

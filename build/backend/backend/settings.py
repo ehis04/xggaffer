@@ -16,9 +16,13 @@ from datetime import timedelta
 from decouple import config, Csv
 import dj_database_url
 import os
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+import sys
 
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+_predictions_path = str(BASE_DIR / 'apps' / 'predictions')
+if _predictions_path not in sys.path:
+    sys.path.append(_predictions_path)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -26,37 +30,40 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 #SECRET_KEY = 'django-insecure-pqtu8qj+c$dmwy5u6&!(ic*^2h&$woay3q%(qo_nel*4=2dw)&'
 SECRET_KEY = config('SECRET_KEY')
-DEBUG = config('DEBUG', default=False, cast=bool)
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'testserver',
+]
 
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
 AUTH_USER_MODEL = 'users.User'
+
+BYPASS_PERMISSIONS = config('BYPASS_PERMISSIONS', default=False, cast=bool)
 
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 CELERY_TIMEZONE = 'UTC'
 CELERY_BEAT_SCHEDULE = {
     'scrape-all-leagues-daily': {
-        'task': 'predictions.tasks.scrape_all_leagues',
-        'schedule': crontab(hour=2, minute=0),  
+        'task': 'apps.predictions.tasks.scrape_all_leagues',
+        'schedule': crontab(hour=2, minute=0),
         'options': {
-            'expires': 3600, 
-        }
+            'expires': 3600,
+        },
     },
-    
     'scrape-premier-league-matchday': {
-        'task': 'predictions.tasks.scrape_specific_league',
-        'schedule': crontab(hour='*/3', day_of_week='sat,sun'),  
-        'args': ('EPL', '2024'),  
+        'task': 'apps.predictions.tasks.scrape_specific_league',
+        'schedule': crontab(hour='*/3', day_of_week='sat,sun'),
+        'args': ('EPL', '2024'),
         'options': {
-            'expires': 1800,  
-        }
+            'expires': 1800,
+        },
     },
 }
-
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
@@ -76,6 +83,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -100,11 +109,28 @@ INSTALLED_APPS = [
     'apps.players.playerProfile',
     'apps.clubs',
     'apps.tactics',
+    'apps.playerdata',
+    'apps.livefootball',
     'corsheaders',
+    'cloudinary',
 ]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+CLOUDINARY_CLOUD_NAME = config('CLOUDINARY_CLOUD_NAME', default='')
+CLOUDINARY_API_KEY = config('CLOUDINARY_API_KEY', default='')
+CLOUDINARY_API_SECRET = config('CLOUDINARY_API_SECRET', default='')
+
+CLUB_RESOURCES_USE_CLOUDINARY = config(
+    'CLUB_RESOURCES_USE_CLOUDINARY',
+    default=False,
+    cast=bool,
+)
+CLUB_RESOURCES_CLOUDINARY_FOLDER = config(
+    'CLUB_RESOURCES_CLOUDINARY_FOLDER',
+    default='xggaffer/clubs/resources',
+)
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -198,6 +224,7 @@ USE_TZ = True
 
 # Resend Email Service Configuration
 RESEND_API_KEY = config('RESEND_API_KEY', default='')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='xgGaffer <noreply@xggaffer.site>')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
@@ -244,5 +271,43 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
 #DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@labone.com')
 
+
 # Frontend Configuration
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
+
+FOOTBALL_DATA_ENABLED = config('FOOTBALL_DATA_ENABLED', default=True, cast=bool)
+FOOTBALL_DATA_API_BASE_URL = config(
+    'FOOTBALL_DATA_API_BASE_URL',
+    default='https://api.football-data.org/v4'
+)
+FOOTBALL_DATA_API_TOKEN = config('FOOTBALL_DATA_API_TOKEN', default='')
+FOOTBALL_DATA_TIMEOUT_SECONDS = config(
+    'FOOTBALL_DATA_TIMEOUT_SECONDS',
+    default=15,
+    cast=int,
+)
+FOOTBALL_DATA_RETRY_COUNT = config(
+    'FOOTBALL_DATA_RETRY_COUNT',
+    default=2,
+    cast=int,
+)
+
+UNDERSTAT_ENABLED = config('UNDERSTAT_ENABLED', default=True, cast=bool)
+UNDERSTAT_BASE_URL = config(
+    'UNDERSTAT_BASE_URL',
+    default='https://understat.com'
+)
+UNDERSTAT_TIMEOUT_SECONDS = config(
+    'UNDERSTAT_TIMEOUT_SECONDS',
+    default=15,
+    cast=int,
+)
+UNDERSTAT_RETRY_COUNT = config(
+    'UNDERSTAT_RETRY_COUNT',
+    default=2,
+    cast=int,
+)
+UNDERSTAT_USER_AGENT = config(
+    'UNDERSTAT_USER_AGENT',
+    default='xgGaffer/1.0 (+https://xggaffer.site)'
+)

@@ -1,78 +1,75 @@
 import pandas as pd
-from pathlib import Path
 
-
-DATA_DIR = Path(__file__).resolve().parents[5] / 'data'
-RAW_DIR = DATA_DIR / 'raw' / 'understat'
+from ml.models.match_outcome.config import RAW_DIR
 
 
 def load_matches(leagues: list[str], seasons: list[str]) -> pd.DataFrame:
     dfs = []
-    
+
     for league in leagues:
         for season in seasons:
-            filepath = RAW_DIR / 'matches' / f"{league.lower()}_{season}_matches.csv"
+            filepath = RAW_DIR / str(season) / f"understat_matches_{league}_{season}_raw.csv"
             if filepath.exists():
                 df = pd.read_csv(filepath)
                 df['league'] = league
                 df['season'] = str(season)
                 dfs.append(df)
-    
+
     if not dfs:
-        raise FileNotFoundError(f"No match files found in {RAW_DIR / 'matches'}")
-    
+        raise FileNotFoundError(f"No match files found under {RAW_DIR}")
+
     return pd.concat(dfs, ignore_index=True)
 
 
 def load_teams(leagues: list[str], seasons: list[str]) -> pd.DataFrame:
     dfs = []
-    
+
     for league in leagues:
         for season in seasons:
-            filepath = RAW_DIR / 'teams' / f"{league.lower()}_{season}_teams.csv"
+            filepath = RAW_DIR / str(season) / f"understat_teams_{league}_{season}_raw.csv"
             if filepath.exists():
                 df = pd.read_csv(filepath)
                 df['league'] = league
                 df['season'] = str(season)
                 dfs.append(df)
-    
+
     if not dfs:
-        raise FileNotFoundError(f"No team files found in {RAW_DIR / 'teams'}")
-    
+        raise FileNotFoundError(f"No team files found under {RAW_DIR}")
+
     return pd.concat(dfs, ignore_index=True)
 
 
 def load_players(leagues: list[str], seasons: list[str]) -> pd.DataFrame:
     dfs = []
-    
+
     for league in leagues:
         for season in seasons:
-            filepath = RAW_DIR / 'players' / f"{league.lower()}_{season}_players.csv"
+            filepath = RAW_DIR / str(season) / f"understat_players_{league}_{season}_raw.csv"
             if filepath.exists():
                 df = pd.read_csv(filepath)
                 df['season'] = str(season)
                 dfs.append(df)
-    
+
     if not dfs:
-        raise FileNotFoundError(f"No player files found in {RAW_DIR / 'players'}")
-    
+        raise FileNotFoundError(f"No player files found under {RAW_DIR}")
+
     return pd.concat(dfs, ignore_index=True)
 
 
 def load_team_summaries(leagues: list[str], seasons: list[str]) -> pd.DataFrame:
     dfs = []
-    
+
     for league in leagues:
         for season in seasons:
-            filepath = RAW_DIR / 'team_summaries' / f"{league.lower()}_{season}_team_summaries.csv"
+            filepath = RAW_DIR / str(season) / f"understat_team_summaries_{league}_{season}_raw.csv"
             if filepath.exists():
                 df = pd.read_csv(filepath)
                 df['season'] = str(season)
                 dfs.append(df)
-    
+
     if not dfs:
-        raise FileNotFoundError(f"No team summary files found in {RAW_DIR / 'team_summaries'}")
-    
+        raise FileNotFoundError(f"No team summary files found under {RAW_DIR}")
+
     return pd.concat(dfs, ignore_index=True)
 
 

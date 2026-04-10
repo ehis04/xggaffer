@@ -1,0 +1,357 @@
+.container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.loading {
+  text-align: centre;
+  padding: 4rem 2rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+}
+
+.subtitle {
+  color: rgba(255, 255, 255, 0.62);
+  margin: 0.45rem 0 0 0;
+  font-size: 0.96rem;
+  max-width: 760px;
+}
+
+.heroActions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.primaryButton,
+.secondaryButton {
+  padding: 0.85rem 1.2rem;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s, opacity 0.2s;
+}
+
+.primaryButton {
+  background: #3b82f6;
+  color: white;
+  border: none;
+}
+
+.primaryButton:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.secondaryButton {
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.secondaryButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.notice,
+.error,
+.errorInline {
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.notice {
+  background: rgba(59, 130, 246, 0.10);
+  border: 1px solid rgba(59, 130, 246, 0.24);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.noticeActions {
+  margin-top: 0.8rem;
+}
+
+.error,
+.errorInline {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  color: #fca5a5;
+}
+
+.topGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.workflowGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 1.25rem;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: centre;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 1.15rem;
+  color: white;
+  font-weight: 700;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: centre;
+  justify-content: centre;
+  min-height: 30px;
+  padding: 0 0.8rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.panelCopy {
+  margin: 0 0 1rem 0;
+  color: rgba(255, 255, 255, 0.66);
+  line-height: 1.55;
+}
+
+.codeForm {
+  display: flex;
+  gap: 0.75rem;
+  align-items: centre;
+  flex-wrap: wrap;
+}
+
+.codeInput,
+.codeTextarea {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: white;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+.codeInput {
+  flex: 1;
+  min-width: 220px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.codeInput:focus,
+.codeTextarea:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.8);
+}
+
+.lookupResult {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.lookupTitleRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: centre;
+  margin-bottom: 0.5rem;
+}
+
+.lookupTitle {
+  margin: 0;
+  color: white;
+  font-size: 1rem;
+}
+
+.lookupMeta {
+  margin: 0 0 0.55rem 0;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.88rem;
+}
+
+.lookupText {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.84);
+  line-height: 1.55;
+}
+
+.noticeBlock {
+  margin-top: 0.9rem;
+  padding: 0.85rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.detailNote {
+  margin-top: 0.5rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.inlineActions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.9rem;
+}
+
+.hiddenClubList,
+.workflowList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.hiddenClubRow,
+.workflowRow {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: white;
+  text-align: left;
+}
+
+.hiddenClubRow {
+  cursor: pointer;
+}
+
+.hiddenClubRow:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.hiddenClubName,
+.workflowName {
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+
+.hiddenClubMeta,
+.workflowMeta {
+  color: rgba(255, 255, 255, 0.64);
+  font-size: 0.86rem;
+}
+
+.hiddenClubArrow {
+  font-size: 1.15rem;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 1rem;
+}
+
+.empty {
+  text-align: centre;
+  padding: 2.5rem 1rem;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.emptyActions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: centre;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+@media (max-width: 1024px) {
+
+  .topGrid,
+  .workflowGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .heroActions,
+  .codeForm,
+  .emptyActions,
+  .inlineActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .primaryButton,
+  .secondaryButton,
+  .codeInput {
+    width: 100%;
+  }
+
+  .lookupTitleRow,
+  .panelHeader,
+  .workflowRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

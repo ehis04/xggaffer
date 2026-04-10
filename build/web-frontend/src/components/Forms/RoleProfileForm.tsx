@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './css/RoleProfileForm.css';
 import apiClient from '../../services/api/client';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 
 interface CoachProfileData {
   experience_level: string;
@@ -14,7 +14,7 @@ interface CoachProfileData {
 interface PlayerProfileData {
   primary_position: string;
   secondary_position: string;
-  dominant_foot: string;
+  preferred_foot: string;
   height_cm: number | string;
   weight_kg: number | string;
 }
@@ -36,7 +36,7 @@ export const RoleProfileForm = () => {
   const [playerFormData, setPlayerFormData] = useState<PlayerProfileData>({
     primary_position: '',
     secondary_position: '',
-    dominant_foot: 'r',
+    preferred_foot: 'r',
     height_cm: '',
     weight_kg: '',
   });
@@ -126,7 +126,7 @@ export const RoleProfileForm = () => {
       await apiClient.post('/players/profile/create/', {
         primary_position: playerFormData.primary_position,
         secondary_position: playerFormData.secondary_position,
-        dominant_foot: playerFormData.dominant_foot,
+        preferred_foot: playerFormData.preferred_foot,
         height_cm: Number(playerFormData.height_cm),
         weight_kg: Number(playerFormData.weight_kg),
       });
@@ -359,10 +359,10 @@ export const RoleProfileForm = () => {
           </div>
 
           <div className="profile-creation-form-group">
-            <label htmlFor="dominant_foot">Dominant Foot</label>
+            <label htmlFor="preferred_foot">Dominant Foot</label>
             <select
-              id="dominant_foot"
-              value={playerFormData.dominant_foot}
+              id="preferred_foot"
+              value={playerFormData.preferred_foot}
               onChange={handlePlayerInputChange}
               required
             >

@@ -32,10 +32,26 @@ class UserRoleSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at']
 
 class UserSerializer(serializers.ModelSerializer):
+    active_role = serializers.SerializerMethodField()
+    active_role_display = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'email_verified']
+        fields = [
+            'id', 'username', 'email', 'first_name', 'last_name', 'email_verified',
+            'active_role', 'active_role_display'
+        ]
         read_only_fields = ['id', 'username', 'email', 'email_verified']
+
+    def get_active_role(self, obj):
+        profile = getattr(obj, 'profile', None)
+        return getattr(profile, 'active_role', None)
+
+    def get_active_role_display(self, obj):
+        profile = getattr(obj, 'profile', None)
+        if profile and profile.active_role:
+            return profile.get_active_role_display()
+        return None
 
 class UserProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -43,14 +59,18 @@ class UserProfileSerializer(serializers.ModelSerializer):
     user_display_name = serializers.SerializerMethodField()
     is_following = serializers.SerializerMethodField()
     followed_by = serializers.SerializerMethodField()
+    active_role_display = serializers.CharField(source='get_active_role_display', read_only=True)
     
     class Meta:
         model = UserProfile
         fields = ['id', 'user', 'display_name', 'user_display_name', 'bio', 'gender',
                   'date_of_birth', 'visibility', 'followers_count', 
                   'following_count', 'created_at', 'updated_at', 
-                  'roles', 'is_following', 'followed_by']
-        read_only_fields = ['id', 'user', 'followers_count', 'following_count', 'created_at', 'updated_at']
+                  'roles', 'active_role', 'active_role_display', 'is_following', 'followed_by']
+        read_only_fields = [
+            'id', 'user', 'followers_count', 'following_count', 'created_at', 'updated_at',
+            'active_role', 'active_role_display'
+        ]
     
     def get_user_display_name(self, obj):
         return obj.get_display_name()

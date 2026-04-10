@@ -4,7 +4,6 @@ import './App.css';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { PublicOnlyRoute } from './components/auth/PublicOnlyRoute';
 
-// Setup pages
 import LandingPage from './pages/setup/LandingPage';
 import ProfileCreationPage from './pages/setup/ProfileCreationPage';
 import { RoleAssignPage } from './pages/setup/RoleAssignPage';
@@ -12,11 +11,9 @@ import { RoleProfilePage } from './pages/setup/RoleProfilePage';
 import { VerifyEmailPromptPage } from './pages/setup/VerifyEmailPromptPage';
 import { VerifyEmailCallbackPage } from './pages/setup/VerifyEmailCallbackPage';
 
-// Social pages
 import { SocialPage } from './pages/social/SocialPage';
 import { PostDetailPage } from './pages/social/PostDetailPage';
 
-// Reffing pages
 import RefBase from './pages/reffing/RefBase';
 import QuizBase from './pages/reffing/quiz/QuizBase';
 import ControlBase from './pages/reffing/controlTraining/ControlBase';
@@ -27,30 +24,45 @@ import ChangesTimeline from './pages/reffing/quiz/ChangesTimeLine';
 import LawDetail from './pages/reffing/quiz/LawDetails';
 import LawsList from './pages/reffing/quiz/LawsList';
 
-// Coaching pages
 import { CoachingBase } from './pages/coaching/CoachingBase';
+import MyClubsPage from './pages/coaching/clubs/MyClubsPage';
+import BrowseClubsPage from './pages/coaching/clubs/BrowseClubPage';
+import CreateClubPage from './pages/coaching/clubs/CreateClubPage';
+import ClubPlayersPage from './pages/coaching/clubs/ClubPlayersPage';
+import { IndividualClubBase } from './pages/coaching/clubs/IndividualClubBase';
 import TeamsheetDetail from './pages/coaching/teamsheets/TeamsheetDetail';
 import TeamsheetList from './pages/coaching/teamsheets/TeamsheetList';
 import TeamsheetListPage from './pages/coaching/teamsheets/TeamsheetListPage';
 import TeamsheetCreatePage from './pages/coaching/teamsheets/TeamsheetCreatePage';
 import TeamsheetDetailPage from './pages/coaching/teamsheets/TeamsheetDetailPage';
+import PredictionPage from './pages/predictions/PredictionPage';
+
+import InternalPlayerProfilePage from './pages/coaching/playerdata/InternalPlayerProfilePage';
+import InternalPlayerComparisonPage from './pages/coaching/playerdata/InternalPlayerComparisonPage';
+
+import LiveFootballBasePage from './pages/livefootball/LiveFootballBasePage';
+import LiveFootballPage from './pages/livefootball/LiveFootballPage';
+import Leagues from './pages/livefootball/leagues/LeaguesPage';
+import LeagueComparePage from './pages/livefootball/leagues/LeagueComparePage';
+import LeagueCustomPage from './pages/livefootball/leagues/LeagueCustomPage';
+import LeaguePredictPage from './pages/livefootball/leagues/LeaguePredictPage';
 
 function App() {
   return (
     <BrowserRouter>
       <div className="app">
         <Routes>
-          {/* Public only route */}
-          <Route path="/" element={
-            <PublicOnlyRoute redirectTo="/social" useFrom={false}>
-              <LandingPage />
-            </PublicOnlyRoute>
-          } />
+          <Route
+            path="/"
+            element={
+              <PublicOnlyRoute redirectTo="/social" useFrom={false}>
+                <LandingPage />
+              </PublicOnlyRoute>
+            }
+          />
 
-          {/* Unprotected route (verification callback) */}
           <Route path="/verify-email/confirm" element={<VerifyEmailCallbackPage />} />
 
-          {/* Protected routes - verification NOT required */}
           <Route element={<ProtectedRoute requireVerified={false} />}>
             <Route path="/verify-email" element={<VerifyEmailPromptPage />} />
             <Route path="/create/profile" element={<ProfileCreationPage />} />
@@ -58,13 +70,10 @@ function App() {
             <Route path="/create/profile/role/details" element={<RoleProfilePage />} />
           </Route>
 
-          {/* Protected routes - verification required */}
           <Route element={<ProtectedRoute />}>
-            {/* Social */}
             <Route path="/social" element={<SocialPage />} />
             <Route path="/social/post/:postId" element={<PostDetailPage />} />
 
-            {/* Reffing */}
             <Route path="/refbase" element={<RefBase />} />
             <Route path="/quizbase" element={<QuizBase />} />
             <Route path="/controlBase" element={<ControlBase />} />
@@ -75,16 +84,33 @@ function App() {
             <Route path="/laws/:lawNumber" element={<LawDetail />} />
             <Route path="/laws/changes" element={<ChangesTimeline />} />
 
-            {/* Coaching */}
             <Route path="/coaching" element={<CoachingBase />} />
             <Route path="/coaching/teamsheets" element={<TeamsheetList />} />
             <Route path="/coaching/teamsheets/:id" element={<TeamsheetDetail />} />
+            <Route path="/coaching/predictions" element={<PredictionPage />} />
+
+            <Route path="/coaching/playerdata" element={<InternalPlayerProfilePage />} />
+            <Route path="/coaching/playerdata/player" element={<InternalPlayerProfilePage />} />
+            <Route path="/coaching/playerdata/player/:playerId" element={<InternalPlayerProfilePage />} />
+            <Route path="/coaching/playerdata/compare" element={<InternalPlayerComparisonPage />} />
+            <Route path="/livefootball" element={<LiveFootballBasePage />} />
+            <Route path="/livefootball/competitions" element={<LiveFootballPage />} />
+            <Route path="/livefootball/leagues" element={<Leagues />} />
+            <Route path="/livefootball/leagues/compare" element={<LeagueComparePage />} />
+            <Route path="/livefootball/leagues/custom" element={<LeagueCustomPage />} />
+            <Route path="/livefootball/leagues/predict" element={<LeaguePredictPage />} />
+
+
+            <Route path="/clubs" element={<MyClubsPage />} />
+            <Route path="/clubs/browse" element={<BrowseClubsPage />} />
+            <Route path="/clubs/create" element={<CreateClubPage />} />
             <Route path="/clubs/:clubId/teamsheets" element={<TeamsheetListPage />} />
             <Route path="/clubs/:clubId/teamsheets/new" element={<TeamsheetCreatePage />} />
             <Route path="/clubs/:clubId/teamsheets/:teamsheetId" element={<TeamsheetDetailPage />} />
+            <Route path="/clubs/:clubId/" element={<IndividualClubBase />} />
+            <Route path="/clubs/:clubId/players" element={<ClubPlayersPage />} />
           </Route>
 
-          {/* Catch all */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

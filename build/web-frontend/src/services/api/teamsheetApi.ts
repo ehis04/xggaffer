@@ -10,7 +10,7 @@ import type {
 } from '../../types/teamsheet';
 
 export const teamsheetApi = {
-  list: (clubId: number) => 
+  list: (clubId: number) =>
     apiClient.get<TeamsheetListItem[]>(`/clubs/${clubId}/teamsheets/`),
 
   get: (clubId: number, teamsheetId: number) =>
@@ -41,14 +41,15 @@ export const teamsheetApi = {
     apiClient.post<Teamsheet>(`/clubs/${clubId}/teamsheets/${teamsheetId}/reset_to_formation/`),
 
   getAvailablePlayers: (
-    clubId: number, 
+    clubId: number,
     options?: { position?: string; search?: string; exclude?: number[] }
   ) => {
     const params: Record<string, string> = {};
+
     if (options?.position) params.position = options.position;
     if (options?.search) params.search = options.search;
     if (options?.exclude?.length) params.exclude = options.exclude.join(',');
-    
+
     return apiClient.get<AvailablePlayer[]>(
       `/clubs/${clubId}/teamsheets/available_players/`,
       Object.keys(params).length > 0 ? params : undefined
@@ -63,7 +64,14 @@ export const teamsheetPlayerApi = {
   get: (clubId: number, teamsheetId: number, playerId: number) =>
     apiClient.get<TeamsheetPlayer>(`/clubs/${clubId}/teamsheets/${teamsheetId}/players/${playerId}/`),
 
-  updatePosition: (clubId: number, teamsheetId: number, playerId: number, x: number, y: number, label?: string) =>
+  updatePosition: (
+    clubId: number,
+    teamsheetId: number,
+    playerId: number,
+    x: number,
+    y: number,
+    label?: string
+  ) =>
     apiClient.patch<TeamsheetPlayer>(
       `/clubs/${clubId}/teamsheets/${teamsheetId}/players/${playerId}/update_position/`,
       { position_x: x, position_y: y, ...(label && { position_label: label }) }
@@ -78,7 +86,7 @@ export const teamsheetPlayerApi = {
   assignPlayer: (clubId: number, teamsheetId: number, slotId: number, clubPlayerId: number | null) =>
     apiClient.post<TeamsheetPlayer>(
       `/clubs/${clubId}/teamsheets/${teamsheetId}/players/${slotId}/assign_player/`,
-      { player_profile_id: clubPlayerId }
+      { club_player_id: clubPlayerId }
     ),
 
   swapPositions: (clubId: number, teamsheetId: number, playerId: number, targetPlayerId: number) =>

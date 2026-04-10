@@ -27,6 +27,7 @@ urlpatterns = [
     path('profile/', UserProfileView.as_view(), name='user-profile'),
 
     path('profile/role/', UserRoleView.as_view(), name='user-role'),
+    path('profile/active-role/', ActiveUserRoleView.as_view(), name='active-user-role'),
 
     path('profile/<str:username>/', GetProfileView.as_view(), name='get-profile'),
 

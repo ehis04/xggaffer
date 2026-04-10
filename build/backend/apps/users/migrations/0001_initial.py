@@ -107,7 +107,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='follow',
-            constraint=models.CheckConstraint(condition=models.Q(('follower', models.F('following')), _negated=True), name='prevent_self_follow'),
+            constraint=models.CheckConstraint(check=models.Q(('follower', models.F('following')), _negated=True), name='prevent_self_follow'),
         ),
         migrations.AddIndex(
             model_name='userrole',
