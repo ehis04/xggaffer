@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ProfileButton } from "../Buttons/ProfileButton";
 import "./css/SideBar.css";
 import { getUserProfile } from "./functions/getUserProfile";
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 
 interface NavItem {
   id: string;

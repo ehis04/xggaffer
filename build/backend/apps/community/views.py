@@ -24,7 +24,6 @@ class CreateNewPostView(CreateAPIView):
         serializer.save(author=self.request.user)
 
 # Get single posts
-#TODO this view should allow users to see their own posts regardless of visibility also needs to be extended for FOLLOWERS visibility
 class GetPostView(RetrieveAPIView):
     queryset = (
         Post.objects
@@ -343,9 +342,7 @@ class CommentPostView(ListAPIView):
         
 class LikePostView(APIView):
     permission_classes = [IsAuthenticated]
-    
-    #TODO add get function to get list of all likes related to the post
-    
+
     def post(self, request, post_id):
         post = get_object_or_404(Post, id=post_id)
         content_type = ContentType.objects.get_for_model(Post)
@@ -372,8 +369,3 @@ class LikeCommentView(APIView):
         else:
             comment_like.delete()
             return Response({'detail': 'Comment unliked.', 'liked': False}, status=status.HTTP_200_OK)
-        
-#TODO get all notifications for authenticated user
-
-# TODO search for posts with potentially various filters
-# TODO search by text, author, hashtags

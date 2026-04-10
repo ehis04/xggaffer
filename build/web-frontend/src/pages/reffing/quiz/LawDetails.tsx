@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { lawsApi } from '../../../services/api';
 import type { Law, LawChange } from '../../../types/laws'; 
@@ -9,20 +9,16 @@ export const LawDetail: React.FC = () => {
   const [changes, setChanges] = useState<LawChange[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadLawData();
-  }, [lawNumber]);
-
-  const loadLawData = async () => {
+  const loadLawData = useCallback(async () => {
     if (!lawNumber) return;
-    
+
     try {
       setLoading(true);
       const [lawData, changesData] = await Promise.all([
         lawsApi.getLawByNumber(Number(lawNumber)),
         lawsApi.getChanges(undefined, Number(lawNumber))
       ]);
-      
+
       setLaw(lawData);
       setChanges(changesData);
     } catch (err) {
@@ -30,7 +26,11 @@ export const LawDetail: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [lawNumber]);
+
+  useEffect(() => {
+    loadLawData();
+  }, [loadLawData]);
 
   if (loading) return <div>Loading...</div>;
   if (!law) return <div>Law not found</div>;

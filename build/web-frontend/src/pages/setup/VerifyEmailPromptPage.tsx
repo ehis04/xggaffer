@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 import { useNavigate } from 'react-router-dom';
 
 export function VerifyEmailPromptPage() {
@@ -15,8 +15,8 @@ export function VerifyEmailPromptPage() {
     try {
       await resendVerificationEmail();
       setSent(true);
-    } catch (err: any) {
-      setError(err?.response?.data?.error || 'Failed to send verification email');
+    } catch (err: unknown) {
+      setError((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to send verification email');
     } finally {
       setSending(false);
     }
@@ -24,6 +24,7 @@ export function VerifyEmailPromptPage() {
 
   const handleCheckStatus = async () => {
     await refreshUser();
+    navigate('/social', { replace: true });
   };
 
   return (

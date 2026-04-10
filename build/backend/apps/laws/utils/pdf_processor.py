@@ -1,6 +1,6 @@
 import io
 from pdf2image import convert_from_path, convert_from_bytes
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
 import base64
 
 class PDFProcessor:

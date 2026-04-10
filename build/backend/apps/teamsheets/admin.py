@@ -7,7 +7,7 @@ class TeamsheetPlayerInline(admin.TabularInline):
     extra = 0
     fields = [
         'slot_number',
-        'player_profile',
+        'club_player',
         'custom_name',
         'custom_number',
         'position_label',
@@ -15,7 +15,7 @@ class TeamsheetPlayerInline(admin.TabularInline):
         'position_y',
         'is_substitute',
     ]
-    raw_id_fields = ['player_profile']
+    raw_id_fields = ['club_player']
     ordering = ['is_substitute', 'slot_number']
 
 
@@ -82,11 +82,11 @@ class TeamsheetPlayerAdmin(admin.ModelAdmin):
     list_filter = ['position_label', 'is_substitute', 'teamsheet__club']
     search_fields = [
         'custom_name',
-        'player_profile__first_name',
-        'player_profile__last_name',
+        'club_player__player__first_name',
+        'club_player__player__last_name',
         'teamsheet__title',
     ]
-    raw_id_fields = ['teamsheet', 'player_profile']
+    raw_id_fields = ['teamsheet', 'club_player']
     readonly_fields = ['display_name', 'display_number', 'is_linked', 'created_at', 'updated_at']
     ordering = ['teamsheet', 'is_substitute', 'slot_number']
     
@@ -95,7 +95,7 @@ class TeamsheetPlayerAdmin(admin.ModelAdmin):
             'fields': ['teamsheet', 'slot_number', 'is_substitute']
         }),
         ('Player', {
-            'fields': ['player_profile', 'custom_name', 'custom_number'],
+            'fields': ['club_player', 'custom_name', 'custom_number'],
             'description': 'Link to a club player OR enter custom details'
         }),
         ('Position', {

@@ -74,7 +74,7 @@ class Command(BaseCommand):
             {'first_name': 'Troy', 'last_name': 'Parrott', 'squad_number': 20, 'position': 'FWD'},
         ]
 
-        player_profiles = []
+        club_players = []
         for p_data in players_data:
             player, created = ClubPlayer.objects.get_or_create(
                 club=club,
@@ -87,7 +87,7 @@ class Command(BaseCommand):
                     'created_by': user,
                 }
             )
-            player_profiles.append(player)
+            club_players.append(player)
             if created:
                 self.stdout.write(f'  Created player: {player.full_name}')
 
@@ -138,11 +138,11 @@ class Command(BaseCommand):
                 else:
                     player_idx = position_to_player.get(pos, 0)
                 
-                player_profile = player_profiles[player_idx] if player_idx < len(player_profiles) else None
-                
+                club_player = club_players[player_idx] if player_idx < len(club_players) else None
+
                 TeamsheetPlayer.objects.create(
                     teamsheet=teamsheet,
-                    player_profile=player_profile,
+                    club_player=club_player,
                     slot_number=slot_data['slot'],
                     position_label=slot_data['position'],
                     position_x=slot_data['x'],
@@ -151,10 +151,10 @@ class Command(BaseCommand):
                 )
             
             for i, sub_idx in enumerate([11, 12, 13, 14], start=12):
-                if sub_idx < len(player_profiles):
+                if sub_idx < len(club_players):
                     TeamsheetPlayer.objects.create(
                         teamsheet=teamsheet,
-                        player_profile=player_profiles[sub_idx],
+                        club_player=club_players[sub_idx],
                         slot_number=i,
                         position_label='GK' if sub_idx == 11 else 'DEF',
                         position_x=50,

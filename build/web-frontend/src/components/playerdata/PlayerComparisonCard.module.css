@@ -1,0 +1,431 @@
+.card {
+  background: linear-gradient(180deg, #171717 0%, #111111 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1rem;
+  color: #f5f5f5;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.eyebrow {
+  margin: 0 0 0.2rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a3a3a3;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.2;
+  color: #ffffff;
+}
+
+.contextBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.badge,
+.badgeMuted {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.32rem 0.65rem;
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+.badge {
+  background: rgba(34, 197, 94, 0.14);
+  color: #bbf7d0;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.badgeMuted {
+  background: rgba(255, 255, 255, 0.05);
+  color: #d4d4d4;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.playersGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: stretch;
+  margin-top: 1rem;
+}
+
+.playerPanel {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 0.85rem;
+}
+
+.playerPanelWinner {
+  border-color: rgba(34, 197, 94, 0.26);
+  box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.12);
+}
+
+.playerIdentity {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.avatar,
+.avatarFallback {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.avatar {
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.avatarFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #262626;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #fafafa;
+}
+
+.playerText {
+  min-width: 0;
+}
+
+.playerSideLabel {
+  margin: 0 0 0.15rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #a3a3a3;
+}
+
+.playerName {
+  margin: 0;
+  font-size: 1rem;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.playerMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+}
+
+.playerMetaItem {
+  font-size: 0.8rem;
+  color: #d4d4d4;
+  padding: 0.18rem 0.45rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+}
+
+.overallWinnerBadge {
+  display: inline-flex;
+  margin-top: 0.7rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.14);
+  border: 1px solid rgba(34, 197, 94, 0.22);
+  border-radius: 999px;
+  padding: 0.3rem 0.55rem;
+}
+
+.versusBlock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.versusText {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e5e5e5;
+  font-weight: 700;
+  font-size: 0.84rem;
+  text-transform: uppercase;
+}
+
+.section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.sectionTitle {
+  margin: 0 0 0.7rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.overallSummary {
+  margin-top: 1rem;
+  padding: 0.85rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.overallSummaryRow {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.overallReason {
+  margin: 0;
+  color: #d4d4d4;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.winnerBadge,
+.tieBadge,
+.neutralBadge,
+.winnerBadgeSmall,
+.tieBadgeSmall,
+.neutralBadgeSmall {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.winnerBadge,
+.tieBadge,
+.neutralBadge {
+  padding: 0.32rem 0.65rem;
+  font-size: 0.78rem;
+}
+
+.winnerBadgeSmall,
+.tieBadgeSmall,
+.neutralBadgeSmall {
+  padding: 0.2rem 0.45rem;
+  font-size: 0.72rem;
+}
+
+.winnerBadge,
+.winnerBadgeSmall {
+  background: rgba(34, 197, 94, 0.14);
+  color: #bbf7d0;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.tieBadge,
+.tieBadgeSmall {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fde68a;
+  border: 1px solid rgba(245, 158, 11, 0.18);
+}
+
+.neutralBadge,
+.neutralBadgeSmall {
+  background: rgba(255, 255, 255, 0.05);
+  color: #d4d4d4;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.metricsTable {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.metricRow {
+  display: grid;
+  grid-template-columns: minmax(88px, 1fr) minmax(140px, 1.35fr) minmax(88px, 1fr);
+  gap: 0.65rem;
+  align-items: stretch;
+}
+
+.metricValueCell,
+.metricCentreCell {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 0.7rem;
+}
+
+.metricCellWinner {
+  border-color: rgba(34, 197, 94, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.1);
+}
+
+.metricValueCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.metricValue {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.metricCentreCell {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.45rem;
+  text-align: center;
+}
+
+.metricLabel {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.metricMeta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.deltaText {
+  font-size: 0.76rem;
+  color: #a3a3a3;
+}
+
+.summaryText {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #e5e5e5;
+}
+
+.textBlock + .textBlock {
+  margin-top: 0.75rem;
+}
+
+.textBlockTitle {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #d4d4d4;
+}
+
+.bulletList {
+  margin: 0;
+  padding-left: 1rem;
+  color: #d4d4d4;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.bulletList li + li {
+  margin-top: 0.2rem;
+}
+
+.coverageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 0.65rem;
+}
+
+.coverageItem {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 0.7rem;
+}
+
+.coverageLabel {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.76rem;
+  color: #a3a3a3;
+}
+
+.coverageValue {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #f5f5f5;
+}
+
+.loadingState,
+.errorState,
+.emptyState {
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.loadingState,
+.emptyMessage {
+  color: #d4d4d4;
+}
+
+.errorState {
+  color: #fca5a5;
+}
+
+.reasonList {
+  margin: 0.75rem 0 0;
+  padding-left: 1rem;
+  color: #d4d4d4;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 860px) {
+  .playersGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .versusBlock {
+    order: 2;
+  }
+
+  .metricRow {
+    grid-template-columns: 1fr;
+  }
+
+  .metricValueCell,
+  .metricCentreCell {
+    text-align: left;
+    justify-content: flex-start;
+  }
+
+  .metricMeta {
+    justify-content: flex-start;
+  }
+}

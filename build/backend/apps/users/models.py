@@ -107,6 +107,12 @@ class UserProfile(models.Model):
         choices=Visibility.choices,
         default=Visibility.PUBLIC
     )
+    active_role = models.CharField(
+        max_length=10,
+        choices=Role.choices,
+        blank=True,
+        null=True
+    )
     followers_count = models.PositiveIntegerField(default=0)
     following_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -181,7 +187,7 @@ class Follow(models.Model):
                 name='unique_follow_relationship'
             ),
             models.CheckConstraint(
-                condition=~Q(follower=F('following')),
+                check=~Q(follower=F('following')),
                 name='prevent_self_follow'
             )
         ]

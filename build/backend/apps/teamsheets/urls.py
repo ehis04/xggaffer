@@ -1,6 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import *
+
+from .views import TeamsheetViewSet, TeamsheetPlayerViewSet
+
 
 router = DefaultRouter()
 router.register(r'teamsheets', TeamsheetViewSet, basename='teamsheet')
@@ -9,4 +11,3 @@ router.register(r'teamsheet-players', TeamsheetPlayerViewSet, basename='teamshee
 urlpatterns = [
     path('', include(router.urls)),
 ]
-

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { teamsheetApi } from '../../../services/api';
 import type {
@@ -11,6 +11,54 @@ import type {
 } from '../../../types/teamsheet';
 import { FormationPicker, PlayerSlotSelector, AvailablePlayersList } from '../../../components/teamsheets';
 import styles from './TeamsheetCreatePage.module.css';
+
+const getSlotDisplayName = (slot: SlotState): string => {
+  if (slot.player) {
+    return slot.player.display_name || slot.player.full_name;
+  }
+
+  if (slot.custom_name) {
+    return slot.custom_name;
+  }
+
+  return 'No player assigned yet';
+};
+
+const getSlotDisplayNumber = (slot: SlotState): string => {
+  if (slot.player?.squad_number) {
+    return `#${slot.player.squad_number}`;
+  }
+
+  if (slot.custom_number) {
+    return `#${slot.custom_number}`;
+  }
+
+  return `Slot ${slot.slot_number}`;
+};
+
+const getSlotOccupantType = (slot: SlotState): string => {
+  if (slot.player) {
+    return slot.player.source_type === 'club_member' ? 'Club member' : 'Public player';
+  }
+
+  if (slot.custom_name) {
+    return 'Default player';
+  }
+
+  return 'Unassigned';
+};
+
+const getSlotHelperText = (slot: SlotState): string => {
+  if (slot.player) {
+    return 'Choose a different player below to replace the current assignment, or remove the player from the slot card.';
+  }
+
+  if (slot.custom_name) {
+    return 'Choose a real player below to replace the default placeholder if needed.';
+  }
+
+  return 'Choose a player below or use the default-player option to fill this slot.';
+};
 
 const TeamsheetCreatePage: React.FC = () => {
   const { clubId } = useParams<{ clubId: string }>();
@@ -44,8 +92,9 @@ const TeamsheetCreatePage: React.FC = () => {
         setChoices(choicesData);
 
         if (choicesData.formations_with_templates.length > 0) {
-          const defaultFormation = choicesData.formations_with_templates.find(f => f.value === '442') 
-            || choicesData.formations_with_templates[0];
+          const defaultFormation =
+            choicesData.formations_with_templates.find((f) => f.value === '442') ||
+            choicesData.formations_with_templates[0];
           handleFormationSelect(defaultFormation);
         }
       } catch (err) {
@@ -64,8 +113,8 @@ const TeamsheetCreatePage: React.FC = () => {
     try {
       setLoadingPlayers(true);
       const assignedIds = slots
-        .filter(s => s.player)
-        .map(s => s.player!.id);
+        .filter((s) => s.player)
+        .map((s) => s.player!.id);
 
       const players = await teamsheetApi.getAvailablePlayers(Number(clubId), {
         position: position || undefined,
@@ -81,15 +130,15 @@ const TeamsheetCreatePage: React.FC = () => {
 
   useEffect(() => {
     if (selectedSlot !== null) {
-      const slot = slots.find(s => s.slot_number === selectedSlot);
+      const slot = slots.find((s) => s.slot_number === selectedSlot);
       fetchAvailablePlayers(positionFilter || slot?.position_label);
     }
-  }, [selectedSlot, positionFilter, fetchAvailablePlayers]);
+  }, [selectedSlot, positionFilter, fetchAvailablePlayers, slots]);
 
   const handleFormationSelect = (formation: FormationWithTemplate) => {
     setSelectedFormation(formation);
 
-    const newSlots: SlotState[] = formation.positions.map(pos => ({
+    const newSlots: SlotState[] = formation.positions.map((pos) => ({
       slot_number: pos.slot,
       position_label: pos.position,
       position_x: pos.x,
@@ -100,19 +149,19 @@ const TeamsheetCreatePage: React.FC = () => {
       custom_number: undefined,
     }));
 
-  const subPositions = ['GK', 'CB', 'CB', 'CM', 'CM', 'ST', 'ST'];
-  for (let i = 12; i <= 18; i++) {
-    newSlots.push({
-      slot_number: i,
-      position_label: subPositions[i - 12] || 'MID',
-      position_x: 50,
-      position_y: 50,
-      is_substitute: true,
-      player: null,
-      custom_name: undefined,
-      custom_number: undefined,
-    });
-  }
+    const subPositions = ['GK', 'CB', 'CB', 'CM', 'CM', 'ST', 'ST'];
+    for (let i = 12; i <= 18; i++) {
+      newSlots.push({
+        slot_number: i,
+        position_label: subPositions[i - 12] || 'MID',
+        position_x: 50,
+        position_y: 50,
+        is_substitute: true,
+        player: null,
+        custom_name: undefined,
+        custom_number: undefined,
+      });
+    }
 
     setSlots(newSlots);
     setSelectedSlot(null);
@@ -126,7 +175,7 @@ const TeamsheetCreatePage: React.FC = () => {
   const handlePlayerSelect = (player: AvailablePlayer) => {
     if (selectedSlot === null) return;
 
-    setSlots(prev => prev.map(slot => {
+    setSlots((prev) => prev.map((slot) => {
       if (slot.slot_number === selectedSlot) {
         return {
           ...slot,
@@ -138,11 +187,12 @@ const TeamsheetCreatePage: React.FC = () => {
       return slot;
     }));
 
-    const currentIndex = slots.findIndex(s => s.slot_number === selectedSlot);
-    const emptySlots = slots.filter(s => !s.player && !s.custom_name && s.slot_number !== selectedSlot);
-    
+    const emptySlots = slots.filter(
+      (s) => !s.player && !s.custom_name && s.slot_number !== selectedSlot
+    );
+
     if (emptySlots.length > 0) {
-      const nextEmpty = emptySlots.find(s => s.slot_number > selectedSlot) || emptySlots[0];
+      const nextEmpty = emptySlots.find((s) => s.slot_number > selectedSlot) || emptySlots[0];
       setSelectedSlot(nextEmpty.slot_number);
     } else {
       setSelectedSlot(null);
@@ -152,12 +202,12 @@ const TeamsheetCreatePage: React.FC = () => {
   const handleUseDefault = () => {
     if (selectedSlot === null) return;
 
-    const slot = slots.find(s => s.slot_number === selectedSlot);
+    const slot = slots.find((s) => s.slot_number === selectedSlot);
     if (!slot) return;
 
     const defaultName = `${slot.position_label} #${slot.slot_number}`;
 
-    setSlots(prev => prev.map(s => {
+    setSlots((prev) => prev.map((s) => {
       if (s.slot_number === selectedSlot) {
         return {
           ...s,
@@ -169,9 +219,12 @@ const TeamsheetCreatePage: React.FC = () => {
       return s;
     }));
 
-    const emptySlots = slots.filter(s => !s.player && !s.custom_name && s.slot_number !== selectedSlot);
+    const emptySlots = slots.filter(
+      (s) => !s.player && !s.custom_name && s.slot_number !== selectedSlot
+    );
+
     if (emptySlots.length > 0) {
-      const nextEmpty = emptySlots.find(s => s.slot_number > selectedSlot) || emptySlots[0];
+      const nextEmpty = emptySlots.find((s) => s.slot_number > selectedSlot) || emptySlots[0];
       setSelectedSlot(nextEmpty.slot_number);
     } else {
       setSelectedSlot(null);
@@ -179,7 +232,7 @@ const TeamsheetCreatePage: React.FC = () => {
   };
 
   const handleRemovePlayer = (slotNumber: number) => {
-    setSlots(prev => prev.map(slot => {
+    setSlots((prev) => prev.map((slot) => {
       if (slot.slot_number === slotNumber) {
         return {
           ...slot,
@@ -194,7 +247,7 @@ const TeamsheetCreatePage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!clubId || !selectedFormation) return;
     if (!title.trim()) {
       setError('Title is required');
@@ -202,10 +255,10 @@ const TeamsheetCreatePage: React.FC = () => {
     }
 
     const playerAssignments: PlayerSlotAssignment[] = slots
-      .filter(s => s.player || s.custom_name)
-      .map(s => ({
+      .filter((s) => s.player || s.custom_name)
+      .map((s) => ({
         slot_number: s.slot_number,
-        player_profile_id: s.player?.id || null,
+        club_player_id: s.player?.id || null,
         custom_name: s.custom_name || '',
         custom_number: s.custom_number || null,
         position_label: s.position_label,
@@ -240,6 +293,15 @@ const TeamsheetCreatePage: React.FC = () => {
     navigate(`/clubs/${clubId}/teamsheets`);
   };
 
+  const selectedSlotState = useMemo(
+    () => (selectedSlot !== null
+      ? slots.find((slot) => slot.slot_number === selectedSlot) ?? null
+      : null),
+    [selectedSlot, slots]
+  );
+
+  const selectedSlotCandidateCount = availablePlayers.length;
+
   if (loadingChoices) {
     return (
       <div className={styles.container}>
@@ -248,8 +310,8 @@ const TeamsheetCreatePage: React.FC = () => {
     );
   }
 
-  const filledCount = slots.filter(s => s.player || s.custom_name).length;
-  const starterCount = slots.filter(s => !s.is_substitute && (s.player || s.custom_name)).length;
+  const filledCount = slots.filter((s) => s.player || s.custom_name).length;
+  const starterCount = slots.filter((s) => !s.is_substitute && (s.player || s.custom_name)).length;
 
   return (
     <div className={styles.container}>
@@ -282,7 +344,7 @@ const TeamsheetCreatePage: React.FC = () => {
           <div className={styles.mainColumn}>
             <div className={styles.section}>
               <h2 className={styles.sectionTitle}>Basic Information</h2>
-              
+
               <div className={styles.formGroup}>
                 <label className={styles.label}>Title *</label>
                 <input
@@ -367,17 +429,70 @@ const TeamsheetCreatePage: React.FC = () => {
           </div>
 
           <div className={styles.sidebar}>
-            {selectedSlot !== null ? (
-              <AvailablePlayersList
-                players={availablePlayers}
-                loading={loadingPlayers}
-                onSelect={handlePlayerSelect}
-                onUseDefault={handleUseDefault}
-                positionFilter={positionFilter}
-                onPositionFilterChange={setPositionFilter}
-                positions={choices?.positions || []}
-                selectedIds={slots.filter(s => s.player).map(s => s.player!.id)}
-              />
+            {selectedSlotState ? (
+              <>
+                <div
+                  style={{
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: '12px',
+                    padding: '0.9rem',
+                    marginBottom: '1rem',
+                    display: 'grid',
+                    gap: '0.65rem',
+                    background: 'rgba(255,255,255,0.02)',
+                  }}
+                >
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '1rem' }}>Selected Slot</h3>
+                    <p style={{ margin: '0.3rem 0 0 0', opacity: 0.82 }}>
+                      {selectedSlotState.position_label} ·{' '}
+                      {selectedSlotState.is_substitute ? 'Substitute' : 'Starter'}
+                    </p>
+                  </div>
+
+                  <div
+                    style={{
+                      border: '1px solid rgba(255,255,255,0.06)',
+                      borderRadius: '10px',
+                      padding: '0.75rem',
+                      display: 'grid',
+                      gap: '0.25rem',
+                    }}
+                  >
+                    <strong>{getSlotDisplayName(selectedSlotState)}</strong>
+                    <span style={{ opacity: 0.82 }}>
+                      {getSlotDisplayNumber(selectedSlotState)} · {getSlotOccupantType(selectedSlotState)}
+                    </span>
+
+                    {selectedSlotState.player?.primary_position ? (
+                      <span style={{ opacity: 0.82 }}>
+                        Position: {selectedSlotState.player.primary_position}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div style={{ fontSize: '0.92rem', opacity: 0.82 }}>
+                    {getSlotHelperText(selectedSlotState)}
+                  </div>
+
+                  <div style={{ fontSize: '0.88rem', opacity: 0.72 }}>
+                    {loadingPlayers
+                      ? 'Loading candidates…'
+                      : `${selectedSlotCandidateCount} candidate${selectedSlotCandidateCount === 1 ? '' : 's'} available${positionFilter ? ` for ${positionFilter}` : ''}.`}
+                  </div>
+                </div>
+
+                <AvailablePlayersList
+                  players={availablePlayers}
+                  loading={loadingPlayers}
+                  onSelect={handlePlayerSelect}
+                  onUseDefault={handleUseDefault}
+                  positionFilter={positionFilter}
+                  onPositionFilterChange={setPositionFilter}
+                  positions={choices?.positions || []}
+                  selectedIds={slots.filter((s) => s.player).map((s) => s.player!.id)}
+                />
+              </>
             ) : (
               <div className={styles.selectSlotHint}>
                 <p>Select a slot to assign a player</p>

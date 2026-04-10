@@ -4,6 +4,9 @@ interface RequestOptions extends RequestInit {
   params?: Record<string, string>;
 }
 
+const isFormDataBody = (body: unknown): body is FormData =>
+  typeof FormData !== 'undefined' && body instanceof FormData;
+
 function getCsrfToken(): string | null {
   const cookies = document.cookie.split(';');
   for (const cookie of cookies) {
@@ -68,9 +71,12 @@ class ApiClient {
     }
 
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       ...(fetchOptions.headers as Record<string, string>),
     };
+
+    if (!isFormDataBody(fetchOptions.body) && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     const method = (fetchOptions.method || 'GET').toUpperCase();
     if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
@@ -120,23 +126,33 @@ class ApiClient {
   }
 
   async post<T>(endpoint: string, data?: unknown): Promise<T> {
+    const body = isFormDataBody(data)
+      ? data
+      : data
+        ? JSON.stringify(data)
+        : undefined;
+
     return this.request<T>(endpoint, {
       method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
+      body,
     });
   }
 
   async put<T>(endpoint: string, data: unknown): Promise<T> {
+    const body = isFormDataBody(data) ? data : JSON.stringify(data);
+
     return this.request<T>(endpoint, {
       method: 'PUT',
-      body: JSON.stringify(data),
+      body,
     });
   }
 
   async patch<T>(endpoint: string, data: unknown): Promise<T> {
+    const body = isFormDataBody(data) ? data : JSON.stringify(data);
+
     return this.request<T>(endpoint, {
       method: 'PATCH',
-      body: JSON.stringify(data),
+      body,
     });
   }
 

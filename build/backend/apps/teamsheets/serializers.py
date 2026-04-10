@@ -1,7 +1,13 @@
-from rest_framework import serializers
 from django.db import transaction
-from .models import Teamsheet, TeamsheetPlayer, PitchPosition
-from .formations import get_formation_template, FORMATION_TEMPLATES, get_available_formations
+from rest_framework import serializers
+
+from apps.clubs.models import ClubPlayer
+from common.constants import Position
+from .formations import (
+    get_available_formations,
+    get_formation_template,
+)
+from .models import Teamsheet, TeamsheetPlayer
 
 
 class ChoiceSerializer(serializers.Serializer):
@@ -27,16 +33,16 @@ class TeamsheetPlayerReadSerializer(serializers.ModelSerializer):
     display_number = serializers.IntegerField(read_only=True, allow_null=True)
     display_photo_url = serializers.CharField(read_only=True, allow_null=True)
     is_linked = serializers.BooleanField(read_only=True)
-    player_profile_name = serializers.SerializerMethodField()
-    
+    club_player_name = serializers.SerializerMethodField()
+
     class Meta:
         model = TeamsheetPlayer
         fields = [
             'id',
             'slot_number',
             'is_substitute',
-            'player_profile',
-            'player_profile_name',
+            'club_player',
+            'club_player_name',
             'custom_name',
             'custom_number',
             'display_name',
@@ -49,10 +55,10 @@ class TeamsheetPlayerReadSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
         ]
-    
-    def get_player_profile_name(self, obj) -> str | None:
-        if obj.player_profile:
-            return obj.player_profile.full_name
+
+    def get_club_player_name(self, obj) -> str | None:
+        if obj.club_player:
+            return obj.club_player.display_name or obj.club_player.full_name
         return None
 
 
@@ -62,7 +68,7 @@ class TeamsheetPlayerWriteSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'teamsheet',
-            'player_profile',
+            'club_player',
             'custom_name',
             'custom_number',
             'position_label',
@@ -71,30 +77,30 @@ class TeamsheetPlayerWriteSerializer(serializers.ModelSerializer):
             'slot_number',
             'is_substitute',
         ]
-    
+
     def validate(self, attrs):
-        player_profile = attrs.get('player_profile')
+        club_player = attrs.get('club_player')
         custom_name = attrs.get('custom_name', '').strip()
         teamsheet = attrs.get('teamsheet')
 
-        if not player_profile and not custom_name:
+        if not club_player and not custom_name:
             raise serializers.ValidationError(
-                "Either 'player_profile' or 'custom_name' must be provided."
+                "Either 'club_player' or 'custom_name' must be provided."
             )
 
-        if player_profile and teamsheet:
-            if player_profile.club_id != teamsheet.club_id:
+        if club_player and teamsheet:
+            if club_player.club_id != teamsheet.club_id:
                 raise serializers.ValidationError({
-                    'player_profile': "Player must belong to the same club as the teamsheet."
+                    'club_player': "Player must belong to the same club as the teamsheet."
                 })
-        
+
         return attrs
-    
+
     def validate_position_x(self, value):
         if not 0 <= value <= 100:
             raise serializers.ValidationError("Position X must be between 0 and 100.")
         return value
-    
+
     def validate_position_y(self, value):
         if not 0 <= value <= 100:
             raise serializers.ValidationError("Position Y must be between 0 and 100.")
@@ -104,10 +110,7 @@ class TeamsheetPlayerWriteSerializer(serializers.ModelSerializer):
 class TeamsheetPlayerPositionUpdateSerializer(serializers.Serializer):
     position_x = serializers.FloatField(min_value=0, max_value=100)
     position_y = serializers.FloatField(min_value=0, max_value=100)
-    position_label = serializers.ChoiceField(
-        choices=PitchPosition.choices,
-        required=False  
-    )
+    position_label = serializers.ChoiceField(choices=Position.choices, required=False)
 
 
 class TeamsheetReadSerializer(serializers.ModelSerializer):
@@ -121,7 +124,7 @@ class TeamsheetReadSerializer(serializers.ModelSerializer):
     )
     club_name = serializers.SerializerMethodField()
     created_by_username = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Teamsheet
         fields = [
@@ -144,10 +147,10 @@ class TeamsheetReadSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
         ]
-    
-    def get_club_name(self, obj) -> str:
+
+    def get_club_name(self, obj) -> str | None:
         return obj.club.name if obj.club else None
-    
+
     def get_created_by_username(self, obj) -> str | None:
         return obj.created_by.email if obj.created_by else None
 
@@ -166,25 +169,25 @@ class TeamsheetWriteSerializer(serializers.ModelSerializer):
             'is_template',
         ]
         read_only_fields = ['id']
-    
+
     def validate(self, attrs):
         match_date = attrs.get('match_date')
         opponent = attrs.get('opponent', '').strip()
-        
+
         if match_date and not opponent:
             raise serializers.ValidationError({
                 'opponent': "Opponent is required when match date is set."
             })
-        
+
         return attrs
-    
+
     def create(self, validated_data):
         initialize = self.context.get('initialize_from_template', True)
         teamsheet = super().create(validated_data)
-        
+
         if initialize and teamsheet.formation != 'custom':
             teamsheet.initialize_from_template()
-        
+
         return teamsheet
 
 
@@ -196,7 +199,7 @@ class TeamsheetListSerializer(serializers.ModelSerializer):
     starter_count = serializers.IntegerField(read_only=True)
     is_complete = serializers.BooleanField(read_only=True)
     club_name = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Teamsheet
         fields = [
@@ -213,24 +216,23 @@ class TeamsheetListSerializer(serializers.ModelSerializer):
             'starter_count',
             'updated_at',
         ]
-    
-    def get_club_name(self, obj) -> str:
+
+    def get_club_name(self, obj) -> str | None:
         return obj.club.name if obj.club else None
 
 
 class BulkPlayerPositionUpdateSerializer(serializers.Serializer):
-    
     class PlayerPositionItem(serializers.Serializer):
         id = serializers.IntegerField()
         position_x = serializers.FloatField(min_value=0, max_value=100)
         position_y = serializers.FloatField(min_value=0, max_value=100)
         position_label = serializers.ChoiceField(
-            choices=PitchPosition.choices,
+            choices=Position.choices,
             required=False
         )
-    
+
     updates = PlayerPositionItem(many=True)
-    
+
     def validate_updates(self, value):
         ids = [item['id'] for item in value]
         if len(ids) != len(set(ids)):
@@ -245,10 +247,10 @@ class TeamsheetDuplicateSerializer(serializers.Serializer):
 
 class PlayerSlotAssignmentSerializer(serializers.Serializer):
     slot_number = serializers.IntegerField(min_value=1, max_value=18)
-    player_profile_id = serializers.IntegerField(required=False, allow_null=True)
+    club_player_id = serializers.IntegerField(required=False, allow_null=True)
     custom_name = serializers.CharField(required=False, allow_blank=True, max_length=100)
     custom_number = serializers.IntegerField(required=False, allow_null=True, min_value=1, max_value=99)
-    position_label = serializers.ChoiceField(choices=PitchPosition.choices)
+    position_label = serializers.ChoiceField(choices=Position.choices)
     position_x = serializers.FloatField(min_value=0, max_value=100)
     position_y = serializers.FloatField(min_value=0, max_value=100)
     is_substitute = serializers.BooleanField(default=False)
@@ -262,51 +264,75 @@ class CreateTeamsheetWithPlayersSerializer(serializers.Serializer):
     notes = serializers.CharField(required=False, allow_blank=True)
     is_template = serializers.BooleanField(default=False)
     player_assignments = PlayerSlotAssignmentSerializer(many=True, required=False)
-    
+
     def validate_formation(self, value):
         available = [f[0] for f in get_available_formations()]
         if value not in available and value != 'custom':
-            raise serializers.ValidationError(f"Invalid formation. Choose from: {', '.join(available)}")
+            raise serializers.ValidationError(
+                f"Invalid formation. Choose from: {', '.join(available)}"
+            )
         return value
-    
+
     def validate(self, attrs):
         match_date = attrs.get('match_date')
         opponent = attrs.get('opponent', '').strip()
-        
+
         if match_date and not opponent:
             raise serializers.ValidationError({
                 'opponent': "Opponent is required when match date is set."
             })
-        
+
         player_assignments = attrs.get('player_assignments', [])
         slot_numbers = [p['slot_number'] for p in player_assignments]
         if len(slot_numbers) != len(set(slot_numbers)):
             raise serializers.ValidationError({
                 'player_assignments': "Duplicate slot numbers found."
             })
-        
+
+        club = self.context.get('club')
+
         for assignment in player_assignments:
-            has_profile = assignment.get('player_profile_id')
+            has_club_player = assignment.get('club_player_id')
             has_custom = assignment.get('custom_name', '').strip()
-            if not has_profile and not has_custom:
+
+            if not has_club_player and not has_custom:
                 raise serializers.ValidationError({
-                    'player_assignments': f"Slot {assignment['slot_number']}: Either player_profile_id or custom_name required."
+                    'player_assignments': (
+                        f"Slot {assignment['slot_number']}: "
+                        "Either club_player_id or custom_name required."
+                    )
                 })
-        
+
+            if has_club_player:
+                try:
+                    club_player = ClubPlayer.objects.get(id=assignment['club_player_id'])
+                except ClubPlayer.DoesNotExist:
+                    raise serializers.ValidationError({
+                        'player_assignments': (
+                            f"Slot {assignment['slot_number']}: club_player_id "
+                            f"{assignment['club_player_id']} does not exist."
+                        )
+                    })
+
+                if club and club_player.club_id != club.id:
+                    raise serializers.ValidationError({
+                        'player_assignments': (
+                            f"Slot {assignment['slot_number']}: selected player must belong "
+                            "to the same club as the teamsheet."
+                        )
+                    })
+
         return attrs
-    
+
     def create(self, validated_data):
-        from apps.clubs.models import ClubPlayer
-        
         player_assignments = validated_data.pop('player_assignments', [])
         club = self.context['club']
         user = self.context['user']
-        
+
         with transaction.atomic():
             teamsheet = Teamsheet.objects.create(
                 club=club,
                 created_by=user if user and user.is_authenticated else None,
-                #created_by=user,
                 title=validated_data['title'],
                 formation=validated_data['formation'],
                 match_date=validated_data.get('match_date'),
@@ -314,22 +340,19 @@ class CreateTeamsheetWithPlayersSerializer(serializers.Serializer):
                 notes=validated_data.get('notes', ''),
                 is_template=validated_data.get('is_template', False),
             )
-            
+
             if player_assignments:
                 for assignment in player_assignments:
-                    player_profile = None
-                    if assignment.get('player_profile_id'):
-                        try:
-                            player_profile = ClubPlayer.objects.get(
-                                id=assignment['player_profile_id']
-                            )
-                        except ClubPlayer.DoesNotExist:
-                            pass
-                    
+                    club_player = None
+                    if assignment.get('club_player_id'):
+                        club_player = ClubPlayer.objects.get(
+                            id=assignment['club_player_id']
+                        )
+
                     TeamsheetPlayer.objects.create(
                         teamsheet=teamsheet,
                         slot_number=assignment['slot_number'],
-                        player_profile=player_profile,
+                        club_player=club_player,
                         custom_name=assignment.get('custom_name', ''),
                         custom_number=assignment.get('custom_number'),
                         position_label=assignment['position_label'],
@@ -339,14 +362,14 @@ class CreateTeamsheetWithPlayersSerializer(serializers.Serializer):
                     )
             else:
                 teamsheet.initialize_from_template()
-        
+
         return teamsheet
 
 
 def get_pitch_position_choices():
     return [
         {"value": value, "label": label}
-        for value, label in PitchPosition.choices
+        for value, label in Position.choices
     ]
 
 

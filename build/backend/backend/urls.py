@@ -32,4 +32,6 @@ urlpatterns = [
     path('api/clubs/', include('apps.clubs.urls')),
     path('api/tactics/', include('apps.tactics.urls')),
     path('api/users/', include('apps.users.urls')),
+    path('api/playerdata/', include('apps.playerdata.urls')),
+    path('api/livefootball/', include('apps.livefootball.urls')),
 ]

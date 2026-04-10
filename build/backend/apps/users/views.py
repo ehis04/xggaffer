@@ -259,6 +259,10 @@ class UserRoleView(APIView):
             role=role
         )
 
+        if created and not profile.active_role:
+            profile.active_role = role
+            profile.save(update_fields=['active_role', 'updated_at'])
+
         serializer = UserRoleSerializer(role_obj)
 
         if created:
@@ -289,9 +293,62 @@ class UserRoleView(APIView):
             ).delete()
 
             if deleted_count > 0:
+                if profile.active_role == role:
+                    profile.active_role = None
+                    profile.save(update_fields=['active_role', 'updated_at'])
                 return Response({"message": "Role removed successfully"}, status=status.HTTP_200_OK)
             else:
                 return Response({"error": "Role not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class ActiveUserRoleView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            profile = request.user.profile
+        except UserProfile.DoesNotExist:
+            return Response({"error": "Couldn't get profile"}, status=status.HTTP_400_BAD_REQUEST)
+
+        roles = list(UserRole.objects.filter(user_profile=profile).values_list('role', flat=True))
+        active_role_display = profile.get_active_role_display() if profile.active_role else None
+
+        return Response({
+            "active_role": profile.active_role,
+            "active_role_display": active_role_display,
+            "available_roles": roles,
+        }, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        try:
+            profile = request.user.profile
+        except UserProfile.DoesNotExist:
+            return Response({"error": "Couldn't get profile"}, status=status.HTTP_400_BAD_REQUEST)
+
+        requested_role = request.data.get("role")
+
+        if requested_role in [None, ""]:
+            profile.active_role = None
+            profile.save(update_fields=['active_role', 'updated_at'])
+            return Response({
+                "active_role": None,
+                "active_role_display": None,
+                "message": "Active role cleared",
+            }, status=status.HTTP_200_OK)
+
+        if not UserRole.objects.filter(user_profile=profile, role=requested_role).exists():
+            return Response({
+                "error": "Role is not assigned to your account"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        profile.active_role = requested_role
+        profile.save(update_fields=['active_role', 'updated_at'])
+
+        return Response({
+            "active_role": profile.active_role,
+            "active_role_display": profile.get_active_role_display(),
+            "message": "Active role updated",
+        }, status=status.HTTP_200_OK)
 
 
 class VerifyEmailView(APIView):
@@ -554,6 +611,10 @@ class UserRoleViewSet(viewsets.ViewSet):
             role=role
         )
 
+        if created and not profile.active_role:
+            profile.active_role = role
+            profile.save(update_fields=['active_role', 'updated_at'])
+
         serializer = UserRoleSerializer(role_obj)
 
         if created:
@@ -586,6 +647,9 @@ class UserRoleViewSet(viewsets.ViewSet):
         ).delete()
 
         if deleted_count > 0:
+            if profile.active_role == role:
+                profile.active_role = None
+                profile.save(update_fields=['active_role', 'updated_at'])
             return Response(
                 {"message": "Role removed successfully"},
                 status=status.HTTP_200_OK

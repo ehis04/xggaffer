@@ -19,9 +19,9 @@ def send_verification_email(user):
     
     try:
         resend.Emails.send({
-            "from": "iFoot <onboarding@resend.dev>",
+            "from": settings.DEFAULT_FROM_EMAIL,
             "to": [user.email],
-            "subject": "Verify your iFoot account",
+            "subject": "Verify your xgGaffer account",
             "html": html_content,
             "text": text_content,
         })
@@ -44,9 +44,9 @@ def send_password_reset_email(user, reset_token):
     
     try:
         resend.Emails.send({
-            "from": "iFoot <onboarding@resend.dev>",
+            "from": settings.DEFAULT_FROM_EMAIL,
             "to": [user.email],
-            "subject": "Reset your iFoot password",
+            "subject": "Reset your xgGaffer password",
             "html": html_content,
             "text": text_content,
         })

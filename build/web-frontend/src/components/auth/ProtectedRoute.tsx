@@ -1,5 +1,5 @@
 import { Navigate, useLocation, useNavigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 import { useEffect, useState } from 'react';
 import { usersApi } from '../../services/api/usersApi';
 
@@ -38,8 +38,9 @@ export function ProtectedRoute({ children, requireVerified = true }: ProtectedRo
         if (!profile.roles || profile.roles.length === 0) {
           navigate('/create/profile/role', { replace: true });
         }
-      } catch (err: any) {
-        const status = err?.response?.status ?? err?.status;
+      } catch (err: unknown) {
+        const apiErr = err as { response?: { status?: number }; status?: number };
+        const status = apiErr?.response?.status ?? apiErr?.status;
         if (status === 404) {
           navigate('/create/profile', { replace: true });
         } else {

@@ -4,7 +4,7 @@ from django.urls import reverse
 from django.db.models import Count, Avg
 from django.utils import timezone
 from datetime import timedelta
-from .models import ScrapedMatch, ScrapeLog, TeamStats
+from .models import ScrapedMatch, ScrapeLog, TeamStats, EloRating, CurrentEloRating
 from .tasks import scrape_specific_league
 
 @admin.register(ScrapedMatch)
@@ -253,3 +253,19 @@ class TeamStatsAdmin(admin.ModelAdmin):
     def form_display(self, obj):
         return f"{obj.last_5_xg_for:.2f} xGF (L5)"
     form_display.short_description = 'Recent Form'
+
+@admin.register(EloRating)
+class EloRatingAdmin(admin.ModelAdmin):
+    list_display = ['team', 'league', 'season', 'date', 'elo_before', 'elo_after']
+    list_filter = ['league', 'season']
+    search_fields = ['team']
+    ordering = ['-date']
+ 
+ 
+@admin.register(CurrentEloRating)
+class CurrentEloRatingAdmin(admin.ModelAdmin):
+    list_display = ['team', 'league', 'elo', 'last_match_date', 'updated_at']
+    list_filter = ['league']
+    search_fields = ['team']
+    ordering = ['-elo']
+ 

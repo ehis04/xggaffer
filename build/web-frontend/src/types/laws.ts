@@ -21,7 +21,7 @@ export interface Law {
   number: number;
   title: string;
   clauses: LawClause[];
-  full_content: any;
+  full_content: unknown;
   created_at: string;
 }
 
