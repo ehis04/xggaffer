@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Post, Comment, HashTag, PostTag, Notification, Mention, Block, Like, PostView
-from apps.users.models import User, UserProfile
+from apps.users.models import User, UserProfile, FollowRequest
 
 class PostSerializer(serializers.ModelSerializer):
     class Meta:
@@ -123,4 +123,52 @@ class CommentResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ['id', 'author', 'text_body', 'created_at', 'no_of_likes', 'no_of_replies', 'post', 'parent', 'moderation_status']
-        
+
+
+class NotificationListSerializer(serializers.ModelSerializer):
+    triggered_by = PostAuthorSerializer(read_only=True)
+    target_kind = serializers.SerializerMethodField()
+    post_id = serializers.SerializerMethodField()
+    comment_id = serializers.SerializerMethodField()
+    follow_request_id = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Notification
+        fields = [
+            "id",
+            "notification_type",
+            "is_read",
+            "created_at",
+            "triggered_by",
+            "target_kind",
+            "post_id",
+            "comment_id",
+            "follow_request_id",
+        ]
+
+    def get_target_kind(self, obj):
+        if not obj.content_type_id:
+            return None
+        return obj.content_type.model
+
+    def get_post_id(self, obj):
+        target = obj.content_object
+        if target is None:
+            return None
+        if isinstance(target, Post):
+            return target.id
+        if isinstance(target, Comment):
+            return target.post_id
+        return None
+
+    def get_comment_id(self, obj):
+        target = obj.content_object
+        if isinstance(target, Comment):
+            return target.id
+        return None
+
+    def get_follow_request_id(self, obj):
+        target = obj.content_object
+        if isinstance(target, FollowRequest):
+            return target.id
+        return None

@@ -1,0 +1,88 @@
+.rh-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--brand-light-green);
+}
+
+.rh-container .sidebar-section {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.referee-home {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-left: 80px;
+}
+
+.referee-home-header {
+  height: 56px;
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  border-bottom: 0.5px solid var(--brand-lightest-green-border);
+}
+
+.referee-home-left {
+  display: flex;
+  align-items: center;
+  color: var(--primary-text);
+  text-transform: uppercase;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+}
+
+.referee-home-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.referee-home-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px;
+
+  display: grid;
+  grid-template-columns: 35% 1fr 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "card  courses  courses"
+    "card  perf     map";
+  gap: 16px;
+  align-items: start;
+}
+
+.referee-home-content > .ref-dashboard-card {
+  grid-area: card;
+  align-self: stretch;
+}
+
+.referee-home-content > .yc-container {
+  grid-area: courses;
+  min-width: 0;
+  padding: 5px;
+}
+
+.referee-home-content > .pw {
+  grid-area: perf;
+  min-width: 0;
+}
+
+.referee-home-content > .cm {
+  grid-area: map;
+  min-width: 0;
+}

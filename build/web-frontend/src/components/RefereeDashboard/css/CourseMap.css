@@ -1,0 +1,180 @@
+.cm {
+  background: var(--brand-lightest-green-border);
+  border: 0.5px solid var(--brand-lightest-green-border);
+  border-radius: 16px;
+  padding: 20px 20px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.cm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.cm-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary-text);
+  margin: 0;
+}
+
+.cm-tally {
+  font-size: 12px;
+  color: var(--secondary-text);
+}
+
+.cm-list {
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  max-height: 400px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand-lightest-green-border) transparent;
+}
+
+.cmi {
+  position: relative;
+  list-style: none;
+}
+
+.cmi-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 8px;
+  background: none;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.cmi-btn:not(:disabled):hover {
+  background: rgba(61, 214, 140, 0.05);
+}
+
+.cmi-btn:disabled {
+  cursor: not-allowed;
+}
+
+.cmi-btn:focus-visible {
+  outline: 2px solid #3dd68c;
+  outline-offset: 2px;
+}
+
+.cmi-item-num-completed,
+.cmi-item-num-active,
+.cmi-item-num-locked {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.cmi-item-num-completed {
+  background: var(--brand-darkest-green);
+  border: 0.5px solid rgba(61, 214, 140, 0.3);
+  color: var(--hover-light-green);
+}
+
+.cmi-item-num-active {
+  background: var(--brand-dark-green);
+  border: 0.5px solid var(--hover-lightest-green);
+  color: var(--hover-light-green);
+}
+
+.cmi-item-num-locked {
+  background: #0f1a14;
+  border: 0.5px solid #1e3828;
+  color: #2d5c42;
+}
+
+/* ── Law number text inside the bubble (the <span>) ──
+   This span also has class cmi-num — we rely on it being
+   inside one of the cmi-item-num-* divs for specificity. */
+.cmi-item-num-active .cmi-num,
+.cmi-item-num-locked .cmi-num {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.cmi-item-num-locked .cmi-num {
+  color: var(--brand-green);
+}
+
+/* Icons inside the bubble */
+.cmi-item-num-completed svg,
+.cmi-item-num-active svg,
+.cmi-item-num-locked svg {
+  width: 12px;
+  height: 12px;
+}
+
+.cmi-item-num-locked svg {
+  opacity: 0.4;
+}
+
+/* ── Text block ── */
+.cmi-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cmi-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--secondary-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s;
+}
+
+.cmi-locked .cmi-title {
+  color: var(--brand-green);
+}
+
+.cmi-sub {
+  font-size: 11px;
+  color: var(--brand-green);
+}
+
+.cmi-active .cmi-sub {
+  color: var(--hover-light-green);
+}
+
+/* Hover brightens the title on interactive items */
+.cmi-btn:not(:disabled):hover .cmi-title {
+  color: #ffffff;
+}
+
+.active-course {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--hover-lightest-green);
+  font-size: 0;
+  display: block;
+  animation: ci-pulse 2s ease-in-out infinite;
+}
+
+@keyframes ci-pulse {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.75); }
+}

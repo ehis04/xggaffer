@@ -7,4 +7,4 @@ class ProgressConfig(AppConfig):
     label = "referee_progressTracking"
 
     def ready(self):
-        import apps.referee.progressTracking.signals  # noqa: F401
+        import apps.referee.progressTracking.services

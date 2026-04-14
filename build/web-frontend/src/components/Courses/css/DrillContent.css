@@ -1,0 +1,153 @@
+/* DrillContent.css */
+
+.drill-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 720px;
+  padding-bottom: 28px;
+}
+
+.course-type-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--course-purple);
+  background: rgba(192, 126, 232, 0.08);
+  border: 1px solid rgba(192, 126, 232, 0.2);
+  border-radius: 6px;
+  padding: 5px 12px;
+  width: fit-content;
+}
+
+.ct-title {
+  font-size: 1.55rem;
+  font-weight: 600;
+  color: var(--course-text);
+  line-height: 1.2;
+}
+
+.dc-divider {
+  height: 1px;
+  background: var(--course-border);
+}
+
+.dc-desc {
+  font-size: 0.87rem;
+  line-height: 1.65;
+  color: var(--secondary-text);
+  font-style: italic;
+  max-width: 660px;
+}
+
+.dc-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 660px;
+}
+
+.dc-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid var(--course-border);
+  border-radius: 9px;
+  padding: 12px 15px;
+  background: var(--course-bg-mid);
+}
+
+.dc-statement {
+  font-size: 0.87rem;
+  line-height: 1.6;
+  color: var(--course-text-mid);
+  flex: 1;
+}
+
+.dc-buttons {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.drill-btn {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  border: 1px solid var(--course-border-2);
+  background: var(--course-bg-card);
+  color: var(--course-text-dim);
+  transition: all 0.15s;
+}
+
+.drill-btn:hover:not(:disabled) {
+  background: #172e1e;
+}
+
+.drill-btn:disabled {
+  cursor: not-allowed;
+}
+
+.drill-btn.selected {
+  background: rgba(107, 191, 126, 0.15);
+  border-color: rgba(107, 191, 126, 0.5);
+  color: var(--course-accent);
+}
+
+.drill-btn.correct {
+  background: rgba(107, 191, 126, 0.18);
+  border-color: rgba(107, 191, 126, 0.6);
+  color: var(--course-accent);
+}
+
+.drill-btn.correct-missed {
+  background: rgba(107, 191, 126, 0.08);
+  border-color: rgba(107, 191, 126, 0.3);
+  color: var(--course-accent-2);
+}
+
+.drill-btn.wrong {
+  background: rgba(232, 100, 80, 0.12);
+  border-color: rgba(232, 100, 80, 0.4);
+  color: #e86450;
+}
+
+.dc-score {
+  font-size: 0.77rem;
+  color: var(--course-text-dim);
+}
+
+.dc-score-val {
+  color: var(--secondary-text);
+  font-weight: 600;
+}
+
+.dc-submit-btn {
+  background: rgba(192, 126, 232, 0.12);
+  border: 1px solid rgba(192, 126, 232, 0.35);
+  border-radius: 8px;
+  color: var(--course-purple);
+  font-size: 0.84rem;
+  font-weight: 600;
+  padding: 9px 20px;
+  cursor: pointer;
+  transition: background 0.15s;
+  align-self: flex-start;
+}
+
+.dc-submit-btn:hover {
+  background: rgba(192, 126, 232, 0.22);
+}
+
+.dc-submit-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

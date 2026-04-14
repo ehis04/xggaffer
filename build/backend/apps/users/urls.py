@@ -14,6 +14,24 @@ urlpatterns = [
     # profile management endpoints
     path("profile/create/", UserCreateProfileView.as_view(), name='create-profile-view'),
     path("profile/", UserProfileView.as_view(), name='user-profile-view'),
+    path(
+        "profile/follow-requests/incoming/",
+        IncomingFollowRequestsListView.as_view(),
+        name="follow-requests-incoming",
+    ),
+    path(
+        "profile/follow-requests/outgoing/",
+        OutgoingFollowRequestsListView.as_view(),
+        name="follow-requests-outgoing",
+    ),
+    path(
+        "profile/follow-requests/<int:pk>/accept/",
+        AcceptFollowRequestView.as_view(),
+        name="follow-request-accept",
+    ),
+    path("profile/follow-requests/<int:pk>/decline/",
+        DeclineFollowRequestView.as_view(),
+        name="follow-request-decline",),
     path("profile/<str:username>/", GetProfileView.as_view(), name='get-profile-view'),
     
     # Follow/Unfollow endpoints

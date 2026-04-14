@@ -35,6 +35,8 @@ import { RoleProfilePage } from './pages/setup/RoleProfilePage';
 import { UserProfilePage } from './pages/user/UserProfilePage';
 import { RefereeHome } from './pages/referee/RefereeHome';
 import { QuizPage } from './pages/referee/QuizPage';
+import { CoachingDashboard } from './pages/coaching/CoachingDashboard';
+import { CoursePage } from './pages/referee/CoursePage';
 
 function App() {
 
@@ -62,6 +64,8 @@ function App() {
         <Route path="/profile/:username" element={<UserProfilePage />} />
         <Route path="/referee/" element={<RefereeHome />} />
         <Route path="/referee/quiz/:quizId" element={<QuizPage />} />
+        <Route path="/referee/law/:lawNumber" element={<CoursePage />} />
+        <Route path="/coaching/dashboard" element={<CoachingDashboard />} />
       </Routes>
     </BrowserRouter>
   )

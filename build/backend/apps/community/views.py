@@ -2,11 +2,19 @@ from django.shortcuts import render
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import PostSerializer, ExplorePostSerializer, CommentSerializer, CommentListSerializer, CommentResponseSerializer
+from .serializers import (
+    PostSerializer,
+    ExplorePostSerializer,
+    CommentSerializer,
+    CommentListSerializer,
+    CommentResponseSerializer,
+    NotificationListSerializer,
+)
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import Post, Visibility, ModerationStatus, PostView, Comment, Like, ContentType
-from apps.users.models import User, UserProfile, Follow
+from rest_framework.exceptions import ValidationError
+from .models import Post, Visibility, ModerationStatus, PostView, Comment, Like, ContentType, Notification
+from apps.users.models import User, UserProfile, Follow, FollowRequest
 from rest_framework.generics import CreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
 from django.shortcuts import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
@@ -14,6 +22,7 @@ from django.utils.dateparse import parse_date
 from django.db.models import Q, F, FloatField, IntegerField, ExpressionWrapper
 from django.db.models.expressions import RawSQL
 from django.db import transaction
+from django.contrib.contenttypes.prefetch import GenericPrefetch
 
 # Create your views here.
 
@@ -296,7 +305,70 @@ class FollowingPostsView(ListAPIView):
         ).order_by('-created_at')
         
         return queryset
+
+
+class HashtagPostsView(ListAPIView):
+
+    serializer_class = ExplorePostSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = ExplorePagination
+
+    def get_queryset(self):
+        hashtag_raw = self.request.query_params.get("hashtag")
+        if not hashtag_raw or not str(hashtag_raw).strip():
+            raise ValidationError({"hashtag": "This query parameter is required."})
+        hashtag_clean = str(hashtag_raw).strip().lower().lstrip("#")
+
+        followed_user_ids = []
+        try:
+            user_profile = self.request.user.profile
+            followed_user_ids = list(
+                Follow.objects.filter(follower=user_profile).values_list(
+                    "following__user_id", flat=True
+                )
+            )
+        except UserProfile.DoesNotExist:
+            pass
+
+        visibility_q = Q(visibility=Visibility.PUBLIC)
+        if followed_user_ids:
+            visibility_q |= Q(
+                author_id__in=followed_user_ids,
+                visibility=Visibility.FOLLOWERS,
+            )
+
+        return (
+            Post.objects.filter(
+                moderation_status=ModerationStatus.OK,
+            )
+            .filter(visibility_q)
+            .filter(post_tags__hashtag__body=hashtag_clean)
+            .distinct()
+            .select_related("author", "author__profile")
+            .prefetch_related("post_tags__hashtag", "comments__author")
+            .order_by("-created_at")
+        )
+
+class UserPostsListView(ListAPIView):
+    serializer_class = ExplorePostSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = ExplorePagination
     
+    def get_queryset(self):
+        username = self.kwargs["username"]
+        
+        if self.request.user.username == username:
+            return Post.objects.filter(
+                author__username=username,
+                moderation_status=ModerationStatus.OK
+            ).select_related("author", "author__profile").prefetch_related("post_tags__hashtag").order_by("-created_at")
+            
+        return Post.objects.filter(
+            author__username=username,
+            moderation_status=ModerationStatus.OK,
+            visibility=Visibility.PUBLIC
+        ).select_related("author", "author__profile").prefetch_related("post_tags__hashtag").order_by("-created_at")
+
 class MarkPostViewedView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -434,7 +506,41 @@ class LikeCommentView(APIView):
             comment_like.delete()
             return Response({'detail': 'Comment unliked.', 'liked': False}, status=status.HTTP_200_OK)
         
-#TODO get all notifications for authenticated user
+class NotificationPagination(PageNumberPagination):
+    page_size = 25
+    page_size_query_param = "page-size"
+    max_page_size = 100
+    page_query_param = "page"
+
+
+class NotificationsListView(ListAPIView):
+    serializer_class = NotificationListSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = NotificationPagination
+
+    def get_queryset(self):
+        qs = (
+            Notification.objects.filter(user=self.request.user)
+            .select_related("triggered_by", "content_type")
+            .prefetch_related(
+                GenericPrefetch(
+                    "content_object",
+                    [
+                        Post.objects.only("id"),
+                        Comment.objects.select_related("post").only(
+                            "id", "post_id", "post__id"
+                        ),
+                        FollowRequest.objects.only("id"),
+                    ],
+                )
+            )
+            .order_by("-created_at")
+        )
+        unread_only = self.request.query_params.get("unread_only", "").lower()
+        if unread_only in ("1", "true", "yes"):
+            qs = qs.filter(is_read=False)
+        return qs
+
 
 # TODO search for posts with potentially various filters
 # TODO search by text, author, hashtags

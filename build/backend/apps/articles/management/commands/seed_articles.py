@@ -307,9 +307,9 @@ class Command(BaseCommand):
                 )
                 article.topics.add(topic_obj)
 
-            self.stdout.write(f'  ✓ Created article: {article.title[:60]}...')
+            self.stdout.write(f' Created article: {article.title[:60]}...')
 
-        self.stdout.write(self.style.SUCCESS('\n✓ Seeding complete!'))
+        self.stdout.write('\n Seeding complete!')
         self.stdout.write(f'  Topics: {Topic.objects.count()}')
         self.stdout.write(f'  Sites: {Site.objects.count()}')
         self.stdout.write(f'  Authors: {Author.objects.count()}')

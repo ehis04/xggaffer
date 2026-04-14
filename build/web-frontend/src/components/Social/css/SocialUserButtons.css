@@ -2,6 +2,7 @@
     display: flex;
     gap: 16px;
     align-items: center;
+    
 }
 
 .notifications-button a,
@@ -24,6 +25,7 @@
     width: 20px;
     height: 20px;
     transition: transform 0.2s ease;
+    color: var(--primary-text)
 }
 
 .notifications-button:hover a,

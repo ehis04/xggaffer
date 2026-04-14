@@ -36,7 +36,6 @@ class RefereeProfile(models.Model):
     next_certification_date = models.DateField(null=True, blank=True)
     total_matches_officiates = models.PositiveIntegerField(default=0)
     matches_this_season = models.PositiveIntegerField(default=0)
-    competition_levels = models.JSONField(default=list)
     primary_position = models.CharField(max_length=10, choices=RefereePositions.choices, default=RefereePositions.REFEREE)
     preferred_learning_time = models.CharField(max_length=20, choices=LearningTime.choices, blank=True)
     certification_goal = models.CharField(max_length=15, choices=RefereeCertificationLevel.choices, blank=True)

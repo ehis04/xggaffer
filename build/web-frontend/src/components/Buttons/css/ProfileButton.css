@@ -35,7 +35,7 @@
     font-weight: 500;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     user-select: none;
-    color: white;
+    color: var(--primary-text)
 }
 
 
@@ -78,6 +78,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 150px;
+    color: var(--primary-text)
 }
 
 .profile-button-username {
@@ -86,7 +87,9 @@
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 150px;
+    color: var(--primary-text)
 }
 .profile-button:hover .profile-button-name {
   text-decoration: underline;
+  color: var(--hover-lightest-green);
 }

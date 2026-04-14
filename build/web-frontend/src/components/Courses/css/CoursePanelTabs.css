@@ -1,0 +1,31 @@
+.cpt-tabs {
+  display: flex;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--course-border);
+  background: var(--course-bg-card);
+}
+
+.cpt-tab {
+  position: relative;
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--course-text-xs);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 13px 6px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  outline: none;
+}
+
+.cpt-tab:hover:not(.cpt-tab--active) {
+  color: var(--course-text-dim);
+}
+
+.cpt-tab--active {
+  color: #a8d4b4;
+  border-bottom-color: #5a9a6e;
+}

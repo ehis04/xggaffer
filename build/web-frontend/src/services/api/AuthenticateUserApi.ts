@@ -28,6 +28,14 @@ export const Api_Endpoints = {
 
   // Quiz
   GET_QUIZ: (quizId: number) => `${base_url}/referee/quizzes/${quizId}/`,
+
+  // Referee + Courses
+  REFEREE_DASHBOARD: `${base_url}/referee/dashboard/`,
+  REFEREE_COURSE: (lawNum: number) => `${base_url}/referee/courses/${lawNum}/`,
+  REFEREE_COMPLETE: `${base_url}/referee/progress/complete/`,
+  REFEREE_SCENARIO: `${base_url}/referee/progress/scenario/`,
+  REFEREE_DRILL: `${base_url}/referee/progress/drill/`,
+
 };
 
 export const getAccessToken = (): string | null => {

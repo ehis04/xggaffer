@@ -110,4 +110,43 @@ class Follow(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
-        
+
+class FollowRequest(models.Model):
+    follower = models.ForeignKey(
+        UserProfile, on_delete=models.CASCADE, related_name="outgoing_follow_requests", db_index=True
+    )
+    following = models.ForeignKey(
+        UserProfile, on_delete=models.CASCADE, related_name="incoming_follow_requests", db_index=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Follow Request"
+        verbose_name_plural = "Follow Requests"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["follower", "following"],
+                name="uniq_follow_request_pair",
+            ),
+            models.CheckConstraint(
+                condition=~Q(follower=F("following")),
+                name="followrequest_prevent_self",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["following", "-created_at"]),
+            models.Index(fields=["follower", "-created_at"]),
+        ]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.follower.user.username} → {self.following.user.username} (pending)"
+
+    def clean(self):
+        if self.follower_id and self.following_id and self.follower_id == self.following_id:
+            raise ValidationError("You cannot request to follow yourself.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+

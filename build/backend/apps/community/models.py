@@ -36,7 +36,11 @@ class NotificationType(models.TextChoices):
 
 #& Functions
 def function_targets():
-    return models.Q(app_label="community", model="post") | models.Q(app_label="community", model="comment")
+    return (
+        models.Q(app_label="community", model="post")
+        | models.Q(app_label="community", model="comment")
+        | models.Q(app_label="users", model="followrequest")
+    )
 
 #& Community Models
 class Post(models.Model):
@@ -240,6 +244,16 @@ class Notification(models.Model):
             return f"@{self.triggered_by.username} has mentioned @{self.user.username}"
         elif self.notification_type == NotificationType.LIKE:
             return f"@{self.triggered_by.username} has liked @{self.user.username}'s {self.content_type.name}"
+        elif self.notification_type == NotificationType.COMMENT:
+            return f"@{self.triggered_by.username} has commented on @{self.user.username}'s {self.content_type.name}"
+        elif self.notification_type == NotificationType.REPLY:
+            return f"@{self.triggered_by.username} has replied to @{self.user.username}'s {self.content_type.name}"
+        elif self.notification_type == NotificationType.NEW_FOLLOWER:
+            return f"@{self.triggered_by.username} followed @{self.user.username}'s"
+        elif self.notification_type == NotificationType.FOLLOW_REQUEST:
+            return f"@{self.triggered_by.username} requested to follow @{self.user.username}'s"
+        elif self.notification_type == NotificationType.FOLLOW_ACCEPTED:
+            return f"@{self.triggered_by.username} accepted @{self.user.username}'s follow request"
         return f"{self.triggered_by.username} has notified {self.user.username}"
 
     def get_absolute_url(self):

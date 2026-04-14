@@ -1,4 +1,6 @@
 from django.shortcuts import render, get_object_or_404
+from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import serializers
@@ -7,9 +9,28 @@ from .serializers import *
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import UserProfile, Follow, UserRole
+from .models import UserProfile, Follow, UserRole, Visibility, FollowRequest
 from rest_framework.generics import CreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListAPIView
+from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q
+
+from apps.community.models import Notification, NotificationType
+
+
+def _notify_follow_request_created(follow_request: FollowRequest) -> None:
+    ct = ContentType.objects.get_for_model(FollowRequest)
+    Notification.objects.create(
+        user=follow_request.following.user,
+        triggered_by=follow_request.follower.user,
+        notification_type=NotificationType.FOLLOW_REQUEST,
+        content_type=ct,
+        object_id=follow_request.pk,
+    )
+
+
+def _clear_follow_request_notifications(follow_request: FollowRequest) -> None:
+    ct = ContentType.objects.get_for_model(FollowRequest)
+    Notification.objects.filter(content_type=ct, object_id=follow_request.pk).delete()
 
 # Create your views here.
 
@@ -86,68 +107,127 @@ class GetProfileView(RetrieveAPIView):
     
 class FollowUserView(APIView):
     permission_classes = [IsAuthenticated]
-    
+
     def post(self, request, username):
         try:
             follower_profile = request.user.profile
         except UserProfile.DoesNotExist:
-            return Response({"error": "You have to create a profile before following users."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # gets the profile of the user to follow
+            return Response(
+                {"error": "You have to create a profile before following users."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         following_profile = get_object_or_404(
             UserProfile.objects.select_related("user"), user__username=username
         )
-        
+
         if follower_profile.id == following_profile.id:
             return Response({"error": "You can't follow yourself"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        follow, created = Follow.objects.get_or_create(
-            follower=follower_profile,
-            following=following_profile
-        )
-        
-        if created:
-            return Response({"message": f"You have followed {following_profile.user.username}",
-                            "following": True
-                            },
-                            status=status.HTTP_201_CREATED)
-        else:
+
+        if Follow.objects.filter(
+            follower=follower_profile, following=following_profile
+        ).exists():
             return Response(
                 {
-                    "message": f"You have already followed {following_profile.user.username}",
-                    "following": True
-                }, status=status.HTTP_200_OK
+                    "message": f"You are already following {following_profile.user.username}",
+                    "following": True,
+                    "follow_request_pending": False,
+                },
+                status=status.HTTP_200_OK,
             )
-        
+
+        if following_profile.visibility == Visibility.private:
+            fr, created = FollowRequest.objects.get_or_create(
+                follower=follower_profile,
+                following=following_profile,
+            )
+            if created:
+                _notify_follow_request_created(fr)
+                return Response(
+                    {
+                        "message": f"Follow request sent to {following_profile.user.username}",
+                        "following": False,
+                        "follow_request_pending": True,
+                        "follow_request_id": fr.id,
+                    },
+                    status=status.HTTP_201_CREATED,
+                )
+            return Response(
+                {
+                    "message": "Follow request is already pending",
+                    "following": False,
+                    "follow_request_pending": True,
+                    "follow_request_id": fr.id,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        follow, created = Follow.objects.get_or_create(
+            follower=follower_profile,
+            following=following_profile,
+        )
+
+        if created:
+            return Response(
+                {
+                    "message": f"You have followed {following_profile.user.username}",
+                    "following": True,
+                    "follow_request_pending": False,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(
+            {
+                "message": f"You are already following {following_profile.user.username}",
+                "following": True,
+                "follow_request_pending": False,
+            },
+            status=status.HTTP_200_OK,
+        )
+
     def delete(self, request, username):
         try:
             follower_profile = request.user.profile
         except UserProfile.DoesNotExist:
-            return Response({"error": "You have to create a profile before unfollowing users."}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(
+                {"error": "You have to create a profile before unfollowing users."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         following_profile = get_object_or_404(
             UserProfile.objects.select_related("user"), user__username=username
         )
-        
+
+        for fr in FollowRequest.objects.filter(
+            follower=follower_profile, following=following_profile
+        ):
+            _clear_follow_request_notifications(fr)
+        FollowRequest.objects.filter(
+            follower=follower_profile, following=following_profile
+        ).delete()
+
         deleted_count, _ = Follow.objects.filter(
             follower=follower_profile,
-            following=following_profile
+            following=following_profile,
         ).delete()
 
         if deleted_count > 0:
             return Response(
                 {
                     "message": f"You have unfollowed {following_profile.user.username}",
-                    "following": False
-                }, status=status.HTTP_200_OK
+                    "following": False,
+                    "follow_request_pending": False,
+                },
+                status=status.HTTP_200_OK,
             )
-        else:
-            return Response(
-                {
-                    "message": f"You are not following {following_profile.user.username}",
-                    "following": False
-                }, status=status.HTTP_200_OK
-            )
+        return Response(
+            {
+                "message": f"No active follow or pending request for {following_profile.user.username}",
+                "following": False,
+                "follow_request_pending": False,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 class FollowersListView(ListAPIView):
     serializer_class = FollowerListSerializer
@@ -202,20 +282,125 @@ class CheckFollowStatusView(APIView):
         
         is_following = Follow.objects.filter(
             follower=requester_profile,
-            following=target_profile
+            following=target_profile,
         ).exists()
-        
+
         followed_by = Follow.objects.filter(
             follower=target_profile,
-            following=requester_profile
+            following=requester_profile,
         ).exists()
-        
+
+        follow_request_pending = FollowRequest.objects.filter(
+            follower=requester_profile,
+            following=target_profile,
+        ).exists()
+
         return Response(
             {
                 "is_following": is_following,
                 "followed_by": followed_by,
-                "username": username
+                "follow_request_pending": follow_request_pending,
+                "username": username,
             }
+        )
+
+
+class FollowRequestPagination(PageNumberPagination):
+    page_size = 25
+    page_size_query_param = "page-size"
+    max_page_size = 100
+    page_query_param = "page"
+
+
+class IncomingFollowRequestsListView(ListAPIView):
+    serializer_class = FollowRequestIncomingSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = FollowRequestPagination
+
+    def get_queryset(self):
+        try:
+            profile = self.request.user.profile
+        except UserProfile.DoesNotExist:
+            return FollowRequest.objects.none()
+        return (
+            FollowRequest.objects.filter(following=profile)
+            .select_related("follower__user")
+            .order_by("-created_at")
+        )
+
+
+class OutgoingFollowRequestsListView(ListAPIView):
+    serializer_class = FollowRequestOutgoingSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = FollowRequestPagination
+
+    def get_queryset(self):
+        try:
+            profile = self.request.user.profile
+        except UserProfile.DoesNotExist:
+            return FollowRequest.objects.none()
+        return (
+            FollowRequest.objects.filter(follower=profile)
+            .select_related("following__user")
+            .order_by("-created_at")
+        )
+
+
+class AcceptFollowRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            recipient_profile = request.user.profile
+        except UserProfile.DoesNotExist:
+            return Response(
+                {"error": "You have to create a profile first."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        fr = get_object_or_404(
+            FollowRequest.objects.select_related("follower", "following"),
+            pk=pk,
+            following=recipient_profile,
+        )
+
+        with transaction.atomic():
+            _clear_follow_request_notifications(fr)
+            Follow.objects.get_or_create(follower=fr.follower, following=fr.following)
+            fr.delete()
+
+        return Response(
+            {
+                "message": "Follow request accepted",
+                "following": True,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class DeclineFollowRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            recipient_profile = request.user.profile
+        except UserProfile.DoesNotExist:
+            return Response(
+                {"error": "You have to create a profile first."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        fr = get_object_or_404(
+            FollowRequest.objects.select_related("follower", "following"),
+            pk=pk,
+            following=recipient_profile,
+        )
+        _clear_follow_request_notifications(fr)
+        fr.delete()
+
+        return Response(
+            {"message": "Follow request declined"},
+            status=status.HTTP_200_OK,
         )
 
 # TODO search for users profiles view (class SearchUsersView(ListAPIView):)

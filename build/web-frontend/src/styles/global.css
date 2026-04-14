@@ -1,0 +1,40 @@
+:root {
+    /* brand clours */
+    --brand-darkest-green: #192b23;
+    --brand-dark-green: #23392b;
+    --brand-green: #3a543b;
+    --brand-light-green: #000c09;
+    --brand-lightest-green: #121614c1;
+
+    /* brand colours borders */
+    --brand-darkest-green-border: #15251ecb;
+    --brand-dark-green-border: #203427d8;
+    --brand-green-border: #344c35d0;
+    --brand-light-green-border: #000b09;
+    --brand-lightest-green-border: #121614a0; /* actually a dark green */
+
+    /* text colours */
+    --primary-text: #ffffff;
+    --secondary-text: #feffffc8;
+    --tertiary-text: #feffff99;
+
+    /* hover colours */
+    --hover-darkest-green: #002514;
+    --hover-dark-green: #00471a;
+    --hover-green: #007004;
+    --hover-light-green: #3b925e;
+    --hover-lightest-green: #54ff98;
+
+    --dark-transparent-orange: #9d41007d;
+    --bright-orange: #ec8200;
+
+    --clause-colour: #c43333;
+    --quiz-colour: #2e9d8d;
+    --scenario-colour: #c647aa;
+    --drill-colour: #e9ec40;
+
+    --bg-clause-colour: #2f0b0b;
+    --bg-quiz-colour: #113c36;
+    --bg-scenario-colour: #32122b;
+    --bg-drill-colour: #3c3d11;
+}

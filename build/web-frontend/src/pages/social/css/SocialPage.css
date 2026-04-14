@@ -7,6 +7,7 @@
     "sidebar search right"
     "sidebar main right";
   min-height: 100vh;
+  background: var(--brand-light-green)
 }
 
 .post-detail-page {
@@ -36,7 +37,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: white;
+  background-color: var(--brand-light-green);
 }
 
 .right-section {
@@ -88,7 +89,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: white;
+  background-color: var(--brand-light-green);
 }
 
 .feed-content {

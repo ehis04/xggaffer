@@ -9,7 +9,7 @@
 
 .progress-bar-fill {
     height: 100%;
-    background-color: #818d82;
+    background-color: var(--hover-light-green);
     border-radius: 999px;
     transition: width 0.4s ease;
 }
