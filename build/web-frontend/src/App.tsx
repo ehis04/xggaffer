@@ -14,12 +14,6 @@ import { RoleAssignPage } from "./pages/setup/RoleAssignPage";
 import { RoleProfilePage } from "./pages/setup/RoleProfilePage";
 import { VerifyEmailPromptPage } from "./pages/setup/VerifyEmailPromptPage";
 import { VerifyEmailCallbackPage } from "./pages/setup/VerifyEmailCallbackPage";
-import LandingPage from './pages/setup/LandingPage';
-import ProfileCreationPage from './pages/setup/ProfileCreationPage';
-import { RoleAssignPage } from './pages/setup/RoleAssignPage';
-import { RoleProfilePage } from './pages/setup/RoleProfilePage';
-import { VerifyEmailPromptPage } from './pages/setup/VerifyEmailPromptPage';
-import { VerifyEmailCallbackPage } from './pages/setup/VerifyEmailCallbackPage';
 import { ForgotPasswordPage } from "./pages/setup/ForgotPasswordPage";
 import { ResetPasswordPage } from "./pages/setup/ResetPasswordPage";
 
@@ -42,7 +36,7 @@ import MyClubsPage from './pages/coaching/clubs/MyClubsPage';
 import BrowseClubsPage from './pages/coaching/clubs/BrowseClubPage';
 import CreateClubPage from './pages/coaching/clubs/CreateClubPage';
 import ClubPlayersPage from './pages/coaching/clubs/ClubPlayersPage';
-import { IndividualClubBase } from './pages/coaching/clubs/IndividualClubBase';
+import { IndividualClubBase } from "./pages/coaching/clubs/IndividualClubBase";
 import { UserProfilePage } from "./pages/user/UserProfilePage";
 import { RefereeHome } from "./pages/referee/RefereeHome";
 import { CoachingDashboard } from "./pages/coaching/CoachingDashboard";
@@ -52,20 +46,8 @@ import TeamsheetList from "./pages/coaching/teamsheets/TeamsheetList";
 import TeamsheetListPage from "./pages/coaching/teamsheets/TeamsheetListPage";
 import TeamsheetCreatePage from "./pages/coaching/teamsheets/TeamsheetCreatePage";
 import TeamsheetDetailPage from "./pages/coaching/teamsheets/TeamsheetDetailPage";
-import { UserProfilePage } from "./pages/user/UserProfilePage";
-import { RefereeHome } from "./pages/referee/RefereeHome";
-import { CoachingDashboard } from "./pages/coaching/CoachingDashboard";
-import { CoursePage } from "./pages/referee/CoursePage";
-<<<<<<< HEAD
-=======
-import TeamsheetDetail from './pages/coaching/teamsheets/TeamsheetDetail';
-import TeamsheetList from './pages/coaching/teamsheets/TeamsheetList';
-import TeamsheetListPage from './pages/coaching/teamsheets/TeamsheetListPage';
-import TeamsheetCreatePage from './pages/coaching/teamsheets/TeamsheetCreatePage';
-import TeamsheetDetailPage from './pages/coaching/teamsheets/TeamsheetDetailPage';
->>>>>>> 7df6aba (password reset added, login forms fixed and comments started, halfway dn to pull from Dev)
-import TeamsheetEditPage from './pages/coaching/teamsheets/TeamsheetEditPage';
-import PredictionPage from './pages/predictions/PredictionPage';
+import TeamsheetEditPage from "./pages/coaching/teamsheets/TeamsheetEditPage";
+import PredictionPage from "./pages/predictions/PredictionPage";
 
 import InternalPlayerProfilePage from "./pages/coaching/playerdata/InternalPlayerProfilePage";
 import InternalPlayerComparisonPage from "./pages/coaching/playerdata/InternalPlayerComparisonPage";
@@ -112,8 +94,6 @@ function App() {
               path="/create/profile/role/details"
               element={<RoleProfilePage />}
             />
-            /* working fine */
-            <Route path="/create/profile/role/details" element={<RoleProfilePage />} />
           </Route>
           <Route path="/profile/:username" element={<UserProfilePage />} />
 
@@ -147,18 +127,7 @@ function App() {
 
             /* old page, delete */
             <Route path="/coaching/teamsheets" element={<TeamsheetList />} />
-            /* old page, delete */
-            <Route
-              path="/coaching/teamsheets/:id"
-              element={<TeamsheetDetail />}
-            />
-<<<<<<< HEAD
-=======
-            /* old page, delete */
             <Route path="/coaching/teamsheets/:id" element={<TeamsheetDetail />} />
->>>>>>> 7df6aba (password reset added, login forms fixed and comments started, halfway dn to pull from Dev)
-
-            /* no issues, upgrades noted in docs */
             <Route path="/coaching/predictions" element={<PredictionPage />} />
 
             /* no issues, upgrades noted in docs */
@@ -183,23 +152,6 @@ function App() {
 
             /* change in process*/
             <Route path="/clubs/browse" element={<BrowseClubsPage />} />
-
-            /*
-            <Route path="/clubs/create" element={<CreateClubPage />} />
-
-            /* no issues, upgrades noted in docs
-            */
-
-            <Route
-              path="/clubs/:clubId/teamsheets"
-              element={<TeamsheetListPage />}
-            />
-
-            /* no issues here, upgrades noted in docs */
-            <Route
-              path="/clubs/:clubId/teamsheets/new"
-              element={<TeamsheetCreatePage />}
-            />
 
             /* no issues, upgrades noted in docs */
             <Route
@@ -252,21 +204,9 @@ function App() {
             <Route path="/clubs/:clubId/teamsheets" element={<TeamsheetListPage />} />
             <Route path="/clubs/:clubId/teamsheets/new" element={<TeamsheetCreatePage />} />
             <Route path="/clubs/:clubId/teamsheets/:teamsheetId" element={<TeamsheetDetailPage />} />
-
-            /* No issues, updates noted in docs*/
             <Route path="/clubs/:clubId/teamsheets/:teamsheetId/edit" element={<TeamsheetEditPage />} />
+            <Route path="/coaching/dashboard" element={<CoachingDashboard />} />
 
-            /* 
-
-            
-            the csv previews dont work, theyre expecting specific columns?
-            check if a user can submit a join request
-            no visible calendar, upcming events tab is fine, point of scheduling access?
-            event creation and fixture creation work fine, same thing visuals not right
-            check if engagement counter works plus change actvitiy time to minutes 
-            invite people by email not id 
-            wheres the code for invite 
-            */
             <Route path="/clubs/:clubId/" element={<IndividualClubBase />} />
             <Route path="/clubs/:clubId/players" element={<ClubPlayersPage />} />
 
@@ -275,9 +215,6 @@ function App() {
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
-          
-
-          
         </Routes>
       </div>
     </BrowserRouter>
