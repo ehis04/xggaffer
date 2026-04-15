@@ -181,7 +181,7 @@ class Migration(migrations.Migration):
                 'verbose_name': 'Block',
                 'verbose_name_plural': 'Blocks',
                 'indexes': [models.Index(fields=['blocker', 'blocked_user'], name='community_b_blocker_087cf7_idx')],
-                'constraints': [models.UniqueConstraint(fields=('blocker', 'blocked_user'), name='uniq_blocker_blocked'), models.CheckConstraint(check=models.Q(('blocker', models.F('blocked_user')), _negated=True), name='no_self_block')],
+                'constraints': [models.UniqueConstraint(fields=('blocker', 'blocked_user'), name='uniq_blocker_blocked'), models.CheckConstraint(condition=models.Q(('blocker', models.F('blocked_user')), _negated=True), name='no_self_block')],
             },
         ),
         migrations.CreateModel(

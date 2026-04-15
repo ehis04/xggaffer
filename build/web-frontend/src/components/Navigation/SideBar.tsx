@@ -158,17 +158,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       onClick: () => console.log("Referee clicked"),
       link: "http://localhost:5173/referee",
     },
-    {
-      id: "trash",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-trash3" viewBox="0 0 16 16">
-          <path d="M6.5 1h3a1 1 0 0 1 1 1V3h3.5a.5.5 0 0 1 0 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4H2a.5.5 0 0 1 0-1H5.5V2a1 1 0 0 1 1-1Zm1 2h1V2h-1v1ZM4 4v9a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4H4Zm2.5 2.5a.5.5 0 0 1 1 0V12a.5.5 0 0 1-1 0V6.5Zm3 0a.5.5 0 0 1 1 0V12a.5.5 0 0 1-1 0V6.5Z" />
-        </svg>
-      ),
-      label: "Trash",
-      onClick: () => (globalThis.location.href = "/trash"),
-      link: "/trash",
-    },
   ];
 
   const defaultBottomItems: NavItem[] = [
