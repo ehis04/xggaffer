@@ -14,6 +14,8 @@ import { RoleAssignPage } from "./pages/setup/RoleAssignPage";
 import { RoleProfilePage } from "./pages/setup/RoleProfilePage";
 import { VerifyEmailPromptPage } from "./pages/setup/VerifyEmailPromptPage";
 import { VerifyEmailCallbackPage } from "./pages/setup/VerifyEmailCallbackPage";
+import { ForgotPasswordPage } from "./pages/setup/ForgotPasswordPage";
+import { ResetPasswordPage } from "./pages/setup/ResetPasswordPage";
 
 import { SocialPage } from './pages/social/SocialPage';
 import { PostDetailPage } from './pages/social/PostDetailPage';
