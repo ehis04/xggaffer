@@ -82,6 +82,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+<<<<<<< HEAD
+=======
+    "django.contrib.postgres",
+>>>>>>> 7df6aba (password reset added, login forms fixed and comments started, halfway dn to pull from Dev)
 
     # Third-party apps
     "rest_framework",
@@ -105,6 +109,7 @@ INSTALLED_APPS = [
     "apps.tactics",
     "apps.playerdata",
     "apps.livefootball",
+<<<<<<< HEAD
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -135,6 +140,8 @@ INSTALLED_APPS = [
     'apps.livefootball',
     'corsheaders',
     'cloudinary',
+=======
+>>>>>>> 7df6aba (password reset added, login forms fixed and comments started, halfway dn to pull from Dev)
 ]
 
 MIDDLEWARE = [

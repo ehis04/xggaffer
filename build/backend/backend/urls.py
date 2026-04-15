@@ -13,9 +13,6 @@ urlpatterns = [
 
     # Authentication and user management
     path('api/auth/', include('rest_framework.urls')),
-    path('api/teamsheets/', include('apps.teamsheets.urls')),
-    path('api/predictions/', include('apps.predictions.urls')),
-    path('api/community/', include('apps.community.urls')),
     path('api/users/', include('apps.users.urls')),
 
     # Core coaching and team management

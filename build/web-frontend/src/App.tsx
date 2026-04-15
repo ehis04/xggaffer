@@ -10,6 +10,12 @@ import { RoleAssignPage } from "./pages/setup/RoleAssignPage";
 import { RoleProfilePage } from "./pages/setup/RoleProfilePage";
 import { VerifyEmailPromptPage } from "./pages/setup/VerifyEmailPromptPage";
 import { VerifyEmailCallbackPage } from "./pages/setup/VerifyEmailCallbackPage";
+import LandingPage from './pages/setup/LandingPage';
+import ProfileCreationPage from './pages/setup/ProfileCreationPage';
+import { RoleAssignPage } from './pages/setup/RoleAssignPage';
+import { RoleProfilePage } from './pages/setup/RoleProfilePage';
+import { VerifyEmailPromptPage } from './pages/setup/VerifyEmailPromptPage';
+import { VerifyEmailCallbackPage } from './pages/setup/VerifyEmailCallbackPage';
 import { ForgotPasswordPage } from './pages/setup/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/setup/ResetPasswordPage';
 
@@ -42,6 +48,14 @@ import { UserProfilePage } from "./pages/user/UserProfilePage";
 import { RefereeHome } from "./pages/referee/RefereeHome";
 import { CoachingDashboard } from "./pages/coaching/CoachingDashboard";
 import { CoursePage } from "./pages/referee/CoursePage";
+<<<<<<< HEAD
+=======
+import TeamsheetDetail from './pages/coaching/teamsheets/TeamsheetDetail';
+import TeamsheetList from './pages/coaching/teamsheets/TeamsheetList';
+import TeamsheetListPage from './pages/coaching/teamsheets/TeamsheetListPage';
+import TeamsheetCreatePage from './pages/coaching/teamsheets/TeamsheetCreatePage';
+import TeamsheetDetailPage from './pages/coaching/teamsheets/TeamsheetDetailPage';
+>>>>>>> 7df6aba (password reset added, login forms fixed and comments started, halfway dn to pull from Dev)
 import TeamsheetEditPage from './pages/coaching/teamsheets/TeamsheetEditPage';
 import PredictionPage from './pages/predictions/PredictionPage';
 
@@ -91,6 +105,8 @@ function App() {
               path="/create/profile/role/details"
               element={<RoleProfilePage />}
             />
+            /* working fine */
+            <Route path="/create/profile/role/details" element={<RoleProfilePage />} />
           </Route>
           <Route path="/profile/:username" element={<UserProfilePage />} />
 
@@ -114,8 +130,18 @@ function App() {
             <Route path="/fitnessBase" element={<FitnessBase />} />
             /* need to see lizzy push */
             <Route path="/situationBase" element={<SituationBase />} />
+<<<<<<< HEAD
             <Route path="/laws" element={<LawsList />} />
             <Route path="/laws/:lawNumber" element={<LawDetail />} />
+=======
+            <Route path="/referee/" element={<RefereeHome />} />
+            <Route path="/referee/law/:lawNumber" element={<CoursePage />} />
+            /* need to see lizzy push */
+            <Route path="/laws" element={<LawsList />} />
+            /* need to see lizzy push */
+            <Route path="/laws/:lawNumber" element={<LawDetail />} />
+            /* need to see lizzy push */
+>>>>>>> 7df6aba (password reset added, login forms fixed and comments started, halfway dn to pull from Dev)
             <Route path="/laws/changes" element={<ChangesTimeline />} />
 
             <Route path="/coaching" element={<CoachingBase />} />
@@ -127,6 +153,11 @@ function App() {
               path="/coaching/teamsheets/:id"
               element={<TeamsheetDetail />}
             />
+<<<<<<< HEAD
+=======
+            /* old page, delete */
+            <Route path="/coaching/teamsheets/:id" element={<TeamsheetDetail />} />
+>>>>>>> 7df6aba (password reset added, login forms fixed and comments started, halfway dn to pull from Dev)
 
             /* no issues, upgrades noted in docs */
             <Route path="/coaching/predictions" element={<PredictionPage />} />
@@ -178,6 +209,20 @@ function App() {
             />
             <Route path="/coaching/dashboard" element={<CoachingDashboard />} />
 
+<<<<<<< HEAD
+=======
+            /* no issues, upgrades noted in docs
+            */
+
+            <Route path="/clubs/:clubId/teamsheets" element={<TeamsheetListPage />} />
+
+            /* no issues here, upgrades noted in docs */
+            <Route path="/clubs/:clubId/teamsheets/new" element={<TeamsheetCreatePage />} />
+
+            /* no issues, upgrades noted in docs */
+            <Route path="/clubs/:clubId/teamsheets/:teamsheetId" element={<TeamsheetDetailPage />} />
+
+>>>>>>> 7df6aba (password reset added, login forms fixed and comments started, halfway dn to pull from Dev)
             /* No issues, updates noted in docs*/
             <Route path="/clubs/:clubId/teamsheets/:teamsheetId/edit" element={<TeamsheetEditPage />} />
 
