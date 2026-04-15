@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import pandas as pd
 
-from ml.engines.elo import compute_elo_history, get_elo_at_date
-from ml.features.rolling import (
+from apps.predictions.ml.engines.elo import compute_elo_history, get_elo_at_date
+from apps.predictions.ml.features.rolling import (
     build_features,
     load_match_history,
     to_team_match_rows,
 )
-from ml.models.scoreline.config import SCORE_ENGINE_LEAGUES, SCORE_ENGINE_SEASONS
+from apps.predictions.ml.models.scoreline.config import SCORE_ENGINE_LEAGUES, SCORE_ENGINE_SEASONS
 
 
 class ScoreFeatureService:

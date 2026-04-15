@@ -18,7 +18,7 @@ from sklearn.metrics import (
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, label_binarize
 
-from ml.models.match_outcome.config import (
+from apps.predictions.ml.models.match_outcome.config import (
     DEFAULT_LEAGUES,
     DEFAULT_MODEL_TYPE,
     DEFAULT_SEASONS,
@@ -29,7 +29,7 @@ from ml.models.match_outcome.config import (
     RANDOM_SEED,
     TEST_SEASONS,
 )
-from ml.models.match_outcome.prepare_data import (
+from apps.predictions.ml.models.match_outcome.prepare_data import (
     get_feature_columns,
     get_temporal_split,
     get_train_test_split,

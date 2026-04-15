@@ -10,7 +10,7 @@ from rest_framework.reverse import reverse
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from django.utils import timezone
 from apps.playerdata.models import ClubSeasonEnrichment
 from apps.players.models import ExternalProvider, Player
@@ -51,6 +51,7 @@ from .permissions import (
     CanManageClubPlayerIdentity,
     CanAccessClubResources,
     CanManageClubResources,
+    CanManageOwnClubTrash,
     CanViewClubResourceEngagementDashboard,
     CanViewClubResourceStatus,
     user_can_review_join_requests,
@@ -71,6 +72,7 @@ from .serializers import (
     ClubPlayerRelinkSerializer,
     AvailablePlayerSerializer,
     ClubDuplicateSerializer,
+    ClubTrashActionSerializer,
     ClubWriteSerializer,
     ClubJoinRequestSerializer,
     ClubJoinRequestCreateSerializer,
@@ -96,7 +98,10 @@ from .serializers import (
     ClubImportJobDetailSerializer,
     ClubImportJobCreateSerializer,
     ClubImportJobCommitSerializer,
+    TrashListItemSerializer,
 )
+from apps.teamsheets.models import Teamsheet
+from apps.tactics.models import TacticsBoard
 def apply_club_player_position_filter(queryset, position):
     if not position:
         return queryset
@@ -233,7 +238,17 @@ class CanManageClubContent(BypassablePermission):
 
 class ClubViewSet(viewsets.ModelViewSet):
     serializer_class = ClubSerializer
-    permission_classes = [IsAuthenticatedOrBypass, CanCreateClub, IsClubMemberOrPublicRead]
+    def get_permissions(self):
+        if self.action in ['create', 'duplicate']:
+            return [IsAuthenticatedOrBypass(), CanCreateClub()]
+
+        if self.action in ['trash', 'restore', 'permanent_delete', 'destroy']:
+            return [IsAuthenticatedOrBypass(), CanManageOwnClubTrash()]
+
+        if self.action == 'trash_items':
+            return [IsAuthenticatedOrBypass()]
+
+        return [IsAuthenticatedOrBypass(), IsClubMemberOrPublicRead()]
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
@@ -280,17 +295,30 @@ class ClubViewSet(viewsets.ModelViewSet):
     def _with_understat_summary(self, queryset):
         return queryset.prefetch_related(get_understat_enrichment_prefetch())
 
-    def get_queryset(self):
-        user = self.request.user
-        scope = self.request.query_params.get('scope')
-        search = self.request.query_params.get('search')
+    def _get_trash_mode(self) -> str:
+        value = (self.request.query_params.get('trash') or '').strip().lower()
+        if value in {'only', 'include'}:
+            return value
+        return 'exclude'
 
+    def _base_queryset(self):
+        return self._with_understat_summary(
+            Club.objects.select_related('creator')
+        )
+
+    def _build_queryset(self, *, scope_override=None, include_trashed=False):
+        user = self.request.user
+        scope = scope_override if scope_override is not None else self.request.query_params.get('scope')
+        search = self.request.query_params.get('search')
         listed_filter = get_listed_directory_filter()
+        base_queryset = self._base_queryset()
 
         if not user.is_authenticated:
-            queryset = Club.objects.filter(listed_filter)
-            queryset = apply_club_search_filter(queryset, search)
-            return self._with_understat_summary(queryset)
+            queryset = base_queryset.filter(
+                listed_filter,
+                is_trashed=False,
+            )
+            return apply_club_search_filter(queryset, search)
 
         member_club_ids = ClubMembership.objects.filter(
             user=user,
@@ -298,21 +326,149 @@ class ClubViewSet(viewsets.ModelViewSet):
         ).values_list('club_id', flat=True)
 
         if scope == 'mine':
-            queryset = Club.objects.filter(id__in=member_club_ids)
-            queryset = apply_club_search_filter(queryset, search)
-            return self._with_understat_summary(queryset)
+            active_filter = Q(id__in=member_club_ids)
+        elif scope == 'browse':
+            active_filter = listed_filter & ~Q(id__in=member_club_ids)
+        else:
+            active_filter = Q(id__in=member_club_ids) | listed_filter
 
-        if scope == 'browse':
-            queryset = Club.objects.filter(listed_filter).exclude(id__in=member_club_ids)
-            queryset = apply_club_search_filter(queryset, search)
-            return self._with_understat_summary(queryset)
+        trash_mode = 'include' if include_trashed else self._get_trash_mode()
 
-        queryset = Club.objects.filter(
-            Q(id__in=member_club_ids) | listed_filter
+        if trash_mode == 'only':
+            if scope == 'browse':
+                queryset = base_queryset.none()
+            else:
+                queryset = base_queryset.filter(
+                    creator=user,
+                    is_trashed=True,
+                )
+            return apply_club_search_filter(queryset, search)
+
+        active_queryset = base_queryset.filter(
+            active_filter,
+            is_trashed=False,
         ).distinct()
 
-        queryset = apply_club_search_filter(queryset, search)
-        return self._with_understat_summary(queryset)
+        if trash_mode == 'include' and scope != 'browse':
+            queryset = base_queryset.filter(
+                (active_filter & Q(is_trashed=False)) |
+                Q(creator=user, is_trashed=True)
+            ).distinct()
+            return apply_club_search_filter(queryset, search)
+
+        return apply_club_search_filter(active_queryset, search)
+
+    def _get_club_for_action(self, pk, *, require_trashed=None):
+        club = get_object_or_404(self._base_queryset(), pk=pk)
+        self.check_object_permissions(self.request, club)
+
+        if require_trashed is True and not club.is_trashed:
+            raise ValidationError('This club is not in trash.')
+
+        if require_trashed is False and club.is_trashed:
+            raise ValidationError('This club is already in trash.')
+
+        return club
+
+    def _normalise_trash_section(self) -> str:
+        value = (self.request.query_params.get('section') or 'all').strip().lower()
+        allowed = {'all', 'clubs', 'teamsheets', 'tactics'}
+
+        if value not in allowed:
+            raise ValidationError({
+                'section': 'section must be one of: all, clubs, teamsheets, tactics.'
+            })
+
+        return value
+
+
+    def _build_shared_trash_items(self, user, section: str) -> list[dict]:
+        items: list[dict] = []
+
+        if section in {'all', 'clubs'}:
+            clubs = self._base_queryset().filter(
+                creator=user,
+                is_trashed=True,
+            ).order_by('-trashed_at', '-updated_at')
+
+            for club in clubs:
+                secondary_parts = [club.city, club.country, club.division]
+                secondary_text = ' · '.join(part for part in secondary_parts if part)
+
+                items.append({
+                    'id': club.id,
+                    'section': 'clubs',
+                    'title': club.name,
+                    'secondary_text': secondary_text or None,
+                    'club_id': club.id,
+                    'club_name': club.name,
+                    'trashed_at': club.trashed_at,
+                    'trash_expires_at': club.trash_expires_at,
+                    'updated_at': club.updated_at,
+                    'route_path': f'/clubs/{club.id}/?view=trash',
+                })
+
+        if section in {'all', 'teamsheets'}:
+            teamsheets = Teamsheet.objects.filter(
+                created_by=user,
+                is_trashed=True,
+            ).select_related(
+                'club',
+            ).order_by('-trashed_at', '-updated_at')
+
+            for teamsheet in teamsheets:
+                formation_display = teamsheet.get_formation_display()
+                opponent_part = f' · vs {teamsheet.opponent}' if teamsheet.opponent else ''
+                template_part = ' · Template' if teamsheet.is_template else ''
+
+                items.append({
+                    'id': teamsheet.id,
+                    'section': 'teamsheets',
+                    'title': teamsheet.title,
+                    'secondary_text': f'{formation_display}{opponent_part}{template_part}',
+                    'club_id': teamsheet.club_id,
+                    'club_name': teamsheet.club.name,
+                    'trashed_at': teamsheet.trashed_at,
+                    'trash_expires_at': teamsheet.trash_expires_at,
+                    'updated_at': teamsheet.updated_at,
+                    'route_path': f'/clubs/{teamsheet.club_id}/teamsheets/{teamsheet.id}?view=trash',
+                })
+
+        if section in {'all', 'tactics'}:
+            boards = TacticsBoard.objects.filter(
+                created_by=user,
+                is_trashed=True,
+            ).select_related(
+                'club',
+            ).order_by('-trashed_at', '-updated_at')
+
+            for board in boards:
+                board_type_label = board.get_board_type_display()
+                template_part = ' · Template' if board.is_template else ''
+                linked_part = ' · Linked to teamsheet' if board.linked_teamsheet_id else ''
+
+                items.append({
+                    'id': board.id,
+                    'section': 'tactics',
+                    'title': board.title,
+                    'secondary_text': f'{board_type_label}{template_part}{linked_part}',
+                    'club_id': board.club_id,
+                    'club_name': board.club.name,
+                    'trashed_at': board.trashed_at,
+                    'trash_expires_at': board.trash_expires_at,
+                    'updated_at': board.updated_at,
+                    'route_path': f'/clubs/{board.club_id}/tactics-boards/{board.id}?view=trash',
+                })
+
+        items.sort(
+            key=lambda item: item['trashed_at'] or item['updated_at'],
+            reverse=True,
+        )
+
+        return items
+
+    def get_queryset(self):
+        return self._build_queryset()
 
 
     def perform_create(self, serializer):
@@ -323,6 +479,14 @@ class ClubViewSet(viewsets.ModelViewSet):
             role=ClubMembership.Role.OWNER,
             is_active=True,
         )
+
+    def perform_destroy(self, instance):
+        if not instance.can_be_trashed_by(self.request.user):
+            raise PermissionDenied(
+                'Only the club creator can move this club to trash.'
+            )
+
+        instance.move_to_trash(self.request.user)
 
     def get_understat_enrichment_prefetch():
         return Prefetch(
@@ -416,6 +580,48 @@ class ClubViewSet(viewsets.ModelViewSet):
 
         response_serializer = ClubSerializer(new_club)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'], url_path='trash')
+    def trash(self, request, pk=None):
+        serializer = ClubTrashActionSerializer(data=request.data or {})
+        serializer.is_valid(raise_exception=True)
+
+        club = self._get_club_for_action(pk, require_trashed=False)
+        club.move_to_trash(request.user)
+
+        response_serializer = ClubSerializer(
+            self._base_queryset().get(pk=club.pk),
+            context=self.get_serializer_context(),
+        )
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+
+    @action(detail=True, methods=['post'], url_path='restore')
+    def restore(self, request, pk=None):
+        serializer = ClubTrashActionSerializer(data=request.data or {})
+        serializer.is_valid(raise_exception=True)
+
+        club = self._get_club_for_action(pk, require_trashed=True)
+        club.restore_from_trash(request.user)
+
+        response_serializer = ClubSerializer(
+            self._base_queryset().get(pk=club.pk),
+            context=self.get_serializer_context(),
+        )
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+
+    @action(detail=True, methods=['delete'], url_path='permanent-delete')
+    def permanent_delete(self, request, pk=None):
+        club = self._get_club_for_action(pk, require_trashed=True)
+
+        if not club.can_be_permanently_deleted_by(request.user):
+            raise PermissionDenied(
+                'Only the club creator can permanently delete this club.'
+            )
+
+        club.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['get'])
     def available_players(self, request, pk=None):
@@ -736,21 +942,26 @@ class ClubViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK,
         )
 
+    @action(detail=False, methods=['get'], url_path='trash')
+    def trash_items(self, request):
+        section = self._normalise_trash_section()
+        items = self._build_shared_trash_items(request.user, section)
+
+        serializer = TrashListItemSerializer(items, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        
     @action(detail=False, methods=['get'])
     def my_clubs(self, request):
         if not request.user.is_authenticated:
             return Response([], status=status.HTTP_200_OK)
 
-        member_club_ids = ClubMembership.objects.filter(
-            user=request.user,
-            is_active=True,
-        ).values_list('club_id', flat=True)
+        clubs = self._build_queryset(scope_override='mine')
 
-        clubs = Club.objects.filter(
-            id__in=member_club_ids,
-        ).select_related('creator').order_by('-updated_at')
-
-        serializer = ClubSerializer(clubs, many=True)
+        serializer = ClubSerializer(
+            clubs.order_by('-updated_at'),
+            many=True,
+            context=self.get_serializer_context(),
+        )
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'], url_path='lookup-by-code')
@@ -767,6 +978,7 @@ class ClubViewSet(viewsets.ModelViewSet):
             Club.objects.filter(
                 directory_visibility=Club.DirectoryVisibility.HIDDEN_CODE_ONLY,
                 join_code__iexact=code,
+                is_trashed=False,
             )
         )
 
@@ -1414,6 +1626,8 @@ class ClubResourceViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAuthenticatedOrBypass, CanViewClubResourceEngagementDashboard]
         elif self.action == 'my_status':
             permission_classes = [IsAuthenticatedOrBypass, CanAccessClubResources]
+        elif self.action == 'delivery':
+            permission_classes = [permissions.AllowAny]
         else:
             permission_classes = [IsAuthenticatedOrBypass, CanAccessClubResources]
 
@@ -1581,7 +1795,7 @@ class ClubResourceViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        expected_user_id = request.user.id if request.user.is_authenticated else 0
+        expected_user_id = request.user.id if request.user.is_authenticated else None
         if payload.get('club_id') != resource.club_id or payload.get('resource_id') != resource.id:
             return Response(
                 {'detail': 'Access token does not match this resource.'},
@@ -1589,7 +1803,7 @@ class ClubResourceViewSet(viewsets.ModelViewSet):
             )
 
         if not getattr(settings, 'BYPASS_PERMISSIONS', False):
-            if payload.get('user_id') != expected_user_id:
+            if expected_user_id is not None and payload.get('user_id') != expected_user_id:
                 return Response(
                     {'detail': 'Access token does not match the current user.'},
                     status=status.HTTP_403_FORBIDDEN,

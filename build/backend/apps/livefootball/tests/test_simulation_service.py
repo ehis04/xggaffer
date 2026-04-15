@@ -354,60 +354,60 @@ class SimulationServiceTests(SimpleTestCase):
         for row in result["expected_table"]:
             self.assertAlmostEqual(sum(row["position_probabilities"].values()), 1.0, places=3)
 
-def test_as_of_matchweek_requires_matchweek(self) -> None:
-    with self.assertRaises(ValueError):
-        simulate_league_season("EPL", "2023", "as_of_matchweek")
+    def test_as_of_matchweek_requires_matchweek(self) -> None:
+        with self.assertRaises(ValueError):
+            simulate_league_season("EPL", "2023", "as_of_matchweek")
 
-
-@patch(
-    "apps.livefootball.services.simulation._load_simulation_match_history",
-    return_value=_sample_matches(),
-)
-def test_as_of_matchweek_rejects_latest_available_season(self, _mock_loader) -> None:
-    with self.assertRaises(ValueError):
-        simulate_league_season("EPL", "2024", "as_of_matchweek", matchweek=1)
-
-
-@patch(
-    "apps.livefootball.services.simulation._predict_score_lambdas",
-    return_value=([], []),
-)
-@patch(
-    "apps.livefootball.services.simulation._build_fixture_outcome_probabilities",
-    return_value=[],
-)
-@patch(
-    "apps.livefootball.services.simulation._resolve_engine_versions",
-    return_value={
-        "elo": "v1",
-        "outcome": "v2",
-        "score": "score-test",
-        "simulation": "v1",
-    },
-)
-@patch(
-    "apps.livefootball.services.simulation._load_simulation_match_history",
-    return_value=_sample_matches(),
-)
-def test_as_of_matchweek_historical_season_returns_cutoff_metadata(
-    self,
-    _mock_loader,
-    _mock_versions,
-    _mock_outcomes,
-    _mock_lambdas,
-) -> None:
-    result = simulate_league_season(
-        "EPL",
-        "2023",
-        "as_of_matchweek",
-        simulation_count=20,
-        matchweek=1,
+    @patch(
+        "apps.livefootball.services.simulation._load_simulation_match_history",
+        return_value=_sample_matches(),
     )
+    def test_as_of_matchweek_latest_available_season_is_supported(self, _mock_loader) -> None:
+        result = simulate_league_season("EPL", "2024", "as_of_matchweek", matchweek=1)
 
-    self.assertEqual(result["mode"], "as_of_matchweek")
-    self.assertEqual(result["based_on_matchweek"], 1)
-    self.assertEqual(result["data_cutoff_date"], "2023-08-11")
-    self.assertEqual(result["metadata"]["total_matchweeks"], 1)
+        self.assertEqual(result["mode"], "as_of_matchweek")
+        self.assertEqual(result["based_on_matchweek"], 1)
+
+    @patch(
+        "apps.livefootball.services.simulation._predict_score_lambdas",
+        return_value=([], []),
+    )
+    @patch(
+        "apps.livefootball.services.simulation._build_fixture_outcome_probabilities",
+        return_value=[],
+    )
+    @patch(
+        "apps.livefootball.services.simulation._resolve_engine_versions",
+        return_value={
+            "elo": "v1",
+            "outcome": "v2",
+            "score": "score-test",
+            "simulation": "v1",
+        },
+    )
+    @patch(
+        "apps.livefootball.services.simulation._load_simulation_match_history",
+        return_value=_sample_matches(),
+    )
+    def test_as_of_matchweek_historical_season_returns_cutoff_metadata(
+        self,
+        _mock_loader,
+        _mock_versions,
+        _mock_outcomes,
+        _mock_lambdas,
+    ) -> None:
+        result = simulate_league_season(
+            "EPL",
+            "2023",
+            "as_of_matchweek",
+            simulation_count=20,
+            matchweek=1,
+        )
+
+        self.assertEqual(result["mode"], "as_of_matchweek")
+        self.assertEqual(result["based_on_matchweek"], 1)
+        self.assertEqual(result["data_cutoff_date"], "2023-08-11")
+        self.assertEqual(result["metadata"]["total_matchweeks"], 1)
 
     @patch(
         "apps.livefootball.services.simulation._predict_score_lambdas",

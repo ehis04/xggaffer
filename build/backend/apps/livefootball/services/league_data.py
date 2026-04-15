@@ -28,6 +28,7 @@ from apps.predictions.interpretations.league_commentary import (
     generate_comparison_commentary,
     generate_expected_table_commentary,
 )
+from apps.predictions.models import SimulationResult
 from services.livefootball.helpers import shape_competition_item
 from services.livefootball.queries import get_competition_table
 
@@ -250,6 +251,18 @@ def get_league_expected_table_payload(
         simulation_kwargs["projection_window"] = projection_window
 
     simulation_result = simulate_league_season(**simulation_kwargs)
+
+    if simulation_result.get("data_cutoff_date"):
+        SimulationResult.objects.update_or_create(
+            league=understat_league,
+            season=resolved_season,
+            freeze_date=simulation_result["data_cutoff_date"],
+            defaults={
+                "results": simulation_result["expected_table"],
+                "n_simulations": simulation_result.get("simulation_count", 0),
+            },
+        )
+
     expected_rows = [
         _shape_expected_row(row, canonical_team_directory)
         for row in simulation_result["expected_table"]

@@ -3,12 +3,12 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from ml.models.scoreline.config import (
+from apps.predictions.ml.models.scoreline.config import (
     AWAY_GOALS_FEATURES,
     HOME_GOALS_FEATURES,
     MAX_GOALS,
 )
-from ml.models.scoreline.train import (
+from apps.predictions.ml.models.scoreline.train import (
     derive_probabilities,
     dixon_coles_tau,
     fit_naive_poisson,

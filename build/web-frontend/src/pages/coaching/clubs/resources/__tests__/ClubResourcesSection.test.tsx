@@ -79,6 +79,10 @@ const baseClub: Club = {
   member_count: 10,
   player_count: 18,
   latest_understat_summary: null,
+  is_trashed: false,
+  trashed_at: null,
+  trash_expires_at: null,
+  trashed_by: null,
   created_at: '2026-04-01T10:00:00Z',
   updated_at: '2026-04-01T10:00:00Z',
 };
@@ -179,11 +183,11 @@ describe('ClubResourcesSection', () => {
   });
 
   it('validates upload form before calling upload api', async () => {
-    render(<ClubResourcesSection club={baseClub} isMember />);
+    render(<ClubResourcesSection club={baseClub} isMember canManageResources={true} />);
 
     await screen.findByText('Analysis Pack');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Upload Resource' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Upload resource' }));
 
     expect(
       screen.getByText('Resource title is required.')
@@ -193,7 +197,7 @@ describe('ClubResourcesSection', () => {
     fireEvent.change(screen.getByLabelText('Title'), {
       target: { value: 'New Pack' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Upload Resource' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Upload resource' }));
 
     expect(
       screen.getByText('Choose a supported file before uploading.')
@@ -202,13 +206,13 @@ describe('ClubResourcesSection', () => {
   });
 
   it('renders status badges and member-visible engagement counts honestly', async () => {
-    render(<ClubResourcesSection club={baseClub} isMember />);
+    render(<ClubResourcesSection club={baseClub} isMember canManageResources={false} />);
 
     await screen.findByText('Analysis Pack');
 
     expect(screen.getByText('Club visible', { selector: 'span' })).toBeInTheDocument();
     expect(screen.getAllByText('Completed').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Opened').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Opened count').length).toBeGreaterThan(0);
     expect(screen.getByText('2')).toBeInTheDocument();
     expect(screen.getByText('1')).toBeInTheDocument();
   });
@@ -224,7 +228,7 @@ describe('ClubResourcesSection', () => {
     });
     vi.spyOn(window, 'clearInterval').mockImplementation(() => undefined);
 
-    render(<ClubResourcesSection club={baseClub} isMember />);
+    render(<ClubResourcesSection club={baseClub} isMember canManageResources={false} />);
 
     await screen.findByText('Analysis Pack');
 
@@ -263,7 +267,7 @@ describe('ClubResourcesSection', () => {
     });
     vi.spyOn(window, 'clearInterval').mockImplementation(() => undefined);
 
-    render(<ClubResourcesSection club={baseClub} isMember />);
+    render(<ClubResourcesSection club={baseClub} isMember canManageResources={false} />);
 
     await screen.findByText('Analysis Pack');
 

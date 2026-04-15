@@ -7,8 +7,8 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 
-from ml.models.scoreline.config import MODELS_DIR
-from ml.models.scoreline.train import derive_probabilities, scoreline_matrix
+from apps.predictions.ml.models.scoreline.config import MODELS_DIR
+from apps.predictions.ml.models.scoreline.train import derive_probabilities, scoreline_matrix
 
 
 def resolve_latest_score_model() -> Path:
@@ -38,8 +38,14 @@ class ScorePredictor:
         self.naive_away = artifact.get("naive_away")
 
     def predict_lambdas(self, features_df: pd.DataFrame) -> tuple[float, float]:
-        X_home = sm.add_constant(features_df[self.home_features].astype(float))
-        X_away = sm.add_constant(features_df[self.away_features].astype(float))
+        X_home = sm.add_constant(
+            features_df[self.home_features].astype(float),
+            has_constant="add",
+        )
+        X_away = sm.add_constant(
+            features_df[self.away_features].astype(float),
+            has_constant="add",
+        )
 
         lambda_home = float(self.model_home.predict(X_home).iloc[0])
         lambda_away = float(self.model_away.predict(X_away).iloc[0])
@@ -49,8 +55,14 @@ class ScorePredictor:
     def predict_lambdas_batch(
         self, features_df: pd.DataFrame,
     ) -> tuple[np.ndarray, np.ndarray]:
-        X_home = sm.add_constant(features_df[self.home_features].astype(float))
-        X_away = sm.add_constant(features_df[self.away_features].astype(float))
+        X_home = sm.add_constant(
+            features_df[self.home_features].astype(float),
+            has_constant="add",
+        )
+        X_away = sm.add_constant(
+            features_df[self.away_features].astype(float),
+            has_constant="add",
+        )
 
         return (
             self.model_home.predict(X_home).values,

@@ -127,6 +127,7 @@ const LeagueCustomPage: React.FC = () => {
   const [savedScenarioActionId, setSavedScenarioActionId] = useState<number | null>(null);
 
   const [scoreInputs, setScoreInputs] = useState<ScoreInputState>({});
+  const [selectedTeamName, setSelectedTeamName] = useState<string | null>(null);
 
   useEffect(() => {
     let isActive = true;
@@ -249,6 +250,13 @@ const LeagueCustomPage: React.FC = () => {
     return parsed ?? 1;
   }, [searchParams]);
 
+  const handleRemoveScore = useCallback((fixtureKey: string): void => {
+    setScoreInputs((current) => {
+      const { [fixtureKey]: _removed, ...rest } = current;
+      return rest;
+    });
+  }, []);
+
   const buildLockedResults = useCallback((): LeagueScenarioLockedResultInput[] => {
     return Object.entries(scoreInputs).flatMap(([fixture_key, values]) => {
       const home_goals = values.home_goals.trim();
@@ -265,13 +273,7 @@ const LeagueCustomPage: React.FC = () => {
         return [];
       }
 
-      return [
-        {
-          fixture_key,
-          home_goals: parsedHome,
-          away_goals: parsedAway,
-        },
-      ];
+      return [{ fixture_key, home_goals: parsedHome, away_goals: parsedAway }];
     });
   }, [scoreInputs]);
 
@@ -340,6 +342,7 @@ const LeagueCustomPage: React.FC = () => {
     }
 
     setScoreInputs({});
+    setSelectedTeamName(null);
     void loadScenario([]);
     void loadSavedScenarios();
   }, [selectedLeague, selectedSeason, selectedMode, selectedMatchweek, loadScenario]);
@@ -486,6 +489,7 @@ const LeagueCustomPage: React.FC = () => {
 
   const handleResetScenario = async (): Promise<void> => {
     setScoreInputs({});
+    setSelectedFixtureKeys(new Set());
     await loadScenario([]);
   };
 
@@ -532,14 +536,17 @@ const LeagueCustomPage: React.FC = () => {
       const detail: SavedLeagueScenarioDetail = await liveFootballApi.getSavedLeagueScenario(scenarioId);
 
       const nextInputs: ScoreInputState = {};
+      const nextSelected = new Set<string>();
       detail.locked_results.forEach((item) => {
         nextInputs[item.fixture_key] = {
           home_goals: String(item.home_goals),
           away_goals: String(item.away_goals),
         };
+        nextSelected.add(item.fixture_key);
       });
 
       setScoreInputs(nextInputs);
+      setSelectedFixtureKeys(nextSelected);
 
       await loadScenario(
         detail.locked_results.map((item) => ({
@@ -587,7 +594,6 @@ const LeagueCustomPage: React.FC = () => {
   const filtersReady = Boolean(selectedLeague && selectedSeason && selectedMode);
   const totalMatchweeks = scenario?.metadata.total_matchweeks ?? null;
   const expectedRows = useMemo(() => toExpectedLeagueRows(scenario), [scenario]);
-  const lockedResultCount = buildLockedResults().length;
 
   return (
     <main className={pageStyles.page}>
@@ -721,7 +727,7 @@ const LeagueCustomPage: React.FC = () => {
             </div>
 
             <p className={styles.helperText}>
-              {lockedResultCount} locked scoreline{lockedResultCount === 1 ? '' : 's'} ready to apply.
+              {selectedFixtureKeys.size} fixture{selectedFixtureKeys.size === 1 ? '' : 's'} locked · {(scenario?.remaining_fixtures.length ?? 0) - selectedFixtureKeys.size} following model. Click a fixture to lock a score.
             </p>
 
             {scenario && scenario.remaining_fixtures.length === 0 ? (
@@ -732,41 +738,67 @@ const LeagueCustomPage: React.FC = () => {
 
             {scenario && scenario.remaining_fixtures.length > 0 ? (
               <div className={styles.fixtureList}>
-                {scenario.remaining_fixtures.map((fixture) => (
-                  <article key={fixture.fixture_key} className={styles.fixtureCard}>
-                    <div className={styles.fixtureTeams}>
-                      <span className={styles.fixtureName}>
-                        {fixture.home_team.short_name || fixture.home_team.name} vs{' '}
-                        {fixture.away_team.short_name || fixture.away_team.name}
-                      </span>
-                      <span className={styles.fixtureMeta}>{fixture.fixture_key}</span>
-                    </div>
+                {scenario.remaining_fixtures.map((fixture) => {
+                  const isLocked = selectedFixtureKeys.has(fixture.fixture_key);
+                  return (
+                    <article
+                      key={fixture.fixture_key}
+                      className={`${styles.fixtureCard} ${isLocked ? styles.fixtureCardLocked : styles.fixtureCardOpen}`}
+                    >
+                      <div className={styles.fixtureTeams}>
+                        <span className={styles.fixtureName}>
+                          {fixture.home_team.short_name || fixture.home_team.name} vs{' '}
+                          {fixture.away_team.short_name || fixture.away_team.name}
+                        </span>
+                        {!isLocked && (
+                          <span className={styles.fixturePredicted}>Model predicted</span>
+                        )}
+                      </div>
 
-                    <div className={styles.scoreRow}>
-                      <input
-                        type="number"
-                        min={0}
-                        className={styles.scoreInput}
-                        value={scoreInputs[fixture.fixture_key]?.home_goals ?? ''}
-                        onChange={(event) =>
-                          handleScoreInputChange(fixture.fixture_key, 'home_goals', event.target.value)
-                        }
-                        placeholder="H"
-                      />
-                      <span className={styles.scoreDivider}>-</span>
-                      <input
-                        type="number"
-                        min={0}
-                        className={styles.scoreInput}
-                        value={scoreInputs[fixture.fixture_key]?.away_goals ?? ''}
-                        onChange={(event) =>
-                          handleScoreInputChange(fixture.fixture_key, 'away_goals', event.target.value)
-                        }
-                        placeholder="A"
-                      />
-                    </div>
-                  </article>
-                ))}
+                      {isLocked ? (
+                        <div className={styles.scoreRow}>
+                          <input
+                            type="number"
+                            min={0}
+                            className={styles.scoreInput}
+                            value={scoreInputs[fixture.fixture_key]?.home_goals ?? ''}
+                            onChange={(event) =>
+                              handleScoreInputChange(fixture.fixture_key, 'home_goals', event.target.value)
+                            }
+                            placeholder="H"
+                          />
+                          <span className={styles.scoreDivider}>-</span>
+                          <input
+                            type="number"
+                            min={0}
+                            className={styles.scoreInput}
+                            value={scoreInputs[fixture.fixture_key]?.away_goals ?? ''}
+                            onChange={(event) =>
+                              handleScoreInputChange(fixture.fixture_key, 'away_goals', event.target.value)
+                            }
+                            placeholder="A"
+                          />
+                          <button
+                            type="button"
+                            className={styles.unlockButton}
+                            onClick={() => handleToggleFixture(fixture.fixture_key)}
+                            title="Remove lock"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className={styles.lockButton}
+                          onClick={() => handleToggleFixture(fixture.fixture_key)}
+                        >
+                          Lock score
+                        </button>
+                      )}
+                    </article>
+                  );
+                })}
               </div>
             ) : null}
           </section>

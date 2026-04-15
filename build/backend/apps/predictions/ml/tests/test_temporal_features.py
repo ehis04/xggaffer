@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from ml.features.rolling import (
+from apps.predictions.ml.features.rolling import (
     ROLLING_STATS,
     ROLLING_WINDOWS,
     build_all_features,

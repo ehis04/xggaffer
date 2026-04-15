@@ -3,9 +3,9 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from ml.models.match_outcome.calibration_report import build_match_outcome_calibration_report
-from ml.models.match_outcome.classification_report import build_match_outcome_classification_report
-from ml.models.match_outcome.config import (
+from apps.predictions.ml.models.match_outcome.calibration_report import build_match_outcome_calibration_report
+from apps.predictions.ml.models.match_outcome.classification_report import build_match_outcome_classification_report
+from apps.predictions.ml.models.match_outcome.config import (
     DEFAULT_LEAGUES,
     DEFAULT_MODEL_TYPE,
     DEFAULT_SEASONS,
@@ -13,7 +13,7 @@ from ml.models.match_outcome.config import (
     TEST_SEASONS,
     resolve_latest_model_path,
 )
-from ml.models.match_outcome.train import MODELS, train_model
+from apps.predictions.ml.models.match_outcome.train import MODELS, train_model
 
 
 DEFAULT_OUTPUT_DIR = PROCESSED_DIR

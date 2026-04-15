@@ -1,6 +1,6 @@
 import pandas as pd
 
-from ml.models.match_outcome.config import RAW_DIR
+from apps.predictions.ml.models.match_outcome.config import RAW_DIR
 
 
 def load_matches(leagues: list[str], seasons: list[str]) -> pd.DataFrame:

@@ -745,6 +745,7 @@ CANONICAL_TEAM_NAMES = {
         "understat": "Paris Saint Germain",
         "sofascore": "Paris Saint-Germain",
         "football_data_co_uk": "Paris SG",
+        "football_data_org": "Paris Saint-Germain FC",
     },
     "Reims": {
         "understat": "Reims",
@@ -778,12 +779,6 @@ CANONICAL_TEAM_NAMES = {
     "Troyes": {
         "understat": "Troyes",
         "football_data_co_uk": "Troyes",
-    },
-    "Paris Saint-Germain": {
-        "understat": "Paris Saint-Germain",
-        "sofascore": "Paris Saint-Germain",
-        "football_data_co_uk": "PSG",
-        "football_data_org": "Paris Saint-Germain FC",
     },
     "Birmingham": {
         "understat": "Birmingham",
@@ -847,7 +842,9 @@ CANONICAL_TEAM_NAMES = {
     },
 }
 
-UNDERSTAT_ALIASES = {}
+UNDERSTAT_ALIASES = {
+    "Paris Saint-Germain": "Paris Saint Germain",
+}
 
 SUPPORTED_SOURCES = ["understat", "sofascore", "football_data_co_uk", "football_data_org"]
 

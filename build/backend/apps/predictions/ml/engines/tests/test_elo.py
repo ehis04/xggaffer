@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from ml.engines.elo import (
+from apps.predictions.ml.engines.elo import (
     INITIAL_RATING,
     PROMOTED_TEAM_OFFSET,
     SEASON_MEAN_REVERSION_WEIGHT,

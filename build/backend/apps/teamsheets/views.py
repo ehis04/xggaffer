@@ -5,14 +5,17 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.response import Response
 
 from apps.clubs.models import Club, ClubMembership, ClubPlayer
 from apps.clubs.serializers import AvailablePlayerSerializer
 from .models import Teamsheet, TeamsheetPlayer
+from .permissions import TeamsheetPermission
 from .serializers import (
     BulkPlayerPositionUpdateSerializer,
     CreateTeamsheetWithPlayersSerializer,
+    TeamsheetTrashActionSerializer,
     TeamsheetDuplicateSerializer,
     TeamsheetListSerializer,
     TeamsheetPlayerPositionUpdateSerializer,
@@ -109,9 +112,7 @@ class CanCreateClubContent(permissions.BasePermission):
 
 
 class TeamsheetViewSet(viewsets.ModelViewSet):
-    # Restore proper permissions later if/when you want auth re-enabled.
-    # permission_classes = [permissions.IsAuthenticated, IsClubMember, CanCreateClubContent]
-    permission_classes = []
+    permission_classes = [TeamsheetPermission]
     pagination_class = None
 
     def get_serializer_class(self):
@@ -121,29 +122,75 @@ class TeamsheetViewSet(viewsets.ModelViewSet):
             return TeamsheetWriteSerializer
         return TeamsheetReadSerializer
 
-    def get_queryset(self):
+    def _get_trash_mode(self) -> str:
+        value = (self.request.query_params.get('trash') or '').strip().lower()
+        if value in {'only', 'include'}:
+            return value
+        return 'exclude'
+
+    def _build_queryset(self, include_trashed=False):
         club_pk = self.kwargs.get('club_pk')
 
-        base_queryset = Teamsheet.objects.select_related(
+        queryset = Teamsheet.objects.filter(
+            club_id=club_pk
+        ).select_related(
             'club',
             'created_by',
+            'trashed_by',
         ).prefetch_related(
-            'players__club_player__player',
+            'players',
+            'players__club_player',
         ).order_by('-updated_at')
 
-        if club_pk:
-            return base_queryset.filter(club_id=club_pk)
+        if include_trashed:
+            return queryset
 
-        user_club_ids = ClubMembership.objects.filter(
-            user=self.request.user,
-            is_active=True,
-        ).values_list('club_id', flat=True)
+        trash_mode = self._get_trash_mode()
 
-        return base_queryset.filter(club_id__in=user_club_ids)
+        if trash_mode == 'only':
+            if not self.request.user.is_authenticated:
+                return queryset.none()
+
+            return queryset.filter(
+                is_trashed=True,
+                created_by=self.request.user,
+            )
+
+        if trash_mode == 'include':
+            if not self.request.user.is_authenticated:
+                return queryset.filter(is_trashed=False)
+
+            return queryset.filter(
+                Q(is_trashed=False) |
+                Q(is_trashed=True, created_by=self.request.user)
+            )
+
+        return queryset.filter(is_trashed=False)
+
+    def get_queryset(self):
+        return self._build_queryset(include_trashed=False)
+
+    def _get_teamsheet_for_action(self, pk, *, require_trashed=None):
+        teamsheet = get_object_or_404(
+            self._build_queryset(include_trashed=True),
+            pk=pk,
+        )
+        self.check_object_permissions(self.request, teamsheet)
+
+        if require_trashed is True and not teamsheet.is_trashed:
+            raise ValidationError({'detail': 'This teamsheet is not in trash.'})
+
+        if require_trashed is False and teamsheet.is_trashed:
+            raise ValidationError({'detail': 'This teamsheet is already in trash.'})
+
+        return teamsheet
 
     def perform_create(self, serializer):
         club_pk = self.kwargs.get('club_pk')
         serializer.save(club_id=club_pk, created_by=self.request.user)
+
+    def perform_destroy(self, instance):
+        instance.move_to_trash(self.request.user)
 
     @action(detail=False, methods=['get'])
     def choices(self, request, club_pk=None):
@@ -154,8 +201,40 @@ class TeamsheetViewSet(viewsets.ModelViewSet):
         })
 
     @action(detail=True, methods=['post'])
+    def trash(self, request, club_pk=None, pk=None):
+        serializer = TeamsheetTrashActionSerializer(data=request.data or {})
+        serializer.is_valid(raise_exception=True)
+
+        teamsheet = self._get_teamsheet_for_action(pk, require_trashed=False)
+        teamsheet.move_to_trash(request.user)
+
+        response_serializer = TeamsheetReadSerializer(teamsheet)
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def restore(self, request, club_pk=None, pk=None):
+        serializer = TeamsheetTrashActionSerializer(data=request.data or {})
+        serializer.is_valid(raise_exception=True)
+
+        teamsheet = self._get_teamsheet_for_action(pk, require_trashed=True)
+        teamsheet.restore_from_trash(request.user)
+
+        response_serializer = TeamsheetReadSerializer(teamsheet)
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['delete'], url_path='permanent-delete')
+    def permanent_delete(self, request, club_pk=None, pk=None):
+        teamsheet = self._get_teamsheet_for_action(pk, require_trashed=True)
+
+        if not teamsheet.can_be_permanently_deleted_by(request.user):
+            raise PermissionDenied('Only the teamsheet creator can permanently delete this teamsheet.')
+
+        teamsheet.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['post'])
     def duplicate(self, request, club_pk=None, pk=None):
-        original = self.get_object()
+        original = self._get_teamsheet_for_action(pk, require_trashed=False)
         serializer = TeamsheetDuplicateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -168,13 +247,14 @@ class TeamsheetViewSet(viewsets.ModelViewSet):
                 created_by=request.user,
                 title=new_title,
                 formation=original.formation,
+                match_date=original.match_date,
                 opponent=original.opponent,
                 notes=original.notes,
                 is_template=False,
             )
 
             if include_players:
-                for player in original.players.select_related('club_player', 'club_player__player'):
+                for player in original.players.all():
                     TeamsheetPlayer.objects.create(
                         teamsheet=new_teamsheet,
                         club_player=player.club_player,
@@ -192,7 +272,7 @@ class TeamsheetViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def reset_to_formation(self, request, club_pk=None, pk=None):
-        teamsheet = self.get_object()
+        teamsheet = self._get_teamsheet_for_action(pk, require_trashed=False)
         teamsheet.players.all().delete()
         teamsheet.initialize_from_template()
 
@@ -207,7 +287,13 @@ class TeamsheetViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        club = get_object_or_404(Club, pk=club_pk)
+        try:
+            club = Club.objects.get(pk=club_pk)
+        except Club.DoesNotExist:
+            return Response(
+                {'error': 'Club not found'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         position = request.query_params.get('position')
         search = request.query_params.get('search')
@@ -227,47 +313,40 @@ class TeamsheetViewSet(viewsets.ModelViewSet):
 
         if club.visibility == Club.Visibility.PUBLIC:
             queryset = ClubPlayer.objects.filter(
-                Q(club=club, is_active=True) |
-                Q(is_public=True, is_active=True)
+                models.Q(club=club, is_active=True) |
+                models.Q(is_public=True, is_active=True)
             )
 
-        queryset = queryset.select_related('club', 'user', 'player')
-        queryset = queryset.select_related(
-            'club',
-            'user',
-            'player',
-        ).prefetch_related(
-            'player__external_identities',
-        )
-        
         if exclude_list:
             queryset = queryset.exclude(id__in=exclude_list)
 
         if position:
-            queryset = apply_club_player_position_filter(queryset, position)
+            queryset = queryset.filter(
+                models.Q(primary_position=position) |
+                models.Q(secondary_position=position)
+            )
 
         if search:
-            queryset = apply_club_player_search_filter(queryset, search)
+            queryset = queryset.filter(
+                models.Q(first_name__icontains=search) |
+                models.Q(last_name__icontains=search) |
+                models.Q(display_name__icontains=search)
+            )
 
-        queryset = queryset.annotate(
-            club_priority=Case(
-                When(club_id=club.id, then=Value(0)),
-                default=Value(1),
-                output_field=IntegerField(),
+        queryset = queryset.select_related('club').order_by(
+            models.Case(
+                models.When(club_id=club.id, then=0),
+                default=1,
+                output_field=models.IntegerField(),
             ),
-            sort_primary_position=Coalesce('player__primary_position', 'primary_position'),
-            sort_last_name=Coalesce('player__last_name', 'last_name'),
-        ).order_by(
-            'club_priority',
-            'sort_primary_position',
-            'sort_last_name',
-            'id',
+            'primary_position',
+            'last_name',
         )
 
         serializer = AvailablePlayerSerializer(
             queryset,
             many=True,
-            context={'club_id': int(club_pk)},
+            context={'club_id': club.id},
         )
         return Response(serializer.data)
 
@@ -279,14 +358,19 @@ class TeamsheetViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        club = get_object_or_404(Club, pk=club_pk)
-        user = request.user if request.user.is_authenticated else None
+        try:
+            club = Club.objects.get(pk=club_pk)
+        except Club.DoesNotExist:
+            return Response(
+                {'error': 'Club not found'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         serializer = CreateTeamsheetWithPlayersSerializer(
             data=request.data,
             context={
                 'club': club,
-                'user': user,
+                'user': request.user if request.user.is_authenticated else None,
             },
         )
         serializer.is_valid(raise_exception=True)
@@ -294,7 +378,6 @@ class TeamsheetViewSet(viewsets.ModelViewSet):
 
         response_serializer = TeamsheetReadSerializer(teamsheet)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
-
 
 class TeamsheetPlayerViewSet(viewsets.ModelViewSet):
     # Restore proper permissions later if/when you want auth re-enabled.
@@ -310,11 +393,8 @@ class TeamsheetPlayerViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         teamsheet_pk = self.kwargs.get('teamsheet_pk')
         return TeamsheetPlayer.objects.filter(
-            teamsheet_id=teamsheet_pk,
-        ).select_related(
-            'club_player',
-            'club_player__player',
-        ).order_by('slot_number')
+            teamsheet_id=teamsheet_pk
+        ).select_related('club_player').order_by('slot_number')
 
     def perform_create(self, serializer):
         teamsheet_pk = self.kwargs.get('teamsheet_pk')
@@ -377,19 +457,18 @@ class TeamsheetPlayerViewSet(viewsets.ModelViewSet):
 
         if club_player_id:
             try:
-                club_player = ClubPlayer.objects.select_related('player').get(
+                club_player = ClubPlayer.objects.get(
                     id=club_player_id,
                     club_id=slot.teamsheet.club_id,
                 )
+                slot.club_player = club_player
+                slot.custom_name = ''
+                slot.custom_number = None
             except ClubPlayer.DoesNotExist:
                 return Response(
                     {'error': 'Club player not found'},
                     status=status.HTTP_404_NOT_FOUND,
                 )
-
-            slot.club_player = club_player
-            slot.custom_name = ''
-            slot.custom_number = None
         else:
             slot.club_player = None
 

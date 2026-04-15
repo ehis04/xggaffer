@@ -169,14 +169,20 @@ class UnderstatClientTests(SimpleTestCase):
     )
     def test_timeout_is_retried_then_raised_as_request_error(self):
         session = Mock()
-        session.request.side_effect = [Timeout("first timeout"), Timeout("second timeout")]
+        session.request.side_effect = [
+            Timeout("first timeout"),
+            Timeout("second timeout"),
+            Timeout("third timeout"),
+            Timeout("fourth timeout"),
+        ]
 
         client = UnderstatClient(session=session)
 
         with self.assertRaises(UnderstatRequestError):
             client.get_league_teams("EPL", "2024")
 
-        self.assertEqual(session.request.call_count, 2)
+        # 2 attempts for the AJAX path + 2 attempts for the HTML fallback path.
+        self.assertEqual(session.request.call_count, 4)
 
     @override_settings(
         UNDERSTAT_BASE_URL="https://understat.example",

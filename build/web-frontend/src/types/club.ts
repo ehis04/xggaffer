@@ -78,6 +78,8 @@ export interface ClubUnderstatSeasonSummaryResponse {
   last_synced_at: string | null;
 }
 
+export type ClubTrashMode = 'only' | 'include';
+
 export interface Club {
   id: number;
   name: string;
@@ -103,6 +105,10 @@ export interface Club {
   member_count: number;
   player_count: number;
   latest_understat_summary?: ClubUnderstatSummary | null;
+  is_trashed: boolean;
+  trashed_at: string | null;
+  trash_expires_at: string | null;
+  trashed_by: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -146,6 +152,26 @@ export interface ClubInvitation {
 export interface ClubListParams {
   scope?: ClubListScope;
   search?: string;
+  trash?: ClubTrashMode;
+}
+
+export type TrashSection = 'all' | 'clubs' | 'teamsheets' | 'tactics';
+
+export interface TrashListParams {
+  section?: TrashSection;
+}
+
+export interface TrashListItem {
+  id: number;
+  section: Exclude<TrashSection, 'all'>;
+  title: string;
+  secondary_text?: string | null;
+  club_id: number | null;
+  club_name?: string | null;
+  trashed_at: string | null;
+  trash_expires_at: string | null;
+  updated_at: string | null;
+  route_path: string;
 }
 
 export interface DuplicateClubPayload {
@@ -179,7 +205,7 @@ export interface CreateClubPayload {
 
 export type UpdateClubPayload = Partial<CreateClubPayload>;
 
-export interface LookupClubByCodeResponse extends Club {}
+export interface LookupClubByCodeResponse extends Club { }
 
 export interface CreateClubJoinRequestPayload {
   requested_role?: Extract<ClubMembershipRole, 'player'>;
@@ -198,7 +224,7 @@ export interface RejectClubJoinRequestPayload {
 export type WithdrawClubJoinRequestPayload = Record<string, never>;
 
 export interface CreateClubInvitationPayload {
-  invited_user: number;
+  invited_email: string;
   invited_role: Exclude<ClubMembershipRole, 'owner'>;
   note?: string;
 }
@@ -447,7 +473,8 @@ export interface ClubResourceHeartbeatPayload {
 export type ClubImportType =
   | 'player_profile_update'
   | 'player_season_stats'
-  | 'squad_metrics';
+  | 'squad_metrics'
+  | 'other';
 
 export type ClubImportJobStatus =
   | 'uploaded'

@@ -62,6 +62,12 @@ export const authApi = {
 
   getVerificationStatus: () =>
     apiClient.get<VerificationStatus>('/users/auth/verification-status/'),
+
+  requestPasswordReset: (email: string) =>
+    apiClient.post<{ message: string }>('/users/auth/password-reset/request/', { email }),
+
+  resetPassword: (token: string, newPassword: string, confirmPassword: string) =>
+    apiClient.post<{ message: string }>('/users/auth/password-reset/', { token, new_password: newPassword, confirm_password: confirmPassword }),
 };
 
 export default authApi;

@@ -5,7 +5,7 @@ from pathlib import Path
 import joblib
 import pandas as pd
 
-from ml.models.match_outcome.config import (
+from apps.predictions.ml.models.match_outcome.config import (
     ARTIFACT_REQUIRED_KEYS,
     DEFAULT_MODEL_TYPE,
     FRONTEND_CONTRACT_VERSION,

@@ -1,6 +1,7 @@
 import re
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .storage import (
     ClubResourceStorageError,
@@ -117,6 +118,7 @@ class ClubSerializer(ClubUnderstatSummaryMixin, serializers.ModelSerializer):
     member_count = serializers.IntegerField(read_only=True)
     player_count = serializers.IntegerField(read_only=True)
     creator_username = serializers.CharField(source="creator.email", read_only=True)
+    trashed_by = serializers.IntegerField(source="trashed_by_id", read_only=True)
 
     class Meta:
         model = Club
@@ -143,6 +145,10 @@ class ClubSerializer(ClubUnderstatSummaryMixin, serializers.ModelSerializer):
             "member_count",
             "player_count",
             "latest_understat_summary",
+            "is_trashed",
+            "trashed_at",
+            "trash_expires_at",
+            "trashed_by",
             "created_at",
             "updated_at",
         ]
@@ -589,24 +595,25 @@ class ClubInvitationSerializer(serializers.ModelSerializer):
         ]
 
 
-class ClubInvitationCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ClubInvitation
-        fields = [
-            "invited_user",
-            "invited_role",
-            "note",
-        ]
+class ClubInvitationCreateSerializer(serializers.Serializer):
+    invited_email = serializers.EmailField()
+    invited_role = serializers.ChoiceField(choices=["admin", "coach", "player", "viewer"])
+    note = serializers.CharField(required=False, allow_blank=True, default="")
+
+    def validate_invited_email(self, value):
+        User = get_user_model()
+        try:
+            return User.objects.get(email__iexact=value)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("No account found with that email address.")
 
     def validate(self, attrs):
-        attrs = super().validate(attrs)
-
         club = self.context["club"]
         inviter = self.context["request"].user
 
         candidate = ClubInvitation(
             club=club,
-            invited_user=attrs["invited_user"],
+            invited_user=attrs["invited_email"],
             invited_by=inviter,
             invited_role=attrs["invited_role"],
             note=attrs.get("note", ""),
@@ -622,7 +629,9 @@ class ClubInvitationCreateSerializer(serializers.ModelSerializer):
         return ClubInvitation.objects.create(
             club=club,
             invited_by=inviter,
-            **validated_data,
+            invited_user=validated_data["invited_email"],
+            invited_role=validated_data["invited_role"],
+            note=validated_data.get("note", ""),
         )
 
 
@@ -1090,11 +1099,14 @@ class ClubDuplicateSerializer(serializers.Serializer):
         default=Club.Visibility.PRIVATE,
     )
 
+class ClubTrashActionSerializer(serializers.Serializer):
+    pass
 
 class ClubListSerializer(ClubUnderstatSummaryMixin, serializers.ModelSerializer):
     member_count = serializers.IntegerField(read_only=True)
     player_count = serializers.IntegerField(read_only=True)
     creator_username = serializers.CharField(source="creator.email", read_only=True)
+    trashed_by = serializers.IntegerField(source="trashed_by_id", read_only=True)
 
     class Meta:
         model = Club
@@ -1114,6 +1126,10 @@ class ClubListSerializer(ClubUnderstatSummaryMixin, serializers.ModelSerializer)
             "member_count",
             "player_count",
             "latest_understat_summary",
+            "is_trashed",
+            "trashed_at",
+            "trash_expires_at",
+            "trashed_by",
             "created_at",
             "updated_at",
         ]
@@ -1837,3 +1853,23 @@ class ClubImportJobCreateSerializer(serializers.ModelSerializer):
         persist_import_preview(job)
         job.refresh_from_db()
         return job
+
+class TrashListItemSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    section = serializers.ChoiceField(choices=['clubs', 'teamsheets', 'tactics'])
+    title = serializers.CharField()
+    secondary_text = serializers.CharField(
+        allow_blank=True,
+        allow_null=True,
+        required=False,
+    )
+    club_id = serializers.IntegerField(allow_null=True)
+    club_name = serializers.CharField(
+        allow_blank=True,
+        allow_null=True,
+        required=False,
+    )
+    trashed_at = serializers.DateTimeField(allow_null=True)
+    trash_expires_at = serializers.DateTimeField(allow_null=True)
+    updated_at = serializers.DateTimeField(allow_null=True)
+    route_path = serializers.CharField()

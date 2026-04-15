@@ -5,19 +5,19 @@ import time
 import numpy as np
 import pandas as pd
 
-from ml.engines.elo import compute_elo_history
-from ml.features.rolling import load_match_history
-from ml.models.scoreline.predict import ScorePredictor
-from ml.models.simulation.config import (
+from apps.predictions.ml.engines.elo import compute_elo_history
+from apps.predictions.ml.features.rolling import load_match_history
+from apps.predictions.ml.models.scoreline.predict import ScorePredictor
+from apps.predictions.ml.models.simulation.config import (
     BACKTEST_FREEZE_MATCHWEEKS,
     BACKTEST_LEAGUES,
     BACKTEST_SEASONS,
     N_SIMULATIONS,
 )
-from ml.models.simulation.prepare_fixtures import (
+from apps.predictions.ml.models.simulation.prepare_fixtures import (
     prepare_remaining_fixtures,
 )
-from ml.models.simulation.simulate import (
+from apps.predictions.ml.models.simulation.simulate import (
     aggregate_results,
     compute_league_table,
     simulate_season,

@@ -9,10 +9,10 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
-from ml.models.scoreline.config import PROCESSED_DIR, SCORE_ENGINE_LEAGUES, SCORE_ENGINE_SEASONS, TEST_SEASONS
-from ml.models.scoreline.predict import ScorePredictor, resolve_latest_score_model
-from ml.models.scoreline.prepare_data import get_temporal_split, prepare_score_dataset
-from ml.models.scoreline.train import derive_probabilities, scoreline_matrix, train_score_model
+from apps.predictions.ml.models.scoreline.config import PROCESSED_DIR, SCORE_ENGINE_LEAGUES, SCORE_ENGINE_SEASONS, TEST_SEASONS
+from apps.predictions.ml.models.scoreline.predict import ScorePredictor, resolve_latest_score_model
+from apps.predictions.ml.models.scoreline.prepare_data import get_temporal_split, prepare_score_dataset
+from apps.predictions.ml.models.scoreline.train import derive_probabilities, scoreline_matrix, train_score_model
 
 
 DEFAULT_OUTPUT = PROCESSED_DIR / "scoreline_classification_report.json"

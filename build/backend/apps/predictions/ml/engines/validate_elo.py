@@ -6,8 +6,8 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
-from ml.engines.elo import load_elo_history
-from ml.models.match_outcome.config import PROCESSED_DIR
+from apps.predictions.ml.engines.elo import load_elo_history
+from apps.predictions.ml.models.match_outcome.config import PROCESSED_DIR
 
 
 ELO_RATINGS_PATH = PROCESSED_DIR / "elo_ratings.csv"

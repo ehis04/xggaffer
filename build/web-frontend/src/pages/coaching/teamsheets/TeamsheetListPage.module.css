@@ -124,13 +124,23 @@
   align-items: center;
 }
 
-.complete {
+.gamePlayed {
   color: #4ade80;
   font-size: 0.8rem;
 }
 
 .incomplete {
   color: #fbbf24;
+  font-size: 0.8rem;
+}
+
+.dateNotSet {
+  color: #ffffff;
+  font-size: 0.8rem;
+}
+
+.notPlayed {
+  color: #f87171;
   font-size: 0.8rem;
 }
 
@@ -147,4 +157,94 @@
 
 .empty a:hover {
   text-decoration: underline;
+}
+
+.sectionCopy {
+  margin: 0.4rem 0 0 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.95rem;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tab {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.tabActive {
+  background: rgba(59, 130, 246, 0.22);
+  color: #bfdbfe;
+  border-color: rgba(59, 130, 246, 0.34);
+}
+
+.card {
+  cursor: pointer;
+}
+
+.cardActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.ghostButton,
+.restoreButton,
+.dangerButton {
+  border: none;
+  border-radius: 8px;
+  padding: 0.65rem 0.9rem;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+.ghostButton {
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+}
+
+.restoreButton {
+  background: rgba(34, 197, 94, 0.2);
+  color: #bbf7d0;
+}
+
+.dangerButton {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fecaca;
+}
+
+.ghostButton:disabled,
+.restoreButton:disabled,
+.dangerButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.trashNotice {
+  margin: 0.9rem 0 0 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.82rem;
+}
+
+.emptyLink {
+  color: #93c5fd;
+  text-decoration: none;
+  font-weight: 600;
 }

@@ -10,7 +10,7 @@ from sklearn.calibration import calibration_curve
 from sklearn.metrics import brier_score_loss, log_loss
 from sklearn.preprocessing import label_binarize
 
-from ml.models.match_outcome.config import (
+from apps.predictions.ml.models.match_outcome.config import (
     DEFAULT_LEAGUES,
     DEFAULT_MODEL_TYPE,
     DEFAULT_SEASONS,
@@ -18,12 +18,12 @@ from ml.models.match_outcome.config import (
     TEST_SEASONS,
     resolve_latest_model_path,
 )
-from ml.models.match_outcome.prepare_data import (
+from apps.predictions.ml.models.match_outcome.prepare_data import (
     get_feature_columns,
     get_temporal_split,
     prepare_dataset,
 )
-from ml.models.match_outcome.predict import get_predictor
+from apps.predictions.ml.models.match_outcome.predict import get_predictor
 
 
 DEFAULT_REPORT_PATH = PROCESSED_DIR / "match_outcome_calibration_report.json"

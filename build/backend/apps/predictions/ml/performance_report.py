@@ -3,18 +3,18 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from ml.engines.calibration_report import build_elo_calibration_report
-from ml.engines.classification_report import build_elo_classification_report
-from ml.engines.compute_elo import VALIDATION_SEASON
-from ml.engines.elo import DEFAULT_HOME_ADVANTAGE, DEFAULT_K_FACTOR
-from ml.features.rolling import ALL_LEAGUES, ALL_SEASONS
-from ml.models.match_outcome.calibration_report import (
+from apps.predictions.ml.engines.calibration_report import build_elo_calibration_report
+from apps.predictions.ml.engines.classification_report import build_elo_classification_report
+from apps.predictions.ml.engines.compute_elo import VALIDATION_SEASON
+from apps.predictions.ml.engines.elo import DEFAULT_HOME_ADVANTAGE, DEFAULT_K_FACTOR
+from apps.predictions.ml.features.rolling import ALL_LEAGUES, ALL_SEASONS
+from apps.predictions.ml.models.match_outcome.calibration_report import (
     build_match_outcome_calibration_report,
 )
-from ml.models.match_outcome.classification_report import (
+from apps.predictions.ml.models.match_outcome.classification_report import (
     build_match_outcome_classification_report,
 )
-from ml.models.match_outcome.config import PROCESSED_DIR, TEST_SEASONS
+from apps.predictions.ml.models.match_outcome.config import PROCESSED_DIR, TEST_SEASONS
 
 
 DEFAULT_OUTPUT = PROCESSED_DIR / "engine_performance_report.txt"

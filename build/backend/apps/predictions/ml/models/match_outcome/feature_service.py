@@ -4,20 +4,20 @@ from datetime import datetime, timezone
 
 import pandas as pd
 
-from ml.engines.elo import INITIAL_RATING
-from ml.features.rolling import (
+from apps.predictions.ml.engines.elo import INITIAL_RATING
+from apps.predictions.ml.features.rolling import (
     build_features,
     load_match_history,
     to_team_match_rows,
 )
-from ml.models.match_outcome.config import (
+from apps.predictions.ml.models.match_outcome.config import (
     DEFAULT_LEAGUES,
     DEFAULT_SEASONS,
     INTERPRETABLE_MODEL_TYPE,
     PROCESSED_DIR,
     resolve_latest_model_path,
 )
-from ml.models.match_outcome.prepare_data import FEATURE_COLUMNS
+from apps.predictions.ml.models.match_outcome.prepare_data import FEATURE_COLUMNS
 
 
 ELO_RATINGS_PATH = PROCESSED_DIR / "elo_ratings.csv"
@@ -53,7 +53,7 @@ def get_current_elo(team: str) -> float:
 
 def _load_cached_features(match_id: str) -> dict | None:
     try:
-        from predictions.models import MatchFeature
+        from apps.predictions.models import MatchFeature
         row = MatchFeature.objects.filter(match_id=str(match_id)).first()
         if row is not None:
             return row.features
@@ -72,7 +72,7 @@ def _save_cached_features(
     date: str | None = None,
 ) -> None:
     try:
-        from predictions.models import MatchFeature
+        from apps.predictions.models import MatchFeature
         MatchFeature.objects.update_or_create(
             match_id=str(match_id),
             defaults={
@@ -262,7 +262,7 @@ def predict_match(
     league: str,
     season: str,
 ) -> dict:
-    from ml.models.match_outcome.predict import get_predictor
+    from apps.predictions.ml.models.match_outcome.predict import get_predictor
 
     service = get_feature_service(leagues=[league], seasons=[season])
     features = service.build_prediction_features(

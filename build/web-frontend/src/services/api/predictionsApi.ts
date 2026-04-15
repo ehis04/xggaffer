@@ -1,96 +1,134 @@
+import apiClient from './client';
 import type {
   ModelInfoResponse,
   PredictionRequest,
   PredictionResponse,
   TeamsResponse,
+  ChatResponse,
 } from '../../types/prediction';
 
-const DEFAULT_API_BASE = '/api/predictions';
-export const PREDICTIONS_API_BASE =
+const DEFAULT_PREDICTIONS_API_BASE = '/predictions';
+
+const normalisePredictionsBase = (value: string): string => {
+  const trimmed = value.trim().replace(/\/+$/, '');
+
+  if (!trimmed) {
+    return DEFAULT_PREDICTIONS_API_BASE;
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return DEFAULT_PREDICTIONS_API_BASE;
+  }
+
+  if (trimmed === '/api') {
+    return DEFAULT_PREDICTIONS_API_BASE;
+  }
+
+  if (trimmed.startsWith('/api/')) {
+    return trimmed.replace(/^\/api/, '');
+  }
+
+  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+};
+
+export const PREDICTIONS_API_BASE = normalisePredictionsBase(
   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_PREDICTIONS_API_BASE) ||
-  DEFAULT_API_BASE;
+    DEFAULT_PREDICTIONS_API_BASE
+);
 
-class PredictionsApiError extends Error {
+export class PredictionsApiError extends Error {
   public readonly status: number;
+  public readonly data?: unknown;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, data?: unknown) {
     super(message);
     this.name = 'PredictionsApiError';
     this.status = status;
+    this.data = data;
   }
 }
 
-function buildUrl(path: string, query?: Record<string, string | number | undefined>): string {
-  const base = PREDICTIONS_API_BASE.replace(/\/$/, '');
-  const url = new URL(`${base}/${path.replace(/^\//, '')}`, window.location.origin);
+type ApiClientError = Error & {
+  status?: number;
+  data?: unknown;
+};
 
-  if (query) {
-    Object.entries(query).forEach(([key, value]) => {
-      if (value !== undefined && value !== '') {
-        url.searchParams.set(key, String(value));
-      }
-    });
+const buildPredictionsEndpoint = (path: string): string => {
+  const base = PREDICTIONS_API_BASE.replace(/\/+$/, '');
+  const normalisedPath = path.replace(/^\/+/, '');
+  return `${base}/${normalisedPath}`;
+};
+
+const toPredictionsApiError = (error: unknown): PredictionsApiError => {
+  if (error instanceof PredictionsApiError) {
+    return error;
   }
 
-  return url.toString();
-}
+  const apiError = error as ApiClientError;
+  const status = typeof apiError?.status === 'number' ? apiError.status : 500;
+  const data = apiError?.data;
 
-async function parseResponse<T>(response: Response): Promise<T> {
-  const payload = await response.json().catch(() => null);
+  let message = apiError?.message || 'Prediction API request failed.';
 
-  if (!response.ok) {
-    const message =
-      payload && typeof payload === 'object' && 'error' in payload
-        ? String((payload as { error: unknown }).error)
-        : `Prediction API request failed with status ${response.status}`;
-
-    throw new PredictionsApiError(message, response.status);
+  if (data && typeof data === 'object' && 'error' in data) {
+    const errorValue = (data as { error?: unknown }).error;
+    if (typeof errorValue === 'string' && errorValue.trim()) {
+      message = errorValue;
+    }
   }
 
-  return payload as T;
-}
+  return new PredictionsApiError(message, status, data);
+};
 
-export async function getTeams(league = 'EPL', season = '2024'): Promise<TeamsResponse> {
-  const response = await fetch(buildUrl('/teams/', { league, season }), {
-    method: 'GET',
-    credentials: 'include',
-    headers: {
-      Accept: 'application/json',
-    },
-  });
+const withPredictionsErrorHandling = async <T>(request: () => Promise<T>): Promise<T> => {
+  try {
+    return await request();
+  } catch (error) {
+    throw toPredictionsApiError(error);
+  }
+};
 
-  return parseResponse<TeamsResponse>(response);
+export async function getTeams(
+  league = 'EPL',
+  season = '2024'
+): Promise<TeamsResponse> {
+  return withPredictionsErrorHandling(() =>
+    apiClient.get<TeamsResponse>(
+      buildPredictionsEndpoint('teams/'),
+      { league, season }
+    )
+  );
 }
 
 export async function getModelInfo(): Promise<ModelInfoResponse> {
-  const response = await fetch(buildUrl('/model-info/'), {
-    method: 'GET',
-    credentials: 'include',
-    headers: {
-      Accept: 'application/json',
-    },
-  });
-
-  return parseResponse<ModelInfoResponse>(response);
+  return withPredictionsErrorHandling(() =>
+    apiClient.get<ModelInfoResponse>(
+      buildPredictionsEndpoint('model-info/')
+    )
+  );
 }
 
-export async function predictMatch(request: PredictionRequest): Promise<PredictionResponse> {
-  const response = await fetch(buildUrl('/predict/'), {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify({
-      league: 'EPL',
-      season: '2024',
-      top_factors: 5,
-      ...request,
-    }),
-  });
-
-  return parseResponse<PredictionResponse>(response);
+export async function predictMatch(
+  request: PredictionRequest
+): Promise<PredictionResponse> {
+  return withPredictionsErrorHandling(() =>
+    apiClient.post<PredictionResponse>(
+      buildPredictionsEndpoint('predict/'),
+      {
+        league: 'EPL',
+        season: '2024',
+        top_factors: 5,
+        ...request,
+      }
+    )
+  );
 }
 
-export { PredictionsApiError };
+export async function chatQuery(query: string): Promise<ChatResponse> {
+  return withPredictionsErrorHandling(() =>
+    apiClient.post<ChatResponse>(
+      buildPredictionsEndpoint('chat/'),
+      { query }
+    )
+  );
+}

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import apiClient from '../../../services/api/client';
 import { clubsApi } from '../../../services/api';
 import type { Club, ClubInvitation, ClubJoinRequest } from '../../../types/club';
@@ -73,6 +73,7 @@ const getInvitationStatusLabel = (status: ClubInvitation['status']) => {
 
 const MyClubsPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [clubs, setClubs] = useState<Club[]>([]);
   const [myJoinRequests, setMyJoinRequests] = useState<ClubJoinRequest[]>([]);
@@ -92,6 +93,11 @@ const MyClubsPage: React.FC = () => {
 
   const [workflowLoadingKey, setWorkflowLoadingKey] = useState<string | null>(null);
   const [workflowMessage, setWorkflowMessage] = useState<string | null>(null);
+
+  const [selectedClubIds, setSelectedClubIds] = useState<Set<number>>(new Set());
+
+  const activeView = searchParams.get('view') === 'trash' ? 'trash' : 'active';
+  const isTrashView = activeView === 'trash';
 
   const loadPage = async () => {
     try {
@@ -133,24 +139,15 @@ const MyClubsPage: React.FC = () => {
 
   useEffect(() => {
     void loadPage();
-  }, []);
+  }, [isTrashView]);
 
   const hiddenOwnedClubs = useMemo(
     () => clubs.filter((club) => club.directory_visibility === 'hidden_code_only'),
     [clubs]
   );
 
-  const joinedClubIds = useMemo(
-    () => new Set(clubs.map((club) => club.id)),
-    [clubs]
-  );
-
-  const latestLookupRequest = lookupResult
-    ? myJoinRequests.find((request) => request.club === lookupResult.id)
-    : undefined;
-
   const handleClubClick = (club: Club) => {
-    navigate(`/clubs/${club.id}/`);
+    navigate(`/clubs/${club.id}/${club.is_trashed ? '?view=trash' : ''}`);
   };
 
   const refreshWorkflowState = async () => {
@@ -166,14 +163,12 @@ const MyClubsPage: React.FC = () => {
 
   const handleLookupByCode = async (event: React.FormEvent) => {
     event.preventDefault();
-
     const trimmedCode = joinCode.trim();
     if (!trimmedCode) {
       setLookupError('Enter a join code first.');
       setLookupResult(null);
       return;
     }
-
     try {
       setLookupLoading(true);
       setLookupError(null);
@@ -185,6 +180,27 @@ const MyClubsPage: React.FC = () => {
       setLookupError(err instanceof Error ? err.message : 'No hidden club found for that code.');
     } finally {
       setLookupLoading(false);
+    }
+  };
+
+  const handleLookupRequestSubmit = async () => {
+    if (!lookupResult) return;
+    try {
+      setWorkflowLoadingKey(`lookup-request-${lookupResult.id}`);
+      setWorkflowMessage(null);
+      await clubsApi.requestToJoin(lookupResult.id, {
+        requested_role: 'player',
+        message: lookupRequestMessage.trim() || undefined,
+      });
+      setLookupRequestMessage('');
+      setJoinCode('');
+      setLookupResult(null);
+      setWorkflowMessage('Join request submitted successfully.');
+      await refreshWorkflowState();
+    } catch (err) {
+      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to submit join request.');
+    } finally {
+      setWorkflowLoadingKey(null);
     }
   };
 
@@ -205,30 +221,6 @@ const MyClubsPage: React.FC = () => {
       setWorkflowMessage('Role switched to Coach. You can now create clubs with this account.');
     } catch (err) {
       setWorkflowMessage(err instanceof Error ? err.message : 'Failed to switch role to Coach.');
-    } finally {
-      setWorkflowLoadingKey(null);
-    }
-  };
-
-  const handleLookupRequestSubmit = async () => {
-    if (!lookupResult) {
-      return;
-    }
-
-    try {
-      setWorkflowLoadingKey(`lookup-request-${lookupResult.id}`);
-      setWorkflowMessage(null);
-
-      await clubsApi.requestToJoin(lookupResult.id, {
-        requested_role: 'player',
-        message: lookupRequestMessage.trim() || undefined,
-      });
-
-      setLookupRequestMessage('');
-      setWorkflowMessage('Join request submitted successfully.');
-      await refreshWorkflowState();
-    } catch (err) {
-      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to submit join request.');
     } finally {
       setWorkflowLoadingKey(null);
     }
@@ -276,6 +268,67 @@ const MyClubsPage: React.FC = () => {
     }
   };
 
+  const handleSetView = (view: 'active' | 'trash') => {
+    setWorkflowMessage(null);
+    if (view === 'trash') {
+      setSearchParams({ view: 'trash' });
+      return;
+    }
+    setSearchParams({});
+  };
+
+  const handleTrashClub = async (club: Club) => {
+    try {
+      setWorkflowLoadingKey(`trash-club-${club.id}`);
+      setWorkflowMessage(null);
+      await clubsApi.trash(club.id);
+      setSelectedClubIds((prev) => {
+        const next = new Set(prev);
+        next.delete(club.id);
+        return next;
+      });
+      await refreshWorkflowState();
+      setWorkflowMessage(`"${club.name}" moved to trash.`);
+    } catch (err) {
+      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to move club to trash.');
+    } finally {
+      setWorkflowLoadingKey(null);
+    }
+  };
+
+  const handleBulkTrash = async () => {
+    const ids = Array.from(selectedClubIds);
+    if (ids.length === 0) return;
+    const confirmed = window.confirm(
+      `Move ${ids.length} club${ids.length === 1 ? '' : 's'} to trash?`
+    );
+    if (!confirmed) return;
+    try {
+      setWorkflowLoadingKey('bulk-trash');
+      setWorkflowMessage(null);
+      await Promise.all(ids.map((id) => clubsApi.trash(id)));
+      setSelectedClubIds(new Set());
+      await refreshWorkflowState();
+      setWorkflowMessage(`${ids.length} club${ids.length === 1 ? '' : 's'} moved to trash.`);
+    } catch (err) {
+      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to move clubs to trash.');
+    } finally {
+      setWorkflowLoadingKey(null);
+    }
+  };
+
+  const handleToggleSelectClub = (club: Club) => {
+    setSelectedClubIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(club.id)) {
+        next.delete(club.id);
+      } else {
+        next.add(club.id);
+      }
+      return next;
+    });
+  };
+
   const renderCreateButtonLabel = () => {
     if (canCreateClub === false) {
       return 'Create Club (coach role required)';
@@ -292,14 +345,7 @@ const MyClubsPage: React.FC = () => {
     );
   }
 
-  const lookupIsMember = lookupResult ? joinedClubIds.has(lookupResult.id) : false;
   const switchingToCoach = workflowLoadingKey === 'switch-to-coach';
-  const canSubmitLookupRequest =
-    lookupResult?.join_policy === 'approval_required' &&
-    (!latestLookupRequest ||
-      latestLookupRequest.status === 'rejected' ||
-      latestLookupRequest.status === 'withdrawn' ||
-      latestLookupRequest.status === 'cancelled');
 
   return (
     <div className={styles.container}>
@@ -312,6 +358,39 @@ const MyClubsPage: React.FC = () => {
         </div>
 
         <div className={styles.heroActions}>
+          <div
+            style={{
+              display: 'flex',
+              gap: '8px',
+              background: 'rgba(255, 255, 255, 0.06)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: '10px',
+              padding: '6px',
+            }}
+          >
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              style={{
+                background: !isTrashView ? '#2563eb' : undefined,
+                borderColor: !isTrashView ? '#2563eb' : undefined,
+              }}
+              onClick={() => handleSetView('active')}
+            >
+              Active
+            </button>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              style={{
+                background: isTrashView ? '#2563eb' : undefined,
+                borderColor: isTrashView ? '#2563eb' : undefined,
+              }}
+              onClick={() => handleSetView('trash')}
+            >
+              Trash
+            </button>
+          </div>
           <button
             className={styles.primaryButton}
             onClick={handleCreateClick}
@@ -359,113 +438,119 @@ const MyClubsPage: React.FC = () => {
       <div className={styles.topGrid}>
         <section className={styles.panel}>
           <div className={styles.panelHeader}>
-            <h2 className={styles.panelTitle}>Join by Code</h2>
-            <span className={styles.badge}>Hidden clubs</span>
+            <h2 className={styles.panelTitle}>
+              {isTrashView ? 'Current Clubs' : 'My Clubs'}
+            </h2>
+            <span className={styles.badge}>{clubs.length}</span>
           </div>
 
-          <p className={styles.panelCopy}>
-            Hidden clubs do not appear in normal browse results. Enter a join code to look one up safely.
-          </p>
-
-          <form className={styles.codeForm} onSubmit={handleLookupByCode}>
-            <input
-              className={styles.codeInput}
-              value={joinCode}
-              onChange={(event) => setJoinCode(event.target.value.toUpperCase())}
-              placeholder="Enter join code"
-              maxLength={12}
-            />
-            <button className={styles.primaryButton} type="submit" disabled={lookupLoading}>
-              {lookupLoading ? 'Looking up...' : 'Find Club'}
-            </button>
-          </form>
-
-          {lookupError && <div className={styles.errorInline}>{lookupError}</div>}
-
-          {lookupResult && (
-            <div className={styles.lookupResult}>
-              <div className={styles.lookupTitleRow}>
-                <h3 className={styles.lookupTitle}>{lookupResult.name}</h3>
-                <span className={styles.badge}>Match found</span>
+          {clubs.length === 0 ? (
+            <div className={styles.empty}>
+              <p>You do not have any clubs yet.</p>
+              <div className={styles.emptyActions}>
+                <button
+                  className={styles.secondaryButton}
+                  onClick={() => navigate('/clubs/browse')}
+                >
+                  Discover listed clubs
+                </button>
+                <button
+                  className={styles.secondaryButton}
+                  onClick={handleCreateClick}
+                  disabled={canCreateClub === false}
+                >
+                  {renderCreateButtonLabel()}
+                </button>
               </div>
+            </div>
+          ) : (
+            <>
+              <div className={styles.grid}>
+                {clubs.map((club) => {
+                  const isSelected = selectedClubIds.has(club.id);
+                  return (
+                    <div key={club.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <ClubCard
+                        club={club}
+                        variant="mine"
+                        onClick={handleClubClick}
+                      />
 
-              <p className={styles.lookupMeta}>
-                {lookupResult.club_type === 'user_real_non_pro' && 'Real non-pro club'}
-                {lookupResult.club_type === 'user_fictional' &&
-                  (lookupResult.fictional_basis === 'real_club_copy'
-                    ? 'Fictional copy'
-                    : 'Fictional club')}
-                {lookupResult.club_type === 'system_professional' && 'System professional club'}
-              </p>
+                      {isTrashView && (
+                        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                          <button
+                            className={styles.secondaryButton}
+                            type="button"
+                            style={isSelected ? {
+                              background: 'rgba(59, 130, 246, 0.22)',
+                              borderColor: 'rgba(59, 130, 246, 0.5)',
+                            } : undefined}
+                            onClick={() => handleToggleSelectClub(club)}
+                          >
+                            {isSelected ? 'Selected' : 'Select'}
+                          </button>
 
-              <p className={styles.lookupText}>{lookupResult.description}</p>
-
-              {lookupResult.source_real_club_name && (
-                <p className={styles.lookupMeta}>
-                  Reference club: {lookupResult.source_real_club_name}
-                </p>
-              )}
-
-              {lookupIsMember ? (
-                <div className={styles.noticeBlock}>
-                  You are already in this club. Open the club workspace instead of requesting access again.
-                  <div className={styles.inlineActions}>
-                    <button
-                      className={styles.secondaryButton}
-                      type="button"
-                      onClick={() => navigate(`/clubs/${lookupResult.id}/`)}
-                    >
-                      Open Club
-                    </button>
-                  </div>
-                </div>
-              ) : lookupResult.join_policy === 'approval_required' ? (
-                <>
-                  {latestLookupRequest && (
-                    <div className={styles.noticeBlock}>
-                      Your latest request is currently: <strong>{getRequestStatusLabel(latestLookupRequest.status)}</strong>
-                      {latestLookupRequest.review_note && (
-                        <div className={styles.detailNote}>Reviewer note: {latestLookupRequest.review_note}</div>
+                          <button
+                            className={styles.secondaryButton}
+                            type="button"
+                            style={{
+                              background: 'rgba(239, 68, 68, 0.18)',
+                              borderColor: 'rgba(239, 68, 68, 0.34)',
+                              color: '#fecaca',
+                            }}
+                            disabled={workflowLoadingKey === `trash-club-${club.id}`}
+                            onClick={() => handleTrashClub(club)}
+                          >
+                            {workflowLoadingKey === `trash-club-${club.id}` ? 'Moving...' : 'Send to Trash'}
+                          </button>
+                        </div>
                       )}
                     </div>
-                  )}
+                  );
+                })}
+              </div>
 
-                  {canSubmitLookupRequest ? (
-                    <>
-                      <textarea
-                        className={styles.codeTextarea}
-                        value={lookupRequestMessage}
-                        onChange={(event) => setLookupRequestMessage(event.target.value)}
-                        placeholder="Optional note to the reviewer"
-                        rows={3}
-                      />
-                      <div className={styles.inlineActions}>
-                        <button
-                          className={styles.primaryButton}
-                          type="button"
-                          onClick={handleLookupRequestSubmit}
-                          disabled={workflowLoadingKey === `lookup-request-${lookupResult.id}`}
-                        >
-                          {workflowLoadingKey === `lookup-request-${lookupResult.id}`
-                            ? 'Submitting...'
-                            : 'Request to Join'}
-                        </button>
-                      </div>
-                    </>
-                  ) : null}
-                </>
-              ) : lookupResult.join_policy === 'invite_only' ? (
-                <div className={styles.noticeBlock}>
-                  This club is invite only. Lookup by code reveals the club safely, but does not bypass the invite requirement.
-                </div>
-              ) : (
-                <div className={styles.noticeBlock}>
-                  This club is system managed and is not claimable through ordinary user flows.
+              {isTrashView && selectedClubIds.size > 0 && (
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '0.75rem',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    marginTop: '1.25rem',
+                    paddingTop: '1rem',
+                    borderTop: '1px solid rgba(255,255,255,0.08)',
+                  }}
+                >
+                  <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem' }}>
+                    {selectedClubIds.size} club{selectedClubIds.size === 1 ? '' : 's'} selected
+                  </span>
+                  <button
+                    className={styles.secondaryButton}
+                    type="button"
+                    style={{
+                      background: 'rgba(239, 68, 68, 0.18)',
+                      borderColor: 'rgba(239, 68, 68, 0.34)',
+                      color: '#fecaca',
+                    }}
+                    disabled={workflowLoadingKey === 'bulk-trash'}
+                    onClick={handleBulkTrash}
+                  >
+                    {workflowLoadingKey === 'bulk-trash' ? 'Moving...' : 'Send to Trash'}
+                  </button>
+                  <button
+                    className={styles.secondaryButton}
+                    type="button"
+                    onClick={() => setSelectedClubIds(new Set())}
+                  >
+                    Cancel
+                  </button>
                 </div>
               )}
-            </div>
+            </>
           )}
         </section>
+
 
         <section className={styles.panel}>
           <div className={styles.panelHeader}>
@@ -602,42 +687,69 @@ const MyClubsPage: React.FC = () => {
 
       <section className={styles.panel}>
         <div className={styles.panelHeader}>
-          <h2 className={styles.panelTitle}>My Clubs</h2>
-          <span className={styles.badge}>{clubs.length}</span>
+          <h2 className={styles.panelTitle}>Join a Hidden Club</h2>
         </div>
+        <p className={styles.panelCopy}>
+          Have a join code for a hidden club? Enter it below to find the club and request membership.
+        </p>
 
-        {clubs.length === 0 ? (
-          <div className={styles.empty}>
-            <p>You do not have any clubs yet.</p>
-            <div className={styles.emptyActions}>
+        <form className={styles.codeForm} onSubmit={handleLookupByCode}>
+          <input
+            className={styles.codeInput}
+            type="text"
+            value={joinCode}
+            onChange={(e) => { setJoinCode(e.target.value); setLookupResult(null); setLookupError(null); }}
+            placeholder="Enter join code"
+            autoComplete="off"
+          />
+          <button className={styles.primaryButton} type="submit" disabled={lookupLoading}>
+            {lookupLoading ? 'Looking up...' : 'Find Club'}
+          </button>
+        </form>
+
+        {lookupError && <div className={styles.errorInline}>{lookupError}</div>}
+
+        {lookupResult && (
+          <div className={styles.lookupResult}>
+            <div className={styles.lookupTitleRow}>
+              <h3 className={styles.lookupTitle}>{lookupResult.name}</h3>
+            </div>
+            {lookupResult.description && (
+              <p className={styles.lookupMeta}>{lookupResult.description}</p>
+            )}
+            <p className={styles.lookupMeta}>
+              {lookupResult.city && `${lookupResult.city} · `}Members: {lookupResult.member_count}
+            </p>
+
+            <textarea
+              className={styles.codeTextarea}
+              rows={3}
+              value={lookupRequestMessage}
+              onChange={(e) => setLookupRequestMessage(e.target.value)}
+              placeholder="Optional message with your request"
+            />
+
+            <div className={styles.inlineActions}>
               <button
-                className={styles.secondaryButton}
-                onClick={() => navigate('/clubs/browse')}
+                className={styles.primaryButton}
+                type="button"
+                disabled={workflowLoadingKey === `lookup-request-${lookupResult.id}`}
+                onClick={handleLookupRequestSubmit}
               >
-                Discover listed clubs
+                {workflowLoadingKey === `lookup-request-${lookupResult.id}` ? 'Submitting...' : 'Request to Join'}
               </button>
               <button
                 className={styles.secondaryButton}
-                onClick={handleCreateClick}
-                disabled={canCreateClub === false}
+                type="button"
+                onClick={() => { setLookupResult(null); setJoinCode(''); }}
               >
-                {renderCreateButtonLabel()}
+                Clear
               </button>
             </div>
           </div>
-        ) : (
-          <div className={styles.grid}>
-            {clubs.map((club) => (
-              <ClubCard
-                key={club.id}
-                club={club}
-                variant="mine"
-                onClick={handleClubClick}
-              />
-            ))}
-          </div>
         )}
       </section>
+
     </div>
   );
 };

@@ -3,8 +3,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from ml.models.scoreline.config import HOME_GOALS_FEATURES, AWAY_GOALS_FEATURES
-from ml.models.scoreline.train import (
+from apps.predictions.ml.models.scoreline.config import HOME_GOALS_FEATURES, AWAY_GOALS_FEATURES
+from apps.predictions.ml.models.scoreline.train import (
     derive_probabilities,
     scoreline_matrix,
     train_score_model,
@@ -12,8 +12,8 @@ from ml.models.scoreline.train import (
 
 
 def _get_engine2_predictions(test_df: pd.DataFrame) -> dict:
-    from ml.models.match_outcome.config import resolve_latest_model_path, INTERPRETABLE_MODEL_TYPE
-    from ml.models.match_outcome.predict import get_predictor
+    from apps.predictions.ml.models.match_outcome.config import resolve_latest_model_path, INTERPRETABLE_MODEL_TYPE
+    from apps.predictions.ml.models.match_outcome.predict import get_predictor
 
     model_path = resolve_latest_model_path(INTERPRETABLE_MODEL_TYPE)
     predictor = get_predictor(model_path=model_path)

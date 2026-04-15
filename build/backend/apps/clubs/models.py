@@ -1,12 +1,13 @@
 import secrets
+from datetime import timedelta
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import models
-from common.constants import *
-from apps.players.models import ExternalProvider, Player
 from django.db import models, transaction
 from django.utils import timezone
+
+from common.constants import *
+from apps.players.models import ExternalProvider, Player
 
 class Club(models.Model):
     class Visibility(models.TextChoices):
@@ -118,19 +119,30 @@ class Club(models.Model):
     country = models.CharField(
         max_length=2,
         blank=True,
-        help_text="ISO 3166-1 alpha-2 code"
+        help_text='ISO 3166-1 alpha-2 code'
     )
     stadium = models.CharField(max_length=100, blank=True)
 
     division = models.CharField(
         max_length=100,
         blank=True,
-        help_text="League or division name"
+        help_text='League or division name'
     )
 
     achievements = models.TextField(
         blank=True,
-        help_text="Trophies, notable accomplishments"
+        help_text='Trophies, notable accomplishments'
+    )
+
+    is_trashed = models.BooleanField(default=False)
+    trashed_at = models.DateTimeField(null=True, blank=True)
+    trash_expires_at = models.DateTimeField(null=True, blank=True)
+    trashed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='trashed_clubs'
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -144,6 +156,8 @@ class Club(models.Model):
             models.Index(fields=['club_type']),
             models.Index(fields=['directory_visibility']),
             models.Index(fields=['verification_status']),
+            models.Index(fields=['creator', 'is_trashed']),
+            models.Index(fields=['is_trashed', 'trash_expires_at']),
         ]
 
     def __str__(self):
@@ -311,7 +325,95 @@ class Club(models.Model):
     @property
     def player_count(self):
         return self.club_players.count()
-        
+
+    def can_be_trashed_by(self, user) -> bool:
+        return bool(
+            user
+            and user.is_authenticated
+            and self.creator_id is not None
+            and self.creator_id == user.id
+        )
+
+    def can_be_restored_by(self, user) -> bool:
+        return self.can_be_trashed_by(user)
+
+    def can_be_permanently_deleted_by(self, user) -> bool:
+        return self.can_be_trashed_by(user)
+
+    def is_trash_expired(self) -> bool:
+        return bool(
+            self.is_trashed
+            and self.trash_expires_at is not None
+            and self.trash_expires_at <= timezone.now()
+        )
+
+    def _get_trash_limit(self) -> int:
+        return int(getattr(settings, 'CLUB_TRASH_LIMIT_PER_USER', 10))
+
+    def _validate_trash_limit(self):
+        limit = self._get_trash_limit()
+        active_trashed_count = Club.objects.filter(
+            creator_id=self.creator_id,
+            is_trashed=True,
+        ).exclude(pk=self.pk).count()
+
+        if active_trashed_count >= limit:
+            raise ValidationError(
+                f'You have reached the club trash limit of {limit} items.'
+            )
+
+    def move_to_trash(self, user, commit=True):
+        if not self.can_be_trashed_by(user):
+            raise ValidationError('Only the club creator can move this club to trash.')
+
+        if self.is_trashed:
+            return self
+
+        self._validate_trash_limit()
+
+        now = timezone.now()
+        retention_days = int(getattr(settings, 'TRASH_RETENTION_DAYS', 7))
+
+        self.is_trashed = True
+        self.trashed_at = now
+        self.trash_expires_at = now + timedelta(days=retention_days)
+        self.trashed_by = user
+
+        if commit and self.pk:
+            self.save(
+                update_fields=[
+                    'is_trashed',
+                    'trashed_at',
+                    'trash_expires_at',
+                    'trashed_by',
+                    'updated_at',
+                ]
+            )
+
+        return self
+
+    def restore_from_trash(self, user=None, commit=True):
+        if user is not None and not self.can_be_restored_by(user):
+            raise ValidationError('Only the club creator can restore this club.')
+
+        self.is_trashed = False
+        self.trashed_at = None
+        self.trash_expires_at = None
+        self.trashed_by = None
+
+        if commit and self.pk:
+            self.save(
+                update_fields=[
+                    'is_trashed',
+                    'trashed_at',
+                    'trash_expires_at',
+                    'trashed_by',
+                    'updated_at',
+                ]
+            )
+
+        return self
+
 class ClubMembership(models.Model):
     class Role(models.TextChoices):
         OWNER = 'owner', 'Owner'          
@@ -1621,6 +1723,7 @@ class ClubImportJob(models.Model):
         PLAYER_PROFILE_UPDATE = 'player_profile_update', 'Player Profile Update'
         PLAYER_SEASON_STATS = 'player_season_stats', 'Player Season Stats'
         SQUAD_METRICS = 'squad_metrics', 'Squad Metrics'
+        OTHER = 'other', 'Other'
 
     class Status(models.TextChoices):
         UPLOADED = 'uploaded', 'Uploaded'

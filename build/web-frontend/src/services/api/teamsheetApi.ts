@@ -10,11 +10,21 @@ import type {
 } from '../../types/teamsheet';
 
 export const teamsheetApi = {
-  list: (clubId: number) =>
-    apiClient.get<TeamsheetListItem[]>(`/clubs/${clubId}/teamsheets/`),
+  list: (clubId: number, options?: { trash?: 'only' | 'include' }) =>
+    apiClient.get<TeamsheetListItem[]>(
+      `/clubs/${clubId}/teamsheets/`,
+      options?.trash ? { trash: options.trash } : undefined
+    ),
 
-  get: (clubId: number, teamsheetId: number) =>
-    apiClient.get<Teamsheet>(`/clubs/${clubId}/teamsheets/${teamsheetId}/`),
+  get: (
+    clubId: number,
+    teamsheetId: number,
+    options?: { trash?: 'only' | 'include' }
+  ) =>
+    apiClient.get<Teamsheet>(
+      `/clubs/${clubId}/teamsheets/${teamsheetId}/`,
+      options?.trash ? { trash: options.trash } : undefined
+    ),
 
   create: (clubId: number, data: Partial<Teamsheet>) =>
     apiClient.post<Teamsheet>(`/clubs/${clubId}/teamsheets/`, data),
@@ -27,6 +37,15 @@ export const teamsheetApi = {
 
   delete: (clubId: number, teamsheetId: number) =>
     apiClient.delete(`/clubs/${clubId}/teamsheets/${teamsheetId}/`),
+
+  trash: (clubId: number, teamsheetId: number) =>
+    apiClient.post<Teamsheet>(`/clubs/${clubId}/teamsheets/${teamsheetId}/trash/`, {}),
+
+  restore: (clubId: number, teamsheetId: number) =>
+    apiClient.post<Teamsheet>(`/clubs/${clubId}/teamsheets/${teamsheetId}/restore/`, {}),
+
+  permanentDelete: (clubId: number, teamsheetId: number) =>
+    apiClient.delete<void>(`/clubs/${clubId}/teamsheets/${teamsheetId}/permanent-delete/`),
 
   getChoices: (clubId: number) =>
     apiClient.get<TeamsheetChoices>(`/clubs/${clubId}/teamsheets/choices/`),

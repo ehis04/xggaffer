@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { clubsApi } from '../../../services/api';
+import { ClubCalendar } from '../../../components/Clubs';
 import ClubResourcesSection from './resources/ClubResourcesSection';
 import type {
   Club,
@@ -16,6 +17,7 @@ import type {
 } from '../../../types/club';
 import type { ClubPlayer } from '../../../types/clubPlayers';
 import styles from './css/IndividualClubBase.module.css';
+import { useAuth } from '../../../context/useAuth';
 
 const FEATURES = [
   {
@@ -23,6 +25,12 @@ const FEATURES = [
     title: 'Teamsheets',
     description: 'Create and manage match day teamsheets',
     path: (clubId: number) => `/clubs/${clubId}/teamsheets`,
+  },
+  {
+    key: 'tactics',
+    title: 'Tactics Boards',
+    description: 'Build and edit tactical boards for your club',
+    path: (clubId: number) => `/clubs/${clubId}/tactics-boards`,
   },
   {
     key: 'players',
@@ -210,8 +218,11 @@ const getScheduleItemSummary = (item: ClubCalendarFeedItem) => {
 export const IndividualClubBase = () => {
   const { clubId } = useParams<{ clubId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
 
   const numericClubId = Number(clubId);
+  const isTrashView = searchParams.get('view') === 'trash';
 
   const [club, setClub] = useState<Club | null>(null);
   const [myClubIds, setMyClubIds] = useState<number[]>([]);
@@ -219,6 +230,7 @@ export const IndividualClubBase = () => {
   const [reviewJoinRequests, setReviewJoinRequests] = useState<ClubJoinRequest[]>([]);
   const [reviewInvitations, setReviewInvitations] = useState<ClubInvitation[]>([]);
   const [clubPlayers, setClubPlayers] = useState<ClubPlayer[]>([]);
+  const [clubActionLoading, setClubActionLoading] = useState(false);
 
   const [calendarFeed, setCalendarFeed] = useState<ClubCalendarFeedItem[]>([]);
   const [events, setEvents] = useState<ClubEvent[]>([]);
@@ -232,7 +244,7 @@ export const IndividualClubBase = () => {
   const [workflowMessage, setWorkflowMessage] = useState<string | null>(null);
 
   const [requestMessage, setRequestMessage] = useState('');
-  const [inviteUserIdInput, setInviteUserIdInput] = useState('');
+  const [inviteEmailInput, setInviteEmailInput] = useState('');
   const [inviteRole, setInviteRole] = useState<Exclude<ClubMembershipRole, 'owner'>>('coach');
   const [inviteNote, setInviteNote] = useState('');
 
@@ -283,7 +295,7 @@ export const IndividualClubBase = () => {
       setScheduleError(null);
 
       const [calendarData, eventData, fixtureData] = await Promise.all([
-        clubsApi.listCalendarFeed(clubRecord.id, { limit: 6 }),
+        clubsApi.listCalendarFeed(clubRecord.id, { limit: 50 }), // Increased limit for calendar view
         clubsApi.listEvents(clubRecord.id),
         clubsApi.listFixtures(clubRecord.id),
       ]);
@@ -307,7 +319,10 @@ export const IndividualClubBase = () => {
         setLoading(true);
         setError(null);
 
-        const clubData = await clubsApi.get(numericClubId);
+        const clubData = await clubsApi.get(
+          numericClubId,
+          isTrashView ? { trash: 'only' } : undefined
+        );
         setClub(clubData);
         await reloadClubWorkflowData(clubData);
         await reloadSchedulingData(clubData);
@@ -321,7 +336,7 @@ export const IndividualClubBase = () => {
     if (Number.isFinite(numericClubId)) {
       void fetchClub();
     }
-  }, [numericClubId]);
+  }, [numericClubId, isTrashView]);
 
   const tags = useMemo(() => (club ? buildTags(club) : []), [club]);
   const metaParts = useMemo(
@@ -348,8 +363,82 @@ export const IndividualClubBase = () => {
       myLatestRequest.status === 'cancelled');
 
   const canAttemptSchedulingManagement = Boolean(
-    club && isMember && club.club_type !== 'system_professional'
+    club && isMember && club.club_type !== 'system_professional' && reviewAccess
   );
+
+  const canManageClubTrash =
+    typeof user?.id === 'number' &&
+    typeof club?.creator === 'number' &&
+    user.id === club.creator;
+
+  const handleBackToClubs = () => {
+    navigate(`/clubs${isTrashView ? '?view=trash' : ''}`);
+  };
+
+  const handleMoveClubToTrash = async () => {
+    if (!club) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Move “${club.name}” to trash?`);
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setClubActionLoading(true);
+      setWorkflowMessage(null);
+      await clubsApi.trash(club.id);
+      navigate('/clubs?view=trash');
+    } catch (err) {
+      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to move club to trash.');
+    } finally {
+      setClubActionLoading(false);
+    }
+  };
+
+  const handleRestoreClub = async () => {
+    if (!club) {
+      return;
+    }
+
+    try {
+      setClubActionLoading(true);
+      setWorkflowMessage(null);
+      await clubsApi.restore(club.id);
+      navigate(`/clubs/${club.id}/`);
+    } catch (err) {
+      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to restore club.');
+    } finally {
+      setClubActionLoading(false);
+    }
+  };
+
+  const handlePermanentDeleteClub = async () => {
+    if (!club) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Delete “${club.name}” permanently? This cannot be undone.`
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setClubActionLoading(true);
+      setWorkflowMessage(null);
+      await clubsApi.permanentDelete(club.id);
+      navigate('/clubs?view=trash');
+    } catch (err) {
+      setWorkflowMessage(
+        err instanceof Error ? err.message : 'Failed to permanently delete club.'
+      );
+    } finally {
+      setClubActionLoading(false);
+    }
+  };
 
   const handleRequestToJoin = async () => {
     if (!club) {
@@ -426,9 +515,9 @@ export const IndividualClubBase = () => {
       return;
     }
 
-    const invitedUser = Number(inviteUserIdInput);
-    if (!Number.isInteger(invitedUser) || invitedUser <= 0) {
-      setWorkflowMessage('Enter a valid existing platform user ID for the invitation.');
+    const trimmedEmail = inviteEmailInput.trim();
+    if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setWorkflowMessage('Enter a valid email address to invite.');
       return;
     }
 
@@ -437,12 +526,12 @@ export const IndividualClubBase = () => {
       setWorkflowMessage(null);
 
       await clubsApi.createInvitation(club.id, {
-        invited_user: invitedUser,
+        invited_email: trimmedEmail,
         invited_role: inviteRole,
         note: inviteNote.trim() || undefined,
       });
 
-      setInviteUserIdInput('');
+      setInviteEmailInput('');
       setInviteRole('coach');
       setInviteNote('');
       setWorkflowMessage('Invitation created successfully.');
@@ -689,13 +778,79 @@ export const IndividualClubBase = () => {
         </div>
 
         <div className={styles.heroActions}>
-          <button className={styles.backButton} onClick={() => navigate('/clubs')}>
+          <button className={styles.backButton} onClick={handleBackToClubs}>
             Back to Clubs
           </button>
-          <button className={styles.secondaryButton} onClick={() => navigate('/clubs/browse')}>
-            Discover Clubs
-          </button>
+
+          {!club.is_trashed ? (
+            <>
+              <button className={styles.secondaryButton} onClick={() => navigate('/clubs/browse')}>
+                Discover Clubs
+              </button>
+
+              {canManageClubTrash ? (
+                <button
+                  className={styles.secondaryButton}
+                  type="button"
+                  disabled={clubActionLoading}
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.18)',
+                    borderColor: 'rgba(239, 68, 68, 0.34)',
+                    color: '#fecaca',
+                  }}
+                  onClick={handleMoveClubToTrash}
+                >
+                  {clubActionLoading ? 'Moving...' : 'Move to Trash'}
+                </button>
+              ) : null}
+            </>
+          ) : canManageClubTrash ? (
+            <>
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                disabled={clubActionLoading}
+                style={{
+                  background: 'rgba(34, 197, 94, 0.18)',
+                  borderColor: 'rgba(34, 197, 94, 0.34)',
+                  color: '#bbf7d0',
+                }}
+                onClick={handleRestoreClub}
+              >
+                {clubActionLoading ? 'Restoring...' : 'Restore'}
+              </button>
+
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                disabled={clubActionLoading}
+                style={{
+                  background: 'rgba(239, 68, 68, 0.18)',
+                  borderColor: 'rgba(239, 68, 68, 0.34)',
+                  color: '#fecaca',
+                }}
+                onClick={handlePermanentDeleteClub}
+              >
+                {clubActionLoading ? 'Deleting...' : 'Delete Permanently'}
+              </button>
+            </>
+          ) : null}
         </div>
+        {club.is_trashed && (
+          <div className={styles.notice}>
+            This club is currently in trash and the workspace has been switched into recovery mode.
+            {club.trash_expires_at && (
+              <> It will be removed permanently after{' '}
+                {new Date(club.trash_expires_at).toLocaleDateString('en-IE', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                })}
+                unless you restore it first.
+              </>
+            )}
+          </div>
+        )}
       </section>
 
       {workflowMessage && <div className={styles.notice}>{workflowMessage}</div>}
@@ -704,24 +859,25 @@ export const IndividualClubBase = () => {
       <section className={styles.infoGrid}>
         <div className={styles.infoPanel}>
           <h2 className={styles.panelTitle}>Club Profile</h2>
-          <p className={styles.bodyText}>{club.description}</p>
 
-          {club.directory_visibility === 'hidden_code_only' && club.join_code && (
+          {club.join_code && (
             <div className={styles.codeBox}>
               <div className={styles.codeLabel}>Join code</div>
               <div className={styles.codeValue}>{club.join_code}</div>
             </div>
           )}
+
+          <p className={styles.bodyText}>{club.description}</p>
         </div>
 
         <div className={styles.infoPanel}>
           <h2 className={styles.panelTitle}>Membership Workflow</h2>
 
-          {isMember ? (
-            <div className={styles.noticeBlock}>
-              You already belong to this club workspace.
-            </div>
-          ) : club.join_policy === 'approval_required' ? (
+            {club.is_trashed ? (
+              <div className={styles.noticeBlock}>
+                This club is in trash. Join workflows and club access changes are paused until it is restored.
+              </div>
+            ) : isMember ? (
             <>
               <p className={styles.bodyText}>
                 This club supports a real player request-to-join flow. Approval is still required before membership is granted.
@@ -768,9 +924,12 @@ export const IndividualClubBase = () => {
         </div>
       </section>
 
+      {!club.is_trashed && (
+      <>
       <ClubResourcesSection
         club={club}
         isMember={isMember}
+        canManageResources={reviewAccess}
       />
 
       {reviewAccess && (
@@ -884,23 +1043,18 @@ export const IndividualClubBase = () => {
           <section className={styles.infoPanel}>
             <h2 className={styles.panelTitle}>Invitations</h2>
 
-            <div className={styles.noticeBlock}>
-              Invitations currently target existing platform users only. This frontend uses an explicit user ID input because no separate user-lookup flow has been introduced in this phase.
-            </div>
-
             <div className={styles.formGrid}>
               <div className={styles.formField}>
-                <label className={styles.formLabel} htmlFor="invited-user-id">
-                  Invited user ID
+                <label className={styles.formLabel} htmlFor="invited-email">
+                  Email address
                 </label>
                 <input
-                  id="invited-user-id"
+                  id="invited-email"
                   className={styles.input}
-                  type="number"
-                  min={1}
-                  value={inviteUserIdInput}
-                  onChange={(event) => setInviteUserIdInput(event.target.value)}
-                  placeholder="Existing user ID"
+                  type="email"
+                  value={inviteEmailInput}
+                  onChange={(event) => setInviteEmailInput(event.target.value)}
+                  placeholder="user@example.com"
                 />
               </div>
 
@@ -1046,21 +1200,9 @@ export const IndividualClubBase = () => {
           </section>
 
           <section className={styles.infoPanel}>
-            <h3 className={styles.panelTitle}>Scheduling Access</h3>
+            <h3 className={styles.panelTitle}>Calendar Preview</h3>
 
-            {club.club_type === 'system_professional' ? (
-              <div className={styles.noticeBlock}>
-                This club uses a read-only scheduling surface in Phase D. Official events and fixtures can be shown here, but ordinary manual scheduling is intentionally restricted.
-              </div>
-            ) : isMember ? (
-              <div className={styles.noticeBlock}>
-                Upcoming events and fixtures are now available in the club workspace. Manual scheduling actions are intended for club staff on user-managed clubs, and backend rules still enforce those permissions.
-              </div>
-            ) : (
-              <div className={styles.noticeBlock}>
-                You can view the schedule for this club here. Scheduling management becomes available inside the club workspace for authorised members.
-              </div>
-            )}
+            <ClubCalendar calendarItems={calendarFeed} />
           </section>
         </div>
 
@@ -1460,6 +1602,8 @@ export const IndividualClubBase = () => {
           ))}
         </div>
       </section>
+      </>
+    )}
     </div>
   );
 };

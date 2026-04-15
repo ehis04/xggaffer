@@ -7,20 +7,20 @@ from typing import Any
 import pandas as pd
 from django.core.cache import cache
 
-from ml.engines.elo import INITIAL_RATING, compute_elo_history
-from ml.features.rolling import (
+from apps.predictions.ml.engines.elo import INITIAL_RATING, compute_elo_history
+from apps.predictions.ml.features.rolling import (
     ALL_SEASONS,
     compute_team_rolling_features,
     load_match_history,
     to_team_match_rows,
 )
-from ml.models.match_outcome.config import MODEL_VERSION, resolve_latest_model_path
-from ml.models.match_outcome.feature_service import get_feature_service
-from ml.models.match_outcome.predict import get_predictor
-from ml.models.scoreline.predict import ScorePredictor, resolve_latest_score_model
-from ml.models.simulation.config import MATCHES_PER_MATCHWEEK
-from ml.models.simulation.prepare_fixtures import prepare_fixture_features, prepare_remaining_fixtures
-from ml.models.simulation.simulate import (
+from apps.predictions.ml.models.match_outcome.config import MODEL_VERSION, resolve_latest_model_path
+from apps.predictions.ml.models.match_outcome.feature_service import get_feature_service
+from apps.predictions.ml.models.match_outcome.predict import get_predictor
+from apps.predictions.ml.models.scoreline.predict import ScorePredictor, resolve_latest_score_model
+from apps.predictions.ml.models.simulation.config import MATCHES_PER_MATCHWEEK
+from apps.predictions.ml.models.simulation.prepare_fixtures import prepare_fixture_features, prepare_remaining_fixtures
+from apps.predictions.ml.models.simulation.simulate import (
     aggregate_results,
     simulate_season,
     simulate_with_locked_results,

@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 
 from .serializers import (
     AvailableTeamsRequestSerializer,
+    ChatRequestSerializer,
     CurrentEloSerializer,
     EloRatingSerializer,
     PredictionRequestSerializer,
@@ -739,5 +740,23 @@ class AvailableTacticalTeamsView(APIView):
             logger.exception('Failed to load tactical teams: %s', exc)
             return Response(
                 {'detail': 'Could not load tactical teams.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+class ChatQueryView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = ChatRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        query = serializer.validated_data["query"]
+        try:
+            from .services.chat_service import handle_chat_query
+            result = handle_chat_query(query)
+            return Response(result, status=status.HTTP_200_OK)
+        except Exception as exc:
+            logger.exception("Chat query failed: %s", exc)
+            return Response(
+                {"error": "Query processing failed."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

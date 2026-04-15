@@ -118,6 +118,9 @@ def build_cloudinary_signed_delivery_url(resource):
     resource_type = get_cloudinary_resource_type(resource.file_kind)
     extension = resource.get_extension() or None
 
+    if extension and resource.storage_key.endswith(f'.{extension}'):
+        extension = None
+
     try:
         signed_url, _ = cloudinary.utils.cloudinary_url(
             resource.storage_key,
