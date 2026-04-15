@@ -14,6 +14,12 @@ import { RoleAssignPage } from "./pages/setup/RoleAssignPage";
 import { RoleProfilePage } from "./pages/setup/RoleProfilePage";
 import { VerifyEmailPromptPage } from "./pages/setup/VerifyEmailPromptPage";
 import { VerifyEmailCallbackPage } from "./pages/setup/VerifyEmailCallbackPage";
+import LandingPage from './pages/setup/LandingPage';
+import ProfileCreationPage from './pages/setup/ProfileCreationPage';
+import { RoleAssignPage } from './pages/setup/RoleAssignPage';
+import { RoleProfilePage } from './pages/setup/RoleProfilePage';
+import { VerifyEmailPromptPage } from './pages/setup/VerifyEmailPromptPage';
+import { VerifyEmailCallbackPage } from './pages/setup/VerifyEmailCallbackPage';
 import { ForgotPasswordPage } from "./pages/setup/ForgotPasswordPage";
 import { ResetPasswordPage } from "./pages/setup/ResetPasswordPage";
 
@@ -46,6 +52,14 @@ import { UserProfilePage } from "./pages/user/UserProfilePage";
 import { RefereeHome } from "./pages/referee/RefereeHome";
 import { CoachingDashboard } from "./pages/coaching/CoachingDashboard";
 import { CoursePage } from "./pages/referee/CoursePage";
+<<<<<<< HEAD
+=======
+import TeamsheetDetail from './pages/coaching/teamsheets/TeamsheetDetail';
+import TeamsheetList from './pages/coaching/teamsheets/TeamsheetList';
+import TeamsheetListPage from './pages/coaching/teamsheets/TeamsheetListPage';
+import TeamsheetCreatePage from './pages/coaching/teamsheets/TeamsheetCreatePage';
+import TeamsheetDetailPage from './pages/coaching/teamsheets/TeamsheetDetailPage';
+>>>>>>> 7df6aba (password reset added, login forms fixed and comments started, halfway dn to pull from Dev)
 import PredictionPage from './pages/predictions/PredictionPage';
 
 import InternalPlayerProfilePage from './pages/coaching/playerdata/InternalPlayerProfilePage';
@@ -93,6 +107,8 @@ function App() {
               path="/create/profile/role/details"
               element={<RoleProfilePage />}
             />
+            /* working fine */
+            <Route path="/create/profile/role/details" element={<RoleProfilePage />} />
           </Route>
           <Route path="/profile/:username" element={<UserProfilePage />} />
 
@@ -116,8 +132,19 @@ function App() {
             <Route path="/fitnessBase" element={<FitnessBase />} />
             /* need to see lizzy push */
             <Route path="/situationBase" element={<SituationBase />} />
+<<<<<<< HEAD
+            <Route path="/laws" element={<LawsList />} />
+            <Route path="/laws/:lawNumber" element={<LawDetail />} />
+=======
             <Route path="/referee/" element={<RefereeHome />} />
             <Route path="/referee/law/:lawNumber" element={<CoursePage />} />
+            /* need to see lizzy push */
+            <Route path="/laws" element={<LawsList />} />
+            /* need to see lizzy push */
+            <Route path="/laws/:lawNumber" element={<LawDetail />} />
+            /* need to see lizzy push */
+>>>>>>> 7df6aba (password reset added, login forms fixed and comments started, halfway dn to pull from Dev)
+            <Route path="/laws/changes" element={<ChangesTimeline />} />
 
             <Route path="/coaching" element={<CoachingBase />} />
 
@@ -127,6 +154,11 @@ function App() {
               path="/coaching/teamsheets/:id"
               element={<TeamsheetDetail />}
             />
+<<<<<<< HEAD
+=======
+            /* old page, delete */
+            <Route path="/coaching/teamsheets/:id" element={<TeamsheetDetail />} />
+>>>>>>> 7df6aba (password reset added, login forms fixed and comments started, halfway dn to pull from Dev)
             <Route path="/coaching/predictions" element={<PredictionPage />} />
 
             /* no issues, upgrades noted in docs */
@@ -197,6 +229,35 @@ function App() {
             />
             <Route path="/coaching/dashboard" element={<CoachingDashboard />} />
 
+            /* No issues, updates noted in docs*/
+            <Route path="/clubs/:clubId/teamsheets/:teamsheetId/edit" element={<TeamsheetEditPage />} />
+
+            /* 
+
+            
+            the csv previews dont work, theyre expecting specific columns?
+            check if a user can submit a join request
+            no visible calendar, upcming events tab is fine, point of scheduling access?
+            event creation and fixture creation work fine, same thing visuals not right
+            check if engagement counter works plus change actvitiy time to minutes 
+            invite people by email not id 
+            wheres the code for invite 
+            */
+
+<<<<<<< HEAD
+=======
+            /* no issues, upgrades noted in docs
+            */
+
+            <Route path="/clubs/:clubId/teamsheets" element={<TeamsheetListPage />} />
+
+            /* no issues here, upgrades noted in docs */
+            <Route path="/clubs/:clubId/teamsheets/new" element={<TeamsheetCreatePage />} />
+
+            /* no issues, upgrades noted in docs */
+            <Route path="/clubs/:clubId/teamsheets/:teamsheetId" element={<TeamsheetDetailPage />} />
+
+>>>>>>> 7df6aba (password reset added, login forms fixed and comments started, halfway dn to pull from Dev)
             /* No issues, updates noted in docs*/
             <Route path="/clubs/:clubId/teamsheets/:teamsheetId/edit" element={<TeamsheetEditPage />} />
 
