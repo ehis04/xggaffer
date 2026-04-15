@@ -1,10 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import "./App.css";
 
-import { ProtectedRoute } from "./components/auth/ProtectedRoute";
-import { PublicOnlyRoute } from "./components/auth/PublicOnlyRoute";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { PublicOnlyRoute } from "./components/auth/PublicOnlyRoute";
 
@@ -182,28 +178,6 @@ function App() {
             <Route path="/coaching/dashboard" element={<CoachingDashboard />} />
 
             /* No issues, updates noted in docs*/
-            <Route path="/clubs/:clubId/teamsheets/:teamsheetId/edit" element={<TeamsheetEditPage />} />
-
-            /* 
-
-            
-            the csv previews dont work, theyre expecting specific columns?
-            check if a user can submit a join request
-            no visible calendar, upcming events tab is fine, point of scheduling access?
-            event creation and fixture creation work fine, same thing visuals not right
-            check if engagement counter works plus change actvitiy time to minutes 
-            invite people by email not id 
-            wheres the code for invite 
-            */
-
-<<<<<<< HEAD
-=======
-            /* no issues, upgrades noted in docs
-            */
-
-            <Route path="/clubs/:clubId/teamsheets" element={<TeamsheetListPage />} />
-            <Route path="/clubs/:clubId/teamsheets/new" element={<TeamsheetCreatePage />} />
-            <Route path="/clubs/:clubId/teamsheets/:teamsheetId" element={<TeamsheetDetailPage />} />
             <Route path="/clubs/:clubId/teamsheets/:teamsheetId/edit" element={<TeamsheetEditPage />} />
             <Route path="/coaching/dashboard" element={<CoachingDashboard />} />
 
