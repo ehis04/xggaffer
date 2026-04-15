@@ -133,8 +133,6 @@ class UserProfileAdmin(admin.ModelAdmin):
         }),
     )
 
-<<<<<<< HEAD
-=======
 @admin.register(UserRole)
 class UserRoleAdmin(admin.ModelAdmin):
     list_display = ['user_profile', 'role', 'created_at']
@@ -157,7 +155,6 @@ class UserRoleAdmin(admin.ModelAdmin):
 #         return super().get_queryset(request).select_related("follower__user", "following__user")
 
 
->>>>>>> 11b065e (Feat/courses backup)
 @admin.register(Follow)
 class FollowAdmin(admin.ModelAdmin):
     list_display = ['follower', 'following', 'created_at']

@@ -82,10 +82,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-<<<<<<< HEAD
-=======
     "django.contrib.postgres",
->>>>>>> 7df6aba (password reset added, login forms fixed and comments started, halfway dn to pull from Dev)
 
     # Third-party apps
     "rest_framework",
@@ -109,39 +106,11 @@ INSTALLED_APPS = [
     "apps.tactics",
     "apps.playerdata",
     "apps.livefootball",
-<<<<<<< HEAD
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.postgres',
-    'apps.laws',
-    'apps.articles',
-    'rest_framework',
-    'rest_framework_simplejwt.token_blacklist',
-    'apps.teamsheets',
-    'apps.users',
-    'apps.predictions',
-    'apps.community',
-    'apps.coaching.coachProfile',
-    'apps.coaching',
-    'apps.players',
-    'apps.players.playerProfile',
-    'apps.clubs',
-    'apps.tactics',
-    'apps.referee',
-    'apps.referee.progressTracking',
-    'apps.referee.learningTools',
-    'apps.referee.Laws',
-    'apps.referee.profile',
-    'apps.playerdata',
-    'apps.livefootball',
-    'corsheaders',
-    'cloudinary',
-=======
->>>>>>> 7df6aba (password reset added, login forms fixed and comments started, halfway dn to pull from Dev)
+    "apps.referee",
+    "apps.referee.progressTracking",
+    "apps.referee.learningTools",
+    "apps.referee.Laws",
+    "apps.referee.profile",
 ]
 
 MIDDLEWARE = [
