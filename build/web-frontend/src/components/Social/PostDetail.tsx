@@ -1,9 +1,31 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Post } from './Post';
-import { communityApi, type Comment } from '../../services/api/communityApi';
-import type { PostData } from './Post';
-import './css/PostDetail.css';
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Post } from "./Post";
+import apiClient from "../../services/api/client";
+import type { PostData } from "./Post";
+import "./css/PostDetail.css";
+import type { PostResponse, CommentResponse } from "./types/SocialTypes";
+import { commentToPostData, flattenComments } from "./functions/SocialHelpers";
+import { ProfileButton } from "../Buttons/ProfileButton";
+import type { UserData } from "../Navigation/SideBar";
+import { getUserProfile } from "../Navigation/functions/getUserProfile";
+import { COMMUNITY } from "../../services/api/endpoints";
+import type { PaginatedResponse } from "../../services/api/communityApi";
+
+const BackArrow = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M19 12H5M12 5l-7 7 7 7" />
+  </svg>
+);
 
 export const PostDetail = () => {
   const { postId } = useParams<{ postId: string }>();
@@ -13,18 +35,32 @@ export const PostDetail = () => {
   const [comments, setComments] = useState<PostData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
+
+  const [replyText, setReplyText] = useState("");
+  const [replyingToId, setReplyingToId] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    const fetchPostAndComments = async () => {
-      if (!postId) return;
+    getUserProfile(setUserData);
+  }, []);
 
+  useEffect(() => {
+    if (!postId) return;
+
+    const load = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const postData = await communityApi.getPost(parseInt(postId));
+        const [postData, commentData] = await Promise.all([
+          apiClient.get<PostResponse>(COMMUNITY.POST(parseInt(postId))),
+          apiClient.get<PaginatedResponse<CommentResponse>>(COMMUNITY.POST_COMMENTS(parseInt(postId))),
+        ]);
 
-        const transformedPost: PostData = {
+        setPost({
           id: postData.id,
           author: {
             id: postData.author.id,
@@ -35,221 +71,229 @@ export const PostDetail = () => {
           no_of_likes: postData.no_of_likes,
           no_of_comments: postData.no_of_comments,
           visibility: postData.visibility,
-          moderation_status: 'OK',
-          type: 'post',
-          is_liked: postData.is_liked,
-        };
+          moderation_status: "OK",
+          type: "post",
+          is_liked: postData.is_liked ?? false,
+        });
 
-        setPost(transformedPost);
-
-        const commentsData = await communityApi.getPostComments(parseInt(postId));
-        const transformedComments = commentsToPostData(commentsData);
-        setComments(transformedComments);
+        setComments(flattenComments(commentData.results ?? []));
       } catch (err) {
-        console.error("Couldn't get post details:", err);
-        setError(err instanceof Error ? err.message : 'Failed to load post');
+        console.error(err);
+        setError("Couldn't load this post. Please try again.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPostAndComments();
+    load();
   }, [postId]);
 
-  // Transform API Comment[] to component PostData[]
-  const commentsToPostData = (comments: Comment[]): PostData[] => {
-    const result: PostData[] = [];
-
-    comments.forEach((comment) => {
-      result.push({
-        id: comment.id,
-        author: {
-          id: comment.author.id,
-          username: comment.author.username,
-        },
-        post_id: comment.post,
-        parent_id: comment.parent || undefined,
-        text_body: comment.text_body,
-        created_at: comment.created_at,
-        no_of_likes: comment.no_of_likes,
-        no_of_comments: 0,
-        no_of_replies: comment.no_of_replies,
-        visibility: 'PB',
-        moderation_status: 'OK',
-        type: 'comment',
-        is_liked: false,
-      });
-
-      if (comment.children && comment.children.length > 0) {
-        comment.children.forEach((reply) => {
-          result.push({
-            id: reply.id,
-            author: {
-              id: reply.author.id,
-              username: reply.author.username,
-            },
-            post_id: reply.post,
-            parent_id: reply.parent || undefined,
-            text_body: reply.text_body,
-            created_at: reply.created_at,
-            no_of_likes: reply.no_of_likes,
-            no_of_comments: 0,
-            no_of_replies: reply.no_of_replies,
-            visibility: 'PB',
-            moderation_status: 'OK',
-            type: 'comment',
-            is_liked: false,
-          });
-        });
-      }
-    });
-
-    return result;
+  const handleReplyChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setReplyText(e.target.value);
+    const ta = e.target;
+    ta.style.height = "auto";
+    ta.style.height = `${ta.scrollHeight}px`;
   };
 
-  const handleLike = async (id: number) => {
+  const handleSubmitReply = async () => {
+    if (!postId || !replyText.trim() || isSubmitting) return;
+    setIsSubmitting(true);
     try {
-      if (id === post?.id) {
-        const result = await communityApi.likePost(id);
-        setPost((prev) =>
-          prev
-            ? {
-                ...prev,
-                is_liked: result.liked,
-                no_of_likes: result.no_of_likes,
-              }
-            : null
-        );
-      } else {
-        const result = await communityApi.likeComment(id);
-        setComments((prev) =>
-          prev.map((comment) =>
-            comment.id === id
-              ? {
-                  ...comment,
-                  is_liked: result.liked,
-                  no_of_likes: result.no_of_likes,
-                }
-              : comment
-          )
-        );
-      }
+      const body: Record<string, unknown> = { text_body: replyText.trim() };
+      if (replyingToId) body.parent = replyingToId;
+
+      const newComment = await apiClient.post<CommentResponse>(
+        COMMUNITY.CREATE_COMMENT(parseInt(postId)),
+        body,
+      );
+      setComments((prev) => [commentToPostData(newComment), ...prev]);
+      setReplyText("");
+      setReplyingToId(null);
+      if (textareaRef.current) textareaRef.current.style.height = "auto";
+
+      setPost((p) => (p ? { ...p, no_of_comments: p.no_of_comments + 1 } : p));
     } catch (err) {
-      console.error('Error liking:', err);
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleComment = () => {
-    console.log('comment clicked');
+  const handleLike = async (id: number, type: "post" | "comment") => {
+    try {
+      const endpoint =
+        type === "post"
+          ? COMMUNITY.LIKE_POST(id)
+          : COMMUNITY.LIKE_COMMENT(id);
+      await apiClient.post(endpoint);
+    } catch (err) {
+      console.error("Like error:", err);
+    }
   };
 
-  const handleProfileClick = () => {
-    console.log('profile clicked');
+  const handleComment = (id: number) => {
+    setReplyingToId(id === post?.id ? null : id);
+    setTimeout(() => textareaRef.current?.focus(), 50);
   };
 
-  const handlePostClick = () => {
-    console.log('post clicked');
-  };
+  const handleProfileClick = (username: string) =>
+    navigate(`/profile/${username}`);
+  const handlePostClick = () => {};
 
-  const topLevelComments = comments.filter((c) => !c.parent_id);
+  const topLevel = comments.filter((c) => !c.parent_id);
   const repliesMap = new Map<number, PostData[]>();
-
-  comments.forEach((comment) => {
-    if (comment.parent_id) {
-      const replies = repliesMap.get(comment.parent_id) || [];
-      replies.push(comment);
-      repliesMap.set(comment.parent_id, replies);
+  comments.forEach((c) => {
+    if (c.parent_id) {
+      const arr = repliesMap.get(c.parent_id) ?? [];
+      arr.push(c);
+      repliesMap.set(c.parent_id, arr);
     }
   });
 
-  if (loading) {
-    return (
-      <div className="post-detail-container">
-        <div className="loading">Loading...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="post-detail-container">
-        <div className="error-message">{error}</div>
-      </div>
-    );
-  }
+  const replyingToUsername = replyingToId
+    ? comments.find((c) => c.id === replyingToId)?.author.username
+    : post?.author.username;
 
   return (
-    <div className="post-detail-container">
-      <div className="post-detail-header">
-        <button className="back-button" onClick={() => navigate(-1)}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            fill="currentColor"
-            viewBox="0 0 16 16"
-          >
-            <path
-              fillRule="evenodd"
-              d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"
-            />
-          </svg>
+    <div className="post-detail-root">
+      <header className="pd-header">
+        <button
+          className="pd-back-btn"
+          onClick={() => navigate(-1)}
+          aria-label="Go back"
+        >
+          <BackArrow />
         </button>
-        <h2>Post</h2>
-      </div>
+        <span className="pd-header-title">Post</span>
+      </header>
 
-      <div className="post-detail-main">
-        {post && (
-          <Post
-            post={post}
-            onLike={handleLike}
-            onComment={handleComment}
-            onProfileClick={handleProfileClick}
-            onPostClick={handlePostClick}
-          />
-        )}
-      </div>
-
-      <div className="comment-section">
-        {topLevelComments.length === 0 ? (
-          <div className="empty-comments">
-            <p>No comments! Be the first to comment!</p>
+      <main className="pd-main">
+        {loading && (
+          <div className="pd-loading">
+            <div className="pd-spinner" />
           </div>
-        ) : (
-          <div className="comment-list">
-            {topLevelComments.map((comment) => {
-              const replies = repliesMap.get(comment.id) || [];
-              return (
-                <div key={comment.id} className="comment-thread">
-                  <Post
-                    post={comment}
-                    onLike={handleLike}
-                    onComment={handleComment}
-                    onProfileClick={handleProfileClick}
-                    onPostClick={handlePostClick}
+        )}
+
+        {error && !loading && (
+          <div className="pd-error">
+            <p>{error}</p>
+            <button
+              className="pd-retry-btn"
+              onClick={() => window.location.reload()}
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && post && (
+          <>
+            <Post
+              post={post}
+              onLike={(id) => handleLike(id, "post")}
+              onComment={handleComment}
+              onProfileClick={handleProfileClick}
+              onPostClick={handlePostClick}
+            />
+
+            <div className="pd-composer">
+              <div className="pd-composer-inner">
+                <div className="pd-composer-avatar">
+                  {userData && (
+                    <ProfileButton
+                      username={userData.username}
+                      size="medium"
+                      onClick={handleProfileClick}
+                    />
+                  )}
+                </div>
+                <div className="pd-composer-field">
+                  {replyingToId && replyingToUsername && (
+                    <div className="pd-replying-to">
+                      Replying to{" "}
+                      <span className="pd-replying-name">
+                        @{replyingToUsername}
+                      </span>
+                      <button
+                        className="pd-cancel-reply"
+                        onClick={() => setReplyingToId(null)}
+                        aria-label="Cancel reply"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                  <textarea
+                    ref={textareaRef}
+                    className="pd-textarea"
+                    placeholder={
+                      replyingToId ? "Write your reply…" : "Post your reply…"
+                    }
+                    value={replyText}
+                    onChange={handleReplyChange}
+                    rows={1}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && (e.metaKey || e.ctrlKey))
+                        handleSubmitReply();
+                    }}
                   />
-                  {replies.length > 0 && (
-                    <div className="replies-container">
+                  <div className="pd-composer-footer">
+                    <span
+                      className={`pd-char-count ${replyText.length > 260 ? "warn" : ""}`}
+                    >
+                      {replyText.length > 0 ? `${280 - replyText.length}` : ""}
+                    </span>
+                    <button
+                      className="pd-submit-btn"
+                      onClick={handleSubmitReply}
+                      disabled={
+                        !replyText.trim() ||
+                        isSubmitting ||
+                        replyText.length > 280
+                      }
+                    >
+                      {isSubmitting ? "Posting…" : "Reply"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <section className="pd-comments-section">
+              {topLevel.length === 0 ? (
+                <div className="pd-empty-state">
+                  <p className="pd-empty-title">No replies yet</p>
+                </div>
+              ) : (
+                topLevel.map((comment) => {
+                  const replies = repliesMap.get(comment.id) ?? [];
+                  return (
+                    <div key={comment.id} className="pd-thread">
+                      <Post
+                        post={comment}
+                        onLike={(id) => handleLike(id, "comment")}
+                        onComment={handleComment}
+                        onProfileClick={handleProfileClick}
+                        showReplyLine={replies.length > 0}
+                      />
                       {replies.map((reply) => (
                         <Post
                           key={reply.id}
                           post={reply}
-                          onLike={handleLike}
+                          onLike={(id) => handleLike(id, "comment")}
                           onComment={handleComment}
                           onProfileClick={handleProfileClick}
-                          onPostClick={handlePostClick}
-                          showReplyLine={true}
                           depth={1}
                         />
                       ))}
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                  );
+                })
+              )}
+            </section>
+          </>
         )}
-      </div>
+      </main>
     </div>
   );
 };

@@ -21,8 +21,6 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('rest_framework.urls')),
-    path('api/laws/', include('apps.laws.urls')),
-    path('api/quizzes/', include('apps.quizzes.urls')),
     path('api/teamsheets/', include('apps.teamsheets.urls')),
     path('api/predictions/', include('apps.predictions.urls')),
     path('api/community/', include('apps.community.urls')),
@@ -34,4 +32,5 @@ urlpatterns = [
     path('api/users/', include('apps.users.urls')),
     path('api/playerdata/', include('apps.playerdata.urls')),
     path('api/livefootball/', include('apps.livefootball.urls')),
+    path('api/referee/', include('apps.referee.urls')),
 ]

@@ -3,8 +3,8 @@
     left: 0;
     top: 0;
     height: 100vh;
-    background: white;
-    border-right: 1px solid #e0e0e0;
+    background: var(--brand-lightest-green);
+    border-right: 1px solid var(--brand-lightest-green-border);
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     width: 72px;
     z-index: 1000;
@@ -28,7 +28,7 @@
   gap: 16px;
   padding: 8px 24px;
   margin-bottom: 28px;
-  color: #0a0a0a;
+  color: var(--primary-text);
   cursor: pointer;
   transition: all 0.2s ease;
   /* border-bottom: 1px solid #e0e0e0; */
@@ -63,7 +63,7 @@
     gap: 4px;
     margin-top: auto;
     padding-top: 20px;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid var(--brand-lightest-green-border);
 }
 
 .sidebar-button {
@@ -76,7 +76,6 @@
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    color: #333;
     font-size: 14px;
     width: 100%;
     text-align: left;
@@ -90,7 +89,7 @@
 }
 
 .sidebar-button:hover a {
-    color: #022a15;
+    color: var(--hover-lightest-green);
 }
 
 .sidebar-item:active {
@@ -106,7 +105,7 @@
     justify-content: center;
     transform: translateX(2px);
     text-decoration: none;
-    color: black;
+    color: var(--primary-text);
 }
 
 .sidebar-profile {
@@ -135,7 +134,7 @@
     top: -6px;
     right: -8px;
     background-color: #ff4444;
-    color: white;
+    color: var(--primary-text);
     font-size: 10px;
     font-weight: 600;
     padding: 2px 5px;
@@ -154,7 +153,7 @@
     opacity: 1;
     transition: opacity 0.3s ease;
     text-decoration: none;
-    color: rgb(30, 30, 30);
+    color: var(--primary-text);
 }
 
 .sidebar.collapsed .sidebar-item-label {

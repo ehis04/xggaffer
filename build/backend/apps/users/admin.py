@@ -132,6 +132,21 @@ class UserRoleAdmin(admin.ModelAdmin):
     search_fields = ['user_profile__user__username', 'user_profile__user__email']
     ordering = ['-created_at']
 
+# @admin.register(FollowRequest)
+# class FollowRequestAdmin(admin.ModelAdmin):
+#     list_display = ["follower", "following", "created_at"]
+#     list_filter = ["created_at"]
+#     search_fields = [
+#         "follower__user__username",
+#         "following__user__username",
+#     ]
+#     ordering = ["-created_at"]
+#     raw_id_fields = ["follower", "following"]
+
+#     def get_queryset(self, request):
+#         return super().get_queryset(request).select_related("follower__user", "following__user")
+
+
 @admin.register(Follow)
 class FollowAdmin(admin.ModelAdmin):
     list_display = ['follower', 'following', 'created_at']

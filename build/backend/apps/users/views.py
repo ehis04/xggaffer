@@ -10,6 +10,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import UserProfile, Follow, UserRole, User
 from rest_framework.generics import CreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListAPIView
+from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q
 from django.core.mail import send_mail
 from django.conf import settings
@@ -104,15 +105,10 @@ class FollowUserView(APIView):
 
         follow, created = Follow.objects.get_or_create(
             follower=follower_profile,
-            following=following_profile
+            following=following_profile,
         )
 
         if created:
-            return Response({"message": f"You have followed {following_profile.user.username}",
-                            "following": True
-                            },
-                            status=status.HTTP_201_CREATED)
-        else:
             return Response(
                 {
                     "message": f"You have already followed {following_profile.user.username}",
@@ -132,23 +128,26 @@ class FollowUserView(APIView):
 
         deleted_count, _ = Follow.objects.filter(
             follower=follower_profile,
-            following=following_profile
+            following=following_profile,
         ).delete()
 
         if deleted_count > 0:
             return Response(
                 {
                     "message": f"You have unfollowed {following_profile.user.username}",
-                    "following": False
-                }, status=status.HTTP_200_OK
+                    "following": False,
+                    "follow_request_pending": False,
+                },
+                status=status.HTTP_200_OK,
             )
-        else:
-            return Response(
-                {
-                    "message": f"You are not following {following_profile.user.username}",
-                    "following": False
-                }, status=status.HTTP_200_OK
-            )
+        return Response(
+            {
+                "message": f"No active follow or pending request for {following_profile.user.username}",
+                "following": False,
+                "follow_request_pending": False,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 class FollowersListView(ListAPIView):
     serializer_class = FollowerListSerializer
@@ -203,19 +202,25 @@ class CheckFollowStatusView(APIView):
 
         is_following = Follow.objects.filter(
             follower=requester_profile,
-            following=target_profile
+            following=target_profile,
         ).exists()
 
         followed_by = Follow.objects.filter(
             follower=target_profile,
-            following=requester_profile
+            following=requester_profile,
         ).exists()
+
+        # follow_request_pending = FollowRequest.objects.filter(
+        #     follower=requester_profile,
+        #     following=target_profile,
+        # ).exists()
 
         return Response(
             {
                 "is_following": is_following,
                 "followed_by": followed_by,
-                "username": username
+                "follow_request_pending": follow_request_pending,
+                "username": username,
             }
         )
 

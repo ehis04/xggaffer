@@ -24,20 +24,21 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: #71767b;
+  color: var(--tertiary-text);
   font-size: 15px;
   font-weight: 500;
-  font-family: inherit;
   transition: all 0.2s ease;
   padding: 0 16px;
 }
 
 .feed-tab:hover {
   background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid transparent;
+  border-radius: 12px;
 }
 
 .feed-tab.active {
-  color: #000000;
+  color: var(--primary-text);
   font-weight: 600;
 }
 
@@ -54,7 +55,7 @@
   transform: translateX(-50%);
   width: 60px;
   height: 4px;
-  background: #022a15;
+  background: var(--hover-lightest-green);
   border-radius: 4px 4px 0 0;
   animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

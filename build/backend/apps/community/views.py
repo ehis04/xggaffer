@@ -2,10 +2,19 @@ from django.shortcuts import render
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import PostSerializer, ExplorePostSerializer, CommentSerializer
+from .serializers import (
+    PostSerializer,
+    ExplorePostSerializer,
+    CommentSerializer,
+    CommentListSerializer,
+    CommentResponseSerializer,
+    NotificationListSerializer,
+)
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import Post, Visibility, ModerationStatus, PostView, Comment, Like, ContentType
+from rest_framework.exceptions import ValidationError
+from .models import Post, Visibility, ModerationStatus, PostView, Comment, Like, ContentType, Notification
+from apps.users.models import User, UserProfile, Follow
 from rest_framework.generics import CreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
 from django.shortcuts import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
@@ -13,6 +22,7 @@ from django.utils.dateparse import parse_date
 from django.db.models import Q, F, FloatField, IntegerField, ExpressionWrapper
 from django.db.models.expressions import RawSQL
 from django.db import transaction
+from django.contrib.contenttypes.prefetch import GenericPrefetch
 
 # Create New Post
 
@@ -30,7 +40,7 @@ class GetPostView(RetrieveAPIView):
         .select_related("author")
         .filter(moderation_status=ModerationStatus.OK, visibility=Visibility.PUBLIC)
     )
-    serializer_class = PostSerializer
+    serializer_class = ExplorePostSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "id"
     lookup_url_kwarg = "post_id"
@@ -38,6 +48,22 @@ class GetPostView(RetrieveAPIView):
     def get_queryset(self):
         queryset = super().get_queryset()
         return queryset.filter(visibility=Visibility.PUBLIC)
+
+class GetCommentView(RetrieveAPIView):
+    queryset = (
+        Comment.objects
+        .select_related("author")
+        .filter(moderation_status=ModerationStatus.OK)
+    )
+    serializer_class = CommentListSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = "id"
+    lookup_url_kwarg = "comment_id"
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset
+    
 
 # Update own posts, get, and delete
 
@@ -242,7 +268,104 @@ class ExplorePostsView(ListAPIView):
                 response.data['suggestion'] = 'Try adjusting your filters.'
         
         return response
+
+class FollowingPostsView(ListAPIView):
+    serializer_class = ExplorePostSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = ExplorePagination
     
+    def get_queryset(self):
+        user = self.request.user
+        
+        try:
+            user_profile = user.profile
+        except UserProfile.DoesNotExist:
+            return Post.objects.none()
+        
+        followed_users_ids = Follow.objects.filter(follower=user_profile).values_list('following__user_id', flat=True)
+        
+        if not followed_users_ids:
+            return Post.objects.none()
+        
+        viewed_post_ids = PostView.objects.filter(user=user).values_list('post_id', flat=True)
+        
+        queryset = Post.objects.filter(
+            moderation_status=ModerationStatus.OK,
+            visibility__in=[Visibility.PUBLIC, Visibility.FOLLOWERS],
+            author_id__in=followed_users_ids
+        ).exclude(Q(id__in=viewed_post_ids)
+        ).select_related(
+            'author', 'author__profile'
+        ).prefetch_related(
+            'post_tags__hashtag',
+            'comments__author'
+        ).order_by('-created_at')
+        
+        return queryset
+
+
+class HashtagPostsView(ListAPIView):
+
+    serializer_class = ExplorePostSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = ExplorePagination
+
+    def get_queryset(self):
+        hashtag_raw = self.request.query_params.get("hashtag")
+        if not hashtag_raw or not str(hashtag_raw).strip():
+            raise ValidationError({"hashtag": "This query parameter is required."})
+        hashtag_clean = str(hashtag_raw).strip().lower().lstrip("#")
+
+        followed_user_ids = []
+        try:
+            user_profile = self.request.user.profile
+            followed_user_ids = list(
+                Follow.objects.filter(follower=user_profile).values_list(
+                    "following__user_id", flat=True
+                )
+            )
+        except UserProfile.DoesNotExist:
+            pass
+
+        visibility_q = Q(visibility=Visibility.PUBLIC)
+        if followed_user_ids:
+            visibility_q |= Q(
+                author_id__in=followed_user_ids,
+                visibility=Visibility.FOLLOWERS,
+            )
+
+        return (
+            Post.objects.filter(
+                moderation_status=ModerationStatus.OK,
+            )
+            .filter(visibility_q)
+            .filter(post_tags__hashtag__body=hashtag_clean)
+            .distinct()
+            .select_related("author", "author__profile")
+            .prefetch_related("post_tags__hashtag", "comments__author")
+            .order_by("-created_at")
+        )
+
+class UserPostsListView(ListAPIView):
+    serializer_class = ExplorePostSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = ExplorePagination
+    
+    def get_queryset(self):
+        username = self.kwargs["username"]
+        
+        if self.request.user.username == username:
+            return Post.objects.filter(
+                author__username=username,
+                moderation_status=ModerationStatus.OK
+            ).select_related("author", "author__profile").prefetch_related("post_tags__hashtag").order_by("-created_at")
+            
+        return Post.objects.filter(
+            author__username=username,
+            moderation_status=ModerationStatus.OK,
+            visibility=Visibility.PUBLIC
+        ).select_related("author", "author__profile").prefetch_related("post_tags__hashtag").order_by("-created_at")
+
 class MarkPostViewedView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -303,9 +426,17 @@ class CreateNewCommentView(CreateAPIView):
         if parent_id:
             parent = get_object_or_404(Comment, pk=parent_id, post=post)
         serializer.save(author=self.request.user, post=post, parent=parent)
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        response_serializer = CommentResponseSerializer(serializer.instance)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        
         
 class CommentPostView(ListAPIView):
-    serializer_class = CommentSerializer
+    serializer_class = CommentListSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = CommentPagination
     
@@ -320,9 +451,9 @@ class CommentPostView(ListAPIView):
             moderation_status=ModerationStatus.OK,
             parent__isnull=True # Only top-level comments (no parent)
         ).select_related(
-            'author' # Optimize: get author info in same query
+            'author' # Optimise: get author info in same query
         ).prefetch_related(
-            'children__author' # Optimize: get all replies and their authors
+            'children__author' # Optimise: get all replies and their authors
         )
     
         queryset = self._apply_ordering(queryset)
@@ -369,3 +500,42 @@ class LikeCommentView(APIView):
         else:
             comment_like.delete()
             return Response({'detail': 'Comment unliked.', 'liked': False}, status=status.HTTP_200_OK)
+        
+class NotificationPagination(PageNumberPagination):
+    page_size = 25
+    page_size_query_param = "page-size"
+    max_page_size = 100
+    page_query_param = "page"
+
+
+class NotificationsListView(ListAPIView):
+    serializer_class = NotificationListSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = NotificationPagination
+
+    def get_queryset(self):
+        qs = (
+            Notification.objects.filter(user=self.request.user)
+            .select_related("triggered_by", "content_type")
+            .prefetch_related(
+                GenericPrefetch(
+                    "content_object",
+                    [
+                        Post.objects.only("id"),
+                        Comment.objects.select_related("post").only(
+                            "id", "post_id", "post__id"
+                        ),
+                        # FollowRequest.objects.only("id"),
+                    ],
+                )
+            )
+            .order_by("-created_at")
+        )
+        unread_only = self.request.query_params.get("unread_only", "").lower()
+        if unread_only in ("1", "true", "yes"):
+            qs = qs.filter(is_read=False)
+        return qs
+
+
+# TODO search for posts with potentially various filters
+# TODO search by text, author, hashtags

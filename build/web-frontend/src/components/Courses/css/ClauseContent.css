@@ -1,0 +1,65 @@
+.clause-content {
+  max-width: 720px;
+}
+
+.cc-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cc-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cc-law-label {
+  font-size: 0.67rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--course-accent-2);
+}
+
+.cc-index {
+  font-size: 0.67rem;
+  color: var(--text-xs);
+}
+
+.cc-read-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #5abf6e;
+  background: #0a2010;
+  border: 1px solid #1e5228;
+  border-radius: 20px;
+  padding: 2px 9px;
+}
+
+.clause-c-title {
+  font-size: 1.65rem;
+  font-weight: 600;
+  color: var(--course-text);
+  line-height: 1.2;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.cc-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 640px;
+}
+
+.cc-paragraph {
+  font-size: 0.95rem;
+  line-height: 1.82;
+  color: var(--primary-text);
+}

@@ -1,53 +1,63 @@
-import './css/PostList.css';
-import { Post } from './Post';
-import type { PostData } from './Post';
-import { communityApi, type Post as ApiPost } from '../../services/api/communityApi';
-import { useState, useEffect } from 'react';
+import "./css/PostList.css";
+import { Post } from "./Post";
+import type { PostData } from "./Post";
+import apiClient from "../../services/api/client";
+import { useState, useEffect } from "react";
+import { COMMUNITY } from "../../services/api/endpoints";
+import type { PaginatedResponse } from "../../services/api/communityApi";
 
 interface PostListProps {
+  postList?: PostData[];
+  refreshTrigger?: number;
+  onLike?: (postId: number) => void;
   onComment?: (postId: number) => void;
   onProfileClick?: (username: string) => void;
   onPostClick?: (postId: number) => void;
 }
 
-// Transform API Post to component PostData
-const apiPostToPostData = (apiPost: ApiPost): PostData => ({
-  id: apiPost.id,
-  author: {
-    id: apiPost.author.id,
-    username: apiPost.author.username,
-  },
-  text_body: apiPost.text_body,
-  created_at: apiPost.created_at,
-  no_of_likes: apiPost.no_of_likes,
-  no_of_comments: apiPost.no_of_comments,
-  visibility: apiPost.visibility,
-  moderation_status: 'OK',
-  type: 'post',
-  hashtags: apiPost.hashtags,
-  is_liked: apiPost.is_liked,
-});
+export interface Post {
+  id: number;
+  author: number;
+  text_body: string;
+  created_at: string;
+  no_of_likes: number;
+  no_of_comments: number;
+  visibility: string;
+  post_tags: Array<{
+    hashtag: { id: number; body: string; usage_count: number };
+  }>;
+  is_liked: boolean;
+  hashtags: string[];
+  time_since_posted: string;
+}
 
 export const PostList: React.FC<PostListProps> = ({
+  refreshTrigger = 0,
   onComment,
   onProfileClick,
   onPostClick,
+  postListType = "EXPLORE_POSTS",
 }) => {
-  const [posts, setPosts] = useState<PostData[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [nextPage, setNextPage] = useState<string | null>(null);
+  const [previousPage, setPreviousPage] = useState<string | null>(null);
 
   const getPosts = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const data = await communityApi.explorePosts({ order_by: 'ranked' });
-      // Transform API posts to component format
-      setPosts(data.results.map(apiPostToPostData));
-    } catch (err) {
-      console.error("Couldn't get posts:", err);
-      setError(err instanceof Error ? err.message : 'Failed to load posts');
+      const data = await apiClient.get<PaginatedResponse<Post>>(COMMUNITY[postListType]);
+      setPosts(data.results);
+      setNextPage(data.next);
+      setPreviousPage(data.previous);
+      console.log(data);
+      return data;
+    } catch (error) {
+      console.error("Couldn't get posts: ", error);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -55,55 +65,31 @@ export const PostList: React.FC<PostListProps> = ({
 
   useEffect(() => {
     getPosts();
-  }, []);
+  }, [postListType, refreshTrigger]);
+
+  const postsPB = posts.filter((item: any) => {
+    if ("type" in item) {
+      return item.type === "post";
+    }
+
+    return true;
+  });
+
+  if (!posts || posts.length === 0) {
+    return (
+      <div className="post-list-container-empty">
+        <p> No posts available </p>
+      </div>
+    );
+  }
 
   const handleLike = async (postId: number) => {
-    try {
-      const result = await communityApi.likePost(postId);
-      setPosts((prev) =>
-        prev.map((post) =>
-          post.id === postId
-            ? {
-                ...post,
-                is_liked: result.liked,
-                no_of_likes: result.no_of_likes,
-              }
-            : post
-        )
-      );
-    } catch (err) {
-      console.error('Error liking post:', err);
-    }
+    await apiClient.post(COMMUNITY.LIKE_POST(postId));
   };
-
-  if (loading) {
-    return (
-      <div className="post-list-container-empty">
-        <p>Loading posts...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="post-list-container-empty">
-        <p>{error}</p>
-        <button onClick={getPosts}>Try Again</button>
-      </div>
-    );
-  }
-
-  if (posts.length === 0) {
-    return (
-      <div className="post-list-container-empty">
-        <p>No posts available</p>
-      </div>
-    );
-  }
 
   return (
     <div className="post-list-container">
-      {posts.map((post) => (
+      {postsPB.map((post) => (
         <Post
           key={post.id}
           post={post}

@@ -4,14 +4,14 @@ import './css/RoleProfileForm.css';
 import apiClient from '../../services/api/client';
 import { useAuth } from '../../context/useAuth';
 
-interface CoachProfileData {
+export interface CoachProfileData {
   experience_level: string;
   formation_preferences: string;
   years_experience: number | string;
   club_name: string;
 }
 
-interface PlayerProfileData {
+export interface PlayerProfileData {
   primary_position: string;
   secondary_position: string;
   preferred_foot: string;

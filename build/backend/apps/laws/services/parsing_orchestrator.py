@@ -1,4 +1,4 @@
-from apps.laws.models import LawEdition, Law, LawClause, LawChange, ParsingJob
+from apps.referee.Laws.models import LawEdition, Law, LawClause, LawChange, ParsingJob
 from apps.laws.utils.pdf_processor import PDFProcessor
 from apps.laws.services.llm_parser import LawsLLMParser
 from django.utils import timezone
