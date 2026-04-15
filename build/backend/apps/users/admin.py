@@ -133,6 +133,31 @@ class UserProfileAdmin(admin.ModelAdmin):
         }),
     )
 
+<<<<<<< HEAD
+=======
+@admin.register(UserRole)
+class UserRoleAdmin(admin.ModelAdmin):
+    list_display = ['user_profile', 'role', 'created_at']
+    list_filter = ['role', 'created_at']
+    search_fields = ['user_profile__user__username', 'user_profile__user__email']
+    ordering = ['-created_at']
+
+# @admin.register(FollowRequest)
+# class FollowRequestAdmin(admin.ModelAdmin):
+#     list_display = ["follower", "following", "created_at"]
+#     list_filter = ["created_at"]
+#     search_fields = [
+#         "follower__user__username",
+#         "following__user__username",
+#     ]
+#     ordering = ["-created_at"]
+#     raw_id_fields = ["follower", "following"]
+
+#     def get_queryset(self, request):
+#         return super().get_queryset(request).select_related("follower__user", "following__user")
+
+
+>>>>>>> 11b065e (Feat/courses backup)
 @admin.register(Follow)
 class FollowAdmin(admin.ModelAdmin):
     list_display = ['follower', 'following', 'created_at']

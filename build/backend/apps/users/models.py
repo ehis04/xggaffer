@@ -35,7 +35,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
-    email_verified = models.BooleanField(default=False)
+    email_verified = models.BooleanField(default=True) # change back to false
     verification_token = models.CharField(max_length=100, blank=True, null=True)
     token_created_at = models.DateTimeField(blank=True, null=True)
     password_reset_token = models.CharField(max_length=100, blank=True, null=True)
@@ -187,7 +187,7 @@ class Follow(models.Model):
                 name='unique_follow_relationship'
             ),
             models.CheckConstraint(
-                check=~Q(follower=F('following')),
+                condition=~Q(follower=F('following')),
                 name='prevent_self_follow'
             )
         ]

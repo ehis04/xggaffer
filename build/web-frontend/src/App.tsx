@@ -1,15 +1,15 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import './App.css';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import "./App.css";
 
-import { ProtectedRoute } from './components/auth/ProtectedRoute';
-import { PublicOnlyRoute } from './components/auth/PublicOnlyRoute';
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { PublicOnlyRoute } from "./components/auth/PublicOnlyRoute";
 
-import LandingPage from './pages/setup/LandingPage';
-import ProfileCreationPage from './pages/setup/ProfileCreationPage';
-import { RoleAssignPage } from './pages/setup/RoleAssignPage';
-import { RoleProfilePage } from './pages/setup/RoleProfilePage';
-import { VerifyEmailPromptPage } from './pages/setup/VerifyEmailPromptPage';
-import { VerifyEmailCallbackPage } from './pages/setup/VerifyEmailCallbackPage';
+import LandingPage from "./pages/setup/LandingPage";
+import ProfileCreationPage from "./pages/setup/ProfileCreationPage";
+import { RoleAssignPage } from "./pages/setup/RoleAssignPage";
+import { RoleProfilePage } from "./pages/setup/RoleProfilePage";
+import { VerifyEmailPromptPage } from "./pages/setup/VerifyEmailPromptPage";
+import { VerifyEmailCallbackPage } from "./pages/setup/VerifyEmailCallbackPage";
 import { ForgotPasswordPage } from './pages/setup/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/setup/ResetPasswordPage';
 
@@ -27,17 +27,21 @@ import LawDetail from './pages/reffing/quiz/LawDetails';
 import LawsList from './pages/reffing/quiz/LawsList';
 import TrashPage from './pages/social/TrashPage';
 
-import { CoachingBase } from './pages/coaching/CoachingBase';
+import { CoachingBase } from "./pages/coaching/CoachingBase";
 import MyClubsPage from './pages/coaching/clubs/MyClubsPage';
 import BrowseClubsPage from './pages/coaching/clubs/BrowseClubPage';
 import CreateClubPage from './pages/coaching/clubs/CreateClubPage';
 import ClubPlayersPage from './pages/coaching/clubs/ClubPlayersPage';
 import { IndividualClubBase } from './pages/coaching/clubs/IndividualClubBase';
-import TeamsheetDetail from './pages/coaching/teamsheets/TeamsheetDetail';
-import TeamsheetList from './pages/coaching/teamsheets/TeamsheetList';
-import TeamsheetListPage from './pages/coaching/teamsheets/TeamsheetListPage';
-import TeamsheetCreatePage from './pages/coaching/teamsheets/TeamsheetCreatePage';
-import TeamsheetDetailPage from './pages/coaching/teamsheets/TeamsheetDetailPage';
+import TeamsheetDetail from "./pages/coaching/teamsheets/TeamsheetDetail";
+import TeamsheetList from "./pages/coaching/teamsheets/TeamsheetList";
+import TeamsheetListPage from "./pages/coaching/teamsheets/TeamsheetListPage";
+import TeamsheetCreatePage from "./pages/coaching/teamsheets/TeamsheetCreatePage";
+import TeamsheetDetailPage from "./pages/coaching/teamsheets/TeamsheetDetailPage";
+import { UserProfilePage } from "./pages/user/UserProfilePage";
+import { RefereeHome } from "./pages/referee/RefereeHome";
+import { CoachingDashboard } from "./pages/coaching/CoachingDashboard";
+import { CoursePage } from "./pages/referee/CoursePage";
 import TeamsheetEditPage from './pages/coaching/teamsheets/TeamsheetEditPage';
 import PredictionPage from './pages/predictions/PredictionPage';
 
@@ -83,8 +87,12 @@ function App() {
             /* working fine */
             <Route path="/create/profile/role" element={<RoleAssignPage />} />
             /* working fine */
-            <Route path="/create/profile/role/details" element={<RoleProfilePage />} />
+            <Route
+              path="/create/profile/role/details"
+              element={<RoleProfilePage />}
+            />
           </Route>
+          <Route path="/profile/:username" element={<UserProfilePage />} />
 
           <Route element={<ProtectedRoute />}>
             /* need lizzy push */
@@ -106,11 +114,8 @@ function App() {
             <Route path="/fitnessBase" element={<FitnessBase />} />
             /* need to see lizzy push */
             <Route path="/situationBase" element={<SituationBase />} />
-            /* need to see lizzy push */
             <Route path="/laws" element={<LawsList />} />
-            /* need to see lizzy push */
             <Route path="/laws/:lawNumber" element={<LawDetail />} />
-            /* need to see lizzy push */
             <Route path="/laws/changes" element={<ChangesTimeline />} />
 
             <Route path="/coaching" element={<CoachingBase />} />
@@ -118,7 +123,10 @@ function App() {
             /* old page, delete */
             <Route path="/coaching/teamsheets" element={<TeamsheetList />} />
             /* old page, delete */
-            <Route path="/coaching/teamsheets/:id" element={<TeamsheetDetail />} />
+            <Route
+              path="/coaching/teamsheets/:id"
+              element={<TeamsheetDetail />}
+            />
 
             /* no issues, upgrades noted in docs */
             <Route path="/coaching/predictions" element={<PredictionPage />} />
@@ -152,13 +160,23 @@ function App() {
             /* no issues, upgrades noted in docs
             */
 
-            <Route path="/clubs/:clubId/teamsheets" element={<TeamsheetListPage />} />
+            <Route
+              path="/clubs/:clubId/teamsheets"
+              element={<TeamsheetListPage />}
+            />
 
             /* no issues here, upgrades noted in docs */
-            <Route path="/clubs/:clubId/teamsheets/new" element={<TeamsheetCreatePage />} />
+            <Route
+              path="/clubs/:clubId/teamsheets/new"
+              element={<TeamsheetCreatePage />}
+            />
 
             /* no issues, upgrades noted in docs */
-            <Route path="/clubs/:clubId/teamsheets/:teamsheetId" element={<TeamsheetDetailPage />} />
+            <Route
+              path="/clubs/:clubId/teamsheets/:teamsheetId"
+              element={<TeamsheetDetailPage />}
+            />
+            <Route path="/coaching/dashboard" element={<CoachingDashboard />} />
 
             /* No issues, updates noted in docs*/
             <Route path="/clubs/:clubId/teamsheets/:teamsheetId/edit" element={<TeamsheetEditPage />} />
@@ -182,6 +200,9 @@ function App() {
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
+          
+
+          
         </Routes>
       </div>
     </BrowserRouter>

@@ -1,13 +1,11 @@
 from rest_framework import serializers
 from .models import Post, Comment, HashTag, PostTag, Notification, Mention, Block, Like, PostView
 from apps.users.models import User, UserProfile
-
 class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
-        fields = ['author', 'text_body', 'attachments_count', 'created_at', 'no_of_likes', 'no_of_comments', 'visibility']
-        read_only_fields = ['author', 'moderation_status', 'no_of_likes', 'attachments_count', 'created_at', 'no_of_comments']
-
+        fields = ['id', 'author', 'text_body', 'visibility', 'attachments_count', 'created_at', 'no_of_likes', 'no_of_comments']
+        read_only_fields = ['id', 'author', 'moderation_status', 'no_of_likes', 'attachments_count', 'created_at', 'no_of_comments']
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
@@ -33,6 +31,31 @@ class CommentSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ['id', 'author', 'text_body', 'created_at', 'no_of_likes']
+        
+class CommentListSerializer(serializers.ModelSerializer):
+    author = serializers.CharField(source='author.username', read_only=True)
+    children = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Comment
+        fields = ['id', 'author', 'text_body', 'created_at', 'no_of_likes', 'no_of_replies', 'post', 'parent', 'moderation_status', 'children', 'is_liked']
+        
+    def get_children(self, obj):
+        qs = obj.children.select_related("author").filter(moderation_status="OK")
+        return CommentListSerializer(qs, many=True, context=self.context).data
+
+    def get_is_liked(self, obj):
+        request = self.context.get("request")
+        if request and request.user and request.user.is_authenticated:
+            from django.contrib.contenttypes.models import ContentType
+            content_type = ContentType.objects.get_for_model(Comment)
+            return Like.objects.filter(
+                user=request.user,
+                content_type=content_type,
+                object_id=obj.id
+            ).exists()
+        return False
 
 class PostAuthorSerializer(serializers.ModelSerializer):
     class Meta:
@@ -92,3 +115,58 @@ class ExplorePostSerializer(serializers.ModelSerializer):
         else:
             return "now"
         
+class CommentResponseSerializer(serializers.ModelSerializer):
+    author = serializers.CharField(source='author.username', read_only=True)
+    
+    class Meta:
+        model = Comment
+        fields = ['id', 'author', 'text_body', 'created_at', 'no_of_likes', 'no_of_replies', 'post', 'parent', 'moderation_status']
+
+
+class NotificationListSerializer(serializers.ModelSerializer):
+    triggered_by = PostAuthorSerializer(read_only=True)
+    target_kind = serializers.SerializerMethodField()
+    post_id = serializers.SerializerMethodField()
+    comment_id = serializers.SerializerMethodField()
+    follow_request_id = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Notification
+        fields = [
+            "id",
+            "notification_type",
+            "is_read",
+            "created_at",
+            "triggered_by",
+            "target_kind",
+            "post_id",
+            "comment_id",
+            "follow_request_id",
+        ]
+
+    def get_target_kind(self, obj):
+        if not obj.content_type_id:
+            return None
+        return obj.content_type.model
+
+    def get_post_id(self, obj):
+        target = obj.content_object
+        if target is None:
+            return None
+        if isinstance(target, Post):
+            return target.id
+        if isinstance(target, Comment):
+            return target.post_id
+        return None
+
+    def get_comment_id(self, obj):
+        target = obj.content_object
+        if isinstance(target, Comment):
+            return target.id
+        return None
+
+    # def get_follow_request_id(self, obj):
+    #     target = obj.content_object
+    #     if isinstance(target, FollowRequest):
+    #         return target.id
+    #     return None

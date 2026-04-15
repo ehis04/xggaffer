@@ -4,7 +4,7 @@ import "./css/ProfileButton.css";
 export interface ProfileButtonProps {
   username: string;
   profileImage?: string;
-  size?: "small" | "medium" | "large";
+  size?: "small" | "medium" | "large" | "extra-large";
   onClick?: (username: string) => void;
   showLabel?: boolean;
 }
