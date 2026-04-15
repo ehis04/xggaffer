@@ -6,14 +6,19 @@ import { Sidebar } from "../../components/Navigation/SideBar";
 import { SocialUserButtons } from "../../components/Social/SocialUserButtons";
 import "./css/SocialPage.css";
 import { PostList } from "../../components/Social/PostList";
-
+import { ProfileCard } from "../../components/BoxSections/ProfileCard";
+import { useState } from "react";
 
 export const SocialPage = () => {
+  const [activeTab, setActiveTab] = useState<"forYou" | "following">("forYou");
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   const handleTabChange = (tab: "forYou" | "following") => {
-    console.log("Active tab:", tab);
+    setActiveTab(tab);
   };
   const handlePost = (content: string) => {
     console.log("New Post:", content);
+    setRefreshTrigger((prev) => prev + 1);
   };
   return (
     <div className="social-page">
@@ -29,7 +34,8 @@ export const SocialPage = () => {
         </div>
       </div>
       <div className="trendingBox-section">
-        <TrendingBox />
+        {/* <TrendingBox /> */}
+        <ProfileCard />
       </div>
       <div className="main-section">
         <div className="social-tabs">
@@ -37,7 +43,10 @@ export const SocialPage = () => {
         </div>
         <CreatePost onPost={handlePost} />
         <div className="feed-content">
-          <PostList />
+          <PostList
+            postListType={activeTab === "forYou" ? "EXPLORE_POSTS" : "FOLLOWING_POSTS"}
+            refreshTrigger={refreshTrigger}
+          />
         </div>
       </div>
     </div>
