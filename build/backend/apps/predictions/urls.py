@@ -3,6 +3,7 @@ from .views import (
     AvailableLineupTeamsView,
     AvailableTacticalTeamsView,
     AvailableTeamsView,
+    ChatQueryView,
     EloHistoryView,
     EloRankingView,
     ModelInfoView,
@@ -19,6 +20,8 @@ urlpatterns = [
     path('predict/', PredictMatchView.as_view(), name='predict-match'),
     path('teams/', AvailableTeamsView.as_view(), name='available-teams'),
     path('model-info/', ModelInfoView.as_view(), name='model-info'),
+    
+    path('chat/', ChatQueryView.as_view(), name='chat-query'),
 
     path('elo/rankings/<str:league>/', EloRankingView.as_view(), name='elo-rankings'),
     path('elo/history/<str:team>/', EloHistoryView.as_view(), name='elo-history'),

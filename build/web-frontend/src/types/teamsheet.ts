@@ -37,6 +37,10 @@ export interface Teamsheet {
   starter_count: number;
   substitute_count: number;
   players: TeamsheetPlayer[];
+  is_trashed: boolean;
+  trashed_at: string | null;
+  trash_expires_at: string | null;
+  trashed_by: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -46,6 +50,7 @@ export interface TeamsheetListItem {
   title: string;
   club: number;
   club_name: string;
+  created_by: number | null;
   formation: string;
   formation_display: string;
   match_date: string | null;
@@ -53,6 +58,10 @@ export interface TeamsheetListItem {
   is_template: boolean;
   is_complete: boolean;
   starter_count: number;
+  is_trashed: boolean;
+  trashed_at: string | null;
+  trash_expires_at: string | null;
+  trashed_by: number | null;
   updated_at: string;
 }
 
@@ -130,6 +139,16 @@ export interface CreateTeamsheetPayload {
   notes?: string;
   is_template?: boolean;
   player_assignments?: PlayerSlotAssignment[];
+}
+
+export type TeamsheetTrashMode = 'only' | 'include';
+
+export interface TeamsheetListOptions {
+  trash?: TeamsheetTrashMode;
+}
+
+export interface TeamsheetGetOptions {
+  trash?: TeamsheetTrashMode;
 }
 
 export interface SlotState {

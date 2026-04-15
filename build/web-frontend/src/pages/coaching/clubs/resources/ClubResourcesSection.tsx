@@ -21,6 +21,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 interface ClubResourcesSectionProps {
   club: Club;
   isMember: boolean;
+  canManageResources: boolean;
 }
 
 type ResourceStatusMap = Record<number, ClubResourceMyStatus>;
@@ -29,6 +30,69 @@ type UnknownRecord = Record<string, unknown>;
 
 const ACCEPTED_RESOURCE_TYPES =
   '.pdf,.docx,.pptx,.xlsx,.csv,.png,.jpg,.jpeg,.webp';
+
+const ACCEPTED_EXTENSIONS = ACCEPTED_RESOURCE_TYPES.split(',').map((e) => e.trim());
+
+function extractDrfMessage(data: unknown): string | null {
+  if (!data || typeof data !== 'object') return null;
+  const obj = data as Record<string, unknown>;
+  // DRF returns field errors as { field: ["msg"] } or { field: "msg" }
+  for (const value of Object.values(obj)) {
+    if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') {
+      return value[0];
+    }
+    if (typeof value === 'string' && value.length > 0) {
+      return value;
+    }
+  }
+  return null;
+}
+
+function classifyUploadError(err: unknown): string {
+  // Network failure — fetch never completed
+  if (err instanceof TypeError) {
+    return 'File upload failed: your internet connection was interrupted. Check your connection and try again.';
+  }
+
+  const apiErr = err as { status?: number; data?: unknown };
+  const status = apiErr.status;
+
+  // Extract the actual message from DRF field-level errors (e.g. { file: ["..."] })
+  const drfMessage = extractDrfMessage(apiErr.data);
+  const rawMessage = drfMessage ?? (err instanceof Error ? err.message : '');
+  const lower = rawMessage.toLowerCase();
+
+  if (status === 413 || lower.includes('too large') || lower.includes('exceeds') || lower.includes('size limit')) {
+    return 'File upload failed: the file is too large. Try compressing it or splitting it into smaller files.';
+  }
+  if (
+    status === 415 ||
+    lower.includes('unsupported file type') ||
+    lower.includes('unsupported format') ||
+    lower.includes('file type') ||
+    lower.includes('extension')
+  ) {
+    return `File upload failed: that file type is not accepted. Supported types are ${ACCEPTED_EXTENSIONS.join(', ')}.`;
+  }
+  if (status === 400) {
+    return rawMessage
+      ? `File upload failed: ${rawMessage}`
+      : 'File upload failed: the request was invalid. Check the file and try again.';
+  }
+  if (status === 403) {
+    return 'File upload failed: you do not have permission to upload files for this club.';
+  }
+  if (status === 401) {
+    return 'File upload failed: you need to be logged in to upload files.';
+  }
+  if (status !== undefined && status >= 500) {
+    return 'File upload failed: a server error occurred. Please try again later.';
+  }
+
+  return rawMessage
+    ? `File upload failed: ${rawMessage}`
+    : 'File upload failed: something went wrong. Please try again later.';
+}
 
 const HEARTBEAT_INTERVAL_MS = 15000;
 
@@ -51,6 +115,11 @@ const IMPORT_TYPE_OPTIONS: Array<{
     value: 'squad_metrics',
     label: 'Squad metrics',
     description: 'Create or update season-level club enrichment rows such as wins, goals, xG, and PPDA.',
+  },
+  {
+    value: 'other',
+    label: 'Other / raw preview',
+    description: 'Preview the CSV/XLSX contents without requiring a structured import schema.',
   },
 ];
 
@@ -192,6 +261,14 @@ const getPreviewRows = (job: ClubImportJob | null): UnknownRecord[] => {
   return asArray<UnknownRecord>(asRecord(job?.preview_payload).rows);
 };
 
+const getPreviewHeaders = (job: ClubImportJob | null): string[] => {
+  return asArray<string>(asRecord(job?.preview_payload).headers);
+};
+
+const getRawPreviewRows = (job: ClubImportJob | null): UnknownRecord[] => {
+  return asArray<UnknownRecord>(asRecord(job?.preview_payload).rows);
+};
+
 const getReportErrors = (job: ClubImportJob | null): UnknownRecord[] => {
   return asArray<UnknownRecord>(asRecord(job?.report_payload).errors);
 };
@@ -205,6 +282,7 @@ const getErrorSummaryMessage = (job: ClubImportJob | null): string | null => {
 export const ClubResourcesSection = ({
   club,
   isMember,
+  canManageResources,
 }: ClubResourcesSectionProps) => {
   const uploadTitleInputId = `club-resource-upload-title-${club.id}`;
   const uploadDescriptionInputId = `club-resource-upload-description-${club.id}`;
@@ -226,6 +304,7 @@ export const ClubResourcesSection = ({
   const [uploading, setUploading] = useState(false);
 
   const [resourceActionMessage, setResourceActionMessage] = useState<string | null>(null);
+  const [resourceUploadError, setResourceUploadError] = useState<string | null>(null);
 
   const [selectedEngagement, setSelectedEngagement] =
     useState<ClubResourceEngagement | null>(null);
@@ -235,6 +314,15 @@ export const ClubResourcesSection = ({
 
   const [viewerResource, setViewerResource] = useState<ClubResource | null>(null);
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
+  const viewerFile = useMemo(
+    () =>
+      viewerUrl
+        ? import.meta.env.DEV
+          ? { url: viewerUrl, withCredentials: true }
+          : viewerUrl
+        : null,
+    [viewerUrl],
+  );
   const [viewerLoading, setViewerLoading] = useState(false);
   const [viewerError, setViewerError] = useState<string | null>(null);
   const [viewerPage, setViewerPage] = useState(1);
@@ -252,6 +340,7 @@ export const ClubResourcesSection = ({
   const [loadingImportDetail, setLoadingImportDetail] = useState(false);
   const [committingImport, setCommittingImport] = useState(false);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const currentPageRef = useRef(1);
   const activeViewerResourceRef = useRef<ClubResource | null>(null);
   const lastHeartbeatAtRef = useRef<number | null>(null);
@@ -475,6 +564,7 @@ export const ClubResourcesSection = ({
     try {
       setUploading(true);
       setResourceActionMessage(null);
+      setResourceUploadError(null);
 
       await clubsApi.uploadResource(club.id, {
         title: uploadTitle.trim(),
@@ -487,14 +577,11 @@ export const ClubResourcesSection = ({
       setUploadDescription('');
       setUploadFile(null);
       setUploadVisibility('staff_only');
+      if (fileInputRef.current) fileInputRef.current.value = '';
       setResourceActionMessage('Resource uploaded successfully.');
       await loadResources();
     } catch (err) {
-      setResourceActionMessage(
-        err instanceof Error
-          ? err.message
-          : 'Upload failed. Only owner/admin/coach members can upload resources.',
-      );
+      setResourceUploadError(classifyUploadError(err));
     } finally {
       setUploading(false);
     }
@@ -530,6 +617,38 @@ export const ClubResourcesSection = ({
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Failed to open this resource.';
+      setViewerError(message);
+      setResourceActionMessage(message);
+    } finally {
+      setViewerLoading(false);
+    }
+  };
+
+  const handleDownloadResource = async (resource: ClubResource) => {
+    try {
+      setResourceActionMessage(null);
+      setViewerError(null);
+      setViewerLoading(true);
+
+      const access = await clubsApi.getResourceAccess(club.id, resource.id);
+
+      const link = document.createElement('a');
+      link.href = access.access_url;
+      link.download = resource.original_filename ?? 'resource';
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      const latestStatus = await clubsApi.getMyResourceStatus(club.id, resource.id);
+      setResourceStatuses((current) => ({
+        ...current,
+        [resource.id]: latestStatus,
+      }));
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to download this resource.';
       setViewerError(message);
       setResourceActionMessage(message);
     } finally {
@@ -669,8 +788,18 @@ export const ClubResourcesSection = ({
 
   const previewCounts = getPreviewCounts(selectedImportJob);
   const previewRows = getPreviewRows(selectedImportJob);
+  const previewHeaders = getPreviewHeaders(selectedImportJob).slice(0, 5);
+  const allRawPreviewRows = getRawPreviewRows(selectedImportJob);
+  const rawPreviewRows = allRawPreviewRows.slice(0, 5);
+  const rawPreviewRowCount = allRawPreviewRows.length;
+  const isRawPreview =
+    Boolean(asRecord(selectedImportJob?.preview_payload).raw_preview) ||
+    selectedImportJob?.import_type === 'other';
   const reportCounts = getReportCounts(selectedImportJob);
   const reportErrors = getReportErrors(selectedImportJob);
+  const previewCanCommit = Boolean(
+    asRecord(selectedImportJob?.preview_payload).can_commit,
+  );
   const selectedImportOption = IMPORT_TYPE_OPTIONS.find(
     (option) => option.value === selectedImportType,
   );
@@ -696,20 +825,25 @@ export const ClubResourcesSection = ({
         <div>
           <h2 className={styles.title}>Club Resources</h2>
           <p className={styles.subtitle}>
-            Upload learning material, analysis packs, spreadsheets, and other club files.
+            {canManageResources
+              ? 'Upload learning material, analysis packs, spreadsheets, and other club files.'
+              : 'Access learning material, analysis packs, spreadsheets, and other club files.'
+            }
           </p>
         </div>
       </div>
 
       {error && <div className={styles.error}>{error}</div>}
+      {resourceUploadError && <div className={styles.error}>{resourceUploadError}</div>}
       {resourceActionMessage && <div className={styles.message}>{resourceActionMessage}</div>}
 
       <div className={styles.grid}>
-        <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Upload resource</h3>
-          <p className={styles.cardSubtitle}>
-            Coaches and authorised staff can upload PDFs, Word, PowerPoint, Excel, CSV, and images.
-          </p>
+        {canManageResources && (
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Upload resource</h3>
+            <p className={styles.cardSubtitle}>
+              Coaches and authorised staff can upload PDFs, Word, PowerPoint, Excel, CSV, and images.
+            </p>
 
           <form className={styles.form} onSubmit={handleUploadSubmit}>
             <div className={styles.formGroup}>
@@ -762,6 +896,7 @@ export const ClubResourcesSection = ({
                 File
               </label>
               <input
+                ref={fileInputRef}
                 id={uploadFileInputId}
                 className={styles.fileInput}
                 type="file"
@@ -786,6 +921,7 @@ export const ClubResourcesSection = ({
             </div>
           </form>
         </div>
+        )}
 
         <div className={styles.card}>
           <h3 className={styles.cardTitle}>Resource library</h3>
@@ -795,16 +931,26 @@ export const ClubResourcesSection = ({
 
           {loading ? (
             <div className={styles.loading}>Loading club resources…</div>
-          ) : resources.length === 0 ? (
-            <div className={styles.emptyState}>No resources uploaded yet.</div>
-          ) : (
-            <div className={styles.resourceList}>
-              {resources.map((resource) => {
-                const myStatus = resourceStatuses[resource.id];
+          ) : (() => {
+            const visibleResources = resources.filter((resource) =>
+              resource.engagement_visibility === 'club_visible' ||
+              (resource.engagement_visibility === 'staff_only' && canManageResources)
+            );
+            return visibleResources.length === 0 ? (
+              <div className={styles.emptyState}>
+                {resources.length === 0
+                  ? 'No resources uploaded yet.'
+                  : 'No resources available for your access level.'
+                }
+              </div>
+            ) : (
+              <div className={styles.resourceList}>
+                {visibleResources.map((resource) => {
+                  const myStatus = resourceStatuses[resource.id];
 
-                return (
-                  <div key={resource.id} className={styles.resourceCard}>
-                    <div className={styles.resourceHeader}>
+                  return (
+                    <div key={resource.id} className={styles.resourceCard}>
+                      <div className={styles.resourceHeader}>
                       <div className={styles.resourceTitleGroup}>
                         <h4 className={styles.resourceTitle}>{resource.title}</h4>
                         <p className={styles.resourceSubtitle}>
@@ -890,7 +1036,16 @@ export const ClubResourcesSection = ({
                         disabled={viewerLoading}
                         onClick={() => handleOpenResource(resource)}
                       >
-                        {resource.can_inline_view ? 'Open PDF' : 'Open / Download'}
+                        {resource.can_inline_view ? 'Open inline' : 'Open'}
+                      </button>
+
+                      <button
+                        className={styles.secondaryButton}
+                        type="button"
+                        disabled={viewerLoading}
+                        onClick={() => handleDownloadResource(resource)}
+                      >
+                        Download
                       </button>
 
                       <button
@@ -949,7 +1104,7 @@ export const ClubResourcesSection = ({
                 );
               })}
             </div>
-          )}
+          )})()}
         </div>
       </div>
 
@@ -1137,7 +1292,7 @@ export const ClubResourcesSection = ({
                       </div>
                     </div>
 
-                    {selectedImportJob.status === 'preview_ready' && (
+                    {selectedImportJob.status === 'preview_ready' && previewCanCommit && (
                       <div className={styles.commitBar}>
                         <div className={styles.commitText}>
                           Review the preview carefully before confirming the final commit.
@@ -1153,7 +1308,60 @@ export const ClubResourcesSection = ({
                       </div>
                     )}
 
-                    {previewRows.length > 0 && (
+                    {selectedImportJob.status === 'preview_ready' && !previewCanCommit && (
+                      <div className={styles.message}>
+                        {selectedImportJob.import_type === 'other'
+                          ? 'This preview cannot be committed; it is a raw file review only.'
+                          : 'This preview cannot be committed as a structured import. It is shown for file review only.'
+                        }
+                      </div>
+                    )}
+
+                    {isRawPreview && rawPreviewRows.length > 0 ? (
+                      <div className={styles.previewSection}>
+                        <h5 className={styles.subsectionTitle}>Raw preview</h5>
+                        <div className={styles.mutedText}>
+                          This preview shows the imported CSV/XLSX rows without requiring a structured import schema.
+                        </div>
+                        <div className={styles.previewRowList}>
+                          <table>
+                            <thead>
+                              <tr>
+                                <th>#</th>
+                                <th>Status</th>
+                                {previewHeaders.map((header) => (
+                                  <th key={header}>{header}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {rawPreviewRows.map((row, index) => {
+                                const rowNumber = typeof row.row_number === 'number'
+                                  ? row.row_number
+                                  : index + 1;
+                                const rowStatus = typeof row.status === 'string' ? row.status : 'preview';
+                                const rawData = asRecord(row.raw_data);
+
+                                return (
+                                  <tr key={rowNumber}>
+                                    <td>{formatUnknownValue(rowNumber)}</td>
+                                    <td>{rowStatus}</td>
+                                    {previewHeaders.map((header) => (
+                                      <td key={header}>{formatUnknownValue(rawData[header])}</td>
+                                    ))}
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                        {rawPreviewRowCount > 5 && (
+                          <div className={styles.mutedText}>
+                            Showing the first 5 preview rows. Use the job detail payload for the full persisted preview.
+                          </div>
+                        )}
+                      </div>
+                    ) : previewRows.length > 0 ? (
                       <div className={styles.previewSection}>
                         <h5 className={styles.subsectionTitle}>Preview rows</h5>
                         <div className={styles.previewRowList}>
@@ -1261,7 +1469,7 @@ export const ClubResourcesSection = ({
                           </div>
                         )}
                       </div>
-                    )}
+                    ) : null}
 
                     {(selectedImportJob.status === 'completed' || selectedImportJob.status === 'failed') && (
                       <div className={styles.reportPanel}>
@@ -1351,6 +1559,15 @@ export const ClubResourcesSection = ({
 
               <button
                 type="button"
+                className={styles.secondaryButton}
+                disabled={!viewerResource || !viewerUrl || viewerLoading}
+                onClick={() => viewerResource && handleDownloadResource(viewerResource)}
+              >
+                Download
+              </button>
+
+              <button
+                type="button"
                 className={styles.closeButton}
                 onClick={() => void handleCloseViewer()}
               >
@@ -1390,7 +1607,7 @@ export const ClubResourcesSection = ({
 
             <div className={styles.viewerBody}>
               <Document
-                file={viewerUrl}
+                file={viewerFile}
                 loading={<div className={styles.emptyState}>Loading PDF…</div>}
                 onLoadSuccess={({ numPages }) => {
                   setViewerPageCount(numPages);

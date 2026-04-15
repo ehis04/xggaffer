@@ -10,6 +10,7 @@ from apps.players.playerProfile.models import PlayerProfile
 class ExternalProvider(models.TextChoices):
     FOOTBALL_DATA = "football_data", "football-data.org"
     UNDERSTAT = "understat", "Understat"
+    SOFASCORE = "sofascore", "Sofascore"
 
 
 class ProviderSyncStatus(models.TextChoices):

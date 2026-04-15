@@ -59,3 +59,31 @@ export interface ModelInfoResponse {
   training_info: Record<string, unknown>;
   contract_version?: string;
 }
+
+export interface ChatEntities {
+  home_team: string | null;
+  away_team: string | null;
+  team: string | null;
+  player_name: string | null;
+  league: string | null;
+  season: string | null;
+}
+
+export interface ChatStructuredData {
+  intent: string;
+  entities: ChatEntities;
+  engine_data: Record<string, unknown>;
+  partial: boolean;
+  error: string | null;
+  timestamp: string;
+  capabilities?: Record<string, unknown>;
+}
+
+export interface ChatResponse {
+  prose: string;
+  structured_data: ChatStructuredData;
+  intent: string;
+  entities: ChatEntities;
+  used_fallback: boolean;
+  query_type: string;
+}

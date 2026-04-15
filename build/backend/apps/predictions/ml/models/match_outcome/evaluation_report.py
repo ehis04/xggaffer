@@ -6,8 +6,8 @@ from sklearn.base import clone
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import accuracy_score, classification_report, log_loss
 
-from ml.models.match_outcome.config import RANDOM_SEED
-from ml.models.match_outcome.evaluate import (
+from apps.predictions.ml.models.match_outcome.config import RANDOM_SEED
+from apps.predictions.ml.models.match_outcome.evaluate import (
     compute_ece,
     compute_reliability_data,
     compare_calibration_methods,
@@ -18,12 +18,12 @@ from ml.models.match_outcome.evaluate import (
     print_walk_forward_summary,
     tune_regularisation,
 )
-from ml.models.match_outcome.prepare_data import (
+from apps.predictions.ml.models.match_outcome.prepare_data import (
     get_feature_columns,
     get_temporal_split,
     prepare_dataset,
 )
-from ml.models.match_outcome.train import (
+from apps.predictions.ml.models.match_outcome.train import (
     CALIBRATION_CV,
     CALIBRATION_METHOD,
     MODELS,

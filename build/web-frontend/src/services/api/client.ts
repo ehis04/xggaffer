@@ -1,11 +1,44 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface RequestOptions extends RequestInit {
-  params?: Record<string, string>;
+  params?: Record<string, string | number | boolean>;
 }
 
 const isFormDataBody = (body: unknown): body is FormData =>
   typeof FormData !== 'undefined' && body instanceof FormData;
+
+const extractApiErrorMessage = (error: unknown): string | null => {
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  if (Array.isArray(error)) {
+    return error.map(extractApiErrorMessage).filter(Boolean).join(' ');
+  }
+
+  if (typeof error === 'object' && error !== null) {
+    if ('detail' in error) {
+      return extractApiErrorMessage((error as Record<string, unknown>).detail);
+    }
+
+    if ('message' in error) {
+      return extractApiErrorMessage((error as Record<string, unknown>).message);
+    }
+
+    if ('non_field_errors' in error) {
+      return extractApiErrorMessage(
+        (error as Record<string, unknown>).non_field_errors
+      );
+    }
+
+    const parts = Object.values(error as Record<string, unknown>)
+      .map(extractApiErrorMessage)
+      .filter(Boolean);
+    return parts.length > 0 ? parts.join(' ') : null;
+  }
+
+  return null;
+};
 
 function getCsrfToken(): string | null {
   const cookies = document.cookie.split(';');
@@ -66,7 +99,12 @@ class ApiClient {
     let url = `${this.baseUrl}${endpoint}`;
 
     if (params) {
-      const searchParams = new URLSearchParams(params);
+      const searchParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, String(value));
+        }
+      });
       url += `?${searchParams.toString()}`;
     }
 
@@ -105,7 +143,10 @@ class ApiClient {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      const err = new Error(error.detail || error.message || `HTTP ${response.status}`) as Error & {
+      const message =
+        extractApiErrorMessage(error) ||
+        `HTTP ${response.status}`;
+      const err = new Error(message) as Error & {
         status?: number;
         data?: unknown;
       };
@@ -121,7 +162,10 @@ class ApiClient {
     return response.json();
   }
 
-  async get<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
+  async get<T>(
+    endpoint: string,
+    params?: Record<string, string | number | boolean>
+  ): Promise<T> {
     return this.request<T>(endpoint, { method: 'GET', params });
   }
 

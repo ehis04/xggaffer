@@ -205,7 +205,7 @@ class CurrentEloRating(models.Model):
 
 def populate_elo_from_csv(csv_path: str | None = None) -> dict[str, int]:
     import pandas as pd
-    from ml.models.match_outcome.config import PROCESSED_DIR
+    from apps.predictions.ml.models.match_outcome.config import PROCESSED_DIR
 
     if csv_path is None:
         csv_path = str(PROCESSED_DIR / "elo_ratings.csv")

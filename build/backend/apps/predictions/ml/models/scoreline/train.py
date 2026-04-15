@@ -9,7 +9,7 @@ import statsmodels.api as sm
 from scipy.optimize import minimize_scalar
 from scipy.stats import poisson as poisson_dist
 
-from ml.models.scoreline.config import (
+from apps.predictions.ml.models.scoreline.config import (
     AWAY_GOALS_FEATURES,
     DEFAULT_RHO_BOUNDS,
     DEFAULT_TIME_DECAY_RATE,
@@ -129,6 +129,32 @@ def fit_rho(
     return float(result.x)
 
 
+def compute_nll(
+    test_df: pd.DataFrame,
+    lambda_home: np.ndarray,
+    lambda_away: np.ndarray,
+    rho: float,
+) -> float:
+    hg = test_df["home_goals"].values.astype(int)
+    ag = test_df["away_goals"].values.astype(int)
+
+    p_indep = poisson_dist.pmf(hg, lambda_home) * poisson_dist.pmf(ag, lambda_away)
+
+    tau = np.ones(len(hg))
+    mask_00 = (hg == 0) & (ag == 0)
+    mask_10 = (hg == 1) & (ag == 0)
+    mask_01 = (hg == 0) & (ag == 1)
+    mask_11 = (hg == 1) & (ag == 1)
+
+    tau[mask_00] = 1.0 + lambda_home[mask_00] * lambda_away[mask_00] * rho
+    tau[mask_10] = 1.0 - lambda_away[mask_10] * rho
+    tau[mask_01] = 1.0 - lambda_home[mask_01] * rho
+    tau[mask_11] = 1.0 + rho
+
+    p_dc = np.maximum(p_indep * tau, 1e-10)
+    return float(-np.mean(np.log(p_dc)))
+
+
 
 def scoreline_matrix(
     lambda_h: float,
@@ -204,7 +230,7 @@ def train_score_model(
     decay_rate: float = DEFAULT_TIME_DECAY_RATE,
     save: bool = True,
 ) -> dict:
-    from ml.models.scoreline.prepare_data import (
+    from apps.predictions.ml.models.scoreline.prepare_data import (
         compute_match_weights,
         get_temporal_split,
         prepare_score_dataset,
@@ -253,11 +279,15 @@ def train_score_model(
     test_lambda_h, test_lambda_a = predict_lambdas(
         model_home, model_away, test_df, home_features, away_features,
     )
+    nll = compute_nll(test_df, test_lambda_h, test_lambda_a, rho)
+
+    artifact_path = None
 
     artifact = {
         "model_home": model_home,
         "model_away": model_away,
         "rho": rho,
+        "nll": nll,
         "home_features": home_features,
         "away_features": away_features,
         "decay_rate": decay_rate,
@@ -282,6 +312,10 @@ def train_score_model(
         "model_home": model_home,
         "model_away": model_away,
         "rho": rho,
+        "nll": nll,
+        "model_path": str(artifact_path) if artifact_path is not None else None,
+        "home_features": home_features,
+        "away_features": away_features,
         "naive_home": naive_home,
         "naive_away": naive_away,
         "test_lambda_home": test_lambda_h,

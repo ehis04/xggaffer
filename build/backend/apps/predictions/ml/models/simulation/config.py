@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ml.models.match_outcome.config import (
+from apps.predictions.ml.models.match_outcome.config import (
     DATA_DIR,
     MODELS_DIR,
     PROCESSED_DIR,

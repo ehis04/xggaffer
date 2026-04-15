@@ -38,6 +38,8 @@ import type {
   ClubImportJobListItem,
   CreateClubImportJobPayload,
   CommitClubImportJobPayload,
+  TrashListParams,
+  TrashListItem,
 } from '../../types/club';
 import type {
   ClubPlayer,
@@ -139,8 +141,8 @@ export const clubsApi = {
       code: code.trim(),
     }),
 
-  get: (clubId: number) =>
-    apiClient.get<Club>(`/clubs/${clubId}/`),
+  get: (clubId: number, params?: { trash?: 'only' | 'include' }) =>
+    apiClient.get<Club>(`/clubs/${clubId}/`, params),
 
   getUnderstatSeasonSummary: (
     clubId: number,
@@ -158,6 +160,18 @@ export const clubsApi = {
 
   duplicate: (clubId: number, payload: DuplicateClubPayload = {}) =>
     apiClient.post<Club>(`/clubs/${clubId}/duplicate/`, payload),
+
+  trash: (clubId: number) =>
+    apiClient.post<Club>(`/clubs/${clubId}/trash/`, {}),
+
+  restore: (clubId: number) =>
+    apiClient.post<Club>(`/clubs/${clubId}/restore/`, {}),
+
+  permanentDelete: (clubId: number) =>
+    apiClient.delete<void>(`/clubs/${clubId}/permanent-delete/`),
+
+  listTrashItems: (params?: TrashListParams) =>
+    apiClient.get<TrashListItem[]>('/clubs/trash/', params as Record<string, string | number | boolean> | undefined),
 
   listPlayers: async (clubId: number) => {
     const response = await apiClient.get<ListResponse<ClubPlayerListItem>>(

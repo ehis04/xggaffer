@@ -11,7 +11,11 @@ interface LoginFormData {
   rememberMe: boolean;
 }
 
-export const LoginForm = () => {
+interface LoginFormProps {
+  onSwitchToSignUp?: () => void;
+}
+
+export const LoginForm = ({ onSwitchToSignUp }: LoginFormProps = {}) => {
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: '',
@@ -57,7 +61,7 @@ export const LoginForm = () => {
   };
 
   return (
-    <form className="form" onSubmit={handleSubmit}>
+    <form id="login-form" className="form" onSubmit={handleSubmit}>
       {error && <div className="error-message">{error}</div>}
 
       <div className="flex-column">
@@ -100,22 +104,22 @@ export const LoginForm = () => {
           />
           <label htmlFor="rememberMe">Remember me</label>
         </div>
-        <span className="span">Forgot your password?</span>
+        <span className="span" onClick={() => navigate('/forgot-password')}>
+          Forgot your password?
+        </span>
       </div>
 
       <button className="button-submit" type="submit" disabled={isLoading}>
         {isLoading ? 'Signing In...' : 'Sign In'}
       </button>
 
-      <p className="p">
-        Don't have an account? <span className="span">Sign Up</span>
-      </p>
-      <p className="p line">Or With</p>
-      <div className="google-flex-row">
-        <button type="button" className="btn-google">
-          <img src={googleIcon} alt="Google logo" width={24} height={30} />
-        </button>
+      <div>
+        Don't have an account?{' '}
+        <span className="span" onClick={onSwitchToSignUp}>
+          Sign up here.
+        </span>
       </div>
+
     </form>
   );
 };

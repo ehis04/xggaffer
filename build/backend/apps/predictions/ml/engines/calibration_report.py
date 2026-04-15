@@ -10,15 +10,15 @@ from sklearn.calibration import calibration_curve
 from sklearn.metrics import brier_score_loss, log_loss
 from sklearn.preprocessing import label_binarize
 
-from ml.engines.compute_elo import VALIDATION_SEASON
-from ml.engines.elo import (
+from apps.predictions.ml.engines.compute_elo import VALIDATION_SEASON
+from apps.predictions.ml.engines.elo import (
     DEFAULT_HOME_ADVANTAGE,
     DEFAULT_K_FACTOR,
     compute_elo_history,
     elo_to_probabilities,
 )
-from ml.features.rolling import ALL_LEAGUES, ALL_SEASONS, load_match_history
-from ml.models.match_outcome.config import PROCESSED_DIR
+from apps.predictions.ml.features.rolling import ALL_LEAGUES, ALL_SEASONS, load_match_history
+from apps.predictions.ml.models.match_outcome.config import PROCESSED_DIR
 
 
 DEFAULT_REPORT_PATH = PROCESSED_DIR / "elo_calibration_report.json"

@@ -5,6 +5,7 @@ import LeagueSelector from '../../../components/livefootball/leagues/LeagueSelec
 import MatchweekSelector from '../../../components/livefootball/leagues/MatchweekSelector';
 import PredictionSummary from '../../../components/livefootball/leagues/PredictionSummary';
 import SeasonSelector from '../../../components/livefootball/leagues/SeasonSelector';
+import ChatInterface from '../../../components/predictions/chat/ChatInterface';
 import liveFootballApi from '../../../services/api/livefootballApi';
 import type {
   LeagueExpectedTableResponse,
@@ -493,6 +494,11 @@ const LeaguePredictPage: React.FC = () => {
           ) : null}
         </>
       ) : null}
+
+      <section className={styles.chatSection}>
+        <h3 className={styles.chatTitle}>xgGaffer Assistant</h3>
+        <ChatInterface />
+      </section>
     </main>
   );
 };

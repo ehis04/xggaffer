@@ -58,7 +58,7 @@ class TeamsheetPlayerReadSerializer(serializers.ModelSerializer):
 
     def get_club_player_name(self, obj) -> str | None:
         if obj.club_player:
-            return obj.club_player.display_name or obj.club_player.full_name
+            return obj.club_player.full_name
         return None
 
 
@@ -81,31 +81,29 @@ class TeamsheetPlayerWriteSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         club_player = attrs.get('club_player')
         custom_name = attrs.get('custom_name', '').strip()
-        teamsheet = attrs.get('teamsheet')
+        teamsheet = attrs.get('teamsheet') or getattr(self.instance, 'teamsheet', None)
 
         if not club_player and not custom_name:
             raise serializers.ValidationError(
                 "Either 'club_player' or 'custom_name' must be provided."
             )
 
-        if club_player and teamsheet:
-            if club_player.club_id != teamsheet.club_id:
-                raise serializers.ValidationError({
-                    'club_player': "Player must belong to the same club as the teamsheet."
-                })
+        if club_player and teamsheet and club_player.club_id != teamsheet.club_id:
+            raise serializers.ValidationError({
+                'club_player': 'Player must belong to the same club as the teamsheet.'
+            })
 
         return attrs
 
     def validate_position_x(self, value):
         if not 0 <= value <= 100:
-            raise serializers.ValidationError("Position X must be between 0 and 100.")
+            raise serializers.ValidationError('Position X must be between 0 and 100.')
         return value
 
     def validate_position_y(self, value):
         if not 0 <= value <= 100:
-            raise serializers.ValidationError("Position Y must be between 0 and 100.")
+            raise serializers.ValidationError('Position Y must be between 0 and 100.')
         return value
-
 
 class TeamsheetPlayerPositionUpdateSerializer(serializers.Serializer):
     position_x = serializers.FloatField(min_value=0, max_value=100)
@@ -120,10 +118,11 @@ class TeamsheetReadSerializer(serializers.ModelSerializer):
     is_complete = serializers.BooleanField(read_only=True)
     formation_display = serializers.CharField(
         source='get_formation_display',
-        read_only=True
+        read_only=True,
     )
     club_name = serializers.SerializerMethodField()
     created_by_username = serializers.SerializerMethodField()
+    trashed_by = serializers.IntegerField(source='trashed_by_id', read_only=True)
 
     class Meta:
         model = Teamsheet
@@ -144,6 +143,10 @@ class TeamsheetReadSerializer(serializers.ModelSerializer):
             'starter_count',
             'substitute_count',
             'players',
+            'is_trashed',
+            'trashed_at',
+            'trash_expires_at',
+            'trashed_by',
             'created_at',
             'updated_at',
         ]
@@ -153,7 +156,6 @@ class TeamsheetReadSerializer(serializers.ModelSerializer):
 
     def get_created_by_username(self, obj) -> str | None:
         return obj.created_by.email if obj.created_by else None
-
 
 class TeamsheetWriteSerializer(serializers.ModelSerializer):
     class Meta:
@@ -190,15 +192,15 @@ class TeamsheetWriteSerializer(serializers.ModelSerializer):
 
         return teamsheet
 
-
 class TeamsheetListSerializer(serializers.ModelSerializer):
     formation_display = serializers.CharField(
         source='get_formation_display',
-        read_only=True
+        read_only=True,
     )
     starter_count = serializers.IntegerField(read_only=True)
     is_complete = serializers.BooleanField(read_only=True)
     club_name = serializers.SerializerMethodField()
+    trashed_by = serializers.IntegerField(source='trashed_by_id', read_only=True)
 
     class Meta:
         model = Teamsheet
@@ -214,12 +216,16 @@ class TeamsheetListSerializer(serializers.ModelSerializer):
             'is_template',
             'is_complete',
             'starter_count',
+            'is_trashed',
+            'trashed_at',
+            'trash_expires_at',
+            'trashed_by',
+            'created_at',
             'updated_at',
         ]
 
     def get_club_name(self, obj) -> str | None:
         return obj.club.name if obj.club else None
-
 
 class BulkPlayerPositionUpdateSerializer(serializers.Serializer):
     class PlayerPositionItem(serializers.Serializer):
@@ -244,6 +250,8 @@ class TeamsheetDuplicateSerializer(serializers.Serializer):
     new_title = serializers.CharField(max_length=100)
     include_players = serializers.BooleanField(default=True)
 
+class TeamsheetTrashActionSerializer(serializers.Serializer):
+    pass
 
 class PlayerSlotAssignmentSerializer(serializers.Serializer):
     slot_number = serializers.IntegerField(min_value=1, max_value=18)
@@ -279,92 +287,69 @@ class CreateTeamsheetWithPlayersSerializer(serializers.Serializer):
 
         if match_date and not opponent:
             raise serializers.ValidationError({
-                'opponent': "Opponent is required when match date is set."
+                'opponent': 'Opponent is required when match date is set.'
             })
 
         player_assignments = attrs.get('player_assignments', [])
         slot_numbers = [p['slot_number'] for p in player_assignments]
         if len(slot_numbers) != len(set(slot_numbers)):
             raise serializers.ValidationError({
-                'player_assignments': "Duplicate slot numbers found."
+                'player_assignments': 'Duplicate slot numbers found.'
             })
-
-        club = self.context.get('club')
 
         for assignment in player_assignments:
             has_club_player = assignment.get('club_player_id')
             has_custom = assignment.get('custom_name', '').strip()
-
             if not has_club_player and not has_custom:
                 raise serializers.ValidationError({
                     'player_assignments': (
                         f"Slot {assignment['slot_number']}: "
-                        "Either club_player_id or custom_name required."
+                        "Either club_player_id or custom_name is required."
                     )
                 })
-
-            if has_club_player:
-                try:
-                    club_player = ClubPlayer.objects.get(id=assignment['club_player_id'])
-                except ClubPlayer.DoesNotExist:
-                    raise serializers.ValidationError({
-                        'player_assignments': (
-                            f"Slot {assignment['slot_number']}: club_player_id "
-                            f"{assignment['club_player_id']} does not exist."
-                        )
-                    })
-
-                if club and club_player.club_id != club.id:
-                    raise serializers.ValidationError({
-                        'player_assignments': (
-                            f"Slot {assignment['slot_number']}: selected player must belong "
-                            "to the same club as the teamsheet."
-                        )
-                    })
 
         return attrs
 
     def create(self, validated_data):
+        from apps.clubs.models import ClubPlayer
+
         player_assignments = validated_data.pop('player_assignments', [])
         club = self.context['club']
-        user = self.context['user']
+        user = self.context.get('user')
 
         with transaction.atomic():
             teamsheet = Teamsheet.objects.create(
                 club=club,
-                created_by=user if user and user.is_authenticated else None,
-                title=validated_data['title'],
-                formation=validated_data['formation'],
-                match_date=validated_data.get('match_date'),
-                opponent=validated_data.get('opponent', ''),
-                notes=validated_data.get('notes', ''),
-                is_template=validated_data.get('is_template', False),
+                created_by=user,
+                **validated_data,
             )
 
-            if player_assignments:
-                for assignment in player_assignments:
-                    club_player = None
-                    if assignment.get('club_player_id'):
-                        club_player = ClubPlayer.objects.get(
-                            id=assignment['club_player_id']
-                        )
-
-                    TeamsheetPlayer.objects.create(
-                        teamsheet=teamsheet,
-                        slot_number=assignment['slot_number'],
-                        club_player=club_player,
-                        custom_name=assignment.get('custom_name', ''),
-                        custom_number=assignment.get('custom_number'),
-                        position_label=assignment['position_label'],
-                        position_x=assignment['position_x'],
-                        position_y=assignment['position_y'],
-                        is_substitute=assignment.get('is_substitute', False),
-                    )
-            else:
+            if not player_assignments and validated_data.get('formation') != 'custom':
                 teamsheet.initialize_from_template()
+                return teamsheet
+
+            for assignment in player_assignments:
+                club_player = None
+                club_player_id = assignment.pop('club_player_id', None)
+
+                if club_player_id:
+                    try:
+                        club_player = ClubPlayer.objects.get(
+                            id=club_player_id,
+                            club=club,
+                        )
+                    except ClubPlayer.DoesNotExist:
+                        raise serializers.ValidationError({
+                            'player_assignments': f'Club player {club_player_id} not found.'
+                        })
+
+                TeamsheetPlayer.objects.create(
+                    teamsheet=teamsheet,
+                    club_player=club_player,
+                    **assignment,
+                )
 
         return teamsheet
-
 
 def get_pitch_position_choices():
     return [

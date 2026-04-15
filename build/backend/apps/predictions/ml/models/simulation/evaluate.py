@@ -65,7 +65,7 @@ def print_evaluation_report(metrics: dict) -> None:
 
 
 if __name__ == "__main__":
-    from ml.models.simulation.backtest import run_backtest
+    from apps.predictions.ml.models.simulation.backtest import run_backtest
 
     print("Running full evaluation...")
     print()

@@ -164,6 +164,15 @@
   font-size: 0.92rem;
 }
 
+.input:invalid {
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.input:invalid:focus {
+  border-color: rgba(239, 68, 68, 0.6);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
 .formActions {
   display: flex;
   gap: 0.75rem;

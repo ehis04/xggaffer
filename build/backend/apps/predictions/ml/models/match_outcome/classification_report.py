@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
-from ml.models.match_outcome.config import (
+from apps.predictions.ml.models.match_outcome.config import (
     DEFAULT_LEAGUES,
     DEFAULT_MODEL_TYPE,
     DEFAULT_SEASONS,
@@ -16,12 +16,12 @@ from ml.models.match_outcome.config import (
     TEST_SEASONS,
     resolve_latest_model_path,
 )
-from ml.models.match_outcome.prepare_data import (
+from apps.predictions.ml.models.match_outcome.prepare_data import (
     get_feature_columns,
     get_temporal_split,
     prepare_dataset,
 )
-from ml.models.match_outcome.predict import get_predictor
+from apps.predictions.ml.models.match_outcome.predict import get_predictor
 
 
 DEFAULT_OUTPUT = PROCESSED_DIR / "match_outcome_classification_report.json"

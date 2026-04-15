@@ -134,3 +134,97 @@ class CurrentUserView(APIView):
         return Response({
             'user': serializer.data
         })
+
+
+class RequestPasswordResetView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        email = request.data.get('email')
+        
+        if not email:
+            return Response(
+                {'error': 'Email is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            from .models import User
+            user = User.objects.get(email=email)
+            
+            # Generate password reset token
+            reset_token = user.generate_password_reset_token()
+            
+            # Send password reset email
+            from .services.email_service import send_password_reset_email
+            send_password_reset_email(user, reset_token)
+            
+            return Response({
+                'message': 'If an account exists with this email, you will receive a password reset link.'
+            })
+        except User.DoesNotExist:
+            # Return success message even if user doesn't exist (security best practice)
+            return Response({
+                'message': 'If an account exists with this email, you will receive a password reset link.'
+            })
+        except Exception as e:
+            return Response(
+                {'error': f'Failed to process password reset request: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class ResetPasswordView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        token = request.data.get('token')
+        new_password = request.data.get('new_password')
+        confirm_password = request.data.get('confirm_password')
+        
+        if not token or not new_password or not confirm_password:
+            return Response(
+                {'error': 'Token, new password, and confirmation are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if new_password != confirm_password:
+            return Response(
+                {'error': 'Passwords do not match'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if len(new_password) < 8:
+            return Response(
+                {'error': 'Password must be at least 8 characters long'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            from .models import User
+            user = User.objects.get(password_reset_token=token)
+            
+            # Validate token
+            if not user.is_password_reset_token_valid():
+                return Response(
+                    {'error': 'Password reset link has expired. Please request a new one.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Update password
+            user.set_password(new_password)
+            user.clear_password_reset_token()
+            
+            return Response({
+                'message': 'Password reset successfully. You can now login with your new password.'
+            })
+        except User.DoesNotExist:
+            return Response(
+                {'error': 'Invalid or expired password reset link'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'Failed to reset password: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

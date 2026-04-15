@@ -3,9 +3,9 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from ml.engines.elo import compute_elo_history
-from ml.features.rolling import build_all_features
-from ml.models.scoreline.config import (
+from apps.predictions.ml.engines.elo import compute_elo_history
+from apps.predictions.ml.features.rolling import build_all_features
+from apps.predictions.ml.models.scoreline.config import (
     DEFAULT_TIME_DECAY_RATE,
     SCORE_ENGINE_LEAGUES,
     SCORE_ENGINE_SEASONS,

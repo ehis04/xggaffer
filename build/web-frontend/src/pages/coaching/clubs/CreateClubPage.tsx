@@ -10,6 +10,11 @@ import type {
 } from '../../../types/club';
 import styles from './css/CreateClubPage.module.css';
 
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email.trim());
+};
+
 const COUNTRIES = [
   { code: '', label: 'Select a country' },
   { code: 'IE', label: 'Ireland' },
@@ -154,6 +159,7 @@ const CreateClubPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [roleCapability, setRoleCapability] = useState<RoleCapability>(null);
   const [roleCheckError, setRoleCheckError] = useState<string | null>(null);
+  const [emailTouched, setEmailTouched] = useState(false);
 
   useEffect(() => {
     const loadRoleCapability = async () => {
@@ -181,6 +187,11 @@ const CreateClubPage: React.FC = () => {
   ) => {
     const { name, value } = event.target;
 
+    // Track email field touches for validation feedback
+    if (name === 'verification_contact_email') {
+      setEmailTouched(true);
+    }
+
     setForm((prev) => {
       const next = { ...prev, [name]: value };
 
@@ -194,6 +205,8 @@ const CreateClubPage: React.FC = () => {
         next.verification_contact_email = prev.verification_contact_email;
         next.verification_evidence_text = prev.verification_evidence_text;
         next.verification_evidence_url = prev.verification_evidence_url;
+        // Reset email validation feedback when changing away from real non-pro
+        setEmailTouched(false);
       }
 
       return next;
@@ -218,6 +231,7 @@ const CreateClubPage: React.FC = () => {
         form.verification_contact_name.trim() &&
         form.verification_contact_role.trim() &&
         form.verification_contact_email.trim() &&
+        isValidEmail(form.verification_contact_email) &&
         (form.verification_evidence_text.trim() || form.verification_evidence_url.trim())
       );
     }
@@ -541,6 +555,11 @@ const CreateClubPage: React.FC = () => {
                 placeholder="e.g. manager@club.ie"
                 required={isRealNonPro}
               />
+              {emailTouched && form.verification_contact_email.trim() && !isValidEmail(form.verification_contact_email) && (
+                <div style={{ color: '#fca5a5', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                  Please enter a valid email address (e.g. manager@club.ie)
+                </div>
+              )}
             </div>
 
             <div className={styles.field}>

@@ -6,15 +6,15 @@ import time
 import numpy as np
 import pandas as pd
 
-from ml.engines.elo import (
+from apps.predictions.ml.engines.elo import (
     DEFAULT_HOME_ADVANTAGE,
     DEFAULT_K_FACTOR,
     compute_elo_history,
     elo_to_probabilities,
     save_elo_history,
 )
-from ml.features.rolling import ALL_LEAGUES, ALL_SEASONS, load_match_history
-from ml.models.match_outcome.config import PROCESSED_DIR
+from apps.predictions.ml.features.rolling import ALL_LEAGUES, ALL_SEASONS, load_match_history
+from apps.predictions.ml.models.match_outcome.config import PROCESSED_DIR
 
 
 DEFAULT_OUTPUT = PROCESSED_DIR / "elo_ratings.csv"

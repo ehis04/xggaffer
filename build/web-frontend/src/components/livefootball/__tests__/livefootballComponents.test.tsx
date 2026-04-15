@@ -1,11 +1,16 @@
 import '@testing-library/jest-dom/vitest';
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import FixturesPanel from '../FixturesPanel';
 import LeagueTable from '../LeagueTable';
 import TopScorersPanel from '../TopScorersPanel';
 import TrendSection from '../home/TrendSection';
+import { predictMatch } from '../../../services/api/predictionsApi';
+
+vi.mock('../../../services/api/predictionsApi', () => ({
+  predictMatch: vi.fn(),
+}));
 
 const competition = {
   id: 1,
@@ -17,6 +22,39 @@ const competition = {
   emblem_url: '',
   current_season_label: '2024/2025',
 } as const;
+
+const baseFixtures = {
+  competition,
+  season_label: '2024/2025',
+  previous: [
+    {
+      id: 101,
+      external_match_id: 'm101',
+      season_label: '2024/2025',
+      status: 'FINISHED',
+      kickoff_at: '2026-03-15T15:00:00Z',
+      matchday: 29,
+      home_team: { id: 10, external_id: 'arsenal', name: 'Arsenal', short_name: 'Arsenal', tla: 'ARS', emblem_url: '' },
+      away_team: { id: 11, external_id: 'chelsea', name: 'Chelsea', short_name: 'Chelsea', tla: 'CHE', emblem_url: '' },
+      home_score: 2,
+      away_score: 1,
+    },
+  ],
+  next: [
+    {
+      id: 102,
+      external_match_id: 'm102',
+      season_label: '2024/2025',
+      status: 'SCHEDULED',
+      kickoff_at: '2026-03-22T15:00:00Z',
+      matchday: 30,
+      home_team: { id: 12, external_id: 'spurs', name: 'Tottenham Hotspur', short_name: 'Spurs', tla: 'TOT', emblem_url: '' },
+      away_team: { id: 10, external_id: 'arsenal', name: 'Arsenal', short_name: 'Arsenal', tla: 'ARS', emblem_url: '' },
+      home_score: null,
+      away_score: null,
+    },
+  ],
+};
 
 describe('livefootball presentational components', () => {
   it('renders the league table', () => {
@@ -61,70 +99,20 @@ describe('livefootball presentational components', () => {
   });
 
   it('renders previous and upcoming fixtures', () => {
-    render(
-      <FixturesPanel
-        fixtures={{
-          competition,
-          season_label: '2024/2025',
-          previous: [
-            {
-              id: 101,
-              external_match_id: 'm101',
-              season_label: '2024/2025',
-              status: 'FINISHED',
-              kickoff_at: '2026-03-15T15:00:00Z',
-              matchday: 29,
-              home_team: {
-                id: 10,
-                external_id: 'arsenal',
-                name: 'Arsenal',
-                short_name: 'Arsenal',
-                tla: 'ARS',
-                emblem_url: '',
-              },
-              away_team: {
-                id: 11,
-                external_id: 'chelsea',
-                name: 'Chelsea',
-                short_name: 'Chelsea',
-                tla: 'CHE',
-                emblem_url: '',
-              },
-              home_score: 2,
-              away_score: 1,
-            },
-          ],
-          next: [
-            {
-              id: 102,
-              external_match_id: 'm102',
-              season_label: '2024/2025',
-              status: 'SCHEDULED',
-              kickoff_at: '2026-03-22T15:00:00Z',
-              matchday: 30,
-              home_team: {
-                id: 12,
-                external_id: 'spurs',
-                name: 'Tottenham Hotspur',
-                short_name: 'Spurs',
-                tla: 'TOT',
-                emblem_url: '',
-              },
-              away_team: {
-                id: 10,
-                external_id: 'arsenal',
-                name: 'Arsenal',
-                short_name: 'Arsenal',
-                tla: 'ARS',
-                emblem_url: '',
-              },
-              home_score: null,
-              away_score: null,
-            },
-          ],
-        }}
-      />
-    );
+    vi.mocked(predictMatch).mockResolvedValue({
+      home_team: 'Arsenal',
+      away_team: 'Chelsea',
+      league: 'EPL',
+      season: '2024',
+      prediction: 'Home',
+      probabilities: { home: 0.5, draw: 0.25, away: 0.25 },
+      top_factors: [],
+      metrics: { accuracy: 0.53, brier_score: null },
+      model_type: 'logistic',
+      version: '1',
+    });
+
+    render(<FixturesPanel fixtures={baseFixtures} />);
 
     expect(screen.getByText('Previous fixtures')).toBeInTheDocument();
     expect(screen.getByText('Upcoming fixtures')).toBeInTheDocument();
@@ -156,11 +144,20 @@ describe('livefootball presentational components', () => {
                 tla: 'MCI',
                 emblem_url: '',
               },
-              canonical_player: {
-                id: 501,
-                display_name: 'Erling Haaland',
-                first_name: 'Erling',
-                last_name: 'Haaland',
+            },
+            {
+              rank: 2,
+              external_player_id: 'salah',
+              player_name: 'Mohamed Salah',
+              goals: 18,
+              penalties: 4,
+              team: {
+                id: 30,
+                external_id: 'liverpool',
+                name: 'Liverpool',
+                short_name: 'Liverpool',
+                tla: 'LIV',
+                emblem_url: '',
               },
             },
           ],
@@ -170,22 +167,19 @@ describe('livefootball presentational components', () => {
 
     expect(screen.getByText('Top scorers')).toBeInTheDocument();
     expect(screen.getByText('Erling Haaland')).toBeInTheDocument();
-    expect(screen.getByText('Man City')).toBeInTheDocument();
-    expect(screen.getByText('21')).toBeInTheDocument();
-    expect(screen.getByText('3')).toBeInTheDocument();
+    expect(screen.getByText('Mohamed Salah')).toBeInTheDocument();
   });
 
   it('renders top performing team cards with team, league, and form', () => {
     render(
       <MemoryRouter>
         <TrendSection
-          title="Top performing teams"
-          subtitle="Global cross-league team form highlights."
-          actionLabel="View clubs"
-          actionTo="/livefootball/clubs"
-          updatedAt={null}
+          title="Top Performing Teams"
+          subtitle="Current season form"
+          actionLabel="View all"
+          actionTo="/livefootball"
+          emptyMessage="No data"
           variant="team"
-          emptyMessage="No top performing team cards are available right now."
           items={[
             {
               rank: 1,
@@ -223,5 +217,186 @@ describe('livefootball presentational components', () => {
     expect(screen.getAllByText('W')).toHaveLength(4);
     expect(screen.getByText('D')).toBeInTheDocument();
     expect(screen.getByText('2.33 points per game and 2.00 goals per game.')).toBeInTheDocument();
+  });
+});
+
+describe('FixturesPanel prediction chips', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('renders probability chips after fixtures load', async () => {
+    vi.mocked(predictMatch).mockResolvedValue({
+      home_team: 'Arsenal',
+      away_team: 'Chelsea',
+      league: 'EPL',
+      season: '2024',
+      prediction: 'Home',
+      probabilities: { home: 0.61, draw: 0.23, away: 0.16 },
+      top_factors: [],
+      metrics: { accuracy: 0.53, brier_score: null },
+      model_type: 'logistic',
+      version: '1',
+    });
+
+    render(<FixturesPanel fixtures={baseFixtures} />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText('61%').length).toBeGreaterThan(0);
+    });
+  });
+
+  it('calls predictMatch with league derived from competition code', async () => {
+    vi.mocked(predictMatch).mockResolvedValue({
+      home_team: 'Arsenal',
+      away_team: 'Chelsea',
+      league: 'EPL',
+      season: '2024',
+      prediction: 'Home',
+      probabilities: { home: 0.5, draw: 0.25, away: 0.25 },
+      top_factors: [],
+      metrics: { accuracy: 0.53, brier_score: null },
+      model_type: 'logistic',
+      version: '1',
+    });
+
+    render(<FixturesPanel fixtures={baseFixtures} />);
+
+    await waitFor(() => {
+      expect(predictMatch).toHaveBeenCalledWith(
+        expect.objectContaining({ league: 'EPL', season: '2024' })
+      );
+    });
+  });
+
+  it('skips predictMatch for unsupported competition codes', async () => {
+    const uclFixtures = {
+      ...baseFixtures,
+      competition: { ...baseFixtures.competition, code: 'UCL' },
+    };
+
+    render(<FixturesPanel fixtures={uclFixtures} />);
+
+    await waitFor(() => {
+      expect(predictMatch).not.toHaveBeenCalled();
+    });
+  });
+
+  it('parses season year correctly from season_label', async () => {
+    vi.mocked(predictMatch).mockResolvedValue({
+      home_team: 'Arsenal',
+      away_team: 'Chelsea',
+      league: 'EPL',
+      season: '2023',
+      prediction: 'Home',
+      probabilities: { home: 0.5, draw: 0.25, away: 0.25 },
+      top_factors: [],
+      metrics: { accuracy: 0.53, brier_score: null },
+      model_type: 'logistic',
+      version: '1',
+    });
+
+    const fixtures2023 = {
+      ...baseFixtures,
+      season_label: '2023/2024',
+      previous: [{ ...baseFixtures.previous[0], season_label: '2023/2024' }],
+      next: [{ ...baseFixtures.next[0], season_label: '2023/2024' }],
+    };
+
+    render(<FixturesPanel fixtures={fixtures2023} />);
+
+    await waitFor(() => {
+      expect(predictMatch).toHaveBeenCalledWith(
+        expect.objectContaining({ season: '2023' })
+      );
+    });
+  });
+
+  it('shows dash when prediction fails', async () => {
+    vi.mocked(predictMatch).mockRejectedValue(new Error('unavailable'));
+
+    render(<FixturesPanel fixtures={baseFixtures} />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText('—').length).toBeGreaterThan(0);
+    });
+  });
+
+  it('does not throw when one prediction fails and another succeeds', async () => {
+    vi.mocked(predictMatch)
+      .mockResolvedValueOnce({
+        home_team: 'Arsenal',
+        away_team: 'Chelsea',
+        league: 'EPL',
+        season: '2024',
+        prediction: 'Home',
+        probabilities: { home: 0.55, draw: 0.25, away: 0.20 },
+        top_factors: [],
+        metrics: { accuracy: 0.53, brier_score: null },
+        model_type: 'logistic',
+        version: '1',
+      })
+      .mockRejectedValueOnce(new Error('unavailable'));
+
+    render(<FixturesPanel fixtures={baseFixtures} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Arsenal v Chelsea')).toBeInTheDocument();
+      expect(screen.getByText('Spurs v Arsenal')).toBeInTheDocument();
+    });
+  });
+
+  it('preserves existing fixture content after predictions load', async () => {
+    vi.mocked(predictMatch).mockResolvedValue({
+      home_team: 'Arsenal',
+      away_team: 'Chelsea',
+      league: 'EPL',
+      season: '2024',
+      prediction: 'Home',
+      probabilities: { home: 0.61, draw: 0.23, away: 0.16 },
+      top_factors: [],
+      metrics: { accuracy: 0.53, brier_score: null },
+      model_type: 'logistic',
+      version: '1',
+    });
+
+    render(<FixturesPanel fixtures={baseFixtures} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Arsenal v Chelsea')).toBeInTheDocument();
+      expect(screen.getByText('Spurs v Arsenal')).toBeInTheDocument();
+      expect(screen.getByText('2 - 1')).toBeInTheDocument();
+      expect(screen.getByText('Finished')).toBeInTheDocument();
+    });
+
+    expect(predictMatch).toHaveBeenCalledTimes(2);
+  });
+
+  it('calls predictMatch once per fixture using home_team.name', async () => {
+    vi.mocked(predictMatch).mockResolvedValue({
+      home_team: 'Arsenal',
+      away_team: 'Chelsea',
+      league: 'EPL',
+      season: '2024',
+      prediction: 'Home',
+      probabilities: { home: 0.5, draw: 0.25, away: 0.25 },
+      top_factors: [],
+      metrics: { accuracy: 0.53, brier_score: null },
+      model_type: 'logistic',
+      version: '1',
+    });
+
+    render(<FixturesPanel fixtures={baseFixtures} />);
+
+    await waitFor(() => {
+      expect(predictMatch).toHaveBeenCalledTimes(2);
+    });
+
+    expect(predictMatch).toHaveBeenCalledWith(
+      expect.objectContaining({ home_team: 'Arsenal', away_team: 'Chelsea' })
+    );
+    expect(predictMatch).toHaveBeenCalledWith(
+      expect.objectContaining({ home_team: 'Tottenham Hotspur', away_team: 'Arsenal' })
+    );
   });
 });

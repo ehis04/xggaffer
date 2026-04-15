@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from rest_framework import serializers
 
-from ml.models.match_outcome.config import DEFAULT_TOP_FACTORS, DEMO_LEAGUE, DEMO_SEASON
+from apps.predictions.ml.models.match_outcome.config import DEFAULT_TOP_FACTORS, DEMO_LEAGUE, DEMO_SEASON
 
 
 class PredictionRequestSerializer(serializers.Serializer):
@@ -241,3 +241,6 @@ class TacticalResponseSerializer(serializers.Serializer):
     style_similarity = serializers.FloatField(allow_null=True, required=False)
     matchup_type = serializers.CharField(allow_null=True, required=False)
     model_version = serializers.CharField()
+
+class ChatRequestSerializer(serializers.Serializer):
+    query = serializers.CharField(max_length=500, min_length=1)

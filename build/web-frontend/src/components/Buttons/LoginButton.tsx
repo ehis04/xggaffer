@@ -7,6 +7,7 @@ interface LoginButtonProps {
   popup?: boolean;
   popupContent?: ReactNode;
   colour?: string;
+  onClick?: () => void;
 }
 
 export const LoginButton = ({
@@ -14,6 +15,7 @@ export const LoginButton = ({
   popup,
   popupContent,
   colour,
+  onClick,
 }: LoginButtonProps) => {
   const defaultColour = {
     base: "#83c5ada2",
@@ -27,12 +29,8 @@ export const LoginButton = ({
   const buttonComp = (
     <button
       className="loginButton"
-      style={
-        {
-          backgroundColor: baseColour,
-          borderColor: baseColour,
-        }
-      }
+      style={{ backgroundColor: baseColour, borderColor: baseColour }}
+      onClick={onClick}
     >
       <div className="body">
         <p> {buttonText} </p>

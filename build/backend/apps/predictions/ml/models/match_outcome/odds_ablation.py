@@ -17,11 +17,11 @@ from sklearn.metrics import (
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, label_binarize
 
-from ml.models.match_outcome.config import (
+from apps.predictions.ml.models.match_outcome.config import (
     MODELS_DIR,
     RANDOM_SEED,
 )
-from ml.models.match_outcome.prepare_data import (
+from apps.predictions.ml.models.match_outcome.prepare_data import (
     BASE_FEATURE_COLUMNS,
     FEATURE_COLUMNS_WITH_ODDS,
     ODDS_FEATURES,

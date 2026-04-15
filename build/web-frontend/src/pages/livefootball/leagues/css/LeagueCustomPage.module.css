@@ -44,13 +44,23 @@
 .fixtureCard {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 0.95rem;
-  background: rgba(255, 255, 255, 0.03);
   padding: 0.9rem;
   display: flex;
   justify-content: space-between;
   gap: 1rem;
   align-items: center;
   flex-wrap: wrap;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.fixtureCardOpen {
+  background: rgba(255, 255, 255, 0.03);
+  cursor: default;
+}
+
+.fixtureCardLocked {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.3);
 }
 
 .fixtureTeams {
@@ -88,6 +98,54 @@
 .scoreDivider {
   color: #d9e2ee;
   font-weight: 700;
+}
+
+.fixturePredicted {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.35);
+  font-style: italic;
+}
+
+.lockButton {
+  padding: 0.45rem 0.9rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.lockButton:hover {
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #fff;
+}
+
+.unlockButton {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.unlockButton:hover {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
 }
 
 .actions {

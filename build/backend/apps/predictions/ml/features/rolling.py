@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from ml.models.match_outcome.config import DATA_DIR
+from apps.predictions.ml.models.match_outcome.config import DATA_DIR
 
 PROCESSED_MATCHES_DIR = DATA_DIR / "processed" / "matches"
 LEGACY_MATCHES_DIR = DATA_DIR / "raw" / "understat" / "matches"

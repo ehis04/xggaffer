@@ -16,6 +16,9 @@ urlpatterns = [
     path('auth/refresh/', CookieTokenRefreshView.as_view(), name='auth-refresh'),
     path('auth/me/', CurrentUserView.as_view(), name='auth-me'),
 
+    path('auth/password-reset/request/', RequestPasswordResetView.as_view(), name='request-password-reset'),
+    path('auth/password-reset/', ResetPasswordView.as_view(), name='reset-password'),
+
     path('register/', UserRegisterView.as_view(), name='register'),
 
     path('auth/verify-email/', VerifyEmailView.as_view(), name='verify-email'),

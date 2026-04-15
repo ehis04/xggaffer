@@ -3,9 +3,9 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from ml.models.scoreline.calibration_report import build_scoreline_calibration_report
-from ml.models.scoreline.classification_report import build_scoreline_classification_report
-from ml.models.scoreline.config import PROCESSED_DIR, SCORE_ENGINE_LEAGUES, SCORE_ENGINE_SEASONS, TEST_SEASONS
+from apps.predictions.ml.models.scoreline.calibration_report import build_scoreline_calibration_report
+from apps.predictions.ml.models.scoreline.classification_report import build_scoreline_classification_report
+from apps.predictions.ml.models.scoreline.config import PROCESSED_DIR, SCORE_ENGINE_LEAGUES, SCORE_ENGINE_SEASONS, TEST_SEASONS
 
 
 DEFAULT_OUTPUT = PROCESSED_DIR / "scoreline_model_quality_report.txt"

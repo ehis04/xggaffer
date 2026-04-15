@@ -71,6 +71,12 @@ def resolve_latest_model_path(
     pattern = model_artifact_glob(model_type)
     model_files = sorted(MODELS_DIR.glob(pattern), key=lambda f: f.stat().st_mtime)
 
+    if model_type and '_with_odds' not in model_type:
+        model_files = [
+            path for path in model_files
+            if '_with_odds_' not in path.name
+        ]
+
     if model_files:
         return model_files[-1]
 

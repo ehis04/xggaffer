@@ -75,7 +75,7 @@ class UserAdmin(BaseUserAdmin):
     form = UserChangeForm
     add_form = UserCreationForm
 
-    list_display = ['username', 'email', 'first_name', 'last_name', 'active_role', 'is_active', 'date_joined', 'is_staff', 'is_superuser']
+    list_display = ['id', 'username', 'email', 'first_name', 'last_name', 'active_role', 'is_active', 'date_joined', 'is_staff', 'is_superuser']
     list_filter = ['is_active', 'is_staff', 'is_superuser', 'date_joined']
     search_fields = ['username', 'email', 'first_name', 'last_name']
     ordering = ['-date_joined']
@@ -102,8 +102,16 @@ class UserAdmin(BaseUserAdmin):
         profile = getattr(obj, 'profile', None)
         return profile.get_active_role_display() if profile and profile.active_role else '-'
 
+class UserRoleInline(admin.TabularInline):
+    model = UserRole
+    extra = 0
+    fields = ('role', 'created_at')
+    readonly_fields = ('created_at',)
+    show_change_link = True
+
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
+    inlines = [UserRoleInline]
     list_display = ['user', 'display_name', 'active_role', 'gender', 'followers_count', 'following_count', 'visibility', 'created_at']
     list_filter = ['gender', 'visibility', 'created_at']
     search_fields = ['user__username', 'user__email', 'display_name', 'bio']
@@ -124,13 +132,6 @@ class UserProfileAdmin(admin.ModelAdmin):
             'fields': ('created_at', 'updated_at')
         }),
     )
-
-@admin.register(UserRole)
-class UserRoleAdmin(admin.ModelAdmin):
-    list_display = ['user_profile', 'role', 'created_at']
-    list_filter = ['role', 'created_at']
-    search_fields = ['user_profile__user__username', 'user_profile__user__email']
-    ordering = ['-created_at']
 
 @admin.register(Follow)
 class FollowAdmin(admin.ModelAdmin):

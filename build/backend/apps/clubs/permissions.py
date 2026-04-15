@@ -87,10 +87,7 @@ def user_can_request_player_membership(user):
     if should_bypass_permissions():
         return True
 
-    if not user or not user.is_authenticated:
-        return False
-
-    return user_has_platform_role(user, Role.PLAYER)
+    return bool(user and user.is_authenticated)
 
 
 def user_can_review_join_requests(user, club):
@@ -136,6 +133,34 @@ def user_can_manage_manual_club_scheduling(user, club):
         club.is_user_managed_club()
     )
 
+def user_can_manage_club_trash(user, club):
+    if should_bypass_permissions():
+        return True
+
+    if not user or not user.is_authenticated:
+        return False
+
+    return club.creator_id == user.id
+
+
+class CanManageOwnClubTrash(BasePermission):
+    message = (
+        'Only the club creator can move this club to trash, restore it, '
+        'or delete it permanently.'
+    )
+
+    def has_permission(self, request, view):
+        if should_bypass_permissions():
+            return True
+
+        return bool(request.user and request.user.is_authenticated)
+
+    def has_object_permission(self, request, view, obj):
+        if should_bypass_permissions():
+            return True
+
+        return user_can_manage_club_trash(request.user, obj)
+
 class CanCreateClub(BasePermission):
     message = 'You do not have permission to create this club.'
 
@@ -143,7 +168,8 @@ class CanCreateClub(BasePermission):
         if should_bypass_permissions():
             return True
 
-        if getattr(view, 'action', None) != 'create':
+        action = getattr(view, 'action', None)
+        if action not in ['create', 'duplicate']:
             return True
 
         user = request.user

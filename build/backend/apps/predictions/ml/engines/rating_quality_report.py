@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from ml.engines.validate_elo import CORRELATION_TARGET, ELO_RATINGS_PATH, validate
-from ml.models.match_outcome.config import PROCESSED_DIR
+from apps.predictions.ml.engines.validate_elo import CORRELATION_TARGET, ELO_RATINGS_PATH, validate
+from apps.predictions.ml.models.match_outcome.config import PROCESSED_DIR
 
 
 DEFAULT_OUTPUT = PROCESSED_DIR / "elo_rating_quality_report.txt"

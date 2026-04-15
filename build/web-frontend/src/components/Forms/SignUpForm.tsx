@@ -13,7 +13,11 @@ interface RegisterFormData {
   password: string;
 }
 
-export const SignUpForm = () => {
+interface SignUpFormProps {
+  onSwitchToLogin?: () => void;
+}
+
+export const SignUpForm = ({ onSwitchToLogin }: SignUpFormProps = {}) => {
   const [formData, setFormData] = useState<RegisterFormData>({
     email: '',
     username: '',
@@ -65,7 +69,7 @@ export const SignUpForm = () => {
   };
 
   return (
-    <form className="form" onSubmit={handleSubmit}>
+    <form id="register-form" className="form" onSubmit={handleSubmit}>
       {error && <div className="error-message">{error}</div>}
 
       <div className="flex-column">
@@ -148,14 +152,11 @@ export const SignUpForm = () => {
       </button>
 
       <p className="p">
-        Already have an account? <span className="span">Login</span>
+        Already have an account?{' '}
+        <span className="span" onClick={onSwitchToLogin}>
+          Login
+        </span>
       </p>
-      <p className="p line">Or With</p>
-      <div className="google-flex-row">
-        <button type="button" className="btn-google">
-          <img src={googleIcon} alt="Google logo" width={24} height={30} />
-        </button>
-      </div>
     </form>
   );
 };

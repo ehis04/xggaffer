@@ -3,8 +3,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from ml.models.match_outcome.config import INTERPRETABLE_MODEL_TYPE, resolve_latest_model_path
-from ml.models.match_outcome.predict import get_predictor
+from apps.predictions.ml.models.match_outcome.config import INTERPRETABLE_MODEL_TYPE, resolve_latest_model_path
+from apps.predictions.ml.models.match_outcome.predict import get_predictor
 
 
 STAT_LABELS = {
@@ -206,7 +206,7 @@ def explain_match(
     season: str,
     top_n: int = 5,
 ) -> dict:
-    from ml.models.match_outcome.feature_service import get_feature_service
+    from apps.predictions.ml.models.match_outcome.feature_service import get_feature_service
 
     service = get_feature_service(leagues=[league], seasons=[season])
     features = service.build_prediction_features(home_team, away_team, league, season)

@@ -95,12 +95,20 @@
   font-weight: 500;
 }
 
-.complete {
+.gamePlayed {
   color: #4ade80;
 }
 
 .incomplete {
   color: #fbbf24;
+}
+
+.dateNotSet {
+  color: #ffffff;
+}
+
+.notPlayed {
+  color: #f87171;
 }
 
 .notes {
@@ -120,4 +128,67 @@
   font-size: 0.9rem;
   line-height: 1.5;
   color: rgba(255, 255, 255, 0.9);
+}
+
+.dangerButton,
+.restoreButton {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.dangerButton {
+  background: rgba(239, 68, 68, 0.22);
+}
+
+.dangerButton:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.34);
+}
+
+.restoreButton {
+  background: rgba(34, 197, 94, 0.22);
+}
+
+.restoreButton:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.34);
+}
+
+.dangerButton:disabled,
+.restoreButton:disabled,
+.actionButton:disabled,
+.backButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.complete {
+  color: #4ade80;
+}
+
+.trashedBadge {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fecaca;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.trashedBanner {
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.26);
+  color: #fee2e2;
+  font-size: 0.92rem;
+}
+
+.trashedBannerSubtext {
+  color: rgba(255, 255, 255, 0.84);
 }

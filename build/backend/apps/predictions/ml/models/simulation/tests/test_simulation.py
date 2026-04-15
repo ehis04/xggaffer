@@ -3,8 +3,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from ml.models.simulation.config import POINTS_DRAW, POINTS_WIN
-from ml.models.simulation.simulate import (
+from apps.predictions.ml.models.simulation.config import POINTS_DRAW, POINTS_WIN
+from apps.predictions.ml.models.simulation.simulate import (
     aggregate_results,
     compute_league_table,
     simulate_season,

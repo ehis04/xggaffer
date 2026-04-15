@@ -3,7 +3,7 @@ import warnings
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from ml.features.rolling import (
+from apps.predictions.ml.features.rolling import (
     ALL_LEAGUES,
     ALL_SEASONS,
     DIFF_STATS,
@@ -12,7 +12,7 @@ from ml.features.rolling import (
     ROLLING_WINDOWS,
     build_all_features,
 )
-from ml.models.match_outcome.config import (
+from apps.predictions.ml.models.match_outcome.config import (
     PROCESSED_DIR,
     DEFAULT_LEAGUES,
     DEFAULT_SEASONS,
@@ -120,7 +120,7 @@ def _merge_elo_features(df: pd.DataFrame) -> pd.DataFrame:
 
 def _merge_odds_features(df: pd.DataFrame) -> pd.DataFrame:
     try:
-        from ml.data.odds.merge import merge_odds_to_matches
+        from apps.predictions.ml.data.odds.merge import merge_odds_to_matches
     except ImportError as exc:
         print(f"  Odds merge skipped (import error): {exc}")
         return df

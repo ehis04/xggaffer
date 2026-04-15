@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 from scipy.stats import poisson as poisson_dist
 
-from ml.models.scoreline.config import MAX_GOALS
-from ml.models.scoreline.train import (
+from apps.predictions.ml.models.scoreline.config import MAX_GOALS
+from apps.predictions.ml.models.scoreline.train import (
     derive_probabilities,
     dixon_coles_tau,
     fit_naive_poisson,
@@ -300,7 +300,7 @@ def run_score_evaluation(results: dict) -> dict:
 
 
 if __name__ == "__main__":
-    from ml.models.scoreline.train import train_score_model
+    from apps.predictions.ml.models.scoreline.train import train_score_model
 
     results = train_score_model(save=False)
     metrics = run_score_evaluation(results)

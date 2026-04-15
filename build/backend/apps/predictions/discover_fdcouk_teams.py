@@ -1,5 +1,5 @@
 #temp file
-from ml.data.odds.parse import parse_all
+from apps.predictions.ml.data.odds.parse import parse_all
 
 df = parse_all()
 

@@ -172,7 +172,7 @@ class TestTeamLookupErrors:
 
     def test_unmapped_source_raises_key_error(self):
         with pytest.raises(KeyError):
-            team_from_canonical("Arsenal", "football_data_co_uk")
+            team_from_canonical("Paris FC", "football_data_co_uk")
 
     def test_unknown_canonical_raises_key_error(self):
         with pytest.raises(KeyError):

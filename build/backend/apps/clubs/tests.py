@@ -5293,6 +5293,59 @@ class ClubResourceSerializerTests(TestCase):
             'https://res.cloudinary.com/demo/raw/authenticated/s--signed--/xggaffer/clubs/resources/club_1/test-resource.pdf',
         )
 
+    @override_settings(
+    CLUB_RESOURCES_USE_CLOUDINARY=True,
+    CLOUDINARY_CLOUD_NAME='demo',
+    CLOUDINARY_API_KEY='test-key',
+    CLOUDINARY_API_SECRET='test-secret',
+    )
+    @patch('apps.clubs.views.cloudinary_resources_enabled', return_value=True)
+    @patch('apps.clubs.views.build_cloudinary_signed_delivery_url')
+    def test_delivery_redirects_to_signed_cloudinary_url_without_auth_cookie(
+        self,
+        mock_build_cloudinary_signed_delivery_url,
+        mock_cloudinary_enabled,
+    ):
+        resource = self.create_resource(
+            storage_backend=ClubResource.StorageBackend.CLOUDINARY,
+            storage_key='xggaffer/clubs/resources/club_1/test-resource',
+        )
+
+        mock_build_cloudinary_signed_delivery_url.return_value = (
+            'https://res.cloudinary.com/demo/raw/authenticated/s--signed--/xggaffer/clubs/resources/club_1/test-resource.pdf'
+        )
+
+        access_view = ClubResourceViewSet.as_view({'get': 'access'})
+        access_response = self.perform(
+            access_view,
+            self.member,
+            method='get',
+            club_pk=self.club.id,
+            pk=resource.id,
+        )
+
+        self.assertEqual(access_response.status_code, status.HTTP_200_OK)
+        signed_internal_url = access_response.data['access_url']
+        token = signed_internal_url.split('token=')[1]
+
+        delivery_view = ClubResourceViewSet.as_view({'get': 'delivery'})
+        request = self.factory.get(
+            f'/clubs/{self.club.id}/resources/{resource.id}/delivery/',
+            {'token': token},
+        )
+
+        response = delivery_view(
+            request,
+            club_pk=self.club.id,
+            pk=resource.id,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(
+            response['Location'],
+            'https://res.cloudinary.com/demo/raw/authenticated/s--signed--/xggaffer/clubs/resources/club_1/test-resource.pdf',
+        )
+
 class ClubResourceApiTests(TestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
@@ -7259,6 +7312,70 @@ class ClubImportJobApiTests(TestCase):
         self.assertEqual(response.data['preview_payload'], {})
         self.assertEqual(response.data['report_payload']['stage'], 'preview')
         self.assertEqual(response.data['report_payload']['status'], 'failed')
+
+    def test_create_other_import_type_returns_raw_preview(self):
+        resource = self.create_resource(
+            uploaded_file=self.make_csv_file(
+                content='columnA,columnB\nfoo,bar\n',
+            ),
+            file_kind=ClubResource.FileKind.CSV,
+        )
+
+        view = ClubImportJobViewSet.as_view({'post': 'create'})
+        response = self.perform(
+            view,
+            self.coach,
+            method='post',
+            data={
+                'source_resource': resource.id,
+                'import_type': ClubImportJob.ImportType.OTHER,
+            },
+            club_pk=self.club.id,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['status'], ClubImportJob.Status.PREVIEW_READY)
+        self.assertEqual(response.data['preview_payload']['import_type'], ClubImportJob.ImportType.OTHER)
+        self.assertFalse(response.data['preview_payload']['can_commit'])
+        self.assertEqual(response.data['preview_payload']['counts']['total_rows'], 1)
+        self.assertEqual(len(response.data['preview_payload']['rows']), 1)
+        self.assertEqual(response.data['preview_payload']['rows'][0]['status'], 'preview')
+        self.assertEqual(
+            response.data['preview_payload']['rows'][0]['raw_data']['columnA'],
+            'foo',
+        )
+
+    def test_create_structured_import_type_falls_back_to_raw_preview_for_unknown_schema(self):
+        resource = self.create_resource(
+            uploaded_file=self.make_csv_file(
+                content='foo,bar\nhello,world\n',
+            ),
+            file_kind=ClubResource.FileKind.CSV,
+        )
+
+        view = ClubImportJobViewSet.as_view({'post': 'create'})
+        response = self.perform(
+            view,
+            self.coach,
+            method='post',
+            data={
+                'source_resource': resource.id,
+                'import_type': ClubImportJob.ImportType.PLAYER_PROFILE_UPDATE,
+            },
+            club_pk=self.club.id,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['status'], ClubImportJob.Status.PREVIEW_READY)
+        self.assertFalse(response.data['preview_payload']['can_commit'])
+        self.assertTrue(response.data['preview_payload'].get('raw_preview'))
+        self.assertEqual(response.data['preview_payload']['counts']['total_rows'], 1)
+        self.assertEqual(len(response.data['preview_payload']['rows']), 1)
+        self.assertEqual(response.data['preview_payload']['rows'][0]['status'], 'preview')
+        self.assertEqual(
+            response.data['preview_payload']['rows'][0]['raw_data']['foo'],
+            'hello',
+        )
 
     def test_staff_member_can_list_jobs_for_own_club_only(self):
         own_job = self.create_preview_ready_job()

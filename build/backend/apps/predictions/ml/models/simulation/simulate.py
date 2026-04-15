@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from ml.models.simulation.config import (
+from apps.predictions.ml.models.simulation.config import (
     CI_LOWER_PERCENTILE,
     CI_UPPER_PERCENTILE,
     MAX_GOALS_PER_MATCH,

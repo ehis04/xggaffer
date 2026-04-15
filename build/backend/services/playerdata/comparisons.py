@@ -796,7 +796,20 @@ def build_club_comparison_summary(
 def build_comparison_table_data(
     comparison: PlayerSeasonComparison | ClubSeasonComparison,
 ) -> list[dict[str, Any]]:
-    return [metric.to_dict() for metric in comparison.metrics]
+    rows: list[dict[str, Any]] = []
+
+    for metric in comparison.metrics:
+        payload = metric.to_dict()
+
+        # Keep legacy aliases for existing API/tests while preserving new schema.
+        payload.setdefault("metric_key", payload.get("key"))
+        payload.setdefault("left_value", payload.get("player_a_value"))
+        payload.setdefault("right_value", payload.get("player_b_value"))
+        payload.setdefault("sentence", metric.sentence)
+
+        rows.append(payload)
+
+    return rows
 
 
 def build_player_comparison(
