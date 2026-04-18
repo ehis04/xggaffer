@@ -51,7 +51,7 @@ def calculate_post_interest_scores():
                 if hashtag_body in hashtag_interests:
                     hashtag_score = max(hashtag_score, hashtag_interests[hashtag_body])
             
-            author_score = author_interests.get(post.author_id, 0.0)
+            author_score = author_profiles.get(post.author_id, 0.0)
             
             combined_score = max(hashtag_score, author_score)
             

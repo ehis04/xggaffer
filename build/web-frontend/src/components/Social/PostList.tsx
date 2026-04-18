@@ -1,18 +1,21 @@
 import "./css/PostList.css";
 import { Post } from "./Post";
 import type { PostData } from "./Post";
-import {
-  Api_Endpoints,
-  authenticatedFetch,
-} from "../../services/api/AuthenticateUserApi";
+import apiClient from "../../services/api/client";
 import { useState, useEffect } from "react";
+import { COMMUNITY } from "../../services/api/endpoints";
+import type { PaginatedResponse } from "../../services/api/communityApi";
+import { getPostsUrl, type PostListType } from "./functions/getPosts";
 
-interface PostListProps {
-  postList: PostData[];
+export interface PostListProps {
+  postList?: PostData[];
+  username?: string;
+  refreshTrigger?: number;
   onLike?: (postId: number) => void;
   onComment?: (postId: number) => void;
   onProfileClick?: (username: string) => void;
   onPostClick?: (postId: number) => void;
+  postListType?: PostListType;
 }
 
 export interface Post {
@@ -32,9 +35,12 @@ export interface Post {
 }
 
 export const PostList: React.FC<PostListProps> = ({
+  refreshTrigger = 0,
+  username,
   onComment,
   onProfileClick,
   onPostClick,
+  postListType = "EXPLORE_POSTS",
 }) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
@@ -47,15 +53,8 @@ export const PostList: React.FC<PostListProps> = ({
     setError(null);
 
     try {
-      const response = await authenticatedFetch(Api_Endpoints.EXPLORE_POSTS, {
-        method: "GET",
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch posts: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const url = getPostsUrl(postListType, username);
+      const data = await apiClient.get<PaginatedResponse<Post>>(url);
       setPosts(data.results);
       setNextPage(data.next);
       setPreviousPage(data.previous);
@@ -71,7 +70,7 @@ export const PostList: React.FC<PostListProps> = ({
 
   useEffect(() => {
     getPosts();
-  }, []);
+  }, [postListType, username, refreshTrigger]);
 
   const postsPB = posts.filter((item: any) => {
     if ("type" in item) {
@@ -90,9 +89,7 @@ export const PostList: React.FC<PostListProps> = ({
   }
 
   const handleLike = async (postId: number) => {
-    const response = await authenticatedFetch(Api_Endpoints.LIKE_POST(postId), {
-      method: "POST",
-    });
+    await apiClient.post(COMMUNITY.LIKE_POST(postId));
   };
 
   return (

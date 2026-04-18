@@ -1,0 +1,184 @@
+.scenario-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 720px;
+  padding-bottom: 28px;
+}
+
+.course-type-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--course-blue);
+  background: rgba(126, 184, 232, 0.08);
+  border: 1px solid rgba(126, 184, 232, 0.2);
+  border-radius: 6px;
+  padding: 5px 12px;
+  width: fit-content;
+}
+
+.ct-title {
+  font-size: 1.55rem;
+  font-weight: 600;
+  color: var(--course-text);
+  line-height: 1.2;
+}
+
+.sc-divider {
+  height: 1px;
+  background: var(--course-border);
+}
+
+.sc-situation {
+  background: rgba(126, 184, 232, 0.08);
+  border: 1px solid rgba(126, 184, 232, 0.2);
+  border-left: 3px solid var(--course-blue);
+  border-radius: 10px;
+  padding: 16px 18px;
+  font-size: 0.94rem;
+  line-height: 1.75;
+  color: var(--course-text-mid);
+  max-width: 660px;
+}
+
+.sc-prompt {
+  font-size: 0.68rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-xs);
+}
+
+.sc-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 660px;
+}
+
+.sc-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  border: 1px solid var(--course-border-2);
+  border-radius: 9px;
+  padding: 13px 15px;
+  cursor: pointer;
+  background: var(--course-bg-mid);
+  transition: all 0.15s;
+  width: 100%;
+  text-align: left;
+  color: var(--course-text-mid);
+}
+
+.sc-option:hover:not(:disabled):not(.correct):not(.wrong) {
+  border-color: rgba(126, 184, 232, 0.4);
+  background: rgba(126, 184, 232, 0.06);
+}
+
+.sc-option.selected {
+  border-color: rgba(126, 184, 232, 0.5);
+  background: rgba(126, 184, 232, 0.1);
+}
+
+.sc-option.correct {
+  border-color: rgba(107, 191, 126, 0.6);
+  background: rgba(107, 191, 126, 0.1);
+}
+
+.sc-option.wrong {
+  border-color: rgba(232, 100, 80, 0.5);
+  background: rgba(232, 100, 80, 0.08);
+}
+
+.sc-option:disabled {
+  cursor: not-allowed;
+}
+
+.sc-opt-key {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid var(--course-border-2);
+  color: var(--course-text-dim);
+  background: var(--course-bg-card);
+  transition: all 0.15s;
+}
+
+.sc-option.selected .sc-opt-key {
+  border-color: rgba(126, 184, 232, 0.6);
+  color: var(--course-blue);
+  background: rgba(126, 184, 232, 0.12);
+}
+
+.sc-option.correct .sc-opt-key {
+  border-color: var(--course-accent-2);
+  color: var(--course-accent);
+  background: var(--course-accent-bg);
+}
+
+.sc-option.wrong .sc-opt-key {
+  border-color: rgba(232, 100, 80, 0.6);
+  color: #e86450;
+  background: rgba(232, 100, 80, 0.1);
+}
+
+.sc-opt-text {
+  font-size: 0.89rem;
+  line-height: 1.55;
+  padding-top: 3px;
+}
+
+.sc-check-btn {
+  background: rgba(126, 184, 232, 0.12);
+  border: 1px solid rgba(126, 184, 232, 0.35);
+  border-radius: 8px;
+  color: var(--course-blue);
+  font-size: 0.84rem;
+  font-weight: 600;
+  padding: 9px 20px;
+  cursor: pointer;
+  transition: background 0.15s;
+  align-self: flex-start;
+}
+
+.sc-check-btn:hover {
+  background: rgba(126, 184, 232, 0.22);
+}
+
+.sc-check-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sc-explanation {
+  background: var(--course-accent-bg);
+  border: 1px solid var(--course-border-2);
+  border-left: 3px solid var(--course-accent);
+  border-radius: 9px;
+  padding: 14px 16px;
+  font-size: 0.87rem;
+  line-height: 1.7;
+  color: var(--course-text-mid);
+  max-width: 660px;
+}
+
+.sc-explanation-label {
+  color: var(--course-accent);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+}

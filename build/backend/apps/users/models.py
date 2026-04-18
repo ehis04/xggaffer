@@ -2,24 +2,10 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.core.exceptions import ValidationError
 from django.db.models import Q, F
+from django.utils import timezone
+from datetime import timedelta
+import secrets
 from .managers import UserManager
-
-class Visibility(models.TextChoices):
-    public = 'PB', 'Public'
-    private = 'PR', 'Private'
-
-class Roles(models.TextChoices):
-    coach = 'C', 'Coach'
-    player = 'P', 'Player'
-    referee = 'R', 'Referee'
-    fan = 'F', 'Fan'
-
-class User(AbstractUser):
-    email = models.EmailField(_("email address"), unique=True)
-    username = models.CharField(max_length=150, blank=True, null=True, unique=True)
-
-    USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["username"]
 
 class Gender(models.TextChoices):
     FEMALE = 'F', 'Female'
@@ -45,10 +31,16 @@ class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=150, blank=True, null=True, unique=True)
     first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
-    
+
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    
+
+    email_verified = models.BooleanField(default=True) # change back to false
+    verification_token = models.CharField(max_length=100, blank=True, null=True)
+    token_created_at = models.DateTimeField(blank=True, null=True)
+    password_reset_token = models.CharField(max_length=100, blank=True, null=True)
+    password_reset_token_created_at = models.DateTimeField(blank=True, null=True)
+
     date_joined = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -65,35 +57,44 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+    def generate_verification_token(self):
+        self.verification_token = secrets.token_urlsafe(32)
+        self.token_created_at = timezone.now()
+        self.save()
+        return self.verification_token
+
+    def is_token_valid(self):
+        if not self.verification_token or not self.token_created_at:
+            return False
+        expiry_time = self.token_created_at + timedelta(hours=24)
+        return timezone.now() < expiry_time
+
+    def verify_email(self):
+        self.email_verified = True
+        self.save()
+
+    def generate_password_reset_token(self):
+        self.password_reset_token = secrets.token_urlsafe(32)
+        self.password_reset_token_created_at = timezone.now()
+        self.save()
+        return self.password_reset_token
+
+    def is_password_reset_token_valid(self):
+        if not self.password_reset_token or not self.password_reset_token_created_at:
+            return False
+        expiry_time = self.password_reset_token_created_at + timedelta(hours=1)
+        return timezone.now() < expiry_time
+
+    def clear_password_reset_token(self):
+        self.password_reset_token = None
+        self.password_reset_token_created_at = None
+        self.save()
+
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     display_name = models.CharField(max_length=150, blank=True)
     # profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
-    bio = models.TextField(blank=True)
-    gender = models.CharField(max_length=8, choices=gender_choices.choices, default=gender_choices.NOT_SPECIFIED)
-    date_of_birth = models.DateField(blank=True, null=True)
-    visibility = models.CharField(max_length=10, choices=Visibility.choices, default=Visibility.public)
-    followers_count = models.PositiveIntegerField(default=0)
-    following_count = models.PositiveIntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        verbose_name = 'User Profile'
-        verbose_name_plural = 'User Profiles'
-        indexes = [
-            models.Index(fields=['user']),
-            models.Index(fields=['-followers_count']),
-            models.Index(fields=['-created_at']),
-        ]
-    
-    def get_short_name(self):
-        return self.first_name or self.email.split('@')[0]
-
-
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    display_name = models.CharField(max_length=150, blank=True)
     bio = models.TextField(blank=True)
     gender = models.CharField(
         max_length=8,
@@ -105,6 +106,12 @@ class UserProfile(models.Model):
         max_length=10,
         choices=Visibility.choices,
         default=Visibility.PUBLIC
+    )
+    active_role = models.CharField(
+        max_length=10,
+        choices=Role.choices,
+        blank=True,
+        null=True
     )
     followers_count = models.PositiveIntegerField(default=0)
     following_count = models.PositiveIntegerField(default=0)
@@ -126,7 +133,7 @@ class UserProfile(models.Model):
     def get_display_name(self):
         if self.display_name:
             return self.display_name
-        
+
         full_name = f"{self.user.first_name} {self.user.last_name}".strip()
         return full_name or self.user.username or self.user.email
 

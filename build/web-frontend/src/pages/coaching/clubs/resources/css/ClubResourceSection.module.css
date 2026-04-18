@@ -1,0 +1,733 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.subtitle {
+  margin: 0.45rem 0 0;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: 1.25rem;
+}
+
+.card {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.88));
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 18px;
+  padding: 1.25rem;
+  box-shadow: 0 18px 45px rgba(2, 6, 23, 0.22);
+}
+
+.cardTitle {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.cardSubtitle {
+  margin: 0.45rem 0 0;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.label {
+  color: #cbd5e1;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.input,
+.textarea,
+.select,
+.fileInput {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.72);
+  color: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  padding: 0.8rem 0.95rem;
+  font: inherit;
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus,
+.fileInput:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.8);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16);
+}
+
+.textarea {
+  resize: vertical;
+}
+
+.helperText {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.primaryButton,
+.secondaryButton,
+.commitButton,
+.closeButton {
+  border: 0;
+  border-radius: 12px;
+  padding: 0.78rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+}
+
+.primaryButton:hover,
+.secondaryButton:hover,
+.commitButton:hover,
+.closeButton:hover {
+  transform: translateY(-1px);
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled,
+.commitButton:disabled,
+.closeButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  transform: none;
+}
+
+.primaryButton {
+  background: #2563eb;
+  color: #fff;
+}
+
+.secondaryButton {
+  background: rgba(30, 41, 59, 0.95);
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.commitButton {
+  background: #16a34a;
+  color: #fff;
+}
+
+.closeButton {
+  background: rgba(30, 41, 59, 0.95);
+  color: #e2e8f0;
+}
+
+.message,
+.error {
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  font-weight: 500;
+}
+
+.message {
+  background: rgba(37, 99, 235, 0.14);
+  color: #bfdbfe;
+  border: 1px solid rgba(59, 130, 246, 0.22);
+}
+
+.error {
+  background: rgba(127, 29, 29, 0.28);
+  color: #fecaca;
+  border: 1px solid rgba(248, 113, 113, 0.28);
+}
+
+.loading,
+.emptyState,
+.mutedText {
+  color: #94a3b8;
+}
+
+.resourceList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.resourceCard {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 16px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+}
+
+.resourceHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.resourceTitleGroup {
+  min-width: 0;
+}
+
+.resourceTitle {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.resourceSubtitle {
+  margin: 0.35rem 0 0;
+  color: #94a3b8;
+  word-break: break-word;
+}
+
+.resourceDescription {
+  margin: 0;
+  color: #cbd5e1;
+  line-height: 1.55;
+}
+
+.statusPill,
+.previewBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  background: rgba(30, 41, 59, 0.95);
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.metadataRow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.metadataItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.metadataLabel {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.metadataValue {
+  color: #e2e8f0;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.engagementPanel {
+  background: rgba(15, 23, 42, 0.58);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 14px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.engagementSummary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+.engagementTableWrapper {
+  overflow-x: auto;
+}
+
+.engagementTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+.engagementTable th,
+.engagementTable td {
+  text-align: left;
+  padding: 0.7rem 0.75rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.engagementTable th {
+  color: #94a3b8;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.engagementTable td {
+  color: #e2e8f0;
+}
+
+.importSection {
+  margin-top: 0.25rem;
+}
+
+.importBuilder {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.importGrid {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.importHistory,
+.importDetail {
+  min-width: 0;
+}
+
+.importHistoryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.importHistoryTitle,
+.subsectionTitle,
+.selectedJobTitle {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.importJobList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.importJobCard {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.55);
+  color: inherit;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 14px;
+  padding: 0.95rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.importJobCardSelected {
+  border-color: rgba(59, 130, 246, 0.6);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.14);
+}
+
+.importJobHeader,
+.selectedJobHeader,
+.previewRowHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.importJobTitle {
+  color: #f8fafc;
+  font-weight: 700;
+}
+
+.importJobMeta,
+.selectedJobSubtitle,
+.previewRowMeta {
+  margin-top: 0.25rem;
+  color: #94a3b8;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.selectedJobCard {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 16px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.previewCounts,
+.reportGrid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.countCard {
+  background: rgba(2, 6, 23, 0.38);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 14px;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.countLabel {
+  color: #94a3b8;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.countValue {
+  color: #f8fafc;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.commitBar {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 14px;
+  padding: 0.95rem 1rem;
+}
+
+.commitText {
+  color: #dcfce7;
+  line-height: 1.5;
+}
+
+.previewSection,
+.reportPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.previewRowList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.previewRowCard {
+  background: rgba(2, 6, 23, 0.38);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 14px;
+  padding: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.previewRowTitle {
+  color: #f8fafc;
+  font-weight: 700;
+}
+
+.previewColumns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.previewColumn {
+  min-width: 0;
+}
+
+.previewColumnTitle,
+.warningTitle,
+.errorTitle {
+  margin: 0 0 0.55rem;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.keyValueList,
+.changesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.keyValueItem,
+.changeItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  border-radius: 12px;
+  padding: 0.65rem 0.75rem;
+}
+
+.keyValueKey,
+.changeKey {
+  color: #94a3b8;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.keyValueValue,
+.changeValues {
+  color: #e2e8f0;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.changeValues {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.changeArrow {
+  color: #60a5fa;
+  font-weight: 700;
+}
+
+.warningPanel,
+.errorPanel {
+  border-radius: 14px;
+  padding: 0.85rem 0.95rem;
+}
+
+.warningPanel {
+  background: rgba(120, 53, 15, 0.18);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.errorPanel {
+  background: rgba(127, 29, 29, 0.22);
+  border: 1px solid rgba(248, 113, 113, 0.22);
+}
+
+.warningList,
+.errorList {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: #f8fafc;
+  line-height: 1.5;
+}
+
+.errorDetail {
+  margin-top: 0.25rem;
+  font-size: 0.82rem;
+  color: #fca5a5;
+}
+
+.viewerOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  z-index: 60;
+}
+
+.viewerCard {
+  width: min(960px, 100%);
+  max-height: 92vh;
+  overflow: auto;
+  background: #0f172a;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 18px;
+  padding: 1rem;
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.42);
+  display: flex;
+  flex-direction: column;
+}
+
+.viewerHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.viewerTitle {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.viewerSubtitle {
+  margin: 0.35rem 0 0;
+  color: #94a3b8;
+  word-break: break-word;
+}
+
+.viewerControls {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.pageIndicator {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.viewerBody {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.document {
+  display: flex;
+  justify-content: center;
+}
+
+.status_preview_ready {
+  background: rgba(37, 99, 235, 0.18);
+  color: #bfdbfe;
+  border-color: rgba(59, 130, 246, 0.26);
+}
+
+.status_completed {
+  background: rgba(22, 163, 74, 0.18);
+  color: #dcfce7;
+  border-color: rgba(34, 197, 94, 0.26);
+}
+
+.status_failed,
+.status_invalid,
+.status_unmatched,
+.status_ambiguous {
+  background: rgba(127, 29, 29, 0.22);
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.26);
+}
+
+.status_matched {
+  background: rgba(22, 163, 74, 0.18);
+  color: #dcfce7;
+  border-color: rgba(34, 197, 94, 0.26);
+}
+
+.status_processing,
+.status_validating,
+.status_confirmed,
+.status_uploaded {
+  background: rgba(120, 53, 15, 0.18);
+  color: #fde68a;
+  border-color: rgba(251, 191, 36, 0.26);
+}
+
+@media (max-width: 1100px) {
+
+  .grid,
+  .importGrid,
+  .previewColumns,
+  .previewCounts,
+  .reportGrid,
+  .metadataRow {
+    grid-template-columns: 1fr;
+  }
+
+  .viewerBody {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+
+  .sectionHeader,
+  .resourceHeader,
+  .importJobHeader,
+  .selectedJobHeader,
+  .previewRowHeader,
+  .viewerHeader,
+  .viewerControls,
+  .commitBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .card,
+  .viewerCard {
+    padding: 1rem;
+  }
+
+  .primaryButton,
+  .secondaryButton,
+  .commitButton,
+  .closeButton {
+    width: 100%;
+  }
+}

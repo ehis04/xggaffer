@@ -22,11 +22,9 @@ export const TrendingBox: React.FC<TrendingBoxProps> = ({
   title = "#Trending",
   items,
   maxVisible = 4,
-  showMoreText = "Show more",
-  onTrendingClick,
   onMoreClick,
 }) => {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded] = useState(false);
 
   const defaultItems: TrendingItem[] = [
     {

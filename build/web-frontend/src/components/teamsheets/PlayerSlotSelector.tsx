@@ -1,5 +1,5 @@
 import React from 'react';
-import type { SlotState, AvailablePlayer } from '../../types/teamsheet';
+import type { SlotState } from '../../types/teamsheet';
 import styles from './PlayerSlotSelector.module.css';
 
 interface PlayerSlotSelectorProps {

@@ -14,16 +14,30 @@ export const Api_Endpoints = {
   GET_PROFILE: (username: string) => `${base_url}/users/profile/${username}/`,
   CREATE_COACH_PROFILE: `${base_url}/coaching/profile/create/`,
   CREATE_PLAYER_PROFILE: `${base_url}/players/profile/create/`,
-  
+
   // Community
   CREATE_POST: `${base_url}/community/create/post/`,
-  CREATE_COMMENT: (postId: number) => `${base_url}/community/post/${postId}/create/comment/`,
+  CREATE_COMMENT: (postId: number) =>
+    `${base_url}/community/post/${postId}/create/comment/`,
   EXPLORE_POSTS: `${base_url}/community/explore/?order_by=ranked/`,
+  FOLLOWING_POSTS: `${base_url}/community/following/`,
   POST_ID: (postId: number) => `${base_url}/community/post/${postId}/`,
   DELETE_POST: (postId: number) => `${base_url}/community/my-post/${postId}/`,
   LIKE_POST: (postId: number) => `${base_url}/community/posts/${postId}/like/`,
-  LIKE_COMMENT: (postId: number) => `${base_url}/community/comment/${postId}/like/`,
-  POST_COMMENTS: (postId: number) => `${base_url}/community/posts/${postId}/comments/`,
+  LIKE_COMMENT: (postId: number) =>
+    `${base_url}/community/comment/${postId}/like/`,
+  POST_COMMENTS: (postId: number) =>
+    `${base_url}/community/posts/${postId}/comments/`,
+
+  // Quiz
+  GET_QUIZ: (quizId: number) => `${base_url}/referee/quizzes/${quizId}/`,
+
+  // Referee + Courses
+  REFEREE_DASHBOARD: `${base_url}/referee/dashboard/`,
+  REFEREE_COURSE: (lawNum: number) => `${base_url}/referee/courses/${lawNum}/`,
+  REFEREE_COMPLETE: `${base_url}/referee/progress/complete/`,
+  REFEREE_SCENARIO: `${base_url}/referee/progress/scenario/`,
+  REFEREE_DRILL: `${base_url}/referee/progress/drill/`,
 };
 
 export const getAccessToken = (): string | null => {
@@ -72,45 +86,45 @@ export const refreshAccessToken = async (): Promise<string | null> => {
     return data.access;
   } catch (error) {
     clearTokens();
-    console.log(error)
+    console.log(error);
     return null;
   }
 };
 
-export const authenticatedFetch = async (
-    url: string,
-    options: RequestInit = {}
+export const apiClient = async (
+  url: string,
+  options: RequestInit = {},
 ): Promise<Response> => {
-    const accessToken = getAccessToken();
+  const accessToken = getAccessToken();
 
-    if (!accessToken) {
-        throw new Error("No access token!");
-    }
+  if (!accessToken) {
+    throw new Error("No access token!");
+  }
 
-    const headers = {
-        ...options.headers,
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-    };
+  const headers = {
+    ...options.headers,
+    Authorization: `Bearer ${accessToken}`,
+    "Content-Type": "application/json",
+  };
 
-    let response = await fetch(url, {
+  let response = await fetch(url, {
+    ...options,
+    headers,
+  });
+
+  if (response.status === 401) {
+    const newToken = await refreshAccessToken();
+
+    if (newToken) {
+      headers.Authorization = `Bearer ${newToken}`;
+      response = await fetch(url, {
         ...options,
         headers,
-    });
-
-    if (response.status === 401) {
-        const newToken = await refreshAccessToken();
-
-        if (newToken) {
-            headers.Authorization = `Bearer ${newToken}`;
-            response = await fetch(url, {
-                ...options,
-                headers,
-            });
-        } else {
-            globalThis.location.href = "/login";
-            throw new Error("Session expired");
-        }
+      });
+    } else {
+      globalThis.location.href = "/login";
+      throw new Error("Session expired");
     }
-    return response;
-}
+  }
+  return response;
+};

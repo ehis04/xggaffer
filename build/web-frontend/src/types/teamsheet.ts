@@ -1,9 +1,12 @@
+import type { Club } from './club';
+export type { Club };
+
 export interface TeamsheetPlayer {
   id: number;
   slot_number: number;
   is_substitute: boolean;
-  player_profile: number | null;
-  player_profile_name: string | null;
+  club_player: number | null;
+  club_player_name: string | null;
   custom_name: string;
   custom_number: number | null;
   display_name: string;
@@ -34,6 +37,10 @@ export interface Teamsheet {
   starter_count: number;
   substitute_count: number;
   players: TeamsheetPlayer[];
+  is_trashed: boolean;
+  trashed_at: string | null;
+  trash_expires_at: string | null;
+  trashed_by: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -43,6 +50,7 @@ export interface TeamsheetListItem {
   title: string;
   club: number;
   club_name: string;
+  created_by: number | null;
   formation: string;
   formation_display: string;
   match_date: string | null;
@@ -50,6 +58,10 @@ export interface TeamsheetListItem {
   is_template: boolean;
   is_complete: boolean;
   starter_count: number;
+  is_trashed: boolean;
+  trashed_at: string | null;
+  trash_expires_at: string | null;
+  trashed_by: number | null;
   updated_at: string;
 }
 
@@ -93,30 +105,15 @@ export interface BulkPositionUpdate {
   updates: PlayerPositionUpdate[];
 }
 
-export interface Club {
-  id: number;
-  name: string;
-  description: string;
-  badge: string | null;
-  creator: number;
-  creator_username: string;
-  visibility: string;
-  city: string;
-  country: string;
-  stadium: string;
-  division: string;
-  member_count: number;
-  player_count: number;
-}
-
 export interface AvailablePlayer {
+  // This id is the ClubPlayer id, not the canonical Player id.
   id: number;
   first_name: string;
   last_name: string;
   full_name: string;
   display_name: string | null;
   squad_number: number | null;
-  position: string;
+  primary_position: string;
   photo: string | null;
   club: number;
   is_public: boolean;
@@ -125,7 +122,7 @@ export interface AvailablePlayer {
 
 export interface PlayerSlotAssignment {
   slot_number: number;
-  player_profile_id?: number | null;
+  club_player_id?: number | null;
   custom_name?: string;
   custom_number?: number | null;
   position_label: string;
@@ -144,6 +141,16 @@ export interface CreateTeamsheetPayload {
   player_assignments?: PlayerSlotAssignment[];
 }
 
+export type TeamsheetTrashMode = 'only' | 'include';
+
+export interface TeamsheetListOptions {
+  trash?: TeamsheetTrashMode;
+}
+
+export interface TeamsheetGetOptions {
+  trash?: TeamsheetTrashMode;
+}
+
 export interface SlotState {
   slot_number: number;
   position_label: string;
@@ -159,16 +166,26 @@ export type PositionGroup = 'GK' | 'DEF' | 'MID' | 'FWD';
 
 export const POSITION_GROUPS: Record<string, PositionGroup> = {
   GK: 'GK',
-  CB: 'DEF',
+
   RB: 'DEF',
-  LB: 'DEF',
   RWB: 'DEF',
+  CB: 'DEF',
+  RCB: 'DEF',
+  CCB: 'DEF',
+  LCB: 'DEF',
+  LB: 'DEF',
   LWB: 'DEF',
+
+  RDM: 'MID',
   CDM: 'MID',
+  LDM: 'MID',
   CM: 'MID',
-  CAM: 'MID',
   RM: 'MID',
   LM: 'MID',
+  RAM: 'MID',
+  CAM: 'MID',
+  LAM: 'MID',
+
   RW: 'FWD',
   LW: 'FWD',
   CF: 'FWD',

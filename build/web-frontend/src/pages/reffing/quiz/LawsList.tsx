@@ -1,7 +1,6 @@
-// frontend/src/components/laws/LawsList.tsx
-import React, { useEffect, useState } from 'react';
-import { lawsApi } from '../../../../services/api';
-import type { LawListItem, LawEdition } from '../../../../types/laws';
+import React, { useEffect, useState, useCallback } from 'react';
+import { lawsApi } from '../../../services/api';
+import type { LawListItem, LawEdition } from '../../../types/laws';
 
 export const LawsList: React.FC = () => {
   const [laws, setLaws] = useState<LawListItem[]>([]);
@@ -16,14 +15,13 @@ export const LawsList: React.FC = () => {
 
   useEffect(() => {
     loadLaws();
-  }, [selectedEdition]);
+  }, []);
 
   const loadEditions = async () => {
     try {
       const data = await lawsApi.getEditions();
       setEditions(data);
-      
-      // Set current edition as default
+
       const current = data.find(e => e.is_current);
       if (current) setSelectedEdition(current.id);
     } catch (err) {
@@ -32,7 +30,7 @@ export const LawsList: React.FC = () => {
     }
   };
 
-  const loadLaws = async () => {
+  const loadLaws = useCallback(async () => {
     try {
       setLoading(true);
       const data = await lawsApi.getLaws(selectedEdition);
@@ -43,7 +41,7 @@ export const LawsList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedEdition]);
 
   if (loading) return <div className="loading">Loading laws...</div>;
   if (error) return <div className="error">{error}</div>;

@@ -1,0 +1,207 @@
+
+######################################################################
+          xgGaffer Engine 2 Milestone A — Evaluation Report           
+######################################################################
+
+Loading dataset...
+  Elo merge: 19835/19835 matches matched
+Features available: 86/86
+Rows dropped (insufficient history): 231/19835
+Total samples: 19604
+Train: 17861 | Test: 1743
+Features: 86
+
+======================================================================
+1. DATASET SUMMARY
+======================================================================
+Total matches: 19604
+Features:      86
+Leagues:       ['Bundesliga', 'EPL', 'La_Liga', 'Ligue_1', 'Serie_A']
+Seasons:       ['2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024']
+
+Per-league match counts:
+  Bundesliga       3323
+  EPL              4130
+  La_Liga          4138
+  Ligue_1          3885
+  Serie_A          4128
+
+Overall target distribution:
+  A: 30.7%
+  D: 25.4%
+  H: 43.9%
+
+Per-league target distribution:
+result          A      D      H
+league                         
+Bundesliga  0.306  0.251  0.442
+EPL         0.321  0.235  0.444
+La_Liga     0.286  0.262  0.452
+Ligue_1     0.306  0.256  0.438
+Serie_A     0.314  0.267  0.419
+
+======================================================================
+2. BASELINES
+======================================================================
+           baseline  accuracy
+        Always Home  0.412507
+Always Majority (H)  0.412507
+    Random Weighted  0.353414
+
+======================================================================
+3. WALK-FORWARD TEMPORAL CROSS-VALIDATION
+======================================================================
+
+================Walk-Forward Temporal Cross-Validation================
+Season       Train   Test     Acc   Brier  LogLoss    ECE  D_Rec
+----------------------------------------------------------------------
+2018          7146   1808   0.517  0.5886   0.9880  0.021   0.00
+2019          8954   1713   0.522  0.5921   0.9969  0.027   0.00
+2020         10667   1818   0.508  0.5987   1.0052  0.047   0.00
+2021         12485   1814   0.521  0.5936   0.9968  0.023   0.00
+2022         14299   1816   0.526  0.5893   0.9876  0.016   0.00
+2023         16115   1746   0.544  0.5795   0.9745  0.026   0.00
+2024         17861   1743   0.532  0.5879   0.9843  0.021   0.00
+----------------------------------------------------------------------
+  accuracy     mean: 0.5242  std: 0.0112
+  brier        mean: 0.5900  std: 0.0059
+  log_loss     mean: 0.9905  std: 0.0101
+  ece          mean: 0.0260  std: 0.0098
+======================================================================
+
+======================================================================
+4. REGULARISATION TUNING
+======================================================================
+     C  accuracy    brier  log_loss      ece
+ 0.001  0.543528 0.579538  0.974461 0.026405
+ 0.010  0.544101 0.580425  0.975874 0.029217
+ 0.100  0.544674 0.581013  0.976818 0.027959
+ 1.000  0.542955 0.581378  0.977347 0.028542
+10.000  0.541237 0.581531  0.977555 0.028678
+
+Best C by log loss: 0.001
+  Accuracy:  0.5435
+  Brier:     0.5795
+  Log loss:  0.9745
+  ECE:       0.0264
+
+======================================================================
+5. CALIBRATION COMPARISON
+======================================================================
+Method              Acc   Brier  LogLoss    ECE
+--------------------------------------------------
+uncalibrated     0.5307  0.5879   0.9841 0.0252
+sigmoid          0.5318  0.5879   0.9843 0.0213
+isotonic         0.5295  0.5879   0.9859 0.0223
+
+Best method by log loss: uncalibrated
+
+Reliability diagram data (per class):
+  A: (0.07,0.08), (0.15,0.14), (0.25,0.27), (0.35,0.36), (0.45,0.51), (0.55,0.56), (0.64,0.63), (0.73,0.74)
+  D: (0.19,0.20), (0.25,0.26), (0.31,0.33)
+  H: (0.08,0.03), (0.16,0.13), (0.25,0.22), (0.35,0.30), (0.45,0.44), (0.55,0.51), (0.65,0.63), (0.73,0.77), (0.81,1.00)
+
+======================================================================
+6. ABLATION ANALYSIS
+======================================================================
+  Training full model...
+  Training without rolling_attack (24 features)...
+  Training without rolling_defence (12 features)...
+  Training without rolling_general (12 features)...
+  Training without ewm (6 features)...
+  Training without form (4 features)...
+  Training without schedule (6 features)...
+  Training without diff (18 features)...
+  Training without elo (3 features)...
+                variant  features_removed  accuracy    brier  log_loss      ece  mcnemar_p
+             FULL MODEL                 0  0.531842 0.587897  0.984327 0.021336        NaN
+ WITHOUT rolling_attack                24  0.531842 0.587479  0.983791 0.021693   1.000000
+WITHOUT rolling_defence                12  0.534710 0.587831  0.984289 0.023402   0.383310
+WITHOUT rolling_general                12  0.531268 0.587920  0.984320 0.022253   1.000000
+            WITHOUT ewm                 6  0.532989 0.588276  0.984850 0.020493   0.774414
+           WITHOUT form                 4  0.530694 0.587927  0.984368 0.021459   0.625000
+       WITHOUT schedule                 6  0.535858 0.587838  0.984424 0.025753   0.264931
+           WITHOUT diff                18  0.530694 0.588029  0.984510 0.021645   0.687500
+            WITHOUT elo                 3  0.528399 0.589318  0.986226 0.024087   0.326940
+
+Impact of removing each family:
+  Family                     Acc delta   LL delta    p-value  Sig
+  -----------------------------------------------------------
+  rolling_attack               +0.0000    -0.0005     1.0000     
+  rolling_defence              +0.0029    -0.0000     0.3833     
+  rolling_general              -0.0006    -0.0000     1.0000     
+  ewm                          +0.0011    +0.0005     0.7744     
+  form                         -0.0011    +0.0000     0.6250     
+  schedule                     +0.0040    +0.0001     0.2649     
+  diff                         -0.0011    +0.0002     0.6875     
+  elo                          -0.0034    +0.0019     0.3269     
+
+======================================================================
+7. PER-CLASS ANALYSIS
+======================================================================
+              precision    recall  f1-score   support
+
+           A       0.54      0.59      0.56       573
+           D       0.00      0.00      0.00       451
+           H       0.53      0.82      0.64       719
+
+    accuracy                           0.53      1743
+   macro avg       0.36      0.47      0.40      1743
+weighted avg       0.39      0.53      0.45      1743
+
+Probability distribution when actual class is:
+  A: mean predicted P(A) = 0.409 +/- 0.163
+  D: mean predicted P(D) = 0.247 +/- 0.030
+  H: mean predicted P(H) = 0.520 +/- 0.155
+
+======================================================================
+8. MODEL COMPARISON (LR vs RF vs GB)
+======================================================================
+  Training logistic_regression...
+/home/eo4/projects/2026-csc-1097-adenire-2-oghinae-2/build/.venv/lib/python3.10/site-packages/sklearn/metrics/_classification.py:1731: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+  _warn_prf(average, modifier, f"{metric.capitalize()} is", result.shape[0])
+/home/eo4/projects/2026-csc-1097-adenire-2-oghinae-2/build/.venv/lib/python3.10/site-packages/sklearn/metrics/_classification.py:1731: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+  _warn_prf(average, modifier, f"{metric.capitalize()} is", result.shape[0])
+/home/eo4/projects/2026-csc-1097-adenire-2-oghinae-2/build/.venv/lib/python3.10/site-packages/sklearn/metrics/_classification.py:1731: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+  _warn_prf(average, modifier, f"{metric.capitalize()} is", result.shape[0])
+  Training random_forest...
+  Training gradient_boosting...
+              model  accuracy  brier_score  log_loss     f1_H     f1_D     f1_A  recall_H  recall_D  recall_A
+      random_forest  0.534710     0.591217  0.990112 0.640260 0.030303 0.567316  0.820584  0.015521  0.584642
+logistic_regression  0.531842     0.587897  0.984327 0.641962 0.000000 0.563333  0.819193  0.000000  0.589878
+  gradient_boosting  0.519220     0.599904  1.003660 0.634045 0.008830 0.528777  0.847010  0.004435  0.513089
+
+Best model by accuracy: random_forest (0.5347)
+Logistic regression is the production choice for:
+  - Calibration quality (Brier, log loss)
+  - Deterministic explanation via coefficients
+  - Training speed and simplicity
+
+======================================================================
+9. PRODUCTION MODEL SUMMARY
+======================================================================
+Model:              Logistic Regression + CalibratedClassifierCV (sigmoid)
+Regularisation:     C = 0.001
+Features:           86 (rolling + EWM + form + schedule + diff + Elo)
+Training leagues:   EPL, La Liga, Bundesliga, Serie A, Ligue 1
+Training seasons:   2014-2023
+Evaluation:         7-fold walk-forward temporal CV
+
+Walk-forward results:
+  Accuracy:   0.5242 +/- 0.0112
+  Brier:      0.5900
+  Log loss:   0.9905
+  ECE:        0.0260
+
+Targets vs actual:
+  Accuracy target:  52-57%    actual: 52.4%
+  Log loss target:  0.95-1.02 actual: 0.9905
+  Brier target:     0.54-0.58 actual: 0.5900
+  ECE target:       < 5%      actual: 2.6%
+
+Draw recall:        0% across all folds (expected without betting odds)
+Next step:          Milestone B adds de-vigged odds for draw signal
+
+######################################################################
+                            END OF REPORT                             
+######################################################################

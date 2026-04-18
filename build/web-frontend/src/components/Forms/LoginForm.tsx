@@ -1,7 +1,9 @@
-import "./css/LoginForm.css";
-import googleIcon from "../../images/logos/google-svg.svg";
-import { useState } from "react";
-import type { FormEvent } from "react";
+import './css/LoginForm.css';
+import googleIcon from '../../images/logos/google-svg.svg';
+import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/useAuth';
+import type { FormEvent } from 'react';
 
 interface LoginFormData {
   email: string;
@@ -9,84 +11,66 @@ interface LoginFormData {
   rememberMe: boolean;
 }
 
-interface LoginResponse {
-  access: string;
-  refresh: string;
-  user: {
-    id: number;
-    email: string;
-    username: string;
-    first_name: string;
-    last_name: string;
-  };
+interface LoginFormProps {
+  onSwitchToSignUp?: () => void;
 }
 
-export const LoginForm = () => {
+export const LoginForm = ({ onSwitchToSignUp }: LoginFormProps = {}) => {
   const [formData, setFormData] = useState<LoginFormData>({
-    email: "",
-    password: "",
+    email: '',
+    password: '',
     rememberMe: false,
   });
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = (location.state as { from?: Location })?.from?.pathname || '/social';
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
+    const { id, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [id]: value,
+      [id]: type === 'checkbox' ? checked : value,
     }));
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8000/api/users/login/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
+      await login({
+        email: formData.email,
+        password: formData.password,
+        remember_me: formData.rememberMe,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || "Login failed");
-      }
 
-      const data: LoginResponse = await response.json();
-
-      localStorage.setItem("access_token", data.access);
-      localStorage.setItem("refresh_token", data.refresh);
-
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      console.log("Login successful: ", data);
-      globalThis.location.href = "http://localhost:5173/social";
-    } catch (error) {
-      setError(
-        error instanceof Error ? error.message : "An error occured during login"
-      );
+      navigate(from, { replace: true });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred during login';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <form className="form" onSubmit={handleSubmit}>
+    <form id="login-form" className="form" onSubmit={handleSubmit}>
+      {error && <div className="error-message">{error}</div>}
+
       <div className="flex-column">
-        <label htmlFor="email"> Email </label>
+        <label htmlFor="email">Email</label>
       </div>
       <div className="inputForm">
         <input
           id="email"
-          type="enail"
+          type="email"
           className="input"
           placeholder="Enter your Email"
           value={formData.email}
@@ -94,8 +78,9 @@ export const LoginForm = () => {
           required
         />
       </div>
+
       <div className="flex-column">
-        <label htmlFor="password"> Password </label>
+        <label htmlFor="password">Password</label>
       </div>
       <div className="inputForm">
         <input
@@ -108,6 +93,7 @@ export const LoginForm = () => {
           required
         />
       </div>
+
       <div className="flex-row">
         <div>
           <input
@@ -116,22 +102,24 @@ export const LoginForm = () => {
             checked={formData.rememberMe}
             onChange={handleInputChange}
           />
-          <label htmlFor="rememberMe"> Remember me </label>
+          <label htmlFor="rememberMe">Remember me</label>
         </div>
-        <span className="span"> Forgot your password? </span>
+        <span className="span" onClick={() => navigate('/forgot-password')}>
+          Forgot your password?
+        </span>
       </div>
+
       <button className="button-submit" type="submit" disabled={isLoading}>
-        {isLoading ? "Signing In..." : "Sign In"}
+        {isLoading ? 'Signing In...' : 'Sign In'}
       </button>
-      <p className="p">
-        Don't have an account? <span className="span"> Sign Up </span>
-      </p>
-      <p className="p line"> Or With </p>
-      <div className="google-flex-row">
-        <button className="btn-google">
-          <img src={googleIcon} alt="Google logo" width={24} height={30} />
-        </button>
+
+      <div>
+        Don't have an account?{' '}
+        <span className="span" onClick={onSwitchToSignUp}>
+          Sign up here.
+        </span>
       </div>
+
     </form>
   );
 };

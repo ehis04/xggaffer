@@ -1,0 +1,12 @@
+Hi {{ first_name|default:"there" }},
+
+Welcome to iFoot! Please verify your email address by clicking the link below:
+
+{{ verification_url }}
+
+This link will expire in 24 hours.
+
+If you didn't create an account with iFoot, you can safely ignore this email.
+
+Thanks,
+The iFoot Team

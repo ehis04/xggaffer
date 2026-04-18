@@ -1,13 +1,15 @@
 import './css/GetStartedButton.css'
 
-export const GetStartedButton = () => {
-    return (
+interface GetStartedButtonProps {
+    onClick?: () => void;
+}
 
-        <button className="getStartedButton">
+export const GetStartedButton = ({ onClick }: GetStartedButtonProps) => {
+    return (
+        <button className="getStartedButton" onClick={onClick}>
             <div className="body">
                 <p> Get Started </p>
             </div>
         </button>
-
-    )
+    );
 }

@@ -4,13 +4,17 @@ import { PrimaryHeader } from "./PrimaryHeader";
 import { SecondaryHeader } from "./SecondaryHeader";
 import "./css/HeroSection.css";
 
-export const HeroSection = () => {
+interface HeroSectionProps {
+  onGetStarted?: () => void;
+}
+
+export const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
   return (
     <div className="heroSection">
       <div className="heroSectionLeft">
         <PrimaryHeader />
         <SecondaryHeader />
-        <GetStartedButton />
+        <GetStartedButton onClick={onGetStarted} />
       </div>
       <div className="heroSectionRight">
         <HeroImage/>
