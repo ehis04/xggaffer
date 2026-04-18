@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import type { AvailablePlayer } from '../../types/teamsheet';
 import styles from './AvailablePlayersList.module.css';
 
@@ -146,7 +146,7 @@ const PlayerRow: React.FC<PlayerRowProps> = ({ player, onSelect }) => {
           {player.display_name || player.full_name}
         </span>
         <span className={styles.playerMeta}>
-          {player.position}
+          {player.primary_position}
           {player.squad_number && ` • #${player.squad_number}`}
         </span>
       </div>

@@ -1,27 +1,10 @@
-import axios from 'axios';
-
-const base_url = 'http://localhost:8000/api';
-
-const apiClient = axios.create({
-    baseUrl: base_url,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
-
-apiClient.interceptors.request.use((config) => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
+import apiClient from './client';
 
 export interface Author {
-    id: number;
-    username: string;
-    profile_image?: string;
-    display_name?: string;
+  id: number;
+  username: string;
+  profile_image?: string;
+  display_name?: string;
 }
 
 export interface Hashtag {
@@ -30,7 +13,7 @@ export interface Hashtag {
   usage_count: number;
 }
 
-export interface ExplorePost {
+export interface Post {
   id: number;
   author: Author;
   text_body: string;
@@ -45,6 +28,20 @@ export interface ExplorePost {
   ranked_score?: number;
   popularity?: number;
   recency_scaled?: number;
+}
+
+export interface Comment {
+  id: number;
+  author: Author;
+  post: number;
+  parent?: number;
+  text_body: string;
+  no_of_likes: number;
+  no_of_replies: number;
+  created_at: string;
+  moderation_status: 'OK' | 'UR' | 'R';
+  children?: Comment[];
+  is_liked?: boolean;
 }
 
 export interface CreatePostData {
@@ -89,15 +86,61 @@ export interface ExploreParams {
   has_attachments?: boolean;
 }
 
-export interface Comment {
-  id: number;
-  author: Author;
-  post: number;
-  parent?: number;
-  text_body: string;
-  no_of_likes: number;
-  no_of_replies: number;
-  created_at: string;
-  moderation_status: 'OK' | 'UR' | 'R';
-  children?: Comment[];
+function buildExploreParams(params: ExploreParams): Record<string, string> {
+  const result: Record<string, string> = {};
+
+  if (params.page) result.page = String(params.page);
+  if (params.page_size) result.page_size = String(params.page_size);
+  if (params.order_by) result.order_by = params.order_by;
+  if (params.hashtag) result.hashtag = params.hashtag;
+  if (params.hashtags?.length) result.hashtags = params.hashtags.join(',');
+  if (params.min_likes) result.min_likes = String(params.min_likes);
+  if (params.max_likes) result.max_likes = String(params.max_likes);
+  if (params.min_comments) result.min_comments = String(params.min_comments);
+  if (params.max_comments) result.max_comments = String(params.max_comments);
+  if (params.search) result.search = params.search;
+  if (params.author) result.author = params.author;
+  if (params.date_from) result.date_from = params.date_from;
+  if (params.date_to) result.date_to = params.date_to;
+  if (params.has_attachments !== undefined) result.has_attachments = String(params.has_attachments);
+
+  return result;
 }
+
+export const communityApi = {
+  explorePosts: (params: ExploreParams = {}) =>
+    apiClient.get<PaginatedResponse<Post>>(
+      '/community/explore/',
+      buildExploreParams(params)
+    ),
+
+  getPost: (postId: number) =>
+    apiClient.get<Post>(`/community/post/${postId}/`),
+
+  createPost: (data: CreatePostData) =>
+    apiClient.post<Post>('/community/create/post/', data),
+
+  deletePost: (postId: number) =>
+    apiClient.delete<void>(`/community/my-post/${postId}/`),
+
+  likePost: (postId: number) =>
+    apiClient.post<{ liked: boolean; no_of_likes: number }>(
+      `/community/posts/${postId}/like/`
+    ),
+
+  getPostComments: (postId: number) =>
+    apiClient.get<Comment[]>(`/community/posts/${postId}/comments/`),
+
+  createComment: (postId: number, data: CreateCommentData) =>
+    apiClient.post<Comment>(`/community/post/${postId}/create/comment/`, data),
+
+  likeComment: (commentId: number) =>
+    apiClient.post<{ liked: boolean; no_of_likes: number }>(
+      `/community/comment/${commentId}/like/`
+    ),
+
+  getTrendingHashtags: (limit = 10) =>
+    apiClient.get<Hashtag[]>('/community/hashtags/trending/', { limit: String(limit) }),
+};
+
+export default communityApi;

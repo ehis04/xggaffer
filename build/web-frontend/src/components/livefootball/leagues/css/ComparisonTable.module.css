@@ -1,0 +1,78 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.mobileToggle {
+  display: none;
+  gap: 0.65rem;
+}
+
+.toggleButton {
+  flex: 1;
+  min-height: 2.6rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #e9eef5;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.toggleButtonActive {
+  background: #e9eef5;
+  color: #111827;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.panelHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f4f7fb;
+}
+
+.panelMeta {
+  margin: 0;
+  color: #aebccd;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.mobileVisible,
+.mobileHidden {
+  display: flex;
+}
+
+@media (max-width: 900px) {
+  .mobileToggle {
+    display: flex;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mobileHidden {
+    display: none;
+  }
+}

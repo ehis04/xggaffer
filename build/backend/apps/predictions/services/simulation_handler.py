@@ -1,0 +1,54 @@
+from __future__ import annotations
+
+import logging
+
+from apps.predictions.services.base_handler import EngineHandler, QueryPayload
+from apps.predictions.services.intent_types import IntentClass, ParsedQuery
+
+_logger = logging.getLogger(__name__)
+
+DEFAULT_LEAGUE = "EPL"
+DEFAULT_SEASON = "2025"
+
+
+class SimulationHandler(EngineHandler):
+    def handle(self, parsed_query: ParsedQuery) -> QueryPayload:
+        league = parsed_query.league or DEFAULT_LEAGUE
+        season = parsed_query.season or DEFAULT_SEASON
+        try:
+            from apps.predictions.models import SimulationResult
+
+            record = (
+                SimulationResult.objects.filter(league=league, season=season)
+                .order_by("-computed_at")
+                .first()
+            )
+
+            if record is None:
+                return QueryPayload(
+                    intent=IntentClass.SEASON_SIMULATION,
+                    engine_data={},
+                    partial=True,
+                    error=f"No simulation data for {league} {season}.",
+                )
+
+            return QueryPayload(
+                intent=IntentClass.SEASON_SIMULATION,
+                engine_data={
+                    "league": league,
+                    "season": season,
+                    "freeze_date": record.freeze_date.isoformat(),
+                    "n_simulations": record.n_simulations,
+                    "table": record.results,
+                },
+                partial=False,
+                error=None,
+            )
+        except Exception as exc:
+            _logger.exception("SimulationHandler failed: %s", exc)
+            return QueryPayload(
+                intent=IntentClass.SEASON_SIMULATION,
+                engine_data={},
+                partial=True,
+                error=str(exc),
+            )

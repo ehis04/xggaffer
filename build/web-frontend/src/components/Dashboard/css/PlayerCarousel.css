@@ -1,0 +1,77 @@
+.pc-container {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: none;
+}
+
+.pc-container::-webkit-scrollbar { display: none; }
+
+.player-card {
+  position: relative;
+  flex-shrink: 0;
+  width: 80px;
+  background: var(--brand-dark-green-border);
+  border: 1px solid var(--brand-dark-green-border);
+  border-radius: 12px;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.12s;
+}
+
+.player-card:hover {
+  border-color: var(--hover-lightest-green);
+  background: var(--hover-light-green);
+}
+.player-card--selected {
+  border: 2px solid var(--hover-lightest-green);
+
+}
+.player-card--unavailable {
+  opacity: 0.6;
+}
+
+.p-card-status-dot {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+}
+
+.player-card-profile {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: rgba(193, 255, 225, 0.055);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--primary-text);
+}
+
+
+.player-card-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--primary-text);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.player-card-pos {
+  font-size: 8px;
+  color: var(--tertiary-text);
+  background: var(--brand-darkest-green-border);
+  padding: 5px;
+  border-radius: 4px;
+}

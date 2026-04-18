@@ -1,25 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { lawsApi } from '../../../../services/api';
-import type { LawChange, LawEdition } from '../../../../types/laws';
+import React, { useEffect, useState, useCallback } from 'react';
+import { lawsApi } from '../../../services/api';
+import type { LawChange, LawEdition } from '../../../types/laws';
 
 export const ChangesTimeline: React.FC = () => {
   const [changes, setChanges] = useState<LawChange[]>([]);
   const [editions, setEditions] = useState<LawEdition[]>([]);
   const [selectedEdition, setSelectedEdition] = useState<number | undefined>();
 
-  useEffect(() => {
-    loadData();
-  }, [selectedEdition]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     const [changesData, editionsData] = await Promise.all([
       lawsApi.getChanges(selectedEdition),
       lawsApi.getEditions()
     ]);
-    
+
     setChanges(changesData);
     setEditions(editionsData);
-  };
+  }, [selectedEdition]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const groupByLaw = (changes: LawChange[]) => {
     return changes.reduce((acc, change) => {

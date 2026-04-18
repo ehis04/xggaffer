@@ -6,6 +6,16 @@ dj-database-url
 
 # CORS
 django-cors-headers
+djangorestframework
+djangorestframework-simplejwt
+drf-nested-routers
+
+# Media
+cloudinary
+django-cloudinary-storage
+
+# Email
+resend
 
 # Background tasks
 celery
@@ -13,7 +23,7 @@ redis
 
 # PDF processing
 pdf2image
-PyPDF2
+pypdf
 Pillow
 
 # AI / LLM
@@ -25,8 +35,9 @@ whitenoise
 # Database (PostgreSQL support)
 psycopg2-binary
 
-djangorestframework-simplejwt
-
 joblib
 
 pandas
+playwright
+xgboost
+lifelines

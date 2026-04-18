@@ -1,0 +1,209 @@
+.course-page-container {
+  height: 100vh;
+  background: var(--brand-light-green);
+  color: var(--primary-text);
+  overflow: hidden;
+}
+
+.course-page {
+  margin-left: 72px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.course-header {
+  height: 52px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--brand-lightest-green-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  gap: 12px;
+}
+
+.course-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.course-law-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  border: 1px solid var(--course-border-2);
+  border-radius: 4px;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+.course-header-title {
+  font-size: 0.93rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.course-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.course-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.course-progress-pct {
+  font-size: 0.68rem;
+  min-width: 32px;
+  text-align: right;
+}
+
+.course-progress-bar {
+  width: 100px;
+  height: 5px;
+  background: var(--brand-lightest-green-border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.course-progress-fill {
+  height: 100%;
+  background: var(--hover-light-green);
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.course-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 308px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.course-content-pane {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--brand-lightest-green-border);
+}
+
+.course-content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 30px 42px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand-lightest-green-border) transparent;
+}
+
+.course-content-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.course-content-scroll::-webkit-scrollbar-thumb {
+  background: var(--course-border-2);
+  border-radius: 10px;
+}
+
+.course-nav-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 42px;
+  border-top: 1px solid var(--brand-lightest-green-border);
+  /* background: var(); */
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.course-nav-btn {
+  background: none;
+  border: 1px solid var(--hover-lightest-green);
+  border-radius: 7px;
+  color: var(--hover-lightest-green);
+  font-size: 0.82rem;
+  padding: 7px 16px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  min-width: 96px;
+}
+
+.course-nav-btn:hover:not(:disabled) {
+  background: var(--hover-light-green);
+  border-color: var(--hover-light-green);
+  color: var(--primary-text);
+}
+
+.course-nav-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.course-nav-prev { text-align: left; }
+.course-nav-next { text-align: right; }
+
+.course-nav-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.68rem;
+  color: var(--course-text-xs);
+  line-height: 1.6;
+  text-align: center;
+}
+
+.course-right-panel {
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  overflow: hidden;
+}
+
+.course-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand-lightest-green-border) transparent;
+}
+
+.course-panel-body::-webkit-scrollbar { width: 4px; }
+.course-panel-body::-webkit-scrollbar-thumb {
+  background: var(--course-border-2);
+  border-radius: 10px;
+}
+
+.course-type-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  padding: 5px 12px;
+  width: fit-content;
+  margin-bottom: 8px;
+  background: transparent;
+  border: 1px solid var(--brand-lightest-green-border);
+  color: var(--primary-text);
+}
+
+.ct-title {
+  font-size: 1.55rem;
+  font-weight: 600;
+  color: var(--primary-text);
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(7px); }
+  to   { opacity: 1; transform: none; }
+}

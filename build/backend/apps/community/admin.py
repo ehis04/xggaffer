@@ -1,7 +1,6 @@
 from django.contrib import admin
 from .models import Post, Comment, Like, HashTag, PostTag, Mention, Notification, Block, UserInterestProfile, UserAuthorInterest, UserHashtagInterest
 
-# Register your models here.
 admin.site.register(Post)
 admin.site.register(Comment)
 admin.site.register(Like)

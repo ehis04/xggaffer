@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { teamsheetApi } from '../../../../services/api';
-import type { TeamsheetListItem } from '../../../../types/teamsheet';
+import { teamsheetApi } from '../../../services/api';
+import type { TeamsheetListItem } from '../../../types/teamsheet';
 
 export const TeamsheetList = () => {
   const [teamsheets, setTeamsheets] = useState<TeamsheetListItem[]>([]);
@@ -10,13 +10,7 @@ export const TeamsheetList = () => {
   const navigate = useNavigate();
   const { clubId } = useParams<{ clubId: string }>();
 
-  useEffect(() => {
-    if (clubId) {
-      loadTeamsheets();
-    }
-  }, [clubId]);
-
-  const loadTeamsheets = async () => {
+  const loadTeamsheets = useCallback(async () => {
     try {
       setLoading(true);
       const data = await teamsheetApi.list(Number(clubId));
@@ -28,7 +22,13 @@ export const TeamsheetList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [clubId]);
+
+  useEffect(() => {
+    if (clubId) {
+      loadTeamsheets();
+    }
+  }, [clubId, loadTeamsheets]);
 
   const handleViewTeamsheet = (id: number) => {
     navigate(`/coaching/teamsheets/${id}`);
