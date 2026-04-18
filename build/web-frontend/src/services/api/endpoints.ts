@@ -32,6 +32,7 @@ export const COMMUNITY = {
   CREATE_COMMENT:         (postId: number) => `/community/post/${postId}/create/comment/`,
   LIKE_COMMENT:           (commentId: number) => `/community/comment/${commentId}/like/`,
   TRENDING_HASHTAGS:      '/community/hashtags/trending/',
+  GET_USERS_POSTS: (username: string) => `/community/posts/user/${username}/`,
 } as const;
 
 export const REFEREE = {
