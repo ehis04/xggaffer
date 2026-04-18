@@ -26,6 +26,13 @@ export interface User {
     first_name: string;
     last_name: string;
   };
+
+export interface UserRole {
+  id: number;
+  role: string;
+  role_display: string;
+  created_at: string;
+}
 export interface UserData {
   user: User;
   username: string;
@@ -35,7 +42,12 @@ export interface UserData {
   following_count: number;
   gender: string;
   profile_image?: string;
+  roles: UserRole[];
+  visibility: string;
+  created_at: string;
 }
+
+
 
 const http = "http://localhost:5173/";
 

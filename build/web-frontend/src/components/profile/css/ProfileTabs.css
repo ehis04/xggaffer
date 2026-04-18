@@ -1,0 +1,50 @@
+.ptabs-container {
+  display: flex;
+  border-bottom: 1px solid var(--brand-lightest-green-border);
+}
+
+.ptabs-tab {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--tertiary-text);
+  border: none;
+  background: none;
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+  padding: 0 12px;
+}
+
+.ptabs-tab:hover {
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--secondary-text);
+}
+
+.ptabs-tab--active {
+  color: var(--primary-text);
+  font-weight: 600;
+}
+
+.ptabs-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 3px;
+  background: var(--hover-lightest-green);
+  border-radius: 3px 3px 0 0;
+  animation: ptabs-slide-in 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes ptabs-slide-in {
+  from { width: 0; opacity: 0; }
+  to   { width: 50px; opacity: 1; }
+}

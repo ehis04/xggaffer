@@ -5,14 +5,17 @@ import apiClient from "../../services/api/client";
 import { useState, useEffect } from "react";
 import { COMMUNITY } from "../../services/api/endpoints";
 import type { PaginatedResponse } from "../../services/api/communityApi";
+import { getPostsUrl, type PostListType } from "./functions/getPosts";
 
-interface PostListProps {
+export interface PostListProps {
   postList?: PostData[];
+  username?: string;
   refreshTrigger?: number;
   onLike?: (postId: number) => void;
   onComment?: (postId: number) => void;
   onProfileClick?: (username: string) => void;
   onPostClick?: (postId: number) => void;
+  postListType?: PostListType;
 }
 
 export interface Post {
@@ -33,6 +36,7 @@ export interface Post {
 
 export const PostList: React.FC<PostListProps> = ({
   refreshTrigger = 0,
+  username,
   onComment,
   onProfileClick,
   onPostClick,
@@ -49,7 +53,8 @@ export const PostList: React.FC<PostListProps> = ({
     setError(null);
 
     try {
-      const data = await apiClient.get<PaginatedResponse<Post>>(COMMUNITY[postListType]);
+      const url = getPostsUrl(postListType, username);
+      const data = await apiClient.get<PaginatedResponse<Post>>(url);
       setPosts(data.results);
       setNextPage(data.next);
       setPreviousPage(data.previous);
@@ -65,7 +70,7 @@ export const PostList: React.FC<PostListProps> = ({
 
   useEffect(() => {
     getPosts();
-  }, [postListType, refreshTrigger]);
+  }, [postListType, username, refreshTrigger]);
 
   const postsPB = posts.filter((item: any) => {
     if ("type" in item) {
