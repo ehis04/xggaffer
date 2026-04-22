@@ -39,8 +39,9 @@ import { CoursePage } from "./pages/referee/CoursePage";
 import TeamsheetCreatePage from "./pages/coaching/teamsheets/TeamsheetCreatePage";
 import TeamsheetDetailPage from "./pages/coaching/teamsheets/TeamsheetDetailPage";
 import TeamsheetEditPage from "./pages/coaching/teamsheets/TeamsheetEditPage";
+import TeamsheetListPage from "./pages/coaching/teamsheets/TeamsheetListPage";
 import PredictionPage from "./pages/predictions/PredictionPage";
-
+import TacticsBoardListPage from "./pages/coaching/tactics/TacticsBoardListPage";
 import InternalPlayerProfilePage from "./pages/coaching/playerdata/InternalPlayerProfilePage";
 import InternalPlayerComparisonPage from "./pages/coaching/playerdata/InternalPlayerComparisonPage";
 
@@ -117,11 +118,7 @@ function App() {
               <Route path="/referee/law/:lawNumber" element={<CoursePage />} />
               <Route path="/coaching" element={<CoachingBase />} />
               /* old page, delete */
-              <Route path="/coaching/teamsheets" element={<TeamsheetList />} />
-              <Route
-                path="/coaching/teamsheets/:id"
-                element={<TeamsheetDetail />}
-              />
+
               {/* <Route
                 path="/coaching/predictions"
                 element={<PredictionPage />}
@@ -170,10 +167,7 @@ function App() {
                 path="/clubs/:clubId/teamsheets/:teamsheetId"
                 element={<TeamsheetDetailPage />}
               />
-              <Route
-                path="/coaching/dashboard"
-                element={<CoachingDashboard />}
-              />
+
               /* no issues, upgrades noted in docs */
               <Route
                 path="/clubs/:clubId/teamsheets"
@@ -189,19 +183,13 @@ function App() {
                 path="/clubs/:clubId/teamsheets/:teamsheetId"
                 element={<TeamsheetDetailPage />}
               />
-              <Route
-                path="/coaching/dashboard"
-                element={<CoachingDashboard />}
-              />
+
               /* No issues, updates noted in docs*/
               <Route
                 path="/clubs/:clubId/teamsheets/:teamsheetId/edit"
                 element={<TeamsheetEditPage />}
               />
-              <Route
-                path="/coaching/dashboard"
-                element={<CoachingDashboard />}
-              />
+
               <Route path="/clubs/:clubId/" element={<IndividualClubBase />} />
               <Route
                 path="/clubs/:clubId/players"

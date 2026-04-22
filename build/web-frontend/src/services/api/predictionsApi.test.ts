@@ -97,24 +97,32 @@ describe('predictionsApi', () => {
       createJsonResponse({ error: 'Odds comparison unavailable for this fixture.' }, 404)
     );
 
-    const error = await getOddsComparison(mockOddsComparisonRequest).catch(
-      (err) => err as PredictionsApiError
-    );
+    let error: PredictionsApiError | undefined;
+    try {
+      await getOddsComparison(mockOddsComparisonRequest);
+    } catch (err) {
+      error = err as PredictionsApiError;
+    }
 
     expect(error).toBeInstanceOf(PredictionsApiError);
-    expect(error.name).toBe('PredictionsApiError');
-    expect(error.status).toBe(404);
-    expect(error.message).toContain('HTTP 404');
+    expect(error!.name).toBe('PredictionsApiError');
+    expect(error!.status).toBe(404);
+    expect(error!.message).toContain('HTTP 404');
   });
 
   it('throws a typed API error when the backend returns an error payload', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(createJsonResponse({ error: 'Model not available.' }, 503));
 
-    const error = await getModelInfo().catch((err) => err as PredictionsApiError);
+    let error: PredictionsApiError | undefined;
+    try {
+      await getModelInfo();
+    } catch (err) {
+      error = err as PredictionsApiError;
+    }
 
     expect(error).toBeInstanceOf(PredictionsApiError);
-    expect(error.name).toBe('PredictionsApiError');
-    expect(error.status).toBe(503);
-    expect(error.message).toContain('HTTP 503');
+    expect(error!.name).toBe('PredictionsApiError');
+    expect(error!.status).toBe(503);
+    expect(error!.message).toContain('HTTP 503');
   });
 });
