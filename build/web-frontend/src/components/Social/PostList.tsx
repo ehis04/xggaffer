@@ -5,11 +5,11 @@ import apiClient from "../../services/api/client";
 import { useState, useEffect } from "react";
 import { COMMUNITY } from "../../services/api/endpoints";
 import type { PaginatedResponse } from "../../services/api/communityApi";
+import { getPostsUrl, type PostListType } from "./functions/getPosts";
 
-type PostListType = "EXPLORE_POSTS" | "FOLLOWING_POSTS";
-
-interface PostListProps {
+export interface PostListProps {
   postList?: PostData[];
+  username?: string;
   refreshTrigger?: number;
   postListType?: PostListType;
   onLike?: (postId: number) => void;
@@ -18,8 +18,25 @@ interface PostListProps {
   onPostClick?: (postId: number) => void;
 }
 
+export interface Post {
+  id: number;
+  author: number;
+  text_body: string;
+  created_at: string;
+  no_of_likes: number;
+  no_of_comments: number;
+  visibility: string;
+  post_tags: Array<{
+    hashtag: { id: number; body: string; usage_count: number };
+  }>;
+  is_liked: boolean;
+  hashtags: string[];
+  time_since_posted: string;
+}
+
 export const PostList: React.FC<PostListProps> = ({
   refreshTrigger = 0,
+  username,
   onComment,
   onProfileClick,
   onPostClick,
@@ -29,7 +46,8 @@ export const PostList: React.FC<PostListProps> = ({
 
   const getPosts = async () => {
     try {
-      const data = await apiClient.get<PaginatedResponse<PostData>>(COMMUNITY[postListType]);
+      const url = getPostsUrl(postListType, username);
+      const data = await apiClient.get<PaginatedResponse<Post>>(url);
       setPosts(data.results);
       return data;
     } catch (error) {
@@ -40,7 +58,7 @@ export const PostList: React.FC<PostListProps> = ({
 
   useEffect(() => {
     getPosts();
-  }, [postListType, refreshTrigger]);
+  }, [postListType, username, refreshTrigger]);
 
   const postsPB = posts.filter((item) => item.type === "post");
 

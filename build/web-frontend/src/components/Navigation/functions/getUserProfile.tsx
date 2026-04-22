@@ -16,6 +16,9 @@ export const getUserProfile = async (
       following_count: data.following_count,
       gender: data.gender,
       // profile_image: data.profile_image,
+      roles: data.roles ?? [],
+      visibility: data.visibility,
+      created_at: data.created_at,
     });
   } catch (error) {
     console.error("Counldn't get user's profile", error);

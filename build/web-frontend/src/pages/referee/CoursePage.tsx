@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { CoursePanel } from "../../components/Courses/CoursePanel";
 import { CourseContent } from "../../components/Courses/CourseContent";
 import { CourseResults } from "../../components/Courses/CourseResults";
@@ -24,6 +24,7 @@ export const CoursePage = () => {
   const [lawNum, setLawNum] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigateBack = useNavigate();
 
   useEffect(() => {
     console.log("lawNumber from params:", lawNumber);
@@ -51,7 +52,6 @@ export const CoursePage = () => {
 
     fetchCourse();
   }, [lawNumber]);
-
 
   const flatItems = useMemo(() => sections.flatMap((s) => s.items), [sections]);
 
@@ -212,7 +212,6 @@ export const CoursePage = () => {
     );
   }
 
-
   return (
     <div className="course-page-container">
       <Sidebar />
@@ -220,6 +219,24 @@ export const CoursePage = () => {
       <div className="course-page">
         <header className="course-header">
           <div className="course-header-left">
+            <button
+              className="ptb-back-btn"
+              onClick={() => navigateBack(-1)}
+              aria-label="Go back"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
             <span className="course-law-badge">Law {lawNum}</span>
             <h1 className="course-header-title">{lawTitle}</h1>
           </div>
