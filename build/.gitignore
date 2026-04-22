@@ -105,6 +105,13 @@ file_structure.txt
 dmypy.json
 logs/
 
+# Backend artifacts
+backend/*.log
+backend/celerybeat-schedule
+backend/cookies.txt
+backend/viewer-cookies.txt
+backend/*.deb
+
 # Local database backups
 *.bak
 *.backup
