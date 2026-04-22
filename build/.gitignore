@@ -98,6 +98,9 @@ celerybeat-schedule
 htmlcov/
 .mypy_cache/
 .dmypy.json
+
+# Local development artifacts
+extra_or_junk/
 dmypy.json
 
 # Local database backups
