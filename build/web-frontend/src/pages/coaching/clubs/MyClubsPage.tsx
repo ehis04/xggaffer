@@ -205,7 +205,7 @@ const MyClubsPage: React.FC = () => {
   };
 
   const handleCreateClick = () => {
-    navigate('/clubs/create');
+    navigate('/coaching/clubs/create');
   };
 
   const handleSwitchToCoach = async () => {
