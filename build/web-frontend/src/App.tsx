@@ -131,7 +131,7 @@ function App() {
               {/* <Route
                 path="/coaching/predictions"
                 element={<PredictionPage />}
-              /> */} 
+              /> */}
               {/* not needed anymore */}
               /* no issues, upgrades noted in docs */
               <Route
