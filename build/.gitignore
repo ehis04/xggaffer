@@ -101,6 +101,7 @@ htmlcov/
 
 # Local development artifacts
 extra_or_junk/
+file_structure.txt
 dmypy.json
 
 # Local database backups
