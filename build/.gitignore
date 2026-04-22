@@ -103,6 +103,7 @@ htmlcov/
 extra_or_junk/
 file_structure.txt
 dmypy.json
+logs/
 
 # Local database backups
 *.bak
