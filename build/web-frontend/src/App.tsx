@@ -40,6 +40,7 @@ import TeamsheetCreatePage from "./pages/coaching/teamsheets/TeamsheetCreatePage
 import TeamsheetDetailPage from "./pages/coaching/teamsheets/TeamsheetDetailPage";
 import TeamsheetEditPage from "./pages/coaching/teamsheets/TeamsheetEditPage";
 import TeamsheetListPage from "./pages/coaching/teamsheets/TeamsheetListPage";
+import TacticsBoardListPage from "./pages/coaching/tactics/TacticsBoardListPage";
 import PredictionPage from "./pages/predictions/PredictionPage";
 import TacticsBoardListPage from "./pages/coaching/tactics/TacticsBoardListPage";
 import InternalPlayerProfilePage from "./pages/coaching/playerdata/InternalPlayerProfilePage";
@@ -117,13 +118,18 @@ function App() {
               <Route path="/referee/" element={<RefereeHome />} />
               <Route path="/referee/law/:lawNumber" element={<CoursePage />} />
               <Route path="/coaching" element={<CoachingBase />} />
-              /* old page, delete */
+              <Route path="/coaching/clubs/create" element={<CreateClubPage />} />
+
 
               {/* <Route
                 path="/coaching/predictions"
                 element={<PredictionPage />}
               /> */}
               {/* not needed anymore */}
+              <Route
+                path="/coaching/predictions/odds"
+                element={<OddsComparisonPage />}
+              />
               /* no issues, upgrades noted in docs */
               <Route
                 path="/coaching/playerdata/player"
