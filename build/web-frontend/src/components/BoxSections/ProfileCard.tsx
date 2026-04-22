@@ -1,5 +1,5 @@
 import "./css/ProfileCard.css";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { UserData } from "../Navigation/SideBar";
 import { getUserProfile } from "../Navigation/functions/getUserProfile";
 import { ProfileButton } from "../Buttons/ProfileButton";

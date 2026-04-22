@@ -5,10 +5,11 @@ import importlib
 from typing import Any
 
 try:
-    from data_collection.config.sources import SOURCE_UNDERSTAT, SOURCE_SOFASCORE
+    from data_collection.config.sources import SOURCE_UNDERSTAT, SOURCE_SOFASCORE, SOURCE_WHOSCORED
 except ImportError:
     SOURCE_UNDERSTAT = "understat"
     SOURCE_SOFASCORE = "sofascore"
+    SOURCE_WHOSCORED = "whoscored"
 
 try:
     from data_collection.core.enums import (
@@ -108,6 +109,36 @@ SOURCE_DATASET_CONTRACTS: dict[tuple[str, str], SourceDatasetContract] = {
         ),
         transformer_import_path=(
             "data_collection.transformers.sofascore.teams:transform_sofascore_teams"
+        ),
+    ),
+    (SOURCE_WHOSCORED, DATASET_MATCHES): SourceDatasetContract(
+        source=SOURCE_WHOSCORED,
+        dataset=DATASET_MATCHES,
+        extractor_import_path=(
+            "data_collection.extractors.whoscored.matches:fetch_whoscored_matches"
+        ),
+        transformer_import_path=(
+            "data_collection.transformers.whoscored.matches:transform_whoscored_matches"
+        ),
+    ),
+    (SOURCE_WHOSCORED, DATASET_PLAYERS): SourceDatasetContract(
+        source=SOURCE_WHOSCORED,
+        dataset=DATASET_PLAYERS,
+        extractor_import_path=(
+            "data_collection.extractors.whoscored.players:fetch_whoscored_players"
+        ),
+        transformer_import_path=(
+            "data_collection.transformers.whoscored.players:transform_whoscored_players"
+        ),
+    ),
+    (SOURCE_WHOSCORED, DATASET_TEAMS): SourceDatasetContract(
+        source=SOURCE_WHOSCORED,
+        dataset=DATASET_TEAMS,
+        extractor_import_path=(
+            "data_collection.extractors.whoscored.teams:fetch_whoscored_teams"
+        ),
+        transformer_import_path=(
+            "data_collection.transformers.whoscored.teams:transform_whoscored_teams"
         ),
     ),
 }

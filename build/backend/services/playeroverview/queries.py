@@ -1,9 +1,16 @@
+"""
+Query and merge helpers for the playeroverview service layer.
+
+Combines playerdata and livefootball information to build player overview and player comparison responses for the API.
+"""
+
 from __future__ import annotations
 
 from typing import Any
 
 from apps.livefootball.models import CompetitionTopScorer, PlayerDirectoryEntry
 from apps.players.models import Player
+from common.utils import latest_datetime
 from services.livefootball.helpers import shape_competition_item, shape_team_lookup_item
 from services.playerdata.comparisons import build_player_comparison
 from services.playerdata.summaries import (
@@ -20,11 +27,11 @@ from services.playeroverview.helpers import (
     get_player_age,
     get_player_display_name,
     group_metric_dicts,
-    latest_datetime,
     normalise_position,
 )
 
 
+# Convert a comparison metric object into a dictionary for the API
 def _build_comparison_metric_dict(metric: Any) -> dict[str, Any]:
     return {
         "key": metric.key,
@@ -43,12 +50,14 @@ def _build_comparison_metric_dict(metric: Any) -> dict[str, Any]:
     }
 
 
+# Convert a context object to a dictionary if it supports to_dict
 def _serialise_context_value(value: Any) -> Any:
     if hasattr(value, "to_dict") and callable(value.to_dict):
         return value.to_dict()
     return value
 
 
+# Build a fallback overview when no playerdata summary is available
 def _build_minimal_general_overview(*, player_name: str, livefootball_context: dict[str, Any] | None) -> dict[str, Any]:
     notes: list[str] = []
     summary = f"No stored playerdata season summary is available for {player_name}."
@@ -73,6 +82,7 @@ def _build_minimal_general_overview(*, player_name: str, livefootball_context: d
     }
 
 
+# Build the livefootball source coverage block for the overview
 def _build_livefootball_source_detail(livefootball_context: dict[str, Any] | None) -> dict[str, Any]:
     if not livefootball_context:
         return build_source_detail_block(
@@ -109,6 +119,7 @@ def _build_livefootball_source_detail(livefootball_context: dict[str, Any] | Non
     )
 
 
+# Find the best available livefootball context for a player from directory or top-scorer data
 def get_best_available_player_context(
     player_id: int,
     *,
@@ -203,6 +214,7 @@ def get_best_available_player_context(
     }
 
 
+# Build the merged provider coverage block for one player
 def get_player_provider_coverage(
     player_id: int,
     *,
@@ -282,6 +294,7 @@ def get_player_provider_coverage(
     )
 
 
+# Build the main player identity block using playerdata and livefootball details
 def _build_player_identity(player: Player, *, summary: Any | None, livefootball_context: dict[str, Any] | None) -> dict[str, Any]:
     livefootball_date_of_birth = livefootball_context.get("date_of_birth") if livefootball_context else None
     display_name = get_player_display_name(player)
@@ -317,6 +330,7 @@ def _build_player_identity(player: Player, *, summary: Any | None, livefootball_
     }
 
 
+# Build the club block using playerdata first and livefootball as fallback
 def _build_club_block(*, summary: Any | None, livefootball_context: dict[str, Any] | None) -> dict[str, Any] | None:
     if summary is not None and getattr(summary, "club", None):
         club = summary.club
@@ -341,6 +355,7 @@ def _build_club_block(*, summary: Any | None, livefootball_context: dict[str, An
     }
 
 
+# Build the shared context block for the overview response
 def _build_context_block(*, summary: Any | None, livefootball_context: dict[str, Any] | None) -> dict[str, Any]:
     livefootball_competition = (livefootball_context or {}).get("competition") or {}
     livefootball_team = (livefootball_context or {}).get("team") or {}
@@ -357,6 +372,7 @@ def _build_context_block(*, summary: Any | None, livefootball_context: dict[str,
     }
 
 
+# Build the general overview block for the player response
 def _build_general_overview(*, player_name: str, summary: Any | None, livefootball_context: dict[str, Any] | None) -> dict[str, Any]:
     if summary is None:
         return _build_minimal_general_overview(
@@ -375,6 +391,7 @@ def _build_general_overview(*, player_name: str, summary: Any | None, livefootba
     }
 
 
+# Build and group the overview metrics for the player response
 def _build_overview_metrics(summary: Any | None, *, position: str | None) -> list[dict[str, Any]]:
     if summary is None:
         return []
@@ -389,6 +406,7 @@ def _build_overview_metrics(summary: Any | None, *, position: str | None) -> lis
     return group_metric_dicts(metrics, position=position)
 
 
+# Build the full merged overview response for one player
 def get_player_overview(
     player_id: int,
     *,
@@ -470,9 +488,7 @@ def get_player_overview(
     }
 
 
-build_player_overview = get_player_overview
-
-
+# Build the shared context block for a player comparison response
 def _build_comparison_context(
     *,
     player_a_overview: dict[str, Any],
@@ -512,6 +528,7 @@ def _build_comparison_context(
     }
 
 
+# Build and group the comparison metrics for the two players
 def _build_grouped_comparison_metrics(
     raw_comparison: Any | None,
     *,
@@ -538,6 +555,7 @@ def _build_grouped_comparison_metrics(
     return group_metric_dicts(metrics, position=position_for_grouping)
 
 
+# Build the general overview block for the player comparison response
 def _build_comparison_general_overview(raw_comparison: Any | None) -> dict[str, Any]:
     if raw_comparison is None:
         return {
@@ -560,6 +578,7 @@ def _build_comparison_general_overview(raw_comparison: Any | None) -> dict[str, 
     }
 
 
+# Build the merged provider coverage block for the player comparison response
 def _build_comparison_provider_coverage(
     *,
     player_a_overview: dict[str, Any],
@@ -619,6 +638,7 @@ def _build_comparison_provider_coverage(
     return comparison_coverage
 
 
+# Build the full merged comparison response for two players
 def compare_players_overview(
     player_a_id: int,
     player_b_id: int,
@@ -716,6 +736,3 @@ def compare_players_overview(
         "missing_reasons": missing_reasons,
     }
 
-
-build_players_overview_comparison = compare_players_overview
-get_player_overview_comparison = compare_players_overview

@@ -32,7 +32,7 @@ export const CourseContent = ({
           revealed={scenarioRevealed.has(item.id)}
           onSelect={(optId) => onScenarioSelect(item.id, optId)}
           onCheck={() => onScenarioCheck(item.id)}
-          onReset={() => onScenarioReset(item.id)} 
+          onReset={onScenarioReset ? () => onScenarioReset(item.id) : undefined}
         />
       );
 
@@ -44,7 +44,7 @@ export const CourseContent = ({
           submitted={drillSubmitted.has(item.id)}
           onAnswer={(index, value) => onDrillAnswer(item.id, index, value)}
           onSubmit={() => onDrillSubmit(item.id)}
-          onReset={() => onDrillReset(item.id)}
+          onReset={onDrillReset ? () => onDrillReset(item.id) : undefined}
         />
       );
     

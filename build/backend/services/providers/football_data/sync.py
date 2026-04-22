@@ -1,8 +1,10 @@
-from django.db import transaction
-from django.utils import timezone
-from django.conf import settings
 import re
 import unicodedata
+from datetime import date
+
+from django.conf import settings
+from django.db import transaction
+from django.utils import timezone
 
 from apps.clubs.models import ClubExternalIdentity, ClubPlayer
 from apps.livefootball.models import (
@@ -42,6 +44,10 @@ from .normalisers import (
     normalize_team_players_payload,
 )
 from services.providers.understat.client import UnderstatClient
+
+
+def _season_str(season) -> str:
+    return str(season) if season is not None else ""
 
 
 class FootballDataSyncService:
@@ -444,7 +450,7 @@ class FootballDataSyncService:
             resource_type="competition_teams",
             resource_external_id=str(competition_external_id),
             triggered_by=triggered_by,
-            metadata={"season": str(season) if season is not None else ""},
+            metadata={"season": _season_str(season)},
         )
 
         try:
@@ -458,7 +464,7 @@ class FootballDataSyncService:
             teams_data = normalize_competition_teams_payload(
                 payload,
                 competition_external_id=competition.external_id,
-                season_label=str(season) if season is not None else "",
+                season_label=_season_str(season),
             )
 
             summary = {
@@ -471,7 +477,7 @@ class FootballDataSyncService:
                 "metadata": {
                     "competition_external_id": str(competition_external_id),
                     "competition_id": competition.id,
-                    "season_label": teams_data[0]["season_label"] if teams_data else (str(season) if season is not None else competition.current_season_label),
+                    "season_label": teams_data[0]["season_label"] if teams_data else (_season_str(season) or competition.current_season_label),
                     "teams_created": 0,
                     "teams_updated": 0,
                     "matched_club_mappings_updated": 0,
@@ -556,7 +562,7 @@ class FootballDataSyncService:
             triggered_by=triggered_by,
             metadata={
                 "competition_external_id": str(competition_external_id),
-                "season": str(season) if season is not None else "",
+                "season": _season_str(season),
             },
         )
 
@@ -566,7 +572,7 @@ class FootballDataSyncService:
                 provider=provider,
             )
 
-            season_label = str(season) if season is not None else competition.current_season_label or ""
+            season_label = _season_str(season) or competition.current_season_label or ""
             fallback_used = False
 
             try:
@@ -842,7 +848,7 @@ class FootballDataSyncService:
             resource_external_id=str(competition_external_id),
             triggered_by=triggered_by,
             metadata={
-                "season": str(season) if season is not None else "",
+                "season": _season_str(season),
                 "snapshot_label": snapshot_label,
             },
         )
@@ -857,7 +863,7 @@ class FootballDataSyncService:
             table_data = normalize_competition_table(
                 payload,
                 competition_external_id=competition.external_id,
-                season_label=str(season) if season is not None else "",
+                season_label=_season_str(season),
                 snapshot_label=snapshot_label,
             )
 
@@ -923,7 +929,7 @@ class FootballDataSyncService:
             resource_external_id=str(competition_external_id),
             triggered_by=triggered_by,
             metadata={
-                "season": str(season) if season is not None else "",
+                "season": _season_str(season),
                 "matchday": matchday,
                 "status": status or "",
                 "date_from": date_from or "",
@@ -952,7 +958,7 @@ class FootballDataSyncService:
             fixtures_data = normalize_competition_matches_payload(
                 payload,
                 competition_external_id=competition.external_id,
-                season_label=str(season) if season is not None else "",
+                season_label=_season_str(season),
             )
 
             summary = {
@@ -965,7 +971,7 @@ class FootballDataSyncService:
                 "metadata": {
                     "competition_external_id": str(competition_external_id),
                     "competition_id": competition.id,
-                    "season_label": fixtures_data[0]["season_label"] if fixtures_data else (str(season) if season is not None else competition.current_season_label),
+                    "season_label": fixtures_data[0]["season_label"] if fixtures_data else (_season_str(season) or competition.current_season_label),
                 },
             }
 
@@ -1021,7 +1027,7 @@ class FootballDataSyncService:
             resource_external_id=str(competition_external_id),
             triggered_by=triggered_by,
             metadata={
-                "season": str(season) if season is not None else "",
+                "season": _season_str(season),
                 "matchday": matchday,
             },
         )
@@ -1040,12 +1046,12 @@ class FootballDataSyncService:
             scorers_data = normalize_competition_scorers_payload(
                 payload,
                 competition_external_id=competition.external_id,
-                season_label=str(season) if season is not None else "",
+                season_label=_season_str(season),
             )
             resolved_season_label = (
                 scorers_data[0]["season_label"]
                 if scorers_data
-                else (str(season) if season is not None else competition.current_season_label or "")
+                else (_season_str(season) or competition.current_season_label or "")
             )
 
             with transaction.atomic():
@@ -1963,8 +1969,6 @@ class FootballDataSyncService:
             ).strip()
             if dob_text:
                 try:
-                    from datetime import date
-
                     date_of_birth = date.fromisoformat(dob_text[:10])
                 except ValueError:
                     date_of_birth = None

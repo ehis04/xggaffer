@@ -1,10 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import IndividualClubBase from '../IndividualClubBase';
 
-const { mockNavigate, mockClubsApi } = vi.hoisted(() => ({
-  mockNavigate: vi.fn(),
+const { mockClubsApi } = vi.hoisted(() => ({
   mockClubsApi: {
     get: vi.fn(),
     myClubs: vi.fn(),
@@ -20,17 +19,12 @@ const { mockNavigate, mockClubsApi } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-    useParams: () => ({ clubId: '1' }),
-  };
-});
-
 vi.mock('../../../../services/api', () => ({
   clubsApi: mockClubsApi,
+}));
+
+vi.mock('../../../../context/useAuth', () => ({
+  useAuth: () => ({ user: { id: 10 } }),
 }));
 
 const club = {
@@ -139,32 +133,51 @@ describe('IndividualClubBase', () => {
 
   it('renders reviewer workflow actions', async () => {
     render(
-      <MemoryRouter>
-        <IndividualClubBase />
+      <MemoryRouter initialEntries={['/clubs/1?tab=members']}>
+        <Routes>
+          <Route path="/clubs/:clubId" element={<IndividualClubBase />} />
+        </Routes>
       </MemoryRouter>
     );
 
-    expect(await screen.findByText('Pending Join Requests')).toBeInTheDocument();
-    expect(screen.getByText('Invitations')).toBeInTheDocument();
+    const joinRequestsTab = await screen.findByRole(
+      'button',
+      { name: /Join requests/i },
+      { timeout: 5000 }
+    );
+    expect(joinRequestsTab).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Invitations/i })).toBeInTheDocument();
+    fireEvent.click(joinRequestsTab);
+
     expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Reject' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Send Invitation' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Invitations/i }));
+    expect(screen.getByRole('button', { name: 'Send invitation' })).toBeInTheDocument();
   });
 
   it('passes the selected ClubPlayer when approving a request', async () => {
     render(
-      <MemoryRouter>
-        <IndividualClubBase />
+      <MemoryRouter initialEntries={['/clubs/1?tab=members']}>
+        <Routes>
+          <Route path="/clubs/:clubId" element={<IndividualClubBase />} />
+        </Routes>
       </MemoryRouter>
     );
 
-    await screen.findByText('Pending Join Requests');
+    fireEvent.click(
+      await screen.findByRole(
+        'button',
+        { name: /Join requests/i },
+        { timeout: 5000 }
+      )
+    );
 
-    fireEvent.change(screen.getByLabelText('Optional roster link'), {
+    fireEvent.change(screen.getByLabelText('Link to roster player (optional)'), {
       target: { value: '31' },
     });
 
-    fireEvent.change(screen.getByLabelText('Review note'), {
+    fireEvent.change(screen.getByLabelText('Review note (optional)'), {
       target: { value: 'Ready for approval.' },
     });
 

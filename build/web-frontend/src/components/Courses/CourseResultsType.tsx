@@ -1,6 +1,14 @@
-export const CourseResultsType = ({type, cType, doneCount, items}) => {
+import type { CourseItem } from "./types/CourseTypes";
+
+interface CourseResultsTypeProps {
+  cType: { label: string; colour: string; bg: string };
+  doneCount: number;
+  items: CourseItem[];
+}
+
+export const CourseResultsType = ({cType, doneCount, items}: CourseResultsTypeProps) => {
     return (
-        <div key={type} className="crt-row">
+        <div className="crt-row">
             <div className="crt-left">
                 <div className="crt-name" style={{background: cType.bg, color: cType.colour}}>
                     {cType.label} task

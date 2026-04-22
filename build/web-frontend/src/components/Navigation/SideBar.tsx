@@ -2,7 +2,6 @@ import { ProfileButton } from "../Buttons/ProfileButton";
 import "./css/SideBar.css";
 import React, { useEffect, useState } from "react";
 import { getUserProfile } from "./functions/getUserProfile";
-import { Navigate } from "react-router-dom";
 
 interface NavItem {
   id: string;
@@ -53,7 +52,6 @@ const http = "http://localhost:5173/";
 
 export const Sidebar: React.FC<SidebarProps> = ({
   items,
-  logo,
   bottomItems,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -145,7 +143,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ),
       label: "Coaching",
       onClick: () => console.log("Coaching clicked"),
-      link: "http://localhost:5173/coaching/dashboard",
+      link: "http://localhost:5173/coaching",
     },
     {
       id: "referee",

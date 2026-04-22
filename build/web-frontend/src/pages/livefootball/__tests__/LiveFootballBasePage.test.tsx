@@ -114,7 +114,7 @@ describe('LiveFootballBasePage', () => {
   });
 
   it('renders success state with core homepage sections', async () => {
-    mockedGetLiveFootballOverview.mockResolvedValue(overviewPayload as any);
+    mockedGetLiveFootballOverview.mockResolvedValue({ data: overviewPayload } as any);
 
     render(
       <MemoryRouter>
@@ -133,7 +133,7 @@ describe('LiveFootballBasePage', () => {
   });
 
   it('only makes one overview request on initial render', async () => {
-    mockedGetLiveFootballOverview.mockResolvedValue(overviewPayload as any);
+    mockedGetLiveFootballOverview.mockResolvedValue({ data: overviewPayload } as any);
 
     render(
       <MemoryRouter>

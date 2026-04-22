@@ -28,6 +28,7 @@ import type {
     SavedLeagueScenarioDetail,
     SavedLeagueScenarioListResponse,
 } from '../../types/livefootball';
+import type { ApiEnvelope } from '../../common/types/response';
 
 type ApiParamValue = string | number | boolean | undefined | null;
 type ApiParamRecord = Record<string, ApiParamValue>;
@@ -268,8 +269,8 @@ export const liveFootballApi = {
         ),
 };
 
-export const getLiveFootballOverview = async (): Promise<LiveFootballOverview> => {
-    return apiClient.get<LiveFootballOverview>('/livefootball/overview/');
+export const getLiveFootballOverview = async (): Promise<ApiEnvelope<LiveFootballOverview>> => {
+    return apiClient.get<ApiEnvelope<LiveFootballOverview>>('/livefootball/overview/');
 };
 
 export {

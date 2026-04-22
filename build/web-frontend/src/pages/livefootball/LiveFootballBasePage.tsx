@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { getLiveFootballOverview } from '../../services/api/livefootballApi';
 import type { LiveFootballOverview } from '../../types/livefootball';
+import type { ApiEnvelope } from '../../common/types/response';
+import { FreshnessBadge } from '../../common/components/FreshnessBadge';
 
 import LiveFootballHeroHeader from '../../components/livefootball/home/LiveFootballHeroHeader';
 import RotatingLeaguePreviewCard from '../../components/livefootball/home/RotatingLeaguePreviewCard';
@@ -13,7 +15,7 @@ import OverviewDataState from '../../components/livefootball/home/OverviewDataSt
 import styles from './css/LiveFootballBasePage.module.css';
 
 const LiveFootballBasePage: React.FC = () => {
-  const [overview, setOverview] = useState<LiveFootballOverview | null>(null);
+  const [envelope, setEnvelope] = useState<ApiEnvelope<LiveFootballOverview> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -25,13 +27,13 @@ const LiveFootballBasePage: React.FC = () => {
       setErrorMessage(null);
 
       try {
-        const payload = await getLiveFootballOverview();
+        const result = await getLiveFootballOverview();
 
         if (!isMounted) {
           return;
         }
 
-        setOverview(payload);
+        setEnvelope(result);
       } catch (error) {
         if (!isMounted) {
           return;
@@ -53,6 +55,8 @@ const LiveFootballBasePage: React.FC = () => {
     };
   }, []);
 
+  const overview = envelope?.data ?? null;
+
   return (
     <main className={styles.page}>
       <LiveFootballHeroHeader generatedAt={overview?.generated_at ?? null} />
@@ -72,8 +76,20 @@ const LiveFootballBasePage: React.FC = () => {
         />
       ) : null}
 
+      {!isLoading && !errorMessage && envelope && !overview ? (
+        <OverviewDataState
+          title="Live Football overview unavailable"
+          description="Data is temporarily unavailable. Please try again shortly."
+          variant="error"
+        />
+      ) : null}
+
       {!isLoading && !errorMessage && overview ? (
         <>
+          <div style={{ padding: '0 1rem 0.5rem' }}>
+            <FreshnessBadge freshness={envelope?.freshness} />
+          </div>
+
           <RotatingLeaguePreviewCard cards={overview.league_snapshot} />
 
           <AllTimeStreaksPreview data={overview.all_time_streaks} />

@@ -1,9 +1,20 @@
+"""
+Helper functions for the playeroverview service layer.
+
+Handles position normalisation, metric ordering and grouping, source preference rules, and provider coverage details for the player overview.
+"""
+
 from __future__ import annotations
 
 from datetime import date, datetime
-from decimal import Decimal
 from typing import Any
 
+from common.utils import latest_datetime
+
+
+# ---------------------------------------------------------------------------
+# Per-position metric key definitions
+# ---------------------------------------------------------------------------
 
 GENERAL_METRIC_KEYS = ["matches_played", "minutes_played"]
 
@@ -80,10 +91,20 @@ ADDITIONAL_METRIC_FALLBACK_KEYS = [
     "pass_accuracy",
 ]
 
+
+# ---------------------------------------------------------------------------
+# Position token sets used for normalisation
+# ---------------------------------------------------------------------------
+
 FORWARD_TOKENS = {"FW", "FWD", "CF", "ST", "SS", "LW", "RW", "LF", "RF", "ATT", "FORWARD", "STRIKER", "WINGER"}
 MIDFIELDER_TOKENS = {"MF", "MID", "CM", "DM", "AM", "CAM", "CDM", "LM", "RM", "MIDFIELDER"}
 DEFENDER_TOKENS = {"DF", "DEF", "CB", "LB", "RB", "LWB", "RWB", "WB", "DEFENDER", "CENTRE-BACK", "CENTER-BACK", "FULL-BACK"}
 GOALKEEPER_TOKENS = {"GK", "GOALKEEPER", "KEEPER"}
+
+
+# ---------------------------------------------------------------------------
+# Metric and overview source-preference rules
+# ---------------------------------------------------------------------------
 
 METRIC_SOURCE_RULES = {
     "matches_played": {
@@ -186,12 +207,18 @@ OVERVIEW_SOURCE_PREFERENCE_RULES = [
 ]
 
 
+# ---------------------------------------------------------------------------
+# String utilities
+# ---------------------------------------------------------------------------
+
+# Convert a value to a trimmed string, or return an empty string if it is missing
 def clean_optional_str(value: Any) -> str:
     if value is None:
         return ""
     return str(value).strip()
 
 
+# Return the first non-empty string from the values given
 def first_non_empty_str(*values: Any) -> str | None:
     for value in values:
         cleaned = clean_optional_str(value)
@@ -200,31 +227,11 @@ def first_non_empty_str(*values: Any) -> str | None:
     return None
 
 
-def serialise_numeric(value: Decimal | int | float | None) -> int | float | None:
-    if value is None:
-        return None
-    if isinstance(value, Decimal):
-        return float(value)
-    return value
+# ---------------------------------------------------------------------------
+# Player identity helpers
+# ---------------------------------------------------------------------------
 
-
-def format_number(value: Decimal | int | float | None) -> str | None:
-    if value is None:
-        return None
-    if isinstance(value, Decimal):
-        value = value.normalize()
-        text = format(value, "f")
-        return text.rstrip("0").rstrip(".") if "." in text else text
-    if isinstance(value, float):
-        return f"{value:.2f}".rstrip("0").rstrip(".")
-    return f"{value:,}"
-
-
-def latest_datetime(*values: datetime | None) -> datetime | None:
-    available_values = [value for value in values if value is not None]
-    return max(available_values) if available_values else None
-
-
+# Pick the best available display name for a player
 def get_player_display_name(player: Any) -> str:
     for attribute in ("display_name", "full_name"):
         value = clean_optional_str(getattr(player, attribute, ""))
@@ -239,6 +246,7 @@ def get_player_display_name(player: Any) -> str:
     return f"Player {player.id}"
 
 
+# Calculate the player's current age from their date of birth
 def get_player_age(player: Any, *, fallback_date_of_birth: date | None = None) -> int | None:
     date_of_birth = getattr(player, "date_of_birth", None) or fallback_date_of_birth
     if not date_of_birth:
@@ -251,6 +259,11 @@ def get_player_age(player: Any, *, fallback_date_of_birth: date | None = None) -
     return years
 
 
+# ---------------------------------------------------------------------------
+# Position normalisation
+# ---------------------------------------------------------------------------
+
+# Convert a raw position value into goalkeeper, defender, midfielder, forward, or unknown
 def normalise_position(value: str | None) -> str:
     raw = clean_optional_str(value)
     if not raw:
@@ -271,6 +284,11 @@ def normalise_position(value: str | None) -> str:
     return "unknown"
 
 
+# ---------------------------------------------------------------------------
+# Position-aware metric ordering and grouping
+# ---------------------------------------------------------------------------
+
+# Return the metric order to use for the given position
 def get_position_metric_priority(position: str | None) -> list[str]:
     normalised_position = normalise_position(position)
 
@@ -285,6 +303,7 @@ def get_position_metric_priority(position: str | None) -> list[str]:
     return [*GENERAL_METRIC_KEYS, *DEFAULT_FOCUS_KEYS, *ADDITIONAL_METRIC_FALLBACK_KEYS]
 
 
+# Return the main metric group label and keys for the given position
 def get_focus_group_spec(position: str | None) -> tuple[str, list[str]]:
     normalised_position = normalise_position(position)
 
@@ -299,6 +318,7 @@ def get_focus_group_spec(position: str | None) -> tuple[str, list[str]]:
     return "Primary metrics", DEFAULT_FOCUS_KEYS
 
 
+# Sort metric dictionaries using the priority order for the player's position
 def sort_metric_dicts(metrics: list[dict[str, Any]], *, position: str | None) -> list[dict[str, Any]]:
     priority_keys = get_position_metric_priority(position)
     priority_index = {key: index for index, key in enumerate(priority_keys)}
@@ -313,6 +333,7 @@ def sort_metric_dicts(metrics: list[dict[str, Any]], *, position: str | None) ->
     return sorted(metrics, key=sort_key)
 
 
+# Group metric dictionaries into general, role-focus, and additional sections
 def group_metric_dicts(metrics: list[dict[str, Any]], *, position: str | None) -> list[dict[str, Any]]:
     if not metrics:
         return []
@@ -363,6 +384,11 @@ def group_metric_dicts(metrics: list[dict[str, Any]], *, position: str | None) -
     return groups
 
 
+# ---------------------------------------------------------------------------
+# Provider coverage block construction
+# ---------------------------------------------------------------------------
+
+# Return the freshness label based on whether data and timestamps are available
 def derive_freshness_label(
     *,
     has_data: bool,
@@ -378,6 +404,7 @@ def derive_freshness_label(
     return "stored"
 
 
+# Build a provider block for a source with no available data
 def build_no_data_provider_block(*, source: str, coverage_notes: list[str] | None = None) -> dict[str, Any]:
     return {
         "source": source,
@@ -392,6 +419,7 @@ def build_no_data_provider_block(*, source: str, coverage_notes: list[str] | Non
     }
 
 
+# Build a detailed coverage block for one data source
 def build_source_detail_block(
     *,
     source: str,
@@ -428,6 +456,7 @@ def build_source_detail_block(
     return detail
 
 
+# Combine multiple source detail blocks into one merged coverage block
 def build_provider_coverage_block(
     source_details: dict[str, dict[str, Any]],
     *,
@@ -493,6 +522,11 @@ def build_provider_coverage_block(
     }
 
 
+# ---------------------------------------------------------------------------
+# Metric source preference helpers
+# ---------------------------------------------------------------------------
+
+# Return the source preference rule for a metric key
 def get_metric_source_rule(metric_key: str | None) -> dict[str, Any]:
     key = clean_optional_str(metric_key)
     rule = METRIC_SOURCE_RULES.get(key)
@@ -508,6 +542,7 @@ def get_metric_source_rule(metric_key: str | None) -> dict[str, Any]:
     }
 
 
+# Add source preference metadata to a metric dictionary
 def apply_metric_source_preference(
     metric: dict[str, Any],
     *,
@@ -528,6 +563,7 @@ def apply_metric_source_preference(
     return metric_copy
 
 
+# Build the source preference summary block for the overview response
 def build_source_preference_block(*, available_sources: list[str] | None = None) -> dict[str, Any]:
     available_sources = available_sources or []
 

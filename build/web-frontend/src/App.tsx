@@ -35,11 +35,7 @@ import ClubPlayersPage from "./pages/coaching/clubs/ClubPlayersPage";
 import { IndividualClubBase } from "./pages/coaching/clubs/IndividualClubBase";
 import { UserProfilePage } from "./pages/user/UserProfilePage";
 import { RefereeHome } from "./pages/referee/RefereeHome";
-import { CoachingDashboard } from "./pages/coaching/CoachingDashboard";
 import { CoursePage } from "./pages/referee/CoursePage";
-import TeamsheetDetail from "./pages/coaching/teamsheets/TeamsheetDetail";
-import TeamsheetList from "./pages/coaching/teamsheets/TeamsheetList";
-import TeamsheetListPage from "./pages/coaching/teamsheets/TeamsheetListPage";
 import TeamsheetCreatePage from "./pages/coaching/teamsheets/TeamsheetCreatePage";
 import TeamsheetDetailPage from "./pages/coaching/teamsheets/TeamsheetDetailPage";
 import TeamsheetEditPage from "./pages/coaching/teamsheets/TeamsheetEditPage";
@@ -55,7 +51,8 @@ import LeagueComparePage from "./pages/livefootball/leagues/LeagueComparePage";
 import LeagueCustomPage from "./pages/livefootball/leagues/LeagueCustomPage";
 import LeaguePredictPage from "./pages/livefootball/leagues/LeaguePredictPage";
 
-import TacticsBoardListPage from "./pages/coaching/tactics/TacticsBoardListPage";
+import OddsComparisonPage from "./pages/predictions/OddsComparisonPage";
+
 import TacticsBoardEditorPage from "./pages/coaching/tactics/TacticsBoardEditorPage";
 import AuthenticatedLayout from "./utils/AuthenticatedLayout";
 
@@ -64,7 +61,6 @@ function App() {
     <BrowserRouter>
       <div className="app">
         <Routes>
-          /* no issue */
           <Route
             path="/"
             element={
@@ -89,11 +85,9 @@ function App() {
             <Route path="/create/profile" element={<ProfileCreationPage />} />
             {/* working fine */}
             <Route path="/create/profile/role" element={<RoleAssignPage />} />
-            <Route
-              path="/create/profile/role/details"
-              element={<RoleProfilePage />}
-            />
+            <Route path="/create/profile/role/details" element={<RoleProfilePage />} />
           </Route>
+
           <Route path="/profile/:username" element={<UserProfilePage />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<AuthenticatedLayout />}>

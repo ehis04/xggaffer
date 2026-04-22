@@ -554,3 +554,20 @@ class SavedLeagueScenarioLockedFixture(models.Model):
 
     def __str__(self) -> str:
         return f"{self.scenario.title} | {self.fixture_key}"
+
+class NativeStatsSnapshot(models.Model):
+    SURFACE_HOMEPAGE = 'homepage'
+
+    surface_key = models.CharField(max_length=64)
+    payload = models.JSONField()
+    fetched_at = models.DateTimeField()
+    is_active = models.BooleanField(default=False)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['surface_key', 'is_active']),
+        ]
+
+    def __str__(self):
+        active = 'active' if self.is_active else 'inactive'
+        return f'NativeStatsSnapshot({self.surface_key}, {active}, {self.fetched_at})'

@@ -1,3 +1,5 @@
+import type { PlayerAvailabilityStatus, ClubPlayerInjury } from './club';
+
 export interface ClubPlayer {
   id: number;
   club: number;
@@ -23,6 +25,9 @@ export interface ClubPlayer {
   is_active: boolean;
   is_claimed?: boolean;
   is_public: boolean;
+
+  availability_status?: PlayerAvailabilityStatus;
+  current_injury?: ClubPlayerInjury | null;
 
   is_linked_to_player?: boolean;
   canonical_player_id?: number | null;

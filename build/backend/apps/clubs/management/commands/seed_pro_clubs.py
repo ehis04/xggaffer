@@ -1,32 +1,3 @@
-"""
-Management command to seed one professional club per top-5 European league,
-populate their current squads from football-data.org, then back-fill
-Understat player-season enrichment records for 2014/15 – current season.
-
-Usage
------
-    # Full run (all clubs, all seasons)
-    python manage.py seed_pro_clubs
-
-    # Wipe existing seeded clubs and start fresh
-    python manage.py seed_pro_clubs --reset
-
-    # Only run a specific club (by slug key)
-    python manage.py seed_pro_clubs --club man_utd
-
-    # Only sync specific seasons
-    python manage.py seed_pro_clubs --seasons 2023 2024
-
-    # Skip the Understat back-fill (squad sync only)
-    python manage.py seed_pro_clubs --skip-understat
-
-    # Skip the squad sync (Understat back-fill only, clubs must already exist)
-    python manage.py seed_pro_clubs --skip-squad-sync
-
-Football-data.org team IDs are hardcoded below. They are stable IDs from the
-v4 API. Understat team slugs are the URL path segments used on understat.com.
-"""
-
 from __future__ import annotations
 
 import csv
@@ -40,7 +11,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
-from apps.clubs.models import Club, ClubExternalIdentity, ClubPlayer
+from apps.clubs.models import Club, ClubExternalIdentity, ClubPlayer, ProClubProviderLink
 from apps.playerdata.models import PlayerSeasonEnrichment
 from apps.players.models import ExternalProvider, Player, PlayerExternalIdentity
 from services.providers.football_data.sync import sync_club_team_squad
@@ -322,7 +293,6 @@ class Command(BaseCommand):
 
         if created:
             self.stdout.write(self.style.SUCCESS(f"  Created club: {club.name} (id={club.id})"))
-            # Make the system user an owner so they can manage the club.
             from apps.clubs.models import ClubMembership
             ClubMembership.objects.get_or_create(
                 club=club,
@@ -333,6 +303,16 @@ class Command(BaseCommand):
                     "joined_at": timezone.now(),
                 },
             )
+            football_data_id = club_config.get('football_data_team_id', '')
+            if football_data_id:
+                ProClubProviderLink.objects.get_or_create(
+                    club=club,
+                    defaults={
+                        'provider': 'football_data',
+                        'provider_team_id': str(football_data_id),
+                        'last_provider_sync_at': timezone.now(),
+                    },
+                )
         else:
             self.stdout.write(f"  Club already exists: {club.name} (id={club.id})")
 

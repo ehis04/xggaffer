@@ -1,4 +1,4 @@
-import { PostAuthor } from "../Post";
+import type { PostAuthor } from "../Post";
 
 export interface CommentResponse {
   id: number;

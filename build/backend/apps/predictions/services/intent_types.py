@@ -3,7 +3,6 @@ from __future__ import annotations
 import dataclasses
 import enum
 
-
 class IntentClass(str, enum.Enum):
     MATCH_PREDICTION = "MATCH_PREDICTION"
     SCORE_PREDICTION = "SCORE_PREDICTION"
@@ -20,8 +19,10 @@ class IntentClass(str, enum.Enum):
     TEAM_RANKINGS = "TEAM_RANKINGS"
     REST_DAYS = "REST_DAYS"
     GLOSSARY = "GLOSSARY"
+    ODDS_COMPARISON = "ODDS_COMPARISON"
     UNKNOWN = "UNKNOWN"
 
+    
 @dataclasses.dataclass
 class ParsedQuery:
     intent: IntentClass

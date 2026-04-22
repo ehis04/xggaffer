@@ -270,7 +270,7 @@ class Block(models.Model):
         verbose_name_plural = _("Blocks")
         constraints = [
             models.UniqueConstraint(fields=["blocker", "blocked_user"], name="uniq_blocker_blocked"),
-            models.CheckConstraint(condition=~Q(blocker=F("blocked_user")), name="no_self_block"),
+            models.CheckConstraint(check=~Q(blocker=F("blocked_user")), name="no_self_block"),
         ]
         indexes = [models.Index(fields=["blocker", "blocked_user"])]
 

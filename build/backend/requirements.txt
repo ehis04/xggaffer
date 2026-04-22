@@ -20,6 +20,7 @@ resend
 # Background tasks
 celery
 redis
+django-redis
 
 # PDF processing
 pdf2image
@@ -41,3 +42,7 @@ pandas
 playwright
 xgboost
 lifelines
+scikit-learn
+statsmodels
+beautifulsoup4
+soccerdata

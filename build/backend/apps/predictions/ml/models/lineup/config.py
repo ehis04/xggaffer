@@ -40,12 +40,12 @@ DEFAULT_LEAGUES: list[str] = ['EPL', 'La_Liga', 'Bundesliga', 'Serie_A', 'Ligue_
 
 DEFAULT_SEASONS: list[str] = [
     '2014', '2015', '2016', '2017', '2018', '2019',
-    '2020', '2021', '2022', '2023', '2024',
+    '2020', '2021', '2022', '2023', '2024', '2025',
 ]
 
 DROPPED_PLAYER_THRESHOLD = 0.60
 
-TEST_SEASONS: list[str] = ['2024']
+TEST_SEASONS: list[str] = ['2025']
 
 REQUEST_DELAY_MIN = 0.5
 REQUEST_DELAY_MAX = 1.5

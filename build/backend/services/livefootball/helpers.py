@@ -1,15 +1,32 @@
+"""
+Helper functions for the livefootball service layer.
+
+Small formatting and lookup tasks handled
+Model data converted into the standard dictionary structure used by the API.
+"""
+
 from django.db.models import Q
 from django.utils import timezone
 
+from common.utils import iso_or_none
 
+
+# ---------------------------------------------------------------------------
+# Fixture status groupings
+# ---------------------------------------------------------------------------
+
+# Indicates a match has been played and has a definitive result
 FINISHED_STATUSES = {"FINISHED", "AWARDED", "AFTER_EXTRA_TIME", "PENALTY_SHOOTOUT"}
+
+# Indicate a match hasn't yet been played or is in progress
 UPCOMING_STATUSES = {"SCHEDULED", "TIMED", "POSTPONED", "SUSPENDED", "IN_PLAY", "PAUSED"}
 
 
-def iso_or_none(value):
-    return value.isoformat() if value else None
+# ---------------------------------------------------------------------------
+# Season label resolution
+# ---------------------------------------------------------------------------
 
-
+# Normalise the requested season label and return an empty string if none was provided
 def resolve_requested_season_label(requested_season_label, competition):
     if requested_season_label is None:
         return ""
@@ -17,17 +34,21 @@ def resolve_requested_season_label(requested_season_label, competition):
     cleaned = str(requested_season_label).strip()
     return cleaned
 
-
+# Work out which season label to use for fixtures based on fixture data, the request, or the competition default
 def resolve_fixtures_season_label(fixtures, requested_season_label, competition):
     if fixtures:
         return fixtures[0].season_label or requested_season_label or competition.current_season_label or ""
     return requested_season_label or competition.current_season_label or ""
 
-
+# Get the most recent table snapshot from the queryset
 def resolve_table_snapshot(queryset):
     return queryset.order_by("-season_label", "-matchday", "-synced_at", "-id").first()
 
+# ---------------------------------------------------------------------------
+# Fixture splitting
+# ---------------------------------------------------------------------------
 
+# Split fixtures into previous and upcoming matches using status and kickoff time
 def split_previous_next_fixtures(
     queryset,
     previous_limit=5,
@@ -53,7 +74,11 @@ def split_previous_next_fixtures(
 
     return previous_items, next_items
 
+# ---------------------------------------------------------------------------
+# Shape functions — competition and team
+# ---------------------------------------------------------------------------
 
+# Convert a competition record into the standard dictionary format used by the API
 def shape_competition_item(item):
     return {
         "id": item.id,
@@ -70,7 +95,7 @@ def shape_competition_item(item):
         "last_synced_at": iso_or_none(item.last_synced_at),
     }
 
-
+# Convert a team lookup record into the standard dictionary format used by the API
 def shape_team_lookup_item(item):
     return {
         "id": item.id,
@@ -89,7 +114,7 @@ def shape_team_lookup_item(item):
         "last_synced_at": iso_or_none(item.last_synced_at),
     }
 
-
+# Build a team reference dictionary, or return a fallback version if no team is linked
 def shape_team_reference(item, external_id="", fallback_name=""):
     if item:
         return {
@@ -110,7 +135,7 @@ def shape_team_reference(item, external_id="", fallback_name=""):
         "emblem_url": "",
     }
 
-
+# Build a player reference dictionary, or return an empty fallback if no player is linked
 def shape_canonical_player_reference(item):
     if not item:
         return {
@@ -128,6 +153,11 @@ def shape_canonical_player_reference(item):
     }
 
 
+# ---------------------------------------------------------------------------
+# Shape functions — table and fixtures
+# ---------------------------------------------------------------------------
+
+# Convert a league table row into the standard dictionary format used by the API
 def shape_table_row(item):
     return {
         "position": item.position,
@@ -147,7 +177,7 @@ def shape_table_row(item):
         "form": item.form or "",
     }
 
-
+# Convert a fixture into the standard dictionary format used by the API
 def shape_fixture(item):
     return {
         "id": item.id,
@@ -171,6 +201,11 @@ def shape_fixture(item):
     }
 
 
+# ---------------------------------------------------------------------------
+# Shape functions — scorers and players
+# ---------------------------------------------------------------------------
+
+# Convert a top scorer record into the standard dictionary format used by the API
 def shape_scorer(item):
     played_matches = (item.metadata or {}).get("played_matches")
 
@@ -189,7 +224,7 @@ def shape_scorer(item):
         "canonical_player": shape_canonical_player_reference(item.canonical_player),
     }
 
-
+# Convert a player lookup record into the standard dictionary format used by the API, including team details
 def shape_player_lookup_item(item):
     team = item.team
 
@@ -206,21 +241,21 @@ def shape_player_lookup_item(item):
         "raw_position": item.raw_position or "",
         "squad_number": item.squad_number,
         "is_active": item.is_active,
-        "team": {
-            "id": team.id if team else None,
-            "competition_id": team.competition_id if team else None,
-            "provider": team.provider if team else "",
-            "external_id": team.external_id if team else "",
-            "season_label": team.season_label if team else "",
-            "name": team.name if team else "",
-            "short_name": team.short_name if team else "",
-            "tla": team.tla if team else "",
-            "area_name": team.area_name if team else "",
-            "emblem_url": team.emblem_url if team else "",
-            "venue": team.venue if team else "",
-            "website": team.website if team else "",
-            "founded_year": team.founded_year if team else None,
-            "last_synced_at": iso_or_none(team.last_synced_at) if team else None,
+        "team": shape_team_lookup_item(team) if team else {
+            "id": None,
+            "competition_id": None,
+            "provider": "",
+            "external_id": "",
+            "season_label": "",
+            "name": "",
+            "short_name": "",
+            "tla": "",
+            "area_name": "",
+            "emblem_url": "",
+            "venue": "",
+            "website": "",
+            "founded_year": None,
+            "last_synced_at": None,
         },
         "canonical_player": shape_canonical_player_reference(item.canonical_player),
     }

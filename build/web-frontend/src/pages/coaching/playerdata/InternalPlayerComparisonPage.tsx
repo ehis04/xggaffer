@@ -231,14 +231,8 @@ const InternalPlayerComparisonPage: React.FC = () => {
 
   useEffect(() => {
     if (!playerAIdFromUrl) return;
-    void playerdataApi
-      .getPlayerOverview(playerAIdFromUrl, {
-        season: SEASON,
-        provider: PROVIDER,
-      })
-      .then((r) =>
-        setPreloadedAName(r.player.display_name || r.player.full_name || null),
-      )
+    void playerdataApi.getPlayerOverview(playerAIdFromUrl, { season: SEASON, provider: PROVIDER })
+      .then((r) => setPreloadedAName(r.data?.player?.display_name || r.data?.player?.full_name || null))
       .catch(() => {});
   }, [playerAIdFromUrl]);
 
@@ -249,26 +243,16 @@ const InternalPlayerComparisonPage: React.FC = () => {
     }
     let active = true;
     setLoadingA(true);
-    void playerdataApi
-      .listEnrichedPlayers({
-        club_id: clubA?.id,
-        search: searchA.trim() || undefined,
-        season: SEASON,
-        provider: PROVIDER,
-        limit: 60,
-      })
-      .then((r) => {
-        if (active) setPlayersA(r.results);
-      })
-      .catch(() => {
-        if (active) setPlayersA([]);
-      })
-      .finally(() => {
-        if (active) setLoadingA(false);
-      });
-    return () => {
-      active = false;
-    };
+    void playerdataApi.listEnrichedPlayers({
+      club_id: clubA?.id,
+      search: searchA.trim() || undefined,
+      season: SEASON,
+      provider: PROVIDER,
+      limit: 60,
+    }).then((r) => { if (active) setPlayersA(r.data?.results ?? []); })
+      .catch(() => { if (active) setPlayersA([]); })
+      .finally(() => { if (active) setLoadingA(false); });
+    return () => { active = false; };
   }, [clubA, searchA]);
 
   useEffect(() => {
@@ -278,26 +262,16 @@ const InternalPlayerComparisonPage: React.FC = () => {
     }
     let active = true;
     setLoadingB(true);
-    void playerdataApi
-      .listEnrichedPlayers({
-        club_id: clubB?.id,
-        search: searchB.trim() || undefined,
-        season: SEASON,
-        provider: PROVIDER,
-        limit: 60,
-      })
-      .then((r) => {
-        if (active) setPlayersB(r.results);
-      })
-      .catch(() => {
-        if (active) setPlayersB([]);
-      })
-      .finally(() => {
-        if (active) setLoadingB(false);
-      });
-    return () => {
-      active = false;
-    };
+    void playerdataApi.listEnrichedPlayers({
+      club_id: clubB?.id,
+      search: searchB.trim() || undefined,
+      season: SEASON,
+      provider: PROVIDER,
+      limit: 60,
+    }).then((r) => { if (active) setPlayersB(r.data?.results ?? []); })
+      .catch(() => { if (active) setPlayersB([]); })
+      .finally(() => { if (active) setLoadingB(false); });
+    return () => { active = false; };
   }, [clubB, searchB]);
 
   const idA = selectedA?.player?.id ?? playerAIdFromUrl ?? null;
@@ -312,16 +286,12 @@ const InternalPlayerComparisonPage: React.FC = () => {
     let active = true;
     setComparisonLoading(true);
     setComparisonError(null);
-    void playerdataApi
-      .getPlayerOverviewComparison({
-        player_a_id: idA,
-        player_b_id: idB,
-        season: SEASON,
-        provider: PROVIDER,
-      })
-      .then((r) => {
-        if (active) setComparison(r);
-      })
+    void playerdataApi.getPlayerOverviewComparison({
+      player_a_id: idA,
+      player_b_id: idB,
+      season: SEASON,
+      provider: PROVIDER,
+    }).then((r) => { if (active) setComparison(r.data ?? null); })
       .catch((err) => {
         if (active) {
           setComparison(null);

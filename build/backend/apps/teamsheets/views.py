@@ -313,8 +313,8 @@ class TeamsheetViewSet(viewsets.ModelViewSet):
 
         if club.visibility == Club.Visibility.PUBLIC:
             queryset = ClubPlayer.objects.filter(
-                models.Q(club=club, is_active=True) |
-                models.Q(is_public=True, is_active=True)
+                Q(club=club, is_active=True) |
+                Q(is_public=True, is_active=True)
             )
 
         if exclude_list:
@@ -322,22 +322,22 @@ class TeamsheetViewSet(viewsets.ModelViewSet):
 
         if position:
             queryset = queryset.filter(
-                models.Q(primary_position=position) |
-                models.Q(secondary_position=position)
+                Q(primary_position=position) |
+                Q(secondary_position=position)
             )
 
         if search:
             queryset = queryset.filter(
-                models.Q(first_name__icontains=search) |
-                models.Q(last_name__icontains=search) |
-                models.Q(display_name__icontains=search)
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search) |
+                Q(display_name__icontains=search)
             )
 
         queryset = queryset.select_related('club').order_by(
-            models.Case(
-                models.When(club_id=club.id, then=0),
+            Case(
+                When(club_id=club.id, then=0),
                 default=1,
-                output_field=models.IntegerField(),
+                output_field=IntegerField(),
             ),
             'primary_position',
             'last_name',

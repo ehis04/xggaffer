@@ -1,6 +1,15 @@
 import { getInitials } from "./functions/getInitials";
+import { statusConfig } from "./functions/statusConfig";
 import type { PlayerCardData } from "./types/DashboardTypes";
 import "./css/PlayerCarousel.css";
+
+interface PlayerCardProps {
+  player: PlayerCardData;
+  isSelected: boolean;
+  isUnavailable: boolean;
+  onPlayerSelect?: (player: PlayerCardData) => void;
+  status: (typeof statusConfig)[keyof typeof statusConfig];
+}
 
 export const PlayerCard = ({
   player,
@@ -8,7 +17,7 @@ export const PlayerCard = ({
   isUnavailable,
   onPlayerSelect,
   status,
-}) => {
+}: PlayerCardProps) => {
   return (
     <button
       className={[

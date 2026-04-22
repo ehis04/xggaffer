@@ -1,3 +1,9 @@
+"""
+Database query helpers for the livefootball service layer.
+
+Functions read competition, fixture, team, scorer, and player data and return it in the format used by the API.
+"""
+
 from django.db.models import Q
 
 from apps.livefootball.models import (
@@ -22,6 +28,12 @@ from .helpers import (
     split_previous_next_fixtures,
 )
 
+
+# ---------------------------------------------------------------------------
+# Competition queries
+# ---------------------------------------------------------------------------
+
+# Return all competitions, with an optional filter for provider
 def list_competitions(provider=None):
     queryset = Competition.objects.all().order_by("name", "id")
 
@@ -30,7 +42,7 @@ def list_competitions(provider=None):
 
     return [shape_competition_item(item) for item in queryset]
 
-
+# Return the latest matching league table for a competition, season, or snapshot
 def get_competition_table(competition_id, season_label=None, snapshot_label=None):
     competition = _get_competition(competition_id)
 
@@ -71,6 +83,11 @@ def get_competition_table(competition_id, season_label=None, snapshot_label=None
     }
 
 
+# ---------------------------------------------------------------------------
+# Fixture queries
+# ---------------------------------------------------------------------------
+
+# Return fixtures for a competition with optional season, status, matchday, and limit filters
 def get_competition_fixtures(
     competition_id,
     season_label=None,
@@ -99,7 +116,7 @@ def get_competition_fixtures(
         "items": [shape_fixture(item) for item in fixtures],
     }
 
-
+# Return the most recently finished fixtures and the next upcoming fixtures for a competition
 def get_competition_previous_next_fixtures(
     competition_id,
     season_label=None,
@@ -130,6 +147,11 @@ def get_competition_previous_next_fixtures(
     }
 
 
+# ---------------------------------------------------------------------------
+# Scorer queries
+# ---------------------------------------------------------------------------
+
+# Return the top scorers for a competition, with an optional season filter
 def get_competition_scorers(competition_id, season_label=None, limit=None):
     competition = _get_competition(competition_id)
 
@@ -163,6 +185,11 @@ def get_competition_scorers(competition_id, season_label=None, limit=None):
     }
 
 
+# ---------------------------------------------------------------------------
+# Team queries
+# ---------------------------------------------------------------------------
+
+# Return all teams in a competition, with an optional season filter
 def list_competition_teams(competition_id, season_label=None):
     competition = _get_competition(competition_id)
 
@@ -187,6 +214,11 @@ def list_competition_teams(competition_id, season_label=None):
     }
 
 
+# ---------------------------------------------------------------------------
+# Player queries
+# ---------------------------------------------------------------------------
+
+# Return the players for one team, with active players only by default
 def list_team_players(team_id, active_only=True):
     team = _get_team(team_id)
 
@@ -211,7 +243,7 @@ def list_team_players(team_id, active_only=True):
         "items": [shape_player_lookup_item(item) for item in players],
     }
 
-
+# Return all players in a competition, with optional season and active-only filters
 def list_competition_players(competition_id, season_label=None, active_only=True):
     competition = _get_competition(competition_id)
 
@@ -239,7 +271,7 @@ def list_competition_players(competition_id, season_label=None, active_only=True
         "items": [shape_player_lookup_item(item) for item in players],
     }
 
-
+# Search for players by name or team, with optional competition, team, season, and active-only filters
 def search_players(
     query,
     competition_id=None,
@@ -287,15 +319,19 @@ def search_players(
         "items": items,
     }
 
+# ---------------------------------------------------------------------------
+# Internal ORM helpers
+# ---------------------------------------------------------------------------
 
+# Get a competition by its ID
 def _get_competition(competition_id):
     return Competition.objects.get(pk=competition_id)
 
-
+# Get a team by its ID, including its linked competition
 def _get_team(team_id):
     return TeamDirectoryEntry.objects.select_related("competition").get(pk=team_id)
 
-
+# Build the base fixtures queryset for a competition with the shared filters applied
 def _competition_fixtures_queryset(
     competition,
     season_label=None,

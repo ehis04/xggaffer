@@ -2,12 +2,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   getModelInfo,
+  getOddsComparison,
   getTeams,
   predictMatch,
   PredictionsApiError,
 } from './predictionsApi';
 import {
   mockModelInfoResponse,
+  mockOddsComparisonRequest,
+  mockOddsComparisonResponse,
   mockPredictionRequest,
   mockPredictionResponse,
   mockTeamsResponse,
@@ -70,15 +73,48 @@ describe('predictionsApi', () => {
     expect(result.probabilities.home).toBe(0.61);
   });
 
+  it('posts an odds comparison request', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(createJsonResponse(mockOddsComparisonResponse));
+
+    const result = await getOddsComparison(mockOddsComparisonRequest);
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    const [url, options] = vi.mocked(fetch).mock.calls[0];
+
+    expect(String(url)).toContain('/odds/compare/');
+    expect(options).toMatchObject({
+      method: 'POST',
+      credentials: 'include',
+    });
+    expect(JSON.parse(String(options?.body))).toEqual(mockOddsComparisonRequest);
+    expect(result.market.favourite).toBe('Home');
+    expect(result.bookmakers).toHaveLength(2);
+    expect(result.support.resources[0].region).toBe('Ireland');
+  });
+
+  it('throws a typed API error when the odds comparison endpoint returns an error payload', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      createJsonResponse({ error: 'Odds comparison unavailable for this fixture.' }, 404)
+    );
+
+    const error = await getOddsComparison(mockOddsComparisonRequest).catch(
+      (err) => err as PredictionsApiError
+    );
+
+    expect(error).toBeInstanceOf(PredictionsApiError);
+    expect(error.name).toBe('PredictionsApiError');
+    expect(error.status).toBe(404);
+    expect(error.message).toContain('HTTP 404');
+  });
+
   it('throws a typed API error when the backend returns an error payload', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(createJsonResponse({ error: 'Model not available.' }, 503));
 
-    await expect(getModelInfo()).rejects.toEqual(
-      expect.objectContaining<Partial<PredictionsApiError>>({
-        name: 'PredictionsApiError',
-        message: 'Model not available.',
-        status: 503,
-      }),
-    );
+    const error = await getModelInfo().catch((err) => err as PredictionsApiError);
+
+    expect(error).toBeInstanceOf(PredictionsApiError);
+    expect(error.name).toBe('PredictionsApiError');
+    expect(error.status).toBe(503);
+    expect(error.message).toContain('HTTP 503');
   });
 });

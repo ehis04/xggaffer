@@ -79,50 +79,6 @@ def _latest_understat_season_year(now_year: int | None = None) -> int:
     year = now_year if now_year is not None else timezone.now().year
     return year - 1
 
-
-@shared_task(bind=True, max_retries=3, default_retry_delay=300)
-def scrape_all_leagues(self):
-    try:
-        logger.info("Starting scheduled scrape of all leagues")
-
-        current_year = timezone.now().year
-        understat_season = str(_latest_understat_season_year(current_year))
-        sofascore_season = str(current_year - 1)
-
-        # Understat and Sofascore do not always expose the same active season key.
-        _run_collection(
-            [SOURCE_UNDERSTAT],
-            ALL_DATASETS,
-            SUPPORTED_LEAGUES,
-            [understat_season],
-            "scrape_all_leagues",
-        )
-        _run_collection(
-            [SOURCE_SOFASCORE],
-            ALL_DATASETS,
-            SUPPORTED_LEAGUES,
-            [sofascore_season],
-            "scrape_all_leagues",
-        )
-
-        logger.info("Scheduled scrape completed successfully")
-        _check_recent_scrapes_and_alert()
-    except Exception as exc:
-        logger.error(f"Scraping task failed: {exc}", exc_info=True)
-        raise self.retry(exc=exc, countdown=60 * (2 ** self.request.retries))
-
-
-@shared_task
-def scrape_specific_league(league, season):
-    try:
-        logger.info(f"Scraping {league} {season}")
-        _run_collection(ALL_SOURCES, ALL_DATASETS, [league], [season], f"scrape_specific_league:{league}/{season}")
-        logger.info(f"Successfully scraped {league} {season}")
-    except Exception as e:
-        logger.error(f"Failed to scrape {league} {season}: {e}", exc_info=True)
-        raise
-
-
 @shared_task
 def backfill_historical_data():
     try:
@@ -175,3 +131,98 @@ def _check_recent_scrapes_and_alert():
 
         mail_admins(subject, message, fail_silently=True)
         logger.critical("Multiple scraping failures - admins notified")
+
+_logger = logging.getLogger(__name__)
+
+
+@shared_task(name='apps.predictions.tasks.promote_model_artefact_task', bind=True)
+def promote_model_artefact_task(self, algorithm: str, path: str, trained_at_iso: str):
+    from apps.predictions.publication import promote_model_artefact
+    from django.utils.dateparse import parse_datetime
+
+    trained_at = parse_datetime(trained_at_iso)
+    if not trained_at:
+        _logger.error('Invalid trained_at_iso: %s', trained_at_iso)
+        return
+
+    record = promote_model_artefact(algorithm=algorithm, path=path, trained_at=trained_at)
+    _logger.info('promote_model_artefact_task: promoted %s', record)
+
+
+@shared_task(name='apps.predictions.tasks.rebuild_predictions_publication_task', bind=True)
+def rebuild_predictions_publication_task(self):
+    from apps.predictions.publication import run_predictions_publication
+    try:
+        run_predictions_publication()
+    except Exception as exc:
+        _logger.error('rebuild_predictions_publication_task failed: %s', exc)
+
+@shared_task(name='apps.predictions.tasks.refresh_upcoming_fixture_odds_task', bind=True, max_retries=1)
+def refresh_upcoming_fixture_odds_task(self, sport_keys=None, max_fixtures=None):
+    from apps.predictions.services.odds.service import (
+        OddsComparisonService,
+        UPCOMING_ODDS_SPORT_KEY_TO_LEAGUE,
+    )
+
+    service = OddsComparisonService()
+
+    selected_sport_keys = tuple(sport_keys or UPCOMING_ODDS_SPORT_KEY_TO_LEAGUE.keys())
+
+    try:
+        result = service.refresh_upcoming_fixture_odds(
+            sport_keys=selected_sport_keys,
+            max_fixtures=max_fixtures,
+            persist=True,
+        )
+        _logger.info(
+            'refresh_upcoming_fixture_odds_task completed: sport_keys=%s fixtures_seen=%s snapshots_created=%s requests_used=%s',
+            result.get('sport_keys_processed', []),
+            result.get('fixtures_seen', 0),
+            result.get('snapshots_created', 0),
+            result.get('requests_used', 0),
+        )
+        return result
+    except Exception as exc:
+        _logger.error('refresh_upcoming_fixture_odds_task failed: %s', exc, exc_info=True)
+        raise
+
+
+@shared_task(name='apps.predictions.tasks.refresh_fixture_odds_snapshot_task', bind=True, max_retries=1)
+def refresh_fixture_odds_snapshot_task(self, fixture_identity: dict):
+    from apps.predictions.services.odds.client import DEFAULT_REGIONS
+    from apps.predictions.services.odds.service import OddsComparisonService
+
+    required_fields = ['sport_key', 'league', 'season', 'home_team', 'away_team']
+    missing_fields = [field for field in required_fields if not fixture_identity.get(field)]
+
+    if missing_fields:
+        raise ValueError(
+            'refresh_fixture_odds_snapshot_task requires: '
+            + ', '.join(required_fields)
+            + f'. Missing: {", ".join(missing_fields)}'
+        )
+
+    service = OddsComparisonService()
+
+    try:
+        result = service.refresh_fixture_odds_snapshot(
+            sport_key=fixture_identity['sport_key'],
+            league=fixture_identity['league'],
+            season=fixture_identity['season'],
+            home_team=fixture_identity['home_team'],
+            away_team=fixture_identity['away_team'],
+            external_fixture_id=fixture_identity.get('external_fixture_id'),
+            commence_time=fixture_identity.get('commence_time'),
+            bookmakers=fixture_identity.get('bookmakers'),
+            regions=fixture_identity.get('regions') or DEFAULT_REGIONS,
+        )
+        _logger.info(
+            'refresh_fixture_odds_snapshot_task completed: fixture=%s snapshot_id=%s quote_count=%s',
+            result.get('external_fixture_id'),
+            result.get('snapshot_id'),
+            result.get('bookmaker_quote_count'),
+        )
+        return result
+    except Exception as exc:
+        _logger.error('refresh_fixture_odds_snapshot_task failed: %s', exc, exc_info=True)
+        raise

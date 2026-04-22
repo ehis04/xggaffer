@@ -7,7 +7,7 @@ from services.providers.understat.sync import sync_understat_club_players_season
 
 
 class Command(BaseCommand):
-    help = "Sync Understat season-level player metrics for the provider-linked players in a club."
+    help = 'Manual backfill and admin repair tool. Automated scheduling is handled by sync_pipeline.'
 
     def add_arguments(self, parser):
         parser.add_argument(

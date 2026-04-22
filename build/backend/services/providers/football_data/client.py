@@ -1,3 +1,9 @@
+"""
+HTTP client for the football-data provider service layer.
+
+Handles authenticated requests, throttling, retries, and response validation.
+"""
+
 import logging
 import re
 from threading import Lock
@@ -22,7 +28,9 @@ _last_request_started_at: float | None = None
 _COMPETITION_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
+# Client for making requests to the football-data API
 class FootballDataClient:
+    # Set up the client with settings, request limits, and an optional session
     def __init__(
         self,
         api_token=None,
@@ -57,6 +65,7 @@ class FootballDataClient:
         self.enabled = getattr(settings, "FOOTBALL_DATA_ENABLED", True)
         self.session = session or requests.Session()
 
+    # Pause requests when needed to stay within the configured rate limit
     def _throttle(self):
         global _last_request_started_at
 
@@ -76,6 +85,7 @@ class FootballDataClient:
 
             _last_request_started_at = monotonic()
 
+    # Build the request headers for the API call
     def _build_headers(self):
         if not self.api_token:
             raise FootballDataAuthenticationError(
@@ -87,10 +97,12 @@ class FootballDataClient:
             "Accept": "application/json",
         }
 
+    # Build the full request URL from a path
     def _build_url(self, path):
         normalized_path = path if path.startswith("/") else f"/{path}"
         return f"{self.base_url}{normalized_path}"
 
+    # Parse the response body as JSON
     def _parse_json(self, response):
         try:
             return response.json()
@@ -99,6 +111,7 @@ class FootballDataClient:
                 "Football-data response did not contain valid JSON."
             ) from exc
 
+    # Raise the correct custom error for an HTTP status code
     def _raise_for_status(self, response):
         status_code = response.status_code
 
@@ -118,6 +131,7 @@ class FootballDataClient:
                 f"Football-data request failed with status {status_code}."
             )
 
+    # Remove empty values and normalise request parameters
     def _clean_params(self, params=None):
         if not params:
             return None
@@ -135,6 +149,7 @@ class FootballDataClient:
 
         return cleaned or None
 
+    # Validate and clean a competition ID before using it in a request
     def _normalize_competition_id(self, competition_id):
         value = str(competition_id).strip()
         if not value or not _COMPETITION_ID_PATTERN.fullmatch(value):
@@ -144,6 +159,7 @@ class FootballDataClient:
             )
         return value
 
+    # Send a request with retry handling and error conversion
     def _request(self, method, path, params=None):
         if not self.enabled:
             raise FootballDataRequestError("Football-data provider is disabled.")
@@ -198,6 +214,7 @@ class FootballDataClient:
             f"Football-data request failed unexpectedly for {method} {path}."
         )
 
+    # Get the list of competitions from the API
     def get_competitions(self, areas=None):
         return self._request(
             "GET",
@@ -207,9 +224,11 @@ class FootballDataClient:
             },
         )
 
+    # Get one team by its ID
     def get_team(self, team_id):
         return self._request("GET", f"/teams/{team_id}")
 
+    # Get the squad list for a team
     def get_team_squad(self, team_id):
         payload = self.get_team(team_id)
         squad = payload.get("squad")
@@ -221,13 +240,12 @@ class FootballDataClient:
 
         return squad
 
-    def get_team_players(self, team_id):
-        return self.get_team_squad(team_id)
-
+    # Get one competition by its ID or code
     def get_competition(self, competition_id):
         normalized_competition_id = self._normalize_competition_id(competition_id)
         return self._request("GET", f"/competitions/{normalized_competition_id}")
 
+    # Get the teams in a competition for an optional season
     def get_competition_teams(self, competition_id, season=None):
         normalized_competition_id = self._normalize_competition_id(competition_id)
         return self._request(
@@ -238,6 +256,7 @@ class FootballDataClient:
             },
         )
 
+    # Get the league table for a competition and optional season
     def get_competition_table(self, competition_id, season=None):
         normalized_competition_id = self._normalize_competition_id(competition_id)
         return self._request(
@@ -248,6 +267,7 @@ class FootballDataClient:
             },
         )
 
+    # Get matches for a competition with optional filters
     def get_competition_matches(
         self,
         competition_id,
@@ -274,6 +294,7 @@ class FootballDataClient:
             },
         )
 
+    # Get top scorers for a competition with optional filters
     def get_competition_scorers(
         self,
         competition_id,

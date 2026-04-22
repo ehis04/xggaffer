@@ -11,11 +11,11 @@ export interface PostListProps {
   postList?: PostData[];
   username?: string;
   refreshTrigger?: number;
+  postListType?: PostListType;
   onLike?: (postId: number) => void;
   onComment?: (postId: number) => void;
   onProfileClick?: (username: string) => void;
   onPostClick?: (postId: number) => void;
-  postListType?: PostListType;
 }
 
 export interface Post {
@@ -42,29 +42,17 @@ export const PostList: React.FC<PostListProps> = ({
   onPostClick,
   postListType = "EXPLORE_POSTS",
 }) => {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [nextPage, setNextPage] = useState<string | null>(null);
-  const [previousPage, setPreviousPage] = useState<string | null>(null);
+  const [posts, setPosts] = useState<PostData[]>([]);
 
   const getPosts = async () => {
-    setLoading(true);
-    setError(null);
-
     try {
       const url = getPostsUrl(postListType, username);
       const data = await apiClient.get<PaginatedResponse<Post>>(url);
       setPosts(data.results);
-      setNextPage(data.next);
-      setPreviousPage(data.previous);
-      console.log(data);
       return data;
     } catch (error) {
       console.error("Couldn't get posts: ", error);
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -72,13 +60,7 @@ export const PostList: React.FC<PostListProps> = ({
     getPosts();
   }, [postListType, username, refreshTrigger]);
 
-  const postsPB = posts.filter((item: any) => {
-    if ("type" in item) {
-      return item.type === "post";
-    }
-
-    return true;
-  });
+  const postsPB = posts.filter((item) => item.type === "post");
 
   if (!posts || posts.length === 0) {
     return (

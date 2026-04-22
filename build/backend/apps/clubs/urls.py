@@ -11,6 +11,11 @@ from .views import (
     FixtureViewSet,
     ClubResourceViewSet,
     ClubImportJobViewSet,
+    ClubPlayerInjuryView,
+    ClubPlayerInjuryResolveView,
+    ClubPlayerManualStatsView,
+    ClubSeasonResultView,
+    ClubSeasonResultDetailView,
 )
 from apps.tactics.urls import register_tactics_routes
 from apps.teamsheets.views import TeamsheetViewSet, TeamsheetPlayerViewSet
@@ -42,5 +47,30 @@ urlpatterns = [
     path('', include(router.urls)),
     path('', include(clubs_router.urls)),
     path('', include(teamsheets_router.urls)),
+    path(
+        '<int:club_id>/players/<int:player_id>/injuries/',
+        ClubPlayerInjuryView.as_view(),
+        name='club-player-injuries',
+    ),
+    path(
+        '<int:club_id>/players/<int:player_id>/injuries/<int:injury_id>/resolve/',
+        ClubPlayerInjuryResolveView.as_view(),
+        name='club-player-injury-resolve',
+    ),
+    path(
+        '<int:club_id>/players/<int:player_id>/stats/',
+        ClubPlayerManualStatsView.as_view(),
+        name='club-player-manual-stats',
+    ),
+    path(
+        '<int:club_id>/season-results/',
+        ClubSeasonResultView.as_view(),
+        name='club-season-results',
+    ),
+    path(
+        '<int:club_id>/season-results/<int:result_id>/',
+        ClubSeasonResultDetailView.as_view(),
+        name='club-season-result-detail',
+    ),
     *[path('', include(tactics_router.urls)) for tactics_router in tactics_routers],
 ]

@@ -1,3 +1,6 @@
+import type { OddsComparisonEngineData } from '../../../types/prediction';
+import ProbabilityBar from '../../../common/ProbabilityBar';
+import OddsComparisonCard from './OddsComparisonCard';
 import styles from './css/StructuredResponseBlock.module.css';
 
 interface StructuredResponseBlockProps {
@@ -32,33 +35,57 @@ interface Capability {
   example: string;
 }
 
-function ProbabilityBar({ engineData }: { engineData: Record<string, unknown> }) {
-  const probabilities = engineData.probabilities as
-    | { home: number; draw: number; away: number }
-    | undefined;
-  if (!probabilities) return null;
+interface ProbabilitySet {
+  home: number;
+  draw: number;
+  away: number;
+}
 
-  const home = Math.round(probabilities.home * 100);
-  const draw = Math.round(probabilities.draw * 100);
-  const away = Math.round(probabilities.away * 100);
+function isOddsComparisonEngineData(data: unknown): data is OddsComparisonEngineData {
+  if (typeof data !== 'object' || data === null) {
+    return false;
+  }
+
+  const candidate = data as Record<string, unknown>;
 
   return (
-    <div className={styles.probBar}>
-      <div className={styles.probSegmentHome} style={{ width: `${home}%` }}>
-        Home {home}%
-      </div>
-      <div className={styles.probSegmentDraw} style={{ width: `${draw}%` }}>
-        Draw {draw}%
-      </div>
-      <div className={styles.probSegmentAway} style={{ width: `${away}%` }}>
-        Away {away}%
-      </div>
-    </div>
+    typeof candidate.home_team === 'string' &&
+    typeof candidate.away_team === 'string' &&
+    typeof candidate.league === 'string' &&
+    typeof candidate.season === 'string' &&
+    typeof candidate.market === 'object' &&
+    candidate.market !== null &&
+    typeof candidate.comparison === 'object' &&
+    candidate.comparison !== null &&
+    Array.isArray(candidate.bookmakers) &&
+    typeof candidate.support === 'object' &&
+    candidate.support !== null
   );
 }
 
+function getProbabilities(data: Record<string, unknown>): ProbabilitySet | null {
+  const probabilities = data.probabilities as Partial<ProbabilitySet> | undefined;
+
+  if (
+    typeof probabilities?.home !== 'number' ||
+    typeof probabilities.draw !== 'number' ||
+    typeof probabilities.away !== 'number'
+  ) {
+    return null;
+  }
+
+  return {
+    home: probabilities.home,
+    draw: probabilities.draw,
+    away: probabilities.away,
+  };
+}
+
 function getRiskClass(label?: string, score?: number): string {
-  const effective = label?.toLowerCase() ?? (score !== undefined ? (score > 0.6 ? 'high' : score > 0.3 ? 'medium' : 'low') : 'low');
+  const effective =
+    label?.toLowerCase() ??
+    (score !== undefined ? (score > 0.6 ? 'high' : score > 0.3 ? 'medium' : 'low') : 'low');
+
   if (effective === 'high') return styles.riskHigh;
   if (effective === 'medium') return styles.riskMedium;
   return styles.riskLow;
@@ -68,7 +95,7 @@ export default function StructuredResponseBlock({
   queryType,
   engineData,
   partial,
-  error: _error,
+  error,
   onExampleClick,
 }: StructuredResponseBlockProps) {
   if (partial && Object.keys(engineData).length === 0) {
@@ -83,10 +110,11 @@ export default function StructuredResponseBlock({
     case 'MATCH_PREDICTION': {
       const topFactors = engineData.top_factors as TopFactor[] | undefined;
       const metrics = engineData.metrics as { accuracy: number } | undefined;
+      const probabilities = getProbabilities(engineData);
 
       return (
         <div className={styles.panel}>
-          <ProbabilityBar engineData={engineData} />
+          {probabilities && <ProbabilityBar probabilities={probabilities} />}
           {topFactors && topFactors.length > 0 && (
             <div className={styles.factorsList}>
               <p className={styles.sectionLabel}>Top factors</p>
@@ -94,7 +122,8 @@ export default function StructuredResponseBlock({
                 <div key={i} className={styles.factorRow}>
                   <span className={styles.factorDesc}>{f.description}</span>
                   <span className={f.contribution >= 0 ? styles.contribPos : styles.contribNeg}>
-                    {f.contribution >= 0 ? '+' : ''}{f.contribution.toFixed(2)}
+                    {f.contribution >= 0 ? '+' : ''}
+                    {f.contribution.toFixed(2)}
                   </span>
                 </div>
               ))}
@@ -109,6 +138,23 @@ export default function StructuredResponseBlock({
       );
     }
 
+    case 'ODDS_COMPARISON':
+      if (!isOddsComparisonEngineData(engineData)) {
+        return (
+          <div className={styles.partialNote}>
+            Detailed analytics data is unavailable for this query.
+          </div>
+        );
+      }
+
+      return (
+        <OddsComparisonCard
+          engineData={engineData}
+          partial={partial}
+          error={error}
+        />
+      );
+
     case 'GLOSSARY': {
       const definition = engineData.definition as string | undefined;
       const term = engineData.term as string | undefined;
@@ -119,7 +165,9 @@ export default function StructuredResponseBlock({
           <div className={styles.panel}>
             <p className={styles.sectionLabel}>Available terms</p>
             <ul className={styles.termList}>
-              {allTerms.map((t) => <li key={t}>{t}</li>)}
+              {allTerms.map((t) => (
+                <li key={t}>{t}</li>
+              ))}
             </ul>
           </div>
         );
@@ -161,7 +209,9 @@ export default function StructuredResponseBlock({
 
     case 'SEASON_SIMULATION': {
       const titleProbs = engineData.title_probabilities as Record<string, number> | undefined;
-      const relegationProbs = engineData.relegation_probabilities as Record<string, number> | undefined;
+      const relegationProbs = engineData.relegation_probabilities as
+        | Record<string, number>
+        | undefined;
 
       if (!titleProbs) return null;
 
@@ -206,7 +256,11 @@ export default function StructuredResponseBlock({
       const predictedXi = engineData.predicted_xi as PredictedPlayer[] | undefined;
 
       if (!predictedXi || predictedXi.length === 0) {
-        return <div className={styles.panel}><p className={styles.muted}>Lineup data unavailable.</p></div>;
+        return (
+          <div className={styles.panel}>
+            <p className={styles.muted}>Lineup data unavailable.</p>
+          </div>
+        );
       }
 
       return (
@@ -217,7 +271,9 @@ export default function StructuredResponseBlock({
               <span className={styles.lineupPos}>{p.position}</span>
               <span className={styles.lineupName}>{p.name}</span>
               {p.start_probability !== undefined && (
-                <span className={styles.lineupProb}>{Math.round(p.start_probability * 100)}%</span>
+                <span className={styles.lineupProb}>
+                  {Math.round(p.start_probability * 100)}%
+                </span>
               )}
             </div>
           ))}
@@ -241,14 +297,14 @@ export default function StructuredResponseBlock({
               <span className={styles.tacticalTeam}>{awayTeam}</span>
             </div>
           ) : null}
-          {clusterLabel && (
-            <span className={styles.clusterBadge}>{clusterLabel}</span>
-          )}
+          {clusterLabel && <span className={styles.clusterBadge}>{clusterLabel}</span>}
           {dominantZones && dominantZones.length > 0 && (
             <div className={styles.zonesWrap}>
               <p className={styles.sectionLabel}>Dominant zones</p>
               <ol className={styles.zoneList}>
-                {dominantZones.map((z) => <li key={z}>Zone {z}</li>)}
+                {dominantZones.map((z) => (
+                  <li key={z}>Zone {z}</li>
+                ))}
               </ol>
             </div>
           )}
@@ -260,7 +316,11 @@ export default function StructuredResponseBlock({
       const players = engineData.players as Player[] | undefined;
 
       if (!players || players.length === 0) {
-        return <div className={styles.panel}><p className={styles.muted}>No player data available.</p></div>;
+        return (
+          <div className={styles.panel}>
+            <p className={styles.muted}>No player data available.</p>
+          </div>
+        );
       }
 
       return (
@@ -270,7 +330,8 @@ export default function StructuredResponseBlock({
             <div key={i} className={styles.playerRow}>
               <span className={styles.playerName}>{p.name}</span>
               <span className={`${styles.riskBadge} ${getRiskClass(p.risk_label, p.risk_score)}`}>
-                {p.risk_label ?? (p.risk_score !== undefined ? `${Math.round(p.risk_score * 100)}%` : 'Unknown')}
+                {p.risk_label ??
+                  (p.risk_score !== undefined ? `${Math.round(p.risk_score * 100)}%` : 'Unknown')}
               </span>
             </div>
           ))}
@@ -283,21 +344,31 @@ export default function StructuredResponseBlock({
       const elo = engineData.elo as Record<string, unknown> | undefined;
       const availability = engineData.availability as Record<string, unknown> | undefined;
       const lineup = engineData.lineup as Record<string, unknown> | undefined;
+      const matchProbabilities = match ? getProbabilities(match) : null;
 
       return (
         <div className={styles.panel}>
           <div className={styles.compositeGrid}>
             <div className={styles.compositeSection}>
               <p className={styles.sectionLabel}>Match prediction</p>
-              {match && Object.keys(match).length > 0
-                ? <ProbabilityBar engineData={match} />
-                : <p className={styles.muted}>Unavailable</p>}
+              {matchProbabilities ? (
+                <ProbabilityBar probabilities={matchProbabilities} />
+              ) : (
+                <p className={styles.muted}>Unavailable</p>
+              )}
             </div>
             <div className={styles.compositeSection}>
               <p className={styles.sectionLabel}>Elo ratings</p>
-              {elo && Object.keys(elo).length > 0
-                ? <StructuredResponseBlock queryType="ELO_QUERY" engineData={elo} partial={false} error={null} />
-                : <p className={styles.muted}>Unavailable</p>}
+              {elo && Object.keys(elo).length > 0 ? (
+                <StructuredResponseBlock
+                  queryType="ELO_QUERY"
+                  engineData={elo}
+                  partial={false}
+                  error={null}
+                />
+              ) : (
+                <p className={styles.muted}>Unavailable</p>
+              )}
             </div>
           </div>
           <div className={styles.compositeSummary}>
@@ -337,6 +408,7 @@ export default function StructuredResponseBlock({
             const awayVal = awayTeam ? values[awayTeam] : undefined;
             const homeWins = homeVal !== undefined && awayVal !== undefined && homeVal > awayVal;
             const awayWins = awayVal !== undefined && homeVal !== undefined && awayVal > homeVal;
+
             return (
               <div key={statName} className={styles.statRow}>
                 <span className={styles.statName}>{statName}</span>

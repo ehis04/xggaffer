@@ -4,6 +4,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .envelope import build_livefootball_envelope
 from .serializers import LiveFootballOverviewSerializer
 from .services.overview import get_livefootball_homepage_payload
 from .services.exceptions import TeamMappingNotFoundError
@@ -337,11 +338,12 @@ class PlayerSearchView(LiveFootballProtectedAPIView):
         if normalized in {"0", "false", "no", "n"}:
             return False
         raise ValidationError({field_name: "Must be a boolean."})
+        
 class LiveFootballOverviewView(LiveFootballProtectedAPIView):
     def get(self, request):
         payload = get_livefootball_homepage_payload()
         serializer = LiveFootballOverviewSerializer(payload)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(build_livefootball_envelope(serializer.data), status=status.HTTP_200_OK)
 
 class LeaguesMetaView(LiveFootballProtectedAPIView):
     def get(self, request):
