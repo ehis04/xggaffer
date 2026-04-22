@@ -1,42 +1,56 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { clubsApi } from '../../../services/api';
-import { playerdataApi } from '../../../services/api/playerdataApi';
-import type { Club } from '../../../types/club';
+import React, { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Sidebar } from "../../../components/Navigation/SideBar";
+import { SocialUserButtons } from "../../../components/Social/SocialUserButtons";
+import { clubsApi } from "../../../services/api";
+import { playerdataApi } from "../../../services/api/playerdataApi";
+import type { Club } from "../../../types/club";
 import type {
   EnrichedPlayerListItem,
   PlayerOverviewComparison,
   PlayerOverviewComparisonMetricGroup,
-} from '../../../types/playerdata';
-import styles from './css/InternalPlayerComparisonPage.module.css';
+} from "../../../types/playerdata";
+import styles from "./css/InternalPlayerComparisonPage.module.css";
 
-const SEASON = '2024';
-const PROVIDER = 'understat';
-
-// ── Metric group ────────────────────────────────────────────────────────────
+const SEASON = "2024";
+const PROVIDER = "understat";
 
 const ComparisonMetricGroup: React.FC<{
   group: PlayerOverviewComparisonMetricGroup;
 }> = ({ group }) => {
-  const visible = (group.metrics ?? []).filter((m) => m.is_comparable !== false);
+  const visible = (group.metrics ?? []).filter(
+    (m) => m.is_comparable !== false,
+  );
   if (visible.length === 0) return null;
 
   return (
-    <div className={styles.panel} style={{ marginBottom: '1rem' }}>
-      <h3 className={styles.metricGroupTitle}>{group.label}</h3>
-      <div className={styles.metricTable}>
+    <div className={styles["icp-panel"]} style={{ marginBottom: "1rem" }}>
+      <h3 className={styles["icp-metric-group-title"]}>{group.label}</h3>
+      <div className={styles["icp-metric-table"]}>
         {visible.map((metric) => {
-          const valA = metric.player_a_formatted ?? (metric.player_a_value != null ? String(metric.player_a_value) : '—');
-          const valB = metric.player_b_formatted ?? (metric.player_b_value != null ? String(metric.player_b_value) : '—');
-          const winA = metric.winner === 'player_a';
-          const winB = metric.winner === 'player_b';
+          const valA =
+            metric.player_a_formatted ??
+            (metric.player_a_value != null
+              ? String(metric.player_a_value)
+              : "—");
+          const valB =
+            metric.player_b_formatted ??
+            (metric.player_b_value != null
+              ? String(metric.player_b_value)
+              : "—");
+          const winA = metric.winner === "player_a";
+          const winB = metric.winner === "player_b";
           return (
-            <div key={metric.key} className={styles.metricRow}>
-              <div className={`${styles.metricVal} ${styles.metricValLeft} ${winA ? styles.metricWinner : ''}`}>
+            <div key={metric.key} className={styles["icp-metric-row"]}>
+              <div
+                className={`${styles["icp-metric-val"]} ${styles["icp-metric-val--left"]} ${winA ? styles["icp-metric-val--winner"] : ""}`}
+              >
                 {valA}
               </div>
-              <div className={styles.metricLabel}>{metric.label}</div>
-              <div className={`${styles.metricVal} ${styles.metricValRight} ${winB ? styles.metricWinner : ''}`}>
+              <div className={styles["icp-metric-label"]}>{metric.label}</div>
+              <div
+                className={`${styles["icp-metric-val"]} ${styles["icp-metric-val--right"]} ${winB ? styles["icp-metric-val--winner"] : ""}`}
+              >
                 {valB}
               </div>
             </div>
@@ -46,8 +60,6 @@ const ComparisonMetricGroup: React.FC<{
     </div>
   );
 };
-
-// ── Player picker column ─────────────────────────────────────────────────────
 
 interface PlayerPickerProps {
   label: string;
@@ -78,36 +90,43 @@ const PlayerPicker: React.FC<PlayerPickerProps> = ({
   onSelectPlayer,
   onClear,
 }) => (
-  <div className={styles.pickerColumn}>
-    <div className={styles.pickerHeader}>
-      <span className={styles.pickerLabel}>{label}</span>
+  <div className={styles["icp-picker-col"]}>
+    <div className={styles["icp-picker-header"]}>
+      <span className={styles["icp-picker-label"]}>{label}</span>
       {selectedPlayer && (
-        <button type="button" className={styles.clearButton} onClick={onClear}>
+        <button
+          type="button"
+          className={styles["icp-clear-btn"]}
+          onClick={onClear}
+        >
           Clear
         </button>
       )}
     </div>
 
     {selectedPlayer ? (
-      <div className={styles.selectedPlayer}>
-        <div className={styles.selectedPlayerName}>
-          {selectedPlayer.player.display_name || selectedPlayer.player.full_name}
+      <div className={styles["icp-selected-player"]}>
+        <div className={styles["icp-selected-player-name"]}>
+          {selectedPlayer.player.display_name ||
+            selectedPlayer.player.full_name}
         </div>
-        <div className={styles.selectedPlayerMeta}>
-          {[selectedPlayer.player.position, selectedPlayer.club?.name].filter(Boolean).join(' · ')}
+        <div className={styles["icp-selected-player-meta"]}>
+          {[selectedPlayer.player.position, selectedPlayer.club?.name]
+            .filter(Boolean)
+            .join(" · ")}
         </div>
       </div>
     ) : (
       <>
         {clubsLoading ? (
-          <div className={styles.hint}>Loading clubs…</div>
+          <div className={styles["icp-hint"]}>Loading clubs…</div>
         ) : (
-          <div className={styles.miniClubGrid}>
+          <div className={styles["icp-mini-club-grid"]}>
             {proClubs.map((club) => (
               <button
                 key={club.id}
                 type="button"
-                className={`${styles.miniClubCard} ${selectedClub?.id === club.id ? styles.miniClubCardActive : ''}`}
+                className={`${styles["icp-mini-club-card"]} ${selectedClub?.id === club.id ? styles["icp-mini-club-card--active"] : ""}`}
                 onClick={() => onSelectClub(club)}
               >
                 {club.name}
@@ -117,170 +136,218 @@ const PlayerPicker: React.FC<PlayerPickerProps> = ({
         )}
 
         <input
-          className={styles.searchInput}
+          className={styles["icp-search-input"]}
           type="text"
-          placeholder={selectedClub ? `Search in ${selectedClub.name}…` : 'Search by name…'}
+          placeholder={
+            selectedClub ? `Search in ${selectedClub.name}…` : "Search by name…"
+          }
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
         />
 
         {playersLoading ? (
-          <div className={styles.hint}>Loading…</div>
+          <div className={styles["icp-hint"]}>Loading…</div>
         ) : players.length > 0 ? (
-          <div className={styles.playerList}>
+          <div className={styles["icp-player-list"]}>
             {players.map((item) => {
-              const name = item.player.display_name || item.player.full_name || `Player ${item.player.id}`;
-              const meta = [item.player.position, item.player.nationality].filter(Boolean).join(' · ');
+              const name =
+                item.player.display_name ||
+                item.player.full_name ||
+                `Player ${item.player.id}`;
+              const meta = [item.player.position, item.player.nationality]
+                .filter(Boolean)
+                .join(" · ");
               return (
                 <button
                   key={item.player.id}
                   type="button"
-                  className={styles.playerRow}
+                  className={styles["icp-player-row"]}
                   onClick={() => onSelectPlayer(item)}
                 >
-                  <div className={styles.playerName}>{name}</div>
-                  {meta && <div className={styles.playerMeta}>{meta}</div>}
+                  <div className={styles["icp-player-name"]}>{name}</div>
+                  {meta && (
+                    <div className={styles["icp-player-meta"]}>{meta}</div>
+                  )}
                 </button>
               );
             })}
           </div>
-        ) : (selectedClub || searchQuery.trim()) ? (
-          <div className={styles.hint}>No players found.</div>
+        ) : selectedClub || searchQuery.trim() ? (
+          <div className={styles["icp-hint"]}>No players found.</div>
         ) : (
-          <div className={styles.hint}>Select a club or search by name.</div>
+          <div className={styles["icp-hint"]}>
+            Select a club or search by name.
+          </div>
         )}
       </>
     )}
   </div>
 );
 
-// ── Page ─────────────────────────────────────────────────────────────────────
-
 const InternalPlayerComparisonPage: React.FC = () => {
   const [searchParams] = useSearchParams();
 
-  // Optional pre-population from profile page "Compare" button
   const playerAIdFromUrl = useMemo(() => {
-    const v = searchParams.get('player_a_id');
+    const v = searchParams.get("player_a_id");
     const n = v ? Number(v) : NaN;
     return Number.isInteger(n) && n > 0 ? n : null;
   }, [searchParams]);
 
-  // Clubs
   const [proClubs, setProClubs] = useState<Club[]>([]);
   const [clubsLoading, setClubsLoading] = useState(true);
 
-  // Player A
   const [clubA, setClubA] = useState<Club | null>(null);
-  const [searchA, setSearchA] = useState('');
+  const [searchA, setSearchA] = useState("");
   const [playersA, setPlayersA] = useState<EnrichedPlayerListItem[]>([]);
   const [loadingA, setLoadingA] = useState(false);
-  const [selectedA, setSelectedA] = useState<EnrichedPlayerListItem | null>(null);
+  const [selectedA, setSelectedA] = useState<EnrichedPlayerListItem | null>(
+    null,
+  );
   const [preloadedAName, setPreloadedAName] = useState<string | null>(null);
 
-  // Player B
   const [clubB, setClubB] = useState<Club | null>(null);
-  const [searchB, setSearchB] = useState('');
+  const [searchB, setSearchB] = useState("");
   const [playersB, setPlayersB] = useState<EnrichedPlayerListItem[]>([]);
   const [loadingB, setLoadingB] = useState(false);
-  const [selectedB, setSelectedB] = useState<EnrichedPlayerListItem | null>(null);
+  const [selectedB, setSelectedB] = useState<EnrichedPlayerListItem | null>(
+    null,
+  );
 
-  // Comparison result
-  const [comparison, setComparison] = useState<PlayerOverviewComparison | null>(null);
+  const [comparison, setComparison] = useState<PlayerOverviewComparison | null>(
+    null,
+  );
   const [comparisonLoading, setComparisonLoading] = useState(false);
   const [comparisonError, setComparisonError] = useState<string | null>(null);
 
-  // Load clubs
   useEffect(() => {
-    clubsApi.browse()
-      .then((clubs) => setProClubs(clubs.filter((c) => c.club_type === 'system_professional')))
+    clubsApi
+      .browse()
+      .then((clubs) =>
+        setProClubs(clubs.filter((c) => c.club_type === "system_professional")),
+      )
       .catch(() => {})
       .finally(() => setClubsLoading(false));
   }, []);
 
-  // Pre-load player A name from URL param
   useEffect(() => {
     if (!playerAIdFromUrl) return;
-    void playerdataApi.getPlayerOverview(playerAIdFromUrl, { season: SEASON, provider: PROVIDER })
-      .then((r) => setPreloadedAName(r.player.display_name || r.player.full_name || null))
+    void playerdataApi
+      .getPlayerOverview(playerAIdFromUrl, {
+        season: SEASON,
+        provider: PROVIDER,
+      })
+      .then((r) =>
+        setPreloadedAName(r.player.display_name || r.player.full_name || null),
+      )
       .catch(() => {});
   }, [playerAIdFromUrl]);
 
-  // Load player list — side A
   useEffect(() => {
-    if (!clubA && !searchA.trim()) { setPlayersA([]); return; }
+    if (!clubA && !searchA.trim()) {
+      setPlayersA([]);
+      return;
+    }
     let active = true;
     setLoadingA(true);
-    void playerdataApi.listEnrichedPlayers({
-      club_id: clubA?.id,
-      search: searchA.trim() || undefined,
-      season: SEASON,
-      provider: PROVIDER,
-      limit: 60,
-    }).then((r) => { if (active) setPlayersA(r.results); })
-      .catch(() => { if (active) setPlayersA([]); })
-      .finally(() => { if (active) setLoadingA(false); });
-    return () => { active = false; };
+    void playerdataApi
+      .listEnrichedPlayers({
+        club_id: clubA?.id,
+        search: searchA.trim() || undefined,
+        season: SEASON,
+        provider: PROVIDER,
+        limit: 60,
+      })
+      .then((r) => {
+        if (active) setPlayersA(r.results);
+      })
+      .catch(() => {
+        if (active) setPlayersA([]);
+      })
+      .finally(() => {
+        if (active) setLoadingA(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [clubA, searchA]);
 
-  // Load player list — side B
   useEffect(() => {
-    if (!clubB && !searchB.trim()) { setPlayersB([]); return; }
+    if (!clubB && !searchB.trim()) {
+      setPlayersB([]);
+      return;
+    }
     let active = true;
     setLoadingB(true);
-    void playerdataApi.listEnrichedPlayers({
-      club_id: clubB?.id,
-      search: searchB.trim() || undefined,
-      season: SEASON,
-      provider: PROVIDER,
-      limit: 60,
-    }).then((r) => { if (active) setPlayersB(r.results); })
-      .catch(() => { if (active) setPlayersB([]); })
-      .finally(() => { if (active) setLoadingB(false); });
-    return () => { active = false; };
+    void playerdataApi
+      .listEnrichedPlayers({
+        club_id: clubB?.id,
+        search: searchB.trim() || undefined,
+        season: SEASON,
+        provider: PROVIDER,
+        limit: 60,
+      })
+      .then((r) => {
+        if (active) setPlayersB(r.results);
+      })
+      .catch(() => {
+        if (active) setPlayersB([]);
+      })
+      .finally(() => {
+        if (active) setLoadingB(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [clubB, searchB]);
 
-  // Derive canonical IDs
   const idA = selectedA?.player?.id ?? playerAIdFromUrl ?? null;
   const idB = selectedB?.player?.id ?? null;
 
-  // Load comparison when both IDs are set
   useEffect(() => {
     if (!idA || !idB || idA === idB) {
       setComparison(null);
       setComparisonError(null);
       return;
     }
-
     let active = true;
     setComparisonLoading(true);
     setComparisonError(null);
-    void playerdataApi.getPlayerOverviewComparison({
-      player_a_id: idA,
-      player_b_id: idB,
-      season: SEASON,
-      provider: PROVIDER,
-    }).then((r) => { if (active) setComparison(r); })
+    void playerdataApi
+      .getPlayerOverviewComparison({
+        player_a_id: idA,
+        player_b_id: idB,
+        season: SEASON,
+        provider: PROVIDER,
+      })
+      .then((r) => {
+        if (active) setComparison(r);
+      })
       .catch((err) => {
         if (active) {
           setComparison(null);
-          setComparisonError(err instanceof Error ? err.message : 'Could not load comparison.');
+          setComparisonError(
+            err instanceof Error ? err.message : "Could not load comparison.",
+          );
         }
       })
-      .finally(() => { if (active) setComparisonLoading(false); });
-    return () => { active = false; };
+      .finally(() => {
+        if (active) setComparisonLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [idA, idB]);
 
   const handleSelectClubA = (club: Club) => {
     setClubA(clubA?.id === club.id ? null : club);
     setSelectedA(null);
-    setSearchA('');
+    setSearchA("");
   };
 
   const handleSelectClubB = (club: Club) => {
     setClubB(clubB?.id === club.id ? null : club);
     setSelectedB(null);
-    setSearchB('');
+    setSearchB("");
   };
 
   const nameA =
@@ -290,136 +357,158 @@ const InternalPlayerComparisonPage: React.FC = () => {
     (playerAIdFromUrl ? `Player ${playerAIdFromUrl}` : null);
 
   const nameB =
-    selectedB?.player?.display_name ||
-    selectedB?.player?.full_name ||
-    null;
+    selectedB?.player?.display_name || selectedB?.player?.full_name || null;
 
   const comparisonNameA =
     comparison?.player_a?.player?.display_name ||
     comparison?.player_a?.player?.full_name ||
     nameA ||
-    'Player A';
+    "Player A";
 
   const comparisonNameB =
     comparison?.player_b?.player?.display_name ||
     comparison?.player_b?.player?.full_name ||
     nameB ||
-    'Player B';
+    "Player B";
 
   const metricGroups = useMemo(
-    () => (comparison?.metric_groups ?? []).filter(
-      (g) => (g.metrics ?? []).some((m) => m.is_comparable !== false)
-    ),
-    [comparison]
+    () =>
+      (comparison?.metric_groups ?? []).filter((g) =>
+        (g.metrics ?? []).some((m) => m.is_comparable !== false),
+      ),
+    [comparison],
   );
 
   return (
-    <div className={styles.container}>
-      {/* Hero */}
-      <section className={styles.hero}>
-        <div>
-          <h1 className={styles.title}>Player Comparison</h1>
-          <p className={styles.subtitle}>
-            Select two players to compare their 2024/25 season stats side by side.
-          </p>
-        </div>
-      </section>
-
-      {/* Player pickers */}
-      <div className={styles.pickersRow}>
-        <PlayerPicker
-          label="Player A"
-          proClubs={proClubs}
-          clubsLoading={clubsLoading}
-          selectedClub={clubA}
-          onSelectClub={handleSelectClubA}
-          searchQuery={searchA}
-          onSearchChange={setSearchA}
-          players={playersA}
-          playersLoading={loadingA}
-          selectedPlayer={selectedA}
-          onSelectPlayer={setSelectedA}
-          onClear={() => { setSelectedA(null); setClubA(null); setSearchA(''); }}
-        />
-
-        <div className={styles.vsBar}>
-          {nameA && nameB ? (
-            <>
-              <div className={styles.vsName}>{nameA}</div>
-              <div className={styles.vsDivider}>vs</div>
-              <div className={styles.vsName}>{nameB}</div>
-            </>
-          ) : (
-            <div className={styles.vsDivider}>vs</div>
-          )}
-        </div>
-
-        <PlayerPicker
-          label="Player B"
-          proClubs={proClubs}
-          clubsLoading={clubsLoading}
-          selectedClub={clubB}
-          onSelectClub={handleSelectClubB}
-          searchQuery={searchB}
-          onSearchChange={setSearchB}
-          players={playersB}
-          playersLoading={loadingB}
-          selectedPlayer={selectedB}
-          onSelectPlayer={setSelectedB}
-          onClear={() => { setSelectedB(null); setClubB(null); setSearchB(''); }}
-        />
+    <div className={styles["icp-root"]}>
+      <div className={styles["icp-sidebar-section"]}>
+        <Sidebar />
       </div>
 
-      {/* Comparison results */}
-      {comparisonLoading && (
-        <div className={styles.loading}>Loading comparison…</div>
-      )}
+      <div className={styles["icp-main"]}>
+        <header className={styles["icp-header"]}>
+          <div className={styles["icp-header-left"]}>Player Comparison</div>
+          <div className={styles["icp-header-mid"]} />
+          <div className={styles["icp-header-right"]}>
+            <SocialUserButtons />
+          </div>
+        </header>
 
-      {comparisonError && (
-        <div className={styles.error}>{comparisonError}</div>
-      )}
+        <div className={styles["icp-content"]}>
+          <section className={styles["icp-hero"]}>
+            <h1 className={styles["icp-title"]}>Player Comparison</h1>
+            <p className={styles["icp-subtitle"]}>
+              Select two players to compare their 2024/25 season stats side by
+              side.
+            </p>
+          </section>
 
-      {comparison && !comparisonLoading && (
-        <>
-          {/* Header names */}
-          <div className={styles.comparisonHeader}>
-            <div className={styles.comparisonPlayerName}>{comparisonNameA}</div>
-            <div className={styles.comparisonVs}>vs</div>
-            <div className={styles.comparisonPlayerName}>{comparisonNameB}</div>
+          <div className={styles["icp-pickers-row"]}>
+            <PlayerPicker
+              label="Player A"
+              proClubs={proClubs}
+              clubsLoading={clubsLoading}
+              selectedClub={clubA}
+              onSelectClub={handleSelectClubA}
+              searchQuery={searchA}
+              onSearchChange={setSearchA}
+              players={playersA}
+              playersLoading={loadingA}
+              selectedPlayer={selectedA}
+              onSelectPlayer={setSelectedA}
+              onClear={() => {
+                setSelectedA(null);
+                setClubA(null);
+                setSearchA("");
+              }}
+            />
+
+            <div className={styles["icp-vs-bar"]}>
+              {nameA && nameB ? (
+                <>
+                  <div className={styles["icp-vs-name"]}>{nameA}</div>
+                  <div className={styles["icp-vs-divider"]}>vs</div>
+                  <div className={styles["icp-vs-name"]}>{nameB}</div>
+                </>
+              ) : (
+                <div className={styles["icp-vs-divider"]}>vs</div>
+              )}
+            </div>
+
+            <PlayerPicker
+              label="Player B"
+              proClubs={proClubs}
+              clubsLoading={clubsLoading}
+              selectedClub={clubB}
+              onSelectClub={handleSelectClubB}
+              searchQuery={searchB}
+              onSearchChange={setSearchB}
+              players={playersB}
+              playersLoading={loadingB}
+              selectedPlayer={selectedB}
+              onSelectPlayer={setSelectedB}
+              onClear={() => {
+                setSelectedB(null);
+                setClubB(null);
+                setSearchB("");
+              }}
+            />
           </div>
 
-          {!comparison.has_comparison_data && comparison.missing_reasons?.length ? (
-            <div className={styles.notice}>
-              {comparison.missing_reasons.join(' ')}
-            </div>
-          ) : null}
+          {comparisonLoading && (
+            <div className={styles["icp-loading"]}>Loading comparison…</div>
+          )}
 
-          {metricGroups.map((group) => (
-            <ComparisonMetricGroup
-              key={group.key}
-              group={group}
-            />
-          ))}
+          {comparisonError && (
+            <div className={styles["icp-error"]}>{comparisonError}</div>
+          )}
 
-          {metricGroups.length === 0 && comparison.has_comparison_data && (
-            <div className={styles.empty}>
-              Stats are available but no comparable metrics were found.
+          {comparison && !comparisonLoading && (
+            <>
+              <div className={styles["icp-comparison-header"]}>
+                <div className={styles["icp-comparison-player-name"]}>
+                  {comparisonNameA}
+                </div>
+                <div className={styles["icp-comparison-vs"]}>vs</div>
+                <div className={styles["icp-comparison-player-name"]}>
+                  {comparisonNameB}
+                </div>
+              </div>
+
+              {!comparison.has_comparison_data &&
+              comparison.missing_reasons?.length ? (
+                <div className={styles["icp-notice"]}>
+                  {comparison.missing_reasons.join(" ")}
+                </div>
+              ) : null}
+
+              {metricGroups.map((group) => (
+                <ComparisonMetricGroup key={group.key} group={group} />
+              ))}
+
+              {metricGroups.length === 0 && comparison.has_comparison_data && (
+                <div className={styles["icp-empty"]}>
+                  Stats are available but no comparable metrics were found.
+                </div>
+              )}
+            </>
+          )}
+
+          {!idA && !idB && (
+            <div className={styles["icp-empty"]}>
+              Select two players above to start the comparison.
             </div>
           )}
-        </>
-      )}
 
-      {!idA && !idB && (
-        <div className={styles.empty}>
-          Select two players above to start the comparison.
+          {idA && !idB && (
+            <div className={styles["icp-empty"]}>
+              {nameA
+                ? `${nameA} selected — now pick Player B.`
+                : "Player A ready — now pick Player B."}
+            </div>
+          )}
         </div>
-      )}
-
-      {idA && !idB && (
-        <div className={styles.empty}>
-          {nameA ? `${nameA} selected — now pick Player B.` : 'Player A ready — now pick Player B.'}
-        </div>
-      )}
+      </div>
     </div>
   );
 };
