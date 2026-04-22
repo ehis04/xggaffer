@@ -3,7 +3,7 @@ import type { CourseResultsProps } from "./types/CourseTypes";
 import { courseType } from "./functions/courseType";
 import { CourseResultsType } from "./CourseResultsType";
 
-export const CourseResults = ({sections, completedIds, onNavigate}: CourseResultsProps) => {
+export const CourseResults = ({sections, completedIds}: CourseResultsProps) => {
     const allItems = sections.flatMap((s) => s.items);
     const done = completedIds.size
     const total = allItems.length
@@ -35,7 +35,7 @@ export const CourseResults = ({sections, completedIds, onNavigate}: CourseResult
                     const cType = courseType[type];
                     const items = allItems.filter((i) => i.type === type);
                     const doneCount = items.filter((i) => completedIds.has(i.id)).length;
-                    return (<CourseResultsType type={type} cType={cType} doneCount={doneCount} items={items}/>)
+                    return <CourseResultsType key={type} cType={cType} doneCount={doneCount} items={items} />
                 })}
             </div>
         </div>

@@ -13,7 +13,7 @@ SCORE_ENGINE_LEAGUES: list[str] = [
     "EPL", "La_Liga", "Bundesliga", "Serie_A", "Ligue_1",
 ]
 
-SCORE_ENGINE_SEASONS: list[str] = [str(y) for y in range(2014, 2025)]
+SCORE_ENGINE_SEASONS: list[str] = [str(y) for y in range(2014, 2026)]
 
 MAX_GOALS = 6
 DEFAULT_TIME_DECAY_RATE = 0.01

@@ -28,6 +28,7 @@ CANONICAL_TEAM_NAMES = {
         "sofascore": "Brighton & Hove Albion",
         "football_data_co_uk": "Brighton",
         "football_data_org": "Brighton & Hove Albion FC",
+        "the_odds_api": "Brighton and Hove Albion",
     },
     "Burnley": {
         "understat": "Burnley",
@@ -37,6 +38,7 @@ CANONICAL_TEAM_NAMES = {
     "Cardiff": {
         "understat": "Cardiff",
         "football_data_co_uk": "Cardiff",
+        "the_odds_api": "Cardiff City",
     },
     "Chelsea": {
         "understat": "Chelsea",
@@ -65,11 +67,13 @@ CANONICAL_TEAM_NAMES = {
     "Huddersfield": {
         "understat": "Huddersfield",
         "football_data_co_uk": "Huddersfield",
+        "the_odds_api": "Huddersfield Town",
     },
     "Hull": {
         "understat": "Hull",
         "football_data_co_uk": "Hull",
         "football_data_org": "Hull City AFC",
+        "the_odds_api": "Hull City",
     },
     "Ipswich": {
         "understat": "Ipswich",
@@ -80,6 +84,7 @@ CANONICAL_TEAM_NAMES = {
         "understat": "Leeds",
         "football_data_co_uk": "Leeds",
         "football_data_org": "Leeds United FC",
+        "the_odds_api": "Leeds United",
     },
     "Leicester": {
         "understat": "Leicester",
@@ -95,6 +100,7 @@ CANONICAL_TEAM_NAMES = {
     "Luton": {
         "understat": "Luton",
         "football_data_co_uk": "Luton",
+        "the_odds_api": "Luton Town",
     },
     "Manchester City": {
         "understat": "Manchester City",
@@ -121,6 +127,7 @@ CANONICAL_TEAM_NAMES = {
     "Norwich": {
         "understat": "Norwich",
         "football_data_co_uk": "Norwich",
+        "the_odds_api": "Norwich City",
     },
     "Nottingham Forest": {
         "understat": "Nottingham Forest",
@@ -146,6 +153,7 @@ CANONICAL_TEAM_NAMES = {
     "Stoke": {
         "understat": "Stoke",
         "football_data_co_uk": "Stoke",
+        "the_odds_api": "Stoke City",
     },
     "Sunderland": {
         "understat": "Sunderland",
@@ -155,6 +163,7 @@ CANONICAL_TEAM_NAMES = {
     "Swansea": {
         "understat": "Swansea",
         "football_data_co_uk": "Swansea",
+        "the_odds_api": "Swansea City",
     },
     "Tottenham": {
         "understat": "Tottenham",
@@ -186,6 +195,7 @@ CANONICAL_TEAM_NAMES = {
     "Alaves": {
         "understat": "Alaves",
         "football_data_co_uk": "Alaves",
+        "the_odds_api": "Alavés",
     },
     "Almeria": {
         "understat": "Almeria",
@@ -194,11 +204,13 @@ CANONICAL_TEAM_NAMES = {
     "Athletic Club": {
         "understat": "Athletic Club",
         "football_data_co_uk": "Ath Bilbao",
+        "the_odds_api": "Athletic Bilbao",
     },
     "Atletico Madrid": {
         "understat": "Atletico Madrid",
         "football_data_co_uk": "Ath Madrid",
         "football_data_org": "Club Atlético de Madrid",
+        "the_odds_api": "Atlético Madrid",
     },
     "Barcelona": {
         "understat": "Barcelona",
@@ -228,6 +240,7 @@ CANONICAL_TEAM_NAMES = {
     "Elche": {
         "understat": "Elche",
         "football_data_co_uk": "Elche",
+        "the_odds_api": "Elche CF",
     },
     "Espanyol": {
         "understat": "Espanyol",
@@ -268,6 +281,7 @@ CANONICAL_TEAM_NAMES = {
     "Osasuna": {
         "understat": "Osasuna",
         "football_data_co_uk": "Osasuna",
+        "the_odds_api": "CA Osasuna",
     },
     "Rayo Vallecano": {
         "understat": "Rayo Vallecano",
@@ -283,6 +297,7 @@ CANONICAL_TEAM_NAMES = {
     },
     "Real Oviedo": {
         "understat": "Real Oviedo",
+        "the_odds_api": "Oviedo",
     },
     "Real Sociedad": {
         "understat": "Real Sociedad",
@@ -347,6 +362,7 @@ CANONICAL_TEAM_NAMES = {
         "understat": "Borussia M.Gladbach",
         "sofascore": "Borussia M'gladbach",
         "football_data_co_uk": "M'gladbach",
+        "the_odds_api": "Borussia Monchengladbach",
     },
     "Darmstadt": {
         "understat": "Darmstadt",
@@ -361,6 +377,7 @@ CANONICAL_TEAM_NAMES = {
         "understat": "FC Cologne",
         "football_data_co_uk": "FC Koln",
         "football_data_org": "1. FC Köln",
+        "the_odds_api": "Koln",
     },
     "FC Heidenheim": {
         "understat": "FC Heidenheim",
@@ -410,6 +427,7 @@ CANONICAL_TEAM_NAMES = {
         "understat": "Mainz 05",
         "sofascore": "1. FSV Mainz 05",
         "football_data_co_uk": "Mainz",
+        "the_odds_api": "FSV Mainz 05",
     },
     "Nuernberg": {
         "understat": "Nuernberg",
@@ -463,6 +481,7 @@ CANONICAL_TEAM_NAMES = {
         "understat": "Atalanta",
         "sofascore": "Atalanta",
         "football_data_co_uk": "Atalanta",
+        "the_odds_api": "Atalanta BC",
     },
     "Benevento": {
         "understat": "Benevento",
@@ -531,6 +550,7 @@ CANONICAL_TEAM_NAMES = {
         "understat": "Inter",
         "sofascore": "Inter",
         "football_data_co_uk": "Inter",
+        "the_odds_api": "Inter Milan",
     },
     "Juventus": {
         "understat": "Juventus",
@@ -582,6 +602,7 @@ CANONICAL_TEAM_NAMES = {
         "understat": "Roma",
         "sofascore": "Roma",
         "football_data_co_uk": "Roma",
+        "the_odds_api": "AS Roma",
     },
     "SPAL 2013": {
         "understat": "SPAL 2013",
@@ -784,11 +805,13 @@ CANONICAL_TEAM_NAMES = {
         "understat": "Birmingham",
         "football_data_co_uk": "Birmingham",
         "football_data_org": "Birmingham City FC",
+        "the_odds_api": "Birmingham City",
     },
     "Blackburn": {
         "understat": "Blackburn",
         "football_data_co_uk": "Blackburn",
         "football_data_org": "Blackburn Rovers FC",
+        "the_odds_api": "Blackburn Rovers",
     },
     "Bristol City": {
         "understat": "Bristol City",
@@ -799,6 +822,7 @@ CANONICAL_TEAM_NAMES = {
         "understat": "Charlton",
         "football_data_co_uk": "Charlton",
         "football_data_org": "Charlton Athletic FC",
+        "the_odds_api": "Charlton Athletic",
     },
     "Coventry City": {
         "understat": "Coventry City",
@@ -829,6 +853,7 @@ CANONICAL_TEAM_NAMES = {
         "understat": "Preston",
         "football_data_co_uk": "Preston",
         "football_data_org": "Preston North End FC",
+        "the_odds_api": "Preston North End",
     },
     "Sheffield Wednesday": {
         "understat": "Sheffield Wednesday",
@@ -846,7 +871,7 @@ UNDERSTAT_ALIASES = {
     "Paris Saint-Germain": "Paris Saint Germain",
 }
 
-SUPPORTED_SOURCES = ["understat", "sofascore", "football_data_co_uk", "football_data_org"]
+SUPPORTED_SOURCES = ["understat", "sofascore", "football_data_co_uk", "football_data_org", "the_odds_api"]
 
 
 def _build_reverse_index(source):

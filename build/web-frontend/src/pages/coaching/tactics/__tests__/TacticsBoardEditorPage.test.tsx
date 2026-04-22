@@ -9,10 +9,15 @@ const mockSaveItemPosition = vi.fn();
 const mockEditorHook = vi.fn();
 const mockPlaybackHook = vi.fn();
 
-vi.mock('react-router-dom', () => ({
-  useNavigate: () => mockNavigate,
-  useParams: () => ({ clubId: '1', boardId: '10' }),
-}));
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+    useParams: () => ({ clubId: '1', boardId: '10' }),
+    useSearchParams: () => [new URLSearchParams(''), vi.fn()],
+  };
+});
 
 vi.mock('../../../../hooks/useTacticsBoardEditor', () => ({
   default: (...args: unknown[]) => mockEditorHook(...args),
@@ -20,6 +25,10 @@ vi.mock('../../../../hooks/useTacticsBoardEditor', () => ({
 
 vi.mock('../../../../hooks/usePlayback', () => ({
   default: (...args: unknown[]) => mockPlaybackHook(...args),
+}));
+
+vi.mock('../../../../context/useAuth', () => ({
+  useAuth: () => ({ user: { id: 3 } }),
 }));
 
 vi.mock('../../../../services/api', () => ({

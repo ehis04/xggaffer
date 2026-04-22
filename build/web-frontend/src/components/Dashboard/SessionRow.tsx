@@ -1,18 +1,22 @@
-import { useNavigate } from "react-router-dom";
 import { formatDate, formatTime } from "./functions/calenderFuncs";
+import { typeConfig } from "./functions/typeConfig";
+import type { SessionEvent, SessionType } from "./types/DashboardTypes";
 import './css/SessionWidget.css';
 
-export const SessionRow = ({ session, config }) => {
-  const navigate = useNavigate();
+interface SessionRowProps {
+  session: SessionEvent;
+  config: (typeof typeConfig)[SessionType];
+}
+
+export const SessionRow = ({ session, config }: SessionRowProps) => {
   return (
     <button
-      key={session.id}
       className="session-row"
       // onClick={() => navigate(`/coaching/sessions/${session.id}`)}
     >
       <div
         className="session-row-type-pill"
-        style={{ color: config.color, background: config.bg }}
+        style={{ color: config.colour, background: config.bg }}
       >
         {config.label}
       </div>

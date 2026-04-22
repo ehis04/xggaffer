@@ -1,3 +1,9 @@
+"""
+Comparison helpers for the playerdata service layer.
+
+Compares two players or two clubs for a season and returns API data.
+"""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
@@ -5,7 +11,13 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from services.playerdata.helpers import latest_datetime
+from common.utils import latest_datetime
+from services.playerdata.helpers import (
+    competition_label,
+    format_number,
+    metric_difference,
+    winner_for_metric,
+)
 from services.playerdata.queries import (
     ClubSeasonEnrichmentRecord,
     PlayerSeasonEnrichmentRecord,
@@ -14,64 +26,40 @@ from services.playerdata.queries import (
 )
 
 
-def format_number(value: Decimal | int | float | None, *, decimal_places: int = 1) -> str:
-    if value is None:
-        return "N/A"
-    if isinstance(value, Decimal):
-        return f"{value:.{decimal_places}f}"
-    if isinstance(value, float):
-        return f"{value:.{decimal_places}f}"
-    return f"{value:,}"
+# ---------------------------------------------------------------------------
+# Metric comparison spec tables
+# ---------------------------------------------------------------------------
+
+PLAYER_METRICS: tuple[dict[str, str], ...] = (
+    {"key": "goals", "label": "Goals", "unit": "", "direction": "higher"},
+    {"key": "assists", "label": "Assists", "unit": "", "direction": "higher"},
+    {"key": "xg", "label": "xG", "unit": "", "direction": "higher"},
+    {"key": "xa", "label": "xA", "unit": "", "direction": "higher"},
+    {"key": "shots", "label": "Shots", "unit": "", "direction": "higher"},
+    {"key": "key_passes", "label": "Key passes", "unit": "", "direction": "higher"},
+    {"key": "minutes_played", "label": "Minutes", "unit": "", "direction": "higher"},
+    {"key": "matches_played", "label": "Matches", "unit": "", "direction": "higher"},
+)
+
+CLUB_METRICS: tuple[dict[str, str], ...] = (
+    {"key": "wins", "label": "Wins", "unit": "", "direction": "higher"},
+    {"key": "draws", "label": "Draws", "unit": "", "direction": "higher"},
+    {"key": "losses", "label": "Losses", "unit": "", "direction": "lower"},
+    {"key": "goals_for", "label": "Goals scored", "unit": "", "direction": "higher"},
+    {"key": "goals_against", "label": "Goals conceded", "unit": "", "direction": "lower"},
+    {"key": "xg", "label": "xG", "unit": "", "direction": "higher"},
+    {"key": "xga", "label": "xGA", "unit": "", "direction": "lower"},
+    {"key": "npxg", "label": "npxG", "unit": "", "direction": "higher"},
+    {"key": "ppda", "label": "PPDA", "unit": "", "direction": "lower"},
+    {"key": "matches_played", "label": "Matches", "unit": "", "direction": "higher"},
+)
 
 
-def competition_label(competition_name: str | None, competition_code: str | None) -> str:
-    if competition_name:
-        return competition_name
-    if competition_code:
-        return competition_code
-    return "this competition"
+# ---------------------------------------------------------------------------
+# Comparison dataclasses
+# ---------------------------------------------------------------------------
 
-
-def metric_difference(
-    left_value: Decimal | int,
-    right_value: Decimal | int,
-) -> Decimal | int:
-    return left_value - right_value
-
-
-def winner_for_metric(
-    *,
-    left_name: str,
-    right_name: str,
-    left_value: Decimal | int | None,
-    right_value: Decimal | int | None,
-    direction: str,
-) -> tuple[str | None, bool, bool, Decimal | int | None]:
-    if left_value is None or right_value is None:
-        return None, False, False, None
-
-    if left_value == right_value:
-        return None, True, True, metric_difference(left_value, right_value)
-
-    if direction == "higher":
-        return (
-            left_name if left_value > right_value else right_name,
-            False,
-            True,
-            metric_difference(left_value, right_value),
-        )
-
-    if direction == "lower":
-        return (
-            left_name if left_value < right_value else right_name,
-            False,
-            True,
-            metric_difference(left_value, right_value),
-        )
-
-    raise ValueError(f"Unsupported comparison direction: {direction}")
-
-
+# Hold the metric comparison result for one metric
 @dataclass(frozen=True)
 class MetricComparison:
     key: str
@@ -86,6 +74,7 @@ class MetricComparison:
     difference: Decimal | int | None
     sentence: str
 
+    # Return this metric comparison in dictionary form for API output
     def to_dict(self) -> dict[str, Any]:
         return {
             "key": self.key,
@@ -101,40 +90,47 @@ class MetricComparison:
             "is_tie": self.is_tie,
         }
 
+    # Return the metric key using the older field name expected by some consumers
     @property
     def metric_key(self) -> str:
         return self.key
 
+    # Return the left value in a JSON-friendly format
     @property
     def player_a_value(self) -> float | int | None:
         if isinstance(self.left_value, Decimal):
             return float(self.left_value)
         return self.left_value
 
+    # Return the left value as a display string
     @property
     def player_a_formatted(self) -> str | None:
         if self.left_value is None:
             return None
         return format_number(self.left_value)
 
+    # Return the right value in a JSON-friendly format
     @property
     def player_b_value(self) -> float | int | None:
         if isinstance(self.right_value, Decimal):
             return float(self.right_value)
         return self.right_value
 
+    # Return the right value as a display string
     @property
     def player_b_formatted(self) -> str | None:
         if self.right_value is None:
             return None
         return format_number(self.right_value)
 
+    # Return the difference in a JSON-friendly format
     @property
     def delta(self) -> float | int | None:
         if isinstance(self.difference, Decimal):
             return float(self.difference)
         return self.difference
 
+    # Return the difference as a display string
     @property
     def formatted_delta(self) -> str | None:
         if self.difference is None:
@@ -142,6 +138,7 @@ class MetricComparison:
         return format_number(self.difference)
 
 
+# Hold the shared context details for a comparison
 @dataclass(frozen=True)
 class ComparisonContext:
     provider: str | None
@@ -155,6 +152,7 @@ class ComparisonContext:
     right_last_synced_at: datetime | None
     sentence: str
 
+    # Return the comparison context in dictionary form for API output
     def to_dict(self) -> dict[str, Any]:
         return {
             "provider": self.provider,
@@ -169,11 +167,13 @@ class ComparisonContext:
             "sentence": self.sentence,
         }
 
+    # Return the season label using the simpler season field name
     @property
     def season(self) -> str | None:
         return self.season_label
 
 
+# Hold the left or right player data for a comparison
 @dataclass(frozen=True)
 class PlayerComparisonSide:
     player_id: int
@@ -227,6 +227,7 @@ class PlayerComparisonSide:
         }
 
 
+# Hold the left or right club data for a comparison
 @dataclass(frozen=True)
 class ClubComparisonSide:
     club_id: int
@@ -252,6 +253,7 @@ class ClubComparisonSide:
         return asdict(self)
 
 
+# Hold the full player-vs-player comparison result
 @dataclass(frozen=True)
 class PlayerSeasonComparison:
     left: PlayerComparisonSide
@@ -419,6 +421,7 @@ class PlayerSeasonComparison:
         return []
 
 
+# Hold the full club-vs-club comparison result
 @dataclass(frozen=True)
 class ClubSeasonComparison:
     left: ClubComparisonSide
@@ -437,31 +440,11 @@ class ClubSeasonComparison:
         }
 
 
-PLAYER_METRICS: tuple[dict[str, str], ...] = (
-    {"key": "goals", "label": "Goals", "unit": "", "direction": "higher"},
-    {"key": "assists", "label": "Assists", "unit": "", "direction": "higher"},
-    {"key": "xg", "label": "xG", "unit": "", "direction": "higher"},
-    {"key": "xa", "label": "xA", "unit": "", "direction": "higher"},
-    {"key": "shots", "label": "Shots", "unit": "", "direction": "higher"},
-    {"key": "key_passes", "label": "Key passes", "unit": "", "direction": "higher"},
-    {"key": "minutes_played", "label": "Minutes", "unit": "", "direction": "higher"},
-    {"key": "matches_played", "label": "Matches", "unit": "", "direction": "higher"},
-)
+# ---------------------------------------------------------------------------
+# Internal comparison builders
+# ---------------------------------------------------------------------------
 
-CLUB_METRICS: tuple[dict[str, str], ...] = (
-    {"key": "wins", "label": "Wins", "unit": "", "direction": "higher"},
-    {"key": "draws", "label": "Draws", "unit": "", "direction": "higher"},
-    {"key": "losses", "label": "Losses", "unit": "", "direction": "lower"},
-    {"key": "goals_for", "label": "Goals scored", "unit": "", "direction": "higher"},
-    {"key": "goals_against", "label": "Goals conceded", "unit": "", "direction": "lower"},
-    {"key": "xg", "label": "xG", "unit": "", "direction": "higher"},
-    {"key": "xga", "label": "xGA", "unit": "", "direction": "lower"},
-    {"key": "npxg", "label": "npxG", "unit": "", "direction": "higher"},
-    {"key": "ppda", "label": "PPDA", "unit": "", "direction": "lower"},
-    {"key": "matches_played", "label": "Matches", "unit": "", "direction": "higher"},
-)
-
-
+# Build a plain-English sentence describing the comparison context
 def _context_sentence(
     *,
     left_provider: str,
@@ -494,6 +477,7 @@ def _context_sentence(
     )
 
 
+# Build the shared context object for the comparison
 def _build_context(
     *,
     left_provider: str,
@@ -542,6 +526,7 @@ def _build_context(
     )
 
 
+# Build a plain-English sentence for one metric result
 def _metric_sentence(
     *,
     label: str,
@@ -570,6 +555,7 @@ def _metric_sentence(
     )
 
 
+# Compare one metric and return the result as a MetricComparison object
 def _compare_metric(
     *,
     key: str,
@@ -613,6 +599,7 @@ def _compare_metric(
     )
 
 
+# Convert a player enrichment record into the left or right player comparison object
 def _player_side(record: PlayerSeasonEnrichmentRecord) -> PlayerComparisonSide:
     return PlayerComparisonSide(
         player_id=record.player_id,
@@ -640,6 +627,7 @@ def _player_side(record: PlayerSeasonEnrichmentRecord) -> PlayerComparisonSide:
     )
 
 
+# Convert a club enrichment record into the left or right club comparison object
 def _club_side(record: ClubSeasonEnrichmentRecord) -> ClubComparisonSide:
     return ClubComparisonSide(
         club_id=record.club_id,
@@ -663,52 +651,51 @@ def _club_side(record: ClubSeasonEnrichmentRecord) -> ClubComparisonSide:
     )
 
 
+# Build the full list of metric comparisons for two players
 def _player_metrics(
     left: PlayerSeasonEnrichmentRecord,
     right: PlayerSeasonEnrichmentRecord,
 ) -> list[MetricComparison]:
-    comparisons: list[MetricComparison] = []
-
-    for spec in PLAYER_METRICS:
-        comparisons.append(
-            _compare_metric(
-                key=spec["key"],
-                label=spec["label"],
-                unit=spec["unit"],
-                direction=spec["direction"],
-                left_name=left.player_name,
-                right_name=right.player_name,
-                left_value=getattr(left, spec["key"]),
-                right_value=getattr(right, spec["key"]),
-            )
+    return [
+        _compare_metric(
+            key=spec["key"],
+            label=spec["label"],
+            unit=spec["unit"],
+            direction=spec["direction"],
+            left_name=left.player_name,
+            right_name=right.player_name,
+            left_value=getattr(left, spec["key"]),
+            right_value=getattr(right, spec["key"]),
         )
+        for spec in PLAYER_METRICS
+    ]
 
-    return comparisons
 
-
+# Build the full list of metric comparisons for two clubs
 def _club_metrics(
     left: ClubSeasonEnrichmentRecord,
     right: ClubSeasonEnrichmentRecord,
 ) -> list[MetricComparison]:
-    comparisons: list[MetricComparison] = []
-
-    for spec in CLUB_METRICS:
-        comparisons.append(
-            _compare_metric(
-                key=spec["key"],
-                label=spec["label"],
-                unit=spec["unit"],
-                direction=spec["direction"],
-                left_name=left.club_name,
-                right_name=right.club_name,
-                left_value=getattr(left, spec["key"]),
-                right_value=getattr(right, spec["key"]),
-            )
+    return [
+        _compare_metric(
+            key=spec["key"],
+            label=spec["label"],
+            unit=spec["unit"],
+            direction=spec["direction"],
+            left_name=left.club_name,
+            right_name=right.club_name,
+            left_value=getattr(left, spec["key"]),
+            right_value=getattr(right, spec["key"]),
         )
+        for spec in CLUB_METRICS
+    ]
 
-    return comparisons
 
+# ---------------------------------------------------------------------------
+# Summary builders
+# ---------------------------------------------------------------------------
 
+# Build summary lines explaining the main results of a player comparison
 def build_player_comparison_summary(
     comparison: PlayerSeasonComparison,
 ) -> list[str]:
@@ -752,6 +739,7 @@ def build_player_comparison_summary(
     return lines
 
 
+# Build summary lines explaining the main results of a club comparison
 def build_club_comparison_summary(
     comparison: ClubSeasonComparison,
 ) -> list[str]:
@@ -793,6 +781,7 @@ def build_club_comparison_summary(
     return lines
 
 
+# Convert comparison metrics into a table-friendly list of dictionaries
 def build_comparison_table_data(
     comparison: PlayerSeasonComparison | ClubSeasonComparison,
 ) -> list[dict[str, Any]]:
@@ -812,6 +801,11 @@ def build_comparison_table_data(
     return rows
 
 
+# ---------------------------------------------------------------------------
+# Public comparison entry points
+# ---------------------------------------------------------------------------
+
+# Build the full comparison between two players for a season
 def build_player_comparison(
     player_a_id: int,
     player_b_id: int,
@@ -879,11 +873,14 @@ def build_player_comparison(
         summary_lines=build_player_comparison_summary(comparison),
     )
 
+
+# Aliases for backward compatibility.
 compare_player_seasons = build_player_comparison
 compare_players = build_player_comparison
 get_player_comparison = build_player_comparison
 
 
+# Build the full comparison between two clubs for a season
 def compare_club_seasons(
     club_a_id: int,
     club_b_id: int,
@@ -894,6 +891,7 @@ def compare_club_seasons(
     competition_code: str | None = None,
     competition_name: str | None = None,
 ) -> ClubSeasonComparison | None:
+
     resolved_season_label = season_label or season
 
     left_record = get_club_season_enrichment(

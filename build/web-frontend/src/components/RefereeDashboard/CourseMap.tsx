@@ -3,8 +3,9 @@ import type { CourseMapProps } from "./types/RefereeDashboardTypes";
 import './css/CourseMap.css';
 
 export const CourseMap = ({ courses }: CourseMapProps) => {
-  const completed = courses.filter((c) => c.status === "completed").length;
-  const total = courses.length;
+  const safeCourses = courses ?? [];
+  const completed = safeCourses.filter((c) => c.status === "completed").length;
+  const total = safeCourses.length;
 
   return (
     <section className="cm" aria-label="Course Map">
@@ -16,7 +17,7 @@ export const CourseMap = ({ courses }: CourseMapProps) => {
       </div>
 
       <ol className="cm-list">
-        {courses.map((course) => (
+        {safeCourses.map((course) => (
           <CourseMapItem key={course.law_number} course={course} />
         ))}
       </ol>

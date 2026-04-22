@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 
 import { chatQuery } from '../../../services/api/predictionsApi';
 import type { ChatResponse } from '../../../types/prediction';
+import type { ApiEnvelope } from '../../../common/types/response';
+import { FreshnessBadge } from '../../../common/components/FreshnessBadge';
 import ChatInput from './ChatInput';
 import StructuredResponseBlock from './StructuredResponseBlock';
 import styles from './css/ChatInterface.module.css';
@@ -10,13 +12,13 @@ interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
-  response?: ChatResponse;
+  envelope?: ApiEnvelope<ChatResponse>;
 }
 
 const STARTER_QUERIES = [
-  'Who wins Arsenal vs Chelsea?',
+  'Compare Arsenal vs Chelsea with bookmaker odds',
   'What is xG?',
-  'Who wins the Premier League this season?',
+  'Show me the market view for Liverpool vs Man City',
   'What lineup will Arsenal use?',
 ] as const;
 
@@ -44,12 +46,13 @@ export default function ChatInterface() {
     setInputError(null);
 
     try {
-      const response = await chatQuery(query);
+      const envelope = await chatQuery(query);
+      const chatData = envelope.data;
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: response.prose,
-        response,
+        content: chatData?.prose ?? '',
+        envelope,
       };
       setMessages((prev) => [...prev, assistantMessage]);
     } catch {
@@ -77,28 +80,34 @@ export default function ChatInterface() {
           </div>
         )}
 
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={msg.role === 'user' ? styles.userMessage : styles.assistantMessage}
-          >
-            <p className={styles.messageText}>{msg.content}</p>
-            {msg.role === 'assistant' && msg.response && (
-              <>
-                {msg.response.used_fallback && (
-                  <span className={styles.fallbackBadge}>(AI narration unavailable)</span>
-                )}
-                <StructuredResponseBlock
-                  queryType={msg.response.query_type}
-                  engineData={msg.response.structured_data.engine_data}
-                  partial={msg.response.structured_data.partial}
-                  error={msg.response.structured_data.error}
-                  onExampleClick={handleSubmit}
-                />
-              </>
-            )}
-          </div>
-        ))}
+        {messages.map((msg) => {
+          const chatData = msg.envelope?.data ?? null;
+          return (
+            <div
+              key={msg.id}
+              className={msg.role === 'user' ? styles.userMessage : styles.assistantMessage}
+            >
+              <p className={styles.messageText}>{msg.content}</p>
+              {msg.role === 'assistant' && msg.envelope && (
+                <>
+                  <FreshnessBadge freshness={msg.envelope.freshness} />
+                  {chatData?.used_fallback && (
+                    <span className={styles.fallbackBadge}>(AI narration unavailable)</span>
+                  )}
+                  {chatData && (
+                    <StructuredResponseBlock
+                      queryType={chatData.query_type}
+                      engineData={chatData.structured_data.engine_data}
+                      partial={chatData.structured_data.partial}
+                      error={chatData.structured_data.error}
+                      onExampleClick={handleSubmit}
+                    />
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
 
         {isLoading && (
           <div className={styles.loadingRow}>

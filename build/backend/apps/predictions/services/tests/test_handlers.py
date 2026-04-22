@@ -187,3 +187,246 @@ class TestCompositeHandler:
             result = CompositeHandler().handle(q)
             assert result.partial is True
             assert "match_error" in result.engine_data
+
+class TestOddsHandler:
+    def test_success(self):
+        from apps.predictions.services.odds_handler import OddsHandler
+
+        with patch(
+            "apps.predictions.services.odds_handler.OddsComparisonService.__init__",
+            return_value=None,
+        ), patch(
+            "apps.predictions.services.odds_handler.OddsComparisonService.get_fixture_odds_comparison",
+            return_value=self._mock_odds_payload(),
+        ), patch(
+            "apps.predictions.services.odds_handler.build_match_prediction_payload",
+            return_value=self._mock_prediction_payload(),
+        ), patch(
+            "apps.predictions.services.odds_handler.HistoricalMarketBenchmark.objects.filter",
+        ) as mock_filter:
+            mock_filter.return_value.order_by.return_value.first.return_value = None
+
+            q = _make_query(
+                intent=IntentClass.ODDS_COMPARISON,
+                raw_query="compare Arsenal vs Chelsea with bookmaker odds",
+            )
+            result = OddsHandler().handle(q)
+
+        assert result.intent == IntentClass.ODDS_COMPARISON
+        assert result.partial is False
+        assert result.error is None
+        assert result.engine_data["home_team"] == "Arsenal"
+        assert result.engine_data["away_team"] == "Chelsea"
+        assert "model" in result.engine_data
+        assert "market" in result.engine_data
+        assert "bookmakers" in result.engine_data
+        assert "comparison" in result.engine_data
+        assert "support" in result.engine_data
+
+    def test_missing_odds_data_returns_partial_response(self):
+        from apps.predictions.services.odds.exceptions import OddsDataUnavailableError
+        from apps.predictions.services.odds_handler import OddsHandler
+
+        with patch(
+            "apps.predictions.services.odds_handler.OddsComparisonService.__init__",
+            return_value=None,
+        ), patch(
+            "apps.predictions.services.odds_handler.OddsComparisonService.get_fixture_odds_comparison",
+            side_effect=OddsDataUnavailableError("No live odds are available."),
+        ):
+            q = _make_query(
+                intent=IntentClass.ODDS_COMPARISON,
+                raw_query="compare Arsenal vs Chelsea with bookmaker odds",
+            )
+            result = OddsHandler().handle(q)
+
+        assert result.intent == IntentClass.ODDS_COMPARISON
+        assert result.partial is True
+        assert "No live odds are available" in result.error
+        assert "support" in result.engine_data
+
+    def test_source_failure_returns_partial_response(self):
+        from apps.predictions.services.odds.exceptions import OddsSourceError
+        from apps.predictions.services.odds_handler import OddsHandler
+
+        with patch(
+            "apps.predictions.services.odds_handler.OddsComparisonService.__init__",
+            return_value=None,
+        ), patch(
+            "apps.predictions.services.odds_handler.OddsComparisonService.get_fixture_odds_comparison",
+            side_effect=OddsSourceError("source failed"),
+        ):
+            q = _make_query(
+                intent=IntentClass.ODDS_COMPARISON,
+                raw_query="compare Arsenal vs Chelsea with bookmaker odds",
+            )
+            result = OddsHandler().handle(q)
+
+        assert result.intent == IntentClass.ODDS_COMPARISON
+        assert result.partial is True
+        assert result.error == "Live odds data is temporarily unavailable."
+        assert "support" in result.engine_data
+
+    def test_support_block_is_present_in_happy_path(self):
+        from apps.predictions.services.odds_handler import OddsHandler
+
+        with patch(
+            "apps.predictions.services.odds_handler.OddsComparisonService.__init__",
+            return_value=None,
+        ), patch(
+            "apps.predictions.services.odds_handler.OddsComparisonService.get_fixture_odds_comparison",
+            return_value=self._mock_odds_payload(),
+        ), patch(
+            "apps.predictions.services.odds_handler.build_match_prediction_payload",
+            return_value=self._mock_prediction_payload(),
+        ), patch(
+            "apps.predictions.services.odds_handler.HistoricalMarketBenchmark.objects.filter",
+        ) as mock_filter:
+            mock_filter.return_value.order_by.return_value.first.return_value = None
+
+            q = _make_query(
+                intent=IntentClass.ODDS_COMPARISON,
+                raw_query="compare Arsenal vs Chelsea with bookmaker odds",
+            )
+            result = OddsHandler().handle(q)
+
+        assert result.partial is False
+        assert "support" in result.engine_data
+        assert result.engine_data["support"]["resources"]
+
+    def _mock_prediction_payload(self) -> dict:
+        return {
+            "home_team": "Arsenal",
+            "away_team": "Chelsea",
+            "league": "EPL",
+            "season": "2024",
+            "prediction": "Home",
+            "probabilities": {
+                "home": 0.51,
+                "draw": 0.26,
+                "away": 0.23,
+            },
+            "top_factors": [],
+            "metrics": {
+                "accuracy": 0.555,
+                "brier_score": None,
+            },
+            "model_type": "logistic_regression",
+            "version": "v1",
+            "contract_version": "1.0",
+        }
+
+    def _mock_odds_payload(self) -> dict:
+        return {
+            "source": "the_odds_api",
+            "sport_key": "soccer_epl",
+            "league": "EPL",
+            "season": "2024",
+            "request_meta": {},
+            "fixture_count": 1,
+            "fixtures": [
+                {
+                    "external_fixture_id": "fixture-1",
+                    "bookmaker_source": "the_odds_api",
+                    "league": "EPL",
+                    "season": "2024",
+                    "home_team": "Arsenal",
+                    "away_team": "Chelsea",
+                    "source_home_team": "Arsenal",
+                    "source_away_team": "Chelsea",
+                    "commence_time": "2026-04-20T15:00:00Z",
+                    "market_type": "1x2",
+                    "snapshot_id": None,
+                    "bookmaker_quotes": [
+                        {
+                            "bookmaker_name": "Bet365",
+                            "bookmaker_slug": "bet365",
+                            "home_odds": 2.1,
+                            "draw_odds": 3.4,
+                            "away_odds": 3.6,
+                            "implied_home": 0.4762,
+                            "implied_draw": 0.2941,
+                            "implied_away": 0.2778,
+                            "devig_home": 0.4550,
+                            "devig_draw": 0.2810,
+                            "devig_away": 0.2640,
+                            "overround": 1.0481,
+                            "last_seen_at": "2026-04-18T10:00:00Z",
+                        },
+                        {
+                            "bookmaker_name": "Paddy Power",
+                            "bookmaker_slug": "paddy-power",
+                            "home_odds": 2.2,
+                            "draw_odds": 3.3,
+                            "away_odds": 3.5,
+                            "implied_home": 0.4545,
+                            "implied_draw": 0.3030,
+                            "implied_away": 0.2857,
+                            "devig_home": 0.4340,
+                            "devig_draw": 0.2890,
+                            "devig_away": 0.2770,
+                            "overround": 1.0432,
+                            "last_seen_at": "2026-04-18T10:05:00Z",
+                        },
+                    ],
+                    "consensus": {
+                        "quote_count": 2,
+                        "consensus_home_probability": 0.4445,
+                        "consensus_draw_probability": 0.2850,
+                        "consensus_away_probability": 0.2705,
+                        "market_favourite": "home",
+                        "latest_last_seen_at": "2026-04-18T10:05:00Z",
+                    },
+                }
+            ],
+        }
+
+    def test_live_unavailable_falls_back_to_stored_snapshot(self):
+        from apps.predictions.services.odds.exceptions import OddsDataUnavailableError
+        from apps.predictions.services.odds_handler import OddsHandler
+
+        stored_fixture = {
+            "external_fixture_id": "fixture-1",
+            "bookmaker_source": "the_odds_api",
+            "league": "EPL",
+            "season": "2024",
+            "home_team": "Arsenal",
+            "away_team": "Chelsea",
+            "source_home_team": "Arsenal",
+            "source_away_team": "Chelsea",
+            "commence_time": "2026-04-20T15:00:00Z",
+            "market_type": "1x2",
+            "snapshot_id": 99,
+            "fetched_at": "2026-04-18T10:10:00Z",
+            "bookmaker_quotes": self._mock_odds_payload()["fixtures"][0]["bookmaker_quotes"],
+            "consensus": self._mock_odds_payload()["fixtures"][0]["consensus"],
+            "is_historical": True,
+        }
+
+        with patch(
+            "apps.predictions.services.odds_handler.OddsComparisonService.__init__",
+            return_value=None,
+        ), patch(
+            "apps.predictions.services.odds_handler.OddsComparisonService.get_fixture_odds_comparison",
+            side_effect=OddsDataUnavailableError("No live odds are available."),
+        ), patch(
+            "apps.predictions.services.odds_handler.OddsComparisonService.get_stored_fixture_odds",
+            return_value=stored_fixture,
+        ), patch(
+            "apps.predictions.services.odds_handler.build_match_prediction_payload",
+            return_value=self._mock_prediction_payload(),
+        ), patch(
+            "apps.predictions.services.odds_handler.HistoricalMarketBenchmark.objects.filter",
+        ) as mock_filter:
+            mock_filter.return_value.order_by.return_value.first.return_value = None
+
+            q = _make_query(
+                intent=IntentClass.ODDS_COMPARISON,
+                raw_query="compare Arsenal vs Chelsea with bookmaker odds",
+            )
+            result = OddsHandler().handle(q)
+
+        assert result.partial is False
+        assert result.engine_data["is_historical"] is True
+        assert result.engine_data["odds_fetched_at"] == "2026-04-18T10:10:00Z"
+        assert "support" in result.engine_data

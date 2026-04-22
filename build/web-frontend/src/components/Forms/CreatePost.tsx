@@ -16,7 +16,7 @@ export const CreatePost = ({
 }: CreatePostProps) => {
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [visibility, setVisibility] = useState<"PB" | "F" | "PR">("PB");
 
   const toggleVisibility = () => {

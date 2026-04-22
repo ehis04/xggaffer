@@ -97,7 +97,7 @@ const InternalPlayerProfilePage: React.FC = () => {
           provider: 'understat',
           limit: 80,
         });
-        if (active) setPlayers(result.results);
+        if (active) setPlayers(result.data?.results ?? []);
       } catch {
         if (active) setPlayers([]);
       } finally {
@@ -126,7 +126,7 @@ const InternalPlayerProfilePage: React.FC = () => {
           season: '2024',
           provider: 'understat',
         });
-        if (active) setOverview(result);
+        if (active) setOverview(result.data ?? null);
       } catch (err) {
         if (active) {
           setOverview(null);

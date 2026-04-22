@@ -127,7 +127,7 @@ const LeagueCustomPage: React.FC = () => {
   const [savedScenarioActionId, setSavedScenarioActionId] = useState<number | null>(null);
 
   const [scoreInputs, setScoreInputs] = useState<ScoreInputState>({});
-  const [selectedTeamName, setSelectedTeamName] = useState<string | null>(null);
+  const [selectedFixtureKeys, setSelectedFixtureKeys] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     let isActive = true;
@@ -257,6 +257,19 @@ const LeagueCustomPage: React.FC = () => {
     });
   }, []);
 
+  const handleToggleFixture = useCallback((fixtureKey: string): void => {
+    setSelectedFixtureKeys((current) => {
+      const next = new Set(current);
+      if (next.has(fixtureKey)) {
+        next.delete(fixtureKey);
+        handleRemoveScore(fixtureKey);
+      } else {
+        next.add(fixtureKey);
+      }
+      return next;
+    });
+  }, [handleRemoveScore]);
+
   const buildLockedResults = useCallback((): LeagueScenarioLockedResultInput[] => {
     return Object.entries(scoreInputs).flatMap(([fixture_key, values]) => {
       const home_goals = values.home_goals.trim();
@@ -342,7 +355,7 @@ const LeagueCustomPage: React.FC = () => {
     }
 
     setScoreInputs({});
-    setSelectedTeamName(null);
+    setSelectedFixtureKeys(new Set());
     void loadScenario([]);
     void loadSavedScenarios();
   }, [selectedLeague, selectedSeason, selectedMode, selectedMatchweek, loadScenario]);

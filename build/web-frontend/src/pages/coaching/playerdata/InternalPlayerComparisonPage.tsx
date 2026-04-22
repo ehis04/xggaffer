@@ -202,7 +202,7 @@ const InternalPlayerComparisonPage: React.FC = () => {
   useEffect(() => {
     if (!playerAIdFromUrl) return;
     void playerdataApi.getPlayerOverview(playerAIdFromUrl, { season: SEASON, provider: PROVIDER })
-      .then((r) => setPreloadedAName(r.player.display_name || r.player.full_name || null))
+      .then((r) => setPreloadedAName(r.data?.player?.display_name || r.data?.player?.full_name || null))
       .catch(() => {});
   }, [playerAIdFromUrl]);
 
@@ -217,7 +217,7 @@ const InternalPlayerComparisonPage: React.FC = () => {
       season: SEASON,
       provider: PROVIDER,
       limit: 60,
-    }).then((r) => { if (active) setPlayersA(r.results); })
+    }).then((r) => { if (active) setPlayersA(r.data?.results ?? []); })
       .catch(() => { if (active) setPlayersA([]); })
       .finally(() => { if (active) setLoadingA(false); });
     return () => { active = false; };
@@ -234,7 +234,7 @@ const InternalPlayerComparisonPage: React.FC = () => {
       season: SEASON,
       provider: PROVIDER,
       limit: 60,
-    }).then((r) => { if (active) setPlayersB(r.results); })
+    }).then((r) => { if (active) setPlayersB(r.data?.results ?? []); })
       .catch(() => { if (active) setPlayersB([]); })
       .finally(() => { if (active) setLoadingB(false); });
     return () => { active = false; };
@@ -260,7 +260,7 @@ const InternalPlayerComparisonPage: React.FC = () => {
       player_b_id: idB,
       season: SEASON,
       provider: PROVIDER,
-    }).then((r) => { if (active) setComparison(r); })
+    }).then((r) => { if (active) setComparison(r.data ?? null); })
       .catch((err) => {
         if (active) {
           setComparison(null);

@@ -104,3 +104,24 @@ def test_confidence_is_float(router: QueryRouter) -> None:
     result = router.route("who wins Arsenal vs Chelsea")
     assert isinstance(result.confidence, float)
     assert 0.0 <= result.confidence <= 1.0
+
+def test_odds_comparison_routes_with_two_teams(router: QueryRouter) -> None:
+    result = router.route("compare Arsenal vs Chelsea with bookmaker odds")
+    assert result.intent == IntentClass.ODDS_COMPARISON
+    assert result.home_team == "Arsenal"
+    assert result.away_team == "Chelsea"
+
+
+def test_odds_comparison_requires_two_teams(router: QueryRouter) -> None:
+    result = router.route("show me bookmaker odds for Arsenal")
+    assert result.intent == IntentClass.UNKNOWN
+    assert result.error_code == "insufficient_teams"
+
+
+def test_odds_comparison_preserves_league_and_season(router: QueryRouter) -> None:
+    result = router.route("compare Arsenal vs Chelsea with bookmaker odds in EPL 2022")
+    assert result.intent == IntentClass.ODDS_COMPARISON
+    assert result.home_team == "Arsenal"
+    assert result.away_team == "Chelsea"
+    assert result.league == "EPL"
+    assert result.season == "2022"

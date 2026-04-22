@@ -1,7 +1,13 @@
 import "./css/ActivityFeedWidget.css";
 import { formatRelativeTime } from "./functions/formatRelativeTime";
+import type { ActivityEvent } from "./types/DashboardTypes";
 
-export const ActivityEventDetail = ({event, isLast}) => {
+interface ActivityEventDetailProps {
+    event: ActivityEvent;
+    isLast: boolean;
+}
+
+export const ActivityEventDetail = ({event, isLast}: ActivityEventDetailProps) => {
     return (
         <div key={event.id} className={`activity-row ${isLast ? 'activity-row-last' : ''}`}>
             <div className="activity-row-timeline">

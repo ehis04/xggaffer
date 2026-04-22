@@ -1,6 +1,16 @@
 import { CoursePanelItem } from "./CoursePanelItem";
-import type { CourseItem } from "./types/CourseTypes";
+import type { CourseItem, CourseSection } from "./types/CourseTypes";
 import './css/CoursePanel.css';
+
+interface CoursePanelSectionProps {
+  section: CourseSection;
+  toggle: (id: string) => void;
+  done: number;
+  open: boolean;
+  completedIds: Set<string>;
+  currentItemId: string;
+  onNavigate: (id: string) => void;
+}
 
 export const CoursePanelSection = ({
   section,
@@ -10,10 +20,10 @@ export const CoursePanelSection = ({
   completedIds,
   currentItemId,
   onNavigate,
-}) => {
+}: CoursePanelSectionProps) => {
   return (
     <div key={section.id} className="cps-container">
-      <button className="cps-header" onClick={toggle} aria-expanded={open}>
+      <button className="cps-header" onClick={() => toggle(section.id)} aria-expanded={open}>
         <div className="cps-header-left">
           <span className="cps-title">{section.title}</span>
         </div>
@@ -35,13 +45,13 @@ export const CoursePanelSection = ({
 
             return (
               <CoursePanelItem
+                key={item.id}
                 item={item}
                 isActive={isActive}
                 isLocked={isLocked}
                 onNavigate={onNavigate}
                 isDone={isDone}
                 isLast={isLast}
-                
               />
             );
           })}

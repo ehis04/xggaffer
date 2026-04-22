@@ -734,3 +734,38 @@ def _is_valid_person_name(value: str) -> bool:
     if cleaned.startswith("### "):
         return False
     return True
+
+def fetch_native_stats_homepage_payload() -> dict:
+    return {
+        'top_performing_teams': get_homepage_top_performing_teams(),
+        'latest_hat_tricks': get_homepage_latest_hat_tricks(),
+        'strikers_with_a_lull': get_homepage_strikers_with_a_lull(),
+        'all_time_streaks': get_default_all_time_streaks(),
+    }
+
+
+def persist_native_stats_snapshot(surface_key: str, payload: dict) -> None:
+    from django.db import transaction
+    from common.utils import utcnow
+    from apps.livefootball.models import NativeStatsSnapshot
+
+    now = utcnow()
+
+    with transaction.atomic():
+        previous = (
+            NativeStatsSnapshot.objects
+            .select_for_update()
+            .filter(surface_key=surface_key, is_active=True)
+            .first()
+        )
+
+        new_snapshot = NativeStatsSnapshot.objects.create(
+            surface_key=surface_key,
+            payload=payload,
+            fetched_at=now,
+            is_active=True,
+        )
+
+        if previous:
+            previous.is_active = False
+            previous.save(update_fields=['is_active'])

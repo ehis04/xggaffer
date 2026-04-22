@@ -61,7 +61,7 @@ export const RefereeHome = () => {
             streak={data?.streak}
           />
           <YourCourses courses={data?.courses} />
-          <PerformanceWidget data={data?.performance} />
+          <PerformanceWidget data={data?.performance ?? { overall_score: 0 }} />
           <CourseMap courses={data?.courses} />
         </main>
       </div>

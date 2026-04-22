@@ -7,6 +7,9 @@ from .views import (
     EloHistoryView,
     EloRankingView,
     ModelInfoView,
+    OddsComparisonView,
+    OddsFixtureListView,
+    OddsTeamsView,
     PredictLineupView,
     PredictMatchView,
     PredictAvailabilityView,
@@ -18,6 +21,9 @@ from .views import (
 
 urlpatterns = [
     path('predict/', PredictMatchView.as_view(), name='predict-match'),
+    path('odds/compare/', OddsComparisonView.as_view(), name='odds-comparison'),
+    path('odds/fixtures/', OddsFixtureListView.as_view(), name='odds-fixture-list'),
+    path('odds/teams/', OddsTeamsView.as_view(), name='odds-teams'),
     path('teams/', AvailableTeamsView.as_view(), name='available-teams'),
     path('model-info/', ModelInfoView.as_view(), name='model-info'),
     

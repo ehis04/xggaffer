@@ -1,3 +1,9 @@
+"""
+Database query helpers for the playerdata service layer.
+
+Reads player and club season enrichment data and returns it in a structured API format.
+"""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
@@ -8,97 +14,21 @@ from typing import Any
 from django.db.models import Q, QuerySet
 
 from apps.playerdata.models import ClubSeasonEnrichment, PlayerSeasonEnrichment
-from services.playerdata.helpers import clean_optional_str, resolve_ordering
+from services.playerdata.helpers import (
+    build_metric_payload,
+    build_provider_coverage_payload,
+    clean_optional_str,
+    format_decimal,
+    normalise_order_by,
+    normalise_season_label,
+    resolve_ordering,
+)
 
+# ---------------------------------------------------------------------------
+# Explanation builders
+# ---------------------------------------------------------------------------
 
-def _normalise_season_label(
-    *,
-    season_label: str | None = None,
-    season: str | None = None,
-) -> str | None:
-    return clean_optional_str(season_label) or clean_optional_str(season)
-
-
-def _normalise_order_by(
-    *,
-    order_by: str | None = None,
-    ordering: str | None = None,
-    default: str,
-) -> str:
-    cleaned_order_by = clean_optional_str(order_by)
-    if cleaned_order_by:
-        return cleaned_order_by
-
-    cleaned_ordering = clean_optional_str(ordering)
-    if cleaned_ordering:
-        return cleaned_ordering
-
-    return default
-
-
-def _build_provider_coverage_dict(
-    *,
-    provider: str,
-    last_synced_at: datetime | None,
-    matches_sampled: int | None = None,
-    minutes_sampled: int | None = None,
-) -> dict[str, Any]:
-    coverage_notes: list[str] = []
-
-    if last_synced_at is None:
-        coverage_status = "unknown"
-        freshness_label = "unknown"
-        coverage_notes.append("No last_synced_at timestamp is available.")
-    else:
-        coverage_status = "available"
-        freshness_label = "synced"
-
-    return {
-        "provider": provider,
-        "has_data": True,
-        "coverage_status": coverage_status,
-        "freshness_label": freshness_label,
-        "source_updated_at": None,
-        "last_synced_at": last_synced_at,
-        "matches_sampled": matches_sampled,
-        "minutes_sampled": minutes_sampled,
-        "coverage_notes": coverage_notes,
-    }
-
-
-def _format_decimal(value: Decimal | None, decimal_places: int = 2) -> str | None:
-    if value is None:
-        return None
-    return f"{value:.{decimal_places}f}"
-
-
-def _build_metric(
-    *,
-    key: str,
-    label: str,
-    value: int | float | Decimal | None,
-    unit: str | None = None,
-) -> dict[str, Any]:
-    if isinstance(value, Decimal):
-        formatted_value = _format_decimal(value)
-        serialisable_value: float | int | None = float(value)
-    else:
-        formatted_value = None if value is None else str(value)
-        serialisable_value = value
-
-    return {
-        "key": key,
-        "label": label,
-        "value": serialisable_value,
-        "formatted_value": formatted_value,
-        "unit": unit,
-        "rank": None,
-        "percentile": None,
-        "sample_size": None,
-        "is_available": value is not None,
-    }
-
-
+# Build a simple deterministic summary for one player's season record
 def _build_player_explanation(
     *,
     matches_played: int,
@@ -117,9 +47,10 @@ def _build_player_explanation(
     if assists > 0:
         strengths.append(f"Recorded {assists} assist{'s' if assists != 1 else ''}.")
     if xg is not None:
-        notes.append(f"xG value stored for this season: {_format_decimal(xg)}.")
+        notes.append(f"xG value stored for this season: {format_decimal(xg)}.")
     if xa is not None:
-        notes.append(f"xA value stored for this season: {_format_decimal(xa)}.")
+        notes.append(f"xA value stored for this season: {format_decimal(xa)}.")
+    # 300 minutes is the minimum threshold for a meaningful sample size.
     if minutes_played < 300:
         watchouts.append("Sample size is small based on minutes played.")
 
@@ -139,7 +70,7 @@ def _build_player_explanation(
         "notes": notes,
     }
 
-
+# Build a simple deterministic summary for one club's season record
 def _build_club_explanation(
     *,
     matches_played: int,
@@ -162,9 +93,9 @@ def _build_club_explanation(
     if losses > wins:
         watchouts.append("Losses exceed wins in the stored season summary.")
     if xg is not None:
-        notes.append(f"xG value stored for this season: {_format_decimal(xg)}.")
+        notes.append(f"xG value stored for this season: {format_decimal(xg)}.")
     if xga is not None:
-        notes.append(f"xGA value stored for this season: {_format_decimal(xga)}.")
+        notes.append(f"xGA value stored for this season: {format_decimal(xga)}.")
 
     summary = (
         f"{matches_played} matches, {wins} wins, {draws} draws, "
@@ -179,7 +110,11 @@ def _build_club_explanation(
         "notes": notes,
     }
 
+# ---------------------------------------------------------------------------
+# Record dataclasses
+# ---------------------------------------------------------------------------
 
+# Hold one player season enrichment record in typed service form
 @dataclass(frozen=True)
 class PlayerSeasonEnrichmentRecord:
     enrichment_id: int
@@ -206,9 +141,11 @@ class PlayerSeasonEnrichmentRecord:
     last_synced_at: datetime | None
     updated_at: datetime
 
+    # Return this player enrichment record in dictionary form
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
+    # Return the main player details in expected API structure
     @property
     def player(self) -> dict[str, Any]:
         return {
@@ -222,6 +159,7 @@ class PlayerSeasonEnrichmentRecord:
             "photo_url": None,
         }
 
+    # Return the linked club details for this player, if available
     @property
     def club(self) -> dict[str, Any] | None:
         if self.club_id is None and not self.club_name:
@@ -234,6 +172,7 @@ class PlayerSeasonEnrichmentRecord:
             "crest_url": None,
         }
 
+    # Return the provider, season, and competition context for this record
     @property
     def context(self) -> dict[str, Any]:
         return {
@@ -243,31 +182,34 @@ class PlayerSeasonEnrichmentRecord:
             "competition_name": self.competition_name,
         }
 
+    # Return the full list of metric payloads for this player record
     @property
     def metrics(self) -> list[dict[str, Any]]:
         return [
-            _build_metric(key="matches_played", label="Matches played", value=self.matches_played),
-            _build_metric(key="minutes_played", label="Minutes played", value=self.minutes_played),
-            _build_metric(key="goals", label="Goals", value=self.goals),
-            _build_metric(key="assists", label="Assists", value=self.assists),
-            _build_metric(key="shots", label="Shots", value=self.shots),
-            _build_metric(key="xg", label="xG", value=self.xg),
-            _build_metric(key="xa", label="xA", value=self.xa),
-            _build_metric(key="npg", label="Non-penalty goals", value=self.npg),
-            _build_metric(key="npxg", label="npxG", value=self.npxg),
-            _build_metric(key="key_passes", label="Key passes", value=self.key_passes),
+            build_metric_payload(key="matches_played", label="Matches played", value=self.matches_played),
+            build_metric_payload(key="minutes_played", label="Minutes played", value=self.minutes_played),
+            build_metric_payload(key="goals", label="Goals", value=self.goals),
+            build_metric_payload(key="assists", label="Assists", value=self.assists),
+            build_metric_payload(key="shots", label="Shots", value=self.shots),
+            build_metric_payload(key="xg", label="xG", value=self.xg),
+            build_metric_payload(key="xa", label="xA", value=self.xa),
+            build_metric_payload(key="npg", label="Non-penalty goals", value=self.npg),
+            build_metric_payload(key="npxg", label="npxG", value=self.npxg),
+            build_metric_payload(key="key_passes", label="Key passes", value=self.key_passes),
         ]
 
+    # Return the main headline metrics for this player record
     @property
     def key_metrics(self) -> list[dict[str, Any]]:
         return [
-            _build_metric(key="minutes_played", label="Minutes played", value=self.minutes_played),
-            _build_metric(key="goals", label="Goals", value=self.goals),
-            _build_metric(key="assists", label="Assists", value=self.assists),
-            _build_metric(key="xg", label="xG", value=self.xg),
-            _build_metric(key="xa", label="xA", value=self.xa),
+            build_metric_payload(key="minutes_played", label="Minutes played", value=self.minutes_played),
+            build_metric_payload(key="goals", label="Goals", value=self.goals),
+            build_metric_payload(key="assists", label="Assists", value=self.assists),
+            build_metric_payload(key="xg", label="xG", value=self.xg),
+            build_metric_payload(key="xa", label="xA", value=self.xa),
         ]
 
+    # Return the deterministic explanation block for this player record
     @property
     def explanation(self) -> dict[str, Any]:
         return _build_player_explanation(
@@ -279,6 +221,7 @@ class PlayerSeasonEnrichmentRecord:
             xa=self.xa,
         )
 
+    # Return a short one-line summary of this player record
     @property
     def explanation_snippet(self) -> str:
         return (
@@ -286,28 +229,33 @@ class PlayerSeasonEnrichmentRecord:
             f"{self.goals} goals, {self.assists} assists."
         )
 
+    # Return provider freshness and coverage details for this record
     @property
     def provider_coverage(self) -> dict[str, Any]:
-        return _build_provider_coverage_dict(
+        return build_provider_coverage_payload(
             provider=self.provider,
             last_synced_at=self.last_synced_at,
             matches_sampled=self.matches_played,
             minutes_sampled=self.minutes_played,
         )
 
+    # Show that this record has summary data available
     @property
     def has_summary_data(self) -> bool:
         return True
 
+    # Show that this record has enrichment data available
     @property
     def has_enrichment_data(self) -> bool:
         return True
 
+    # Return any missing-data reasons for this record
     @property
     def missing_reasons(self) -> list[str]:
         return []
 
 
+# Hold one club season enrichment record in typed service form
 @dataclass(frozen=True)
 class ClubSeasonEnrichmentRecord:
     enrichment_id: int
@@ -330,9 +278,11 @@ class ClubSeasonEnrichmentRecord:
     last_synced_at: datetime | None
     updated_at: datetime
 
+    # Return this club enrichment record in dictionary form
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
+    # Return the main club details in the structure expected by the API
     @property
     def club(self) -> dict[str, Any]:
         return {
@@ -342,6 +292,7 @@ class ClubSeasonEnrichmentRecord:
             "crest_url": None,
         }
 
+    # Return the provider, season, and competition context for this record
     @property
     def context(self) -> dict[str, Any]:
         return {
@@ -351,21 +302,23 @@ class ClubSeasonEnrichmentRecord:
             "competition_name": self.competition_name,
         }
 
+    # Return the full list of metric payloads for this club record
     @property
     def metrics(self) -> list[dict[str, Any]]:
         return [
-            _build_metric(key="matches_played", label="Matches played", value=self.matches_played),
-            _build_metric(key="wins", label="Wins", value=self.wins),
-            _build_metric(key="draws", label="Draws", value=self.draws),
-            _build_metric(key="losses", label="Losses", value=self.losses),
-            _build_metric(key="goals_for", label="Goals for", value=self.goals_for),
-            _build_metric(key="goals_against", label="Goals against", value=self.goals_against),
-            _build_metric(key="xg", label="xG", value=self.xg),
-            _build_metric(key="xga", label="xGA", value=self.xga),
-            _build_metric(key="npxg", label="npxG", value=self.npxg),
-            _build_metric(key="ppda", label="PPDA", value=self.ppda),
+            build_metric_payload(key="matches_played", label="Matches played", value=self.matches_played),
+            build_metric_payload(key="wins", label="Wins", value=self.wins),
+            build_metric_payload(key="draws", label="Draws", value=self.draws),
+            build_metric_payload(key="losses", label="Losses", value=self.losses),
+            build_metric_payload(key="goals_for", label="Goals for", value=self.goals_for),
+            build_metric_payload(key="goals_against", label="Goals against", value=self.goals_against),
+            build_metric_payload(key="xg", label="xG", value=self.xg),
+            build_metric_payload(key="xga", label="xGA", value=self.xga),
+            build_metric_payload(key="npxg", label="npxG", value=self.npxg),
+            build_metric_payload(key="ppda", label="PPDA", value=self.ppda),
         ]
 
+    # Return the deterministic explanation block for this club record
     @property
     def explanation(self) -> dict[str, Any]:
         return _build_club_explanation(
@@ -379,23 +332,30 @@ class ClubSeasonEnrichmentRecord:
             xga=self.xga,
         )
 
+    # Return provider freshness and coverage details for this record
     @property
     def provider_coverage(self) -> dict[str, Any]:
-        return _build_provider_coverage_dict(
+        return build_provider_coverage_payload(
             provider=self.provider,
             last_synced_at=self.last_synced_at,
             matches_sampled=self.matches_played,
             minutes_sampled=None,
         )
 
+    # Show that this record has summary data available
     @property
     def has_summary_data(self) -> bool:
         return True
 
+    # Return any missing-data reasons for this record
     @property
     def missing_reasons(self) -> list[str]:
         return []
 
+
+# ---------------------------------------------------------------------------
+# Ordering field maps
+# ---------------------------------------------------------------------------
 
 PLAYER_ORDERING_FIELDS: dict[str, tuple[str, ...]] = {
     "last_synced_at": ("last_synced_at", "updated_at", "id"),
@@ -432,7 +392,11 @@ CLUB_ORDERING_FIELDS: dict[str, tuple[str, ...]] = {
     "club_name": ("club__name", "id"),
 }
 
+# ---------------------------------------------------------------------------
+# Internal ORM query helpers
+# ---------------------------------------------------------------------------
 
+# Pick the best available display name for the linked player
 def _player_display_name(enrichment: PlayerSeasonEnrichment) -> str:
     player = enrichment.player
 
@@ -449,6 +413,7 @@ def _player_display_name(enrichment: PlayerSeasonEnrichment) -> str:
     return f"{first_name} {last_name}".strip()
 
 
+# Return the player's secondary positions as a list
 def _player_secondary_positions(enrichment: PlayerSeasonEnrichment) -> list[str]:
     player = enrichment.player
     secondary_positions = getattr(player, "secondary_positions", None)
@@ -459,14 +424,16 @@ def _player_secondary_positions(enrichment: PlayerSeasonEnrichment) -> list[str]
     return list(secondary_positions or [])
 
 
+# Build the base queryset for player enrichment records with related objects loaded
 def _player_queryset() -> QuerySet[PlayerSeasonEnrichment]:
     return PlayerSeasonEnrichment.objects.select_related("player", "club")
 
 
+# Build the base queryset for club enrichment records with related objects loaded
 def _club_queryset() -> QuerySet[ClubSeasonEnrichment]:
     return ClubSeasonEnrichment.objects.select_related("club")
 
-
+# Apply all supported filters to a player enrichment queryset
 def _apply_player_filters(
     queryset: QuerySet[PlayerSeasonEnrichment],
     *,
@@ -495,7 +462,7 @@ def _apply_player_filters(
     if provider:
         queryset = queryset.filter(provider=provider)
 
-    resolved_season_label = _normalise_season_label(
+    resolved_season_label = normalise_season_label(
         season_label=season_label,
         season=season,
     )
@@ -544,7 +511,7 @@ def _apply_player_filters(
 
     return queryset
 
-
+# Apply all supported filters to a club enrichment queryset
 def _apply_club_filters(
     queryset: QuerySet[ClubSeasonEnrichment],
     *,
@@ -562,7 +529,7 @@ def _apply_club_filters(
     if provider:
         queryset = queryset.filter(provider=provider)
 
-    resolved_season_label = _normalise_season_label(
+    resolved_season_label = normalise_season_label(
         season_label=season_label,
         season=season,
     )
@@ -579,7 +546,7 @@ def _apply_club_filters(
 
     return queryset
 
-
+# Convert a PlayerSeasonEnrichment model instance into a typed record object
 def _to_player_record(enrichment: PlayerSeasonEnrichment) -> PlayerSeasonEnrichmentRecord:
     club = enrichment.club
 
@@ -609,7 +576,7 @@ def _to_player_record(enrichment: PlayerSeasonEnrichment) -> PlayerSeasonEnrichm
         updated_at=enrichment.updated_at,
     )
 
-
+# Convert a ClubSeasonEnrichment model instance into a typed record object
 def _to_club_record(enrichment: ClubSeasonEnrichment) -> ClubSeasonEnrichmentRecord:
     return ClubSeasonEnrichmentRecord(
         enrichment_id=enrichment.id,
@@ -633,7 +600,11 @@ def _to_club_record(enrichment: ClubSeasonEnrichment) -> ClubSeasonEnrichmentRec
         updated_at=enrichment.updated_at,
     )
 
+# ---------------------------------------------------------------------------
+# Public player queries
+# ---------------------------------------------------------------------------
 
+# Return the most recent matching player enrichment record
 def get_player_season_enrichment(
     player_id: int,
     *,
@@ -658,24 +629,12 @@ def get_player_season_enrichment(
     enrichment = queryset.first()
     return _to_player_record(enrichment) if enrichment else None
 
+# Aliases kept for backward compatibility with existing callers and tests
+get_latest_player_enrichment = get_player_season_enrichment
+get_player_summary_context = get_player_season_enrichment
+get_player_season_data = get_player_season_enrichment
 
-def get_latest_player_enrichment(
-    player_id: int,
-    *,
-    provider: str | None = None,
-    competition_code: str | None = None,
-    competition_name: str | None = None,
-    club_id: int | None = None,
-) -> PlayerSeasonEnrichmentRecord | None:
-    return get_player_season_enrichment(
-        player_id,
-        provider=provider,
-        competition_code=competition_code,
-        competition_name=competition_name,
-        club_id=club_id,
-    )
-
-
+# Return the most recent matching club enrichment record
 def get_club_season_enrichment(
     club_id: int,
     *,
@@ -698,102 +657,16 @@ def get_club_season_enrichment(
     enrichment = queryset.first()
     return _to_club_record(enrichment) if enrichment else None
 
+# Aliases kept for backward compatibility with existing callers and tests
+get_latest_club_enrichment = get_club_season_enrichment
+get_club_summary_context = get_club_season_enrichment
+get_club_season_data = get_club_season_enrichment
 
-def get_latest_club_enrichment(
-    club_id: int,
-    *,
-    provider: str | None = None,
-    competition_code: str | None = None,
-    competition_name: str | None = None,
-) -> ClubSeasonEnrichmentRecord | None:
-    return get_club_season_enrichment(
-        club_id,
-        provider=provider,
-        competition_code=competition_code,
-        competition_name=competition_name,
-    )
+# ---------------------------------------------------------------------------
+# Public list queries
+# ---------------------------------------------------------------------------
 
-
-def get_player_summary_context(
-    player_id: int,
-    *,
-    season_label: str | None = None,
-    season: str | None = None,
-    provider: str | None = None,
-    competition_code: str | None = None,
-    competition_name: str | None = None,
-    club_id: int | None = None,
-) -> PlayerSeasonEnrichmentRecord | None:
-    return get_player_season_enrichment(
-        player_id=player_id,
-        season_label=season_label,
-        season=season,
-        provider=provider,
-        competition_code=competition_code,
-        competition_name=competition_name,
-        club_id=club_id,
-    )
-
-
-def get_player_season_data(
-    player_id: int,
-    *,
-    season_label: str | None = None,
-    season: str | None = None,
-    provider: str | None = None,
-    competition_code: str | None = None,
-    competition_name: str | None = None,
-    club_id: int | None = None,
-) -> PlayerSeasonEnrichmentRecord | None:
-    return get_player_summary_context(
-        player_id=player_id,
-        season_label=season_label,
-        season=season,
-        provider=provider,
-        competition_code=competition_code,
-        competition_name=competition_name,
-        club_id=club_id,
-    )
-
-
-def get_club_summary_context(
-    club_id: int,
-    *,
-    season_label: str | None = None,
-    season: str | None = None,
-    provider: str | None = None,
-    competition_code: str | None = None,
-    competition_name: str | None = None,
-) -> ClubSeasonEnrichmentRecord | None:
-    return get_club_season_enrichment(
-        club_id=club_id,
-        season_label=season_label,
-        season=season,
-        provider=provider,
-        competition_code=competition_code,
-        competition_name=competition_name,
-    )
-
-
-def get_club_season_data(
-    club_id: int,
-    *,
-    season_label: str | None = None,
-    season: str | None = None,
-    provider: str | None = None,
-    competition_code: str | None = None,
-    competition_name: str | None = None,
-) -> ClubSeasonEnrichmentRecord | None:
-    return get_club_summary_context(
-        club_id=club_id,
-        season_label=season_label,
-        season=season,
-        provider=provider,
-        competition_code=competition_code,
-        competition_name=competition_name,
-    )
-
-
+# Return a filtered and ordered list of player enrichment records
 def list_enriched_players(
     *,
     player_id: int | None = None,
@@ -818,7 +691,7 @@ def list_enriched_players(
 ) -> list[PlayerSeasonEnrichmentRecord]:
     del include_unavailable
 
-    resolved_order_by = _normalise_order_by(
+    resolved_order_by = normalise_order_by(
         order_by=order_by,
         ordering=ordering,
         default="last_synced_at",
@@ -855,7 +728,7 @@ def list_enriched_players(
 
     return [_to_player_record(enrichment) for enrichment in queryset]
 
-
+# Return player enrichment results wrapped in a count-and-results response
 def get_enriched_players(
     *,
     player_id: int | None = None,
@@ -904,7 +777,7 @@ def get_enriched_players(
         "results": results,
     }
 
-
+# Return enriched players for one club using the shared player list query
 def list_enriched_club_players(
     club_id: int,
     *,
@@ -947,7 +820,7 @@ def list_enriched_club_players(
         limit=limit,
     )
 
-
+# Return a filtered and ordered list of club enrichment records
 def list_enriched_clubs(
     *,
     club_id: int | None = None,
@@ -961,7 +834,7 @@ def list_enriched_clubs(
     descending: bool = True,
     limit: int | None = None,
 ) -> list[ClubSeasonEnrichmentRecord]:
-    resolved_order_by = _normalise_order_by(
+    resolved_order_by = normalise_order_by(
         order_by=order_by,
         ordering=ordering,
         default="last_synced_at",

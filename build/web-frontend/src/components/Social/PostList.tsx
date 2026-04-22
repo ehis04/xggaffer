@@ -6,29 +6,16 @@ import { useState, useEffect } from "react";
 import { COMMUNITY } from "../../services/api/endpoints";
 import type { PaginatedResponse } from "../../services/api/communityApi";
 
+type PostListType = "EXPLORE_POSTS" | "FOLLOWING_POSTS";
+
 interface PostListProps {
   postList?: PostData[];
   refreshTrigger?: number;
+  postListType?: PostListType;
   onLike?: (postId: number) => void;
   onComment?: (postId: number) => void;
   onProfileClick?: (username: string) => void;
   onPostClick?: (postId: number) => void;
-}
-
-export interface Post {
-  id: number;
-  author: number;
-  text_body: string;
-  created_at: string;
-  no_of_likes: number;
-  no_of_comments: number;
-  visibility: string;
-  post_tags: Array<{
-    hashtag: { id: number; body: string; usage_count: number };
-  }>;
-  is_liked: boolean;
-  hashtags: string[];
-  time_since_posted: string;
 }
 
 export const PostList: React.FC<PostListProps> = ({
@@ -38,28 +25,16 @@ export const PostList: React.FC<PostListProps> = ({
   onPostClick,
   postListType = "EXPLORE_POSTS",
 }) => {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [nextPage, setNextPage] = useState<string | null>(null);
-  const [previousPage, setPreviousPage] = useState<string | null>(null);
+  const [posts, setPosts] = useState<PostData[]>([]);
 
   const getPosts = async () => {
-    setLoading(true);
-    setError(null);
-
     try {
-      const data = await apiClient.get<PaginatedResponse<Post>>(COMMUNITY[postListType]);
+      const data = await apiClient.get<PaginatedResponse<PostData>>(COMMUNITY[postListType]);
       setPosts(data.results);
-      setNextPage(data.next);
-      setPreviousPage(data.previous);
-      console.log(data);
       return data;
     } catch (error) {
       console.error("Couldn't get posts: ", error);
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -67,13 +42,7 @@ export const PostList: React.FC<PostListProps> = ({
     getPosts();
   }, [postListType, refreshTrigger]);
 
-  const postsPB = posts.filter((item: any) => {
-    if ("type" in item) {
-      return item.type === "post";
-    }
-
-    return true;
-  });
+  const postsPB = posts.filter((item) => item.type === "post");
 
   if (!posts || posts.length === 0) {
     return (

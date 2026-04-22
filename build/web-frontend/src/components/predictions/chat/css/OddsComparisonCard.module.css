@@ -1,0 +1,496 @@
+.card {
+  margin-top: 0.5rem;
+  padding: 0.9rem;
+  border-radius: 0.75rem;
+  background: var(--color-surface-raised, #f1f5f9);
+  border: 1px solid var(--color-border, #e2e8f0);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.partialNote {
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.5rem;
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--color-muted, #64748b);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.errorNote {
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.5rem;
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--color-error, #dc2626);
+  font-size: 0.82rem;
+  border: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.fixtureTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text, #1e293b);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+}
+
+.metaItem {
+  font-size: 0.78rem;
+  color: var(--color-muted, #64748b);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding-top: 0.1rem;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-muted, #64748b);
+}
+
+.probabilityGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.probabilityRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.7rem;
+  border-radius: 0.6rem;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+}
+
+.outcomeLabel {
+  font-size: 0.75rem;
+  color: var(--color-muted, #64748b);
+}
+
+.outcomeValue {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text, #1e293b);
+}
+
+.sectionMeta {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text, #334155);
+  line-height: 1.5;
+}
+
+.summaryBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.8rem;
+  border-radius: 0.65rem;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+}
+
+.statusBadge {
+  align-self: flex-start;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.statusAgree {
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803d;
+}
+
+.statusDisagree {
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
+}
+
+.summaryText {
+  margin: 0;
+  color: var(--color-text, #1e293b);
+  line-height: 1.5;
+  font-size: 0.86rem;
+}
+
+.comparisonGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.comparisonItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.comparisonLabel {
+  font-size: 0.74rem;
+  color: var(--color-muted, #64748b);
+}
+
+.comparisonValue {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text, #1e293b);
+}
+
+.bookmakerTable {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.bookmakerCard {
+  padding: 0.7rem;
+  border-radius: 0.65rem;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+}
+
+.bookmakerRow {
+  display: grid;
+  grid-template-columns: minmax(120px, 1.6fr) repeat(3, minmax(48px, 0.7fr));
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.bookmakerHeader {
+  padding: 0 0.1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-muted, #64748b);
+}
+
+.bookmakerName {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--color-text, #1e293b);
+  word-break: break-word;
+}
+
+.bookmakerOdds {
+  font-size: 0.84rem;
+  color: var(--color-text, #1e293b);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.bookmakerMeta {
+  margin: 0.45rem 0 0;
+  font-size: 0.74rem;
+  color: var(--color-muted, #64748b);
+}
+
+.benchmarkStrip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.benchmarkItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.75rem;
+  border-radius: 0.6rem;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+}
+
+.benchmarkLabel {
+  font-size: 0.74rem;
+  color: var(--color-muted, #64748b);
+}
+
+.benchmarkValue {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--color-text, #1e293b);
+}
+
+.fallbackText {
+  margin: 0;
+  color: var(--color-muted, #64748b);
+  font-size: 0.82rem;
+  font-style: italic;
+}
+
+.wellbeingBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  border-radius: 0.7rem;
+  background: rgba(13, 148, 136, 0.06);
+  border: 1px solid rgba(13, 148, 136, 0.12);
+}
+
+.wellbeingWarning {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--color-text, #1e293b);
+}
+
+.wellbeingList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.wellbeingResource {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.resourceLabel {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--color-text, #1e293b);
+}
+
+.resourceMeta {
+  font-size: 0.76rem;
+  color: var(--color-muted, #64748b);
+}
+
+@media (max-width: 720px) {
+  .probabilityGrid,
+  .comparisonGrid,
+  .benchmarkStrip {
+    grid-template-columns: 1fr;
+  }
+
+  .bookmakerRow {
+    grid-template-columns: minmax(100px, 1.4fr) repeat(3, minmax(44px, 0.75fr));
+    gap: 0.45rem;
+  }
+}
+
+.benchmarkSection {
+  gap: 0.65rem;
+}
+
+.benchmarkHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.benchmarkCaption {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--color-muted, #64748b);
+}
+
+.benchmarkSurface {
+  padding: 0.8rem;
+  border-radius: 0.7rem;
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.benchmarkFallback {
+  padding: 0.8rem;
+  border-radius: 0.7rem;
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.benchmarkStrip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.benchmarkItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border-radius: 0.6rem;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+}
+
+.benchmarkLabel {
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: var(--color-muted, #64748b);
+}
+
+.benchmarkValue {
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--color-text, #1e293b);
+  word-break: break-word;
+}
+
+.benchmarkPending {
+  color: var(--color-muted, #64748b);
+  font-weight: 500;
+}
+
+.benchmarkMeta {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: var(--color-muted, #64748b);
+}
+
+.benchmarkSection {
+  gap: 0.65rem;
+}
+
+.benchmarkHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.benchmarkCaption {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--color-muted, #64748b);
+}
+
+.benchmarkMeta {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: var(--color-muted, #64748b);
+}
+
+.benchmarkSurface {
+  padding: 0.8rem;
+  border-radius: 0.7rem;
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.benchmarkFallback {
+  padding: 0.8rem;
+  border-radius: 0.7rem;
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.benchmarkPending {
+  color: var(--color-muted, #64748b);
+  font-weight: 500;
+}
+
+.wellbeingBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.95rem;
+  border-radius: 0.75rem;
+  background: rgba(13, 148, 136, 0.06);
+  border: 1px solid rgba(13, 148, 136, 0.14);
+}
+
+.wellbeingHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.wellbeingTitle {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text, #1e293b);
+}
+
+.wellbeingWarning {
+  margin: 0;
+  padding: 0.75rem 0.8rem;
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(13, 148, 136, 0.12);
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--color-text, #1e293b);
+}
+
+.wellbeingResources {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.wellbeingResourcesLabel {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-muted, #64748b);
+}
+
+.wellbeingList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.wellbeingResource {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  padding: 0.7rem 0.75rem;
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(13, 148, 136, 0.1);
+}
+
+.resourceLabel {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--color-text, #1e293b);
+}
+
+.resourceMeta {
+  font-size: 0.76rem;
+  color: var(--color-muted, #64748b);
+}
+
+.resultSection {
+  display: flex;
+  flex-direction: column;
+}

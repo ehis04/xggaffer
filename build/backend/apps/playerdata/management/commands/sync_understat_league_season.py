@@ -5,7 +5,7 @@ from services.providers.understat.sync import sync_understat_league_season
 
 
 class Command(BaseCommand):
-    help = "Sync Understat season-level club enrichment across a whole league/competition where deterministic mapping is possible."
+    help = 'Manual backfill and admin repair tool. Automated scheduling is handled by sync_pipeline.'
 
     def add_arguments(self, parser):
         parser.add_argument(

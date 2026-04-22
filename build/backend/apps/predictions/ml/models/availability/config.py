@@ -41,7 +41,7 @@ MIN_FUZZY_MATCH_SCORE = 85
 MIN_TEAM_FUZZY_MATCH_SCORE = 70
 
 LEAGUES = ["EPL", "La_Liga", "Bundesliga", "Serie_A", "Ligue_1"]
-DEFAULT_SEASONS = list(range(2014, 2025))
+DEFAULT_SEASONS = list(range(2014, 2026))
 
 UNDERSTAT_SOURCE_FILTER = "understat"
 

@@ -1,4 +1,5 @@
 import apiClient from './client';
+import type { ApiEnvelope } from '../../common/types/response';
 import type {
   ClubSeasonSummary,
   EnrichedPlayerListFilters,
@@ -10,6 +11,7 @@ import type {
   PlayerOverviewComparison,
   PlayerSeasonSummary,
 } from '../../types/playerdata';
+
 
 type ApiParamValue = string | number | boolean | undefined | null;
 type ApiParamRecord = Record<string, ApiParamValue>;
@@ -97,7 +99,7 @@ export const playerdataApi = {
     ),
 
   getPlayerOverview: (playerId: number, filters?: PlayerDataFilters) =>
-    apiClient.get<PlayerOverview>(
+    apiClient.get<ApiEnvelope<PlayerOverview>>(
       `${PLAYER_SUMMARY_BASE}/${playerId}/overview/`,
       buildPlayerDataFilterParams(filters)
     ),
@@ -115,13 +117,13 @@ export const playerdataApi = {
     ),
 
   getPlayerOverviewComparison: (params: PlayerComparisonParams) =>
-    apiClient.get<PlayerOverviewComparison>(
+    apiClient.get<ApiEnvelope<PlayerOverviewComparison>>(
       `${PLAYER_SUMMARY_BASE}/overview-compare/`,
       buildPlayerComparisonParams(params)
     ),
 
   listEnrichedPlayers: (params?: EnrichedPlayerListFilters) =>
-    apiClient.get<EnrichedPlayerListResponse>(
+    apiClient.get<ApiEnvelope<EnrichedPlayerListResponse>>(
       `${PLAYER_SUMMARY_BASE}/enriched/`,
       buildEnrichedPlayerListParams(params)
     ),

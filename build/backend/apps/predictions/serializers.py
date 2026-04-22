@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from rest_framework import serializers
 
-from apps.predictions.ml.models.match_outcome.config import DEFAULT_TOP_FACTORS, DEMO_LEAGUE, DEMO_SEASON
+from apps.predictions.ml.models.match_outcome.config import (
+    DEFAULT_TOP_FACTORS,
+    DEMO_LEAGUE,
+    DEMO_SEASON,
+)
 
 
 class PredictionRequestSerializer(serializers.Serializer):
@@ -244,3 +248,108 @@ class TacticalResponseSerializer(serializers.Serializer):
 
 class ChatRequestSerializer(serializers.Serializer):
     query = serializers.CharField(max_length=500, min_length=1)
+
+class OddsComparisonRequestSerializer(serializers.Serializer):
+    home_team = serializers.CharField(max_length=100)
+    away_team = serializers.CharField(max_length=100)
+    league = serializers.CharField(max_length=50, default=DEMO_LEAGUE)
+    season = serializers.CharField(max_length=10, default=DEMO_SEASON)
+    bookmakers = serializers.ListField(
+        child=serializers.CharField(max_length=100),
+        required=False,
+        allow_empty=True,
+    )
+    use_cached = serializers.BooleanField(required=False, default=False)
+
+    def validate(self, attrs):
+        home_team = attrs["home_team"].strip()
+        away_team = attrs["away_team"].strip()
+
+        if home_team.casefold() == away_team.casefold():
+            raise serializers.ValidationError("Home and away teams must be different.")
+
+        attrs["home_team"] = home_team
+        attrs["away_team"] = away_team
+        return attrs
+
+
+class BookmakerQuoteSerializer(serializers.Serializer):
+    bookmaker = serializers.CharField()
+    home_odds = serializers.FloatField()
+    draw_odds = serializers.FloatField()
+    away_odds = serializers.FloatField()
+    devig_home = serializers.FloatField()
+    devig_draw = serializers.FloatField()
+    devig_away = serializers.FloatField()
+    last_seen_at = serializers.DateTimeField(allow_null=True)
+
+
+class MarketProbabilitiesSerializer(serializers.Serializer):
+    implied_home = serializers.FloatField()
+    implied_draw = serializers.FloatField()
+    implied_away = serializers.FloatField()
+    devig_home = serializers.FloatField()
+    devig_draw = serializers.FloatField()
+    devig_away = serializers.FloatField()
+    consensus_method = serializers.CharField()
+    favourite = serializers.ChoiceField(choices=["home", "draw", "away"])
+    overround = serializers.FloatField()
+    source_label = serializers.CharField()
+
+
+class OddsComparisonModelProbabilitiesSerializer(serializers.Serializer):
+    home = serializers.FloatField()
+    draw = serializers.FloatField()
+    away = serializers.FloatField()
+
+
+class OddsComparisonModelBlockSerializer(serializers.Serializer):
+    probabilities = OddsComparisonModelProbabilitiesSerializer()
+    prediction = serializers.ChoiceField(choices=["Home", "Draw", "Away"])
+    version = serializers.CharField()
+    model_type = serializers.CharField()
+
+
+class BenchmarkSummarySerializer(serializers.Serializer):
+    sample_size = serializers.IntegerField()
+    model_accuracy = serializers.FloatField()
+    market_favourite_accuracy = serializers.FloatField(allow_null=True)
+    model_brier_score = serializers.FloatField(allow_null=True)
+    market_brier_score = serializers.FloatField(allow_null=True)
+    evaluation_scope = serializers.CharField()
+    source_label = serializers.CharField()
+
+
+class SupportResourceSerializer(serializers.Serializer):
+    label = serializers.CharField()
+    region = serializers.CharField()
+    support_type = serializers.CharField()
+
+
+class SupportBlockSerializer(serializers.Serializer):
+    warning = serializers.CharField()
+    resources = SupportResourceSerializer(many=True)
+
+
+class OddsComparisonComparisonSerializer(serializers.Serializer):
+    model_favourite = serializers.ChoiceField(choices=["home", "draw", "away"])
+    market_favourite = serializers.ChoiceField(choices=["home", "draw", "away"])
+    biggest_edge_side = serializers.ChoiceField(choices=["home", "draw", "away"])
+    biggest_edge_points = serializers.FloatField()
+    agreement = serializers.BooleanField()
+    summary = serializers.CharField()
+
+
+class OddsComparisonResponseSerializer(serializers.Serializer):
+    home_team = serializers.CharField()
+    away_team = serializers.CharField()
+    league = serializers.CharField()
+    season = serializers.CharField()
+    kickoff = serializers.DateTimeField()
+    source = serializers.CharField()
+    model = OddsComparisonModelBlockSerializer()
+    market = MarketProbabilitiesSerializer()
+    bookmakers = BookmakerQuoteSerializer(many=True)
+    comparison = OddsComparisonComparisonSerializer()
+    benchmark = BenchmarkSummarySerializer(allow_null=True, required=False)
+    support = SupportBlockSerializer()

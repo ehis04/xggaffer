@@ -103,7 +103,7 @@ const TeamsheetDetailPage: React.FC = () => {
       starters.map((player) =>
         chatQuery(`injury risk ${player.display_name}`)
           .then((response) => {
-            const players = response.structured_data?.engine_data?.players;
+            const players = response.data?.structured_data?.engine_data?.players;
             if (Array.isArray(players) && players.length > 0) {
               return players[0] as PlayerAvailability;
             }
@@ -121,7 +121,7 @@ const TeamsheetDetailPage: React.FC = () => {
   }, [teamsheet]);
 
   const handleBack = () => {
-    navigate(`/clubs/${clubId}/teamsheets${isTrashView ? '?view=trash' : ''}`);
+    navigate(`/clubs/${clubId}/?tab=schedule${isTrashView ? '&view=trash' : ''}`);
   };
 
   const handlePlayerClick = (player: TeamsheetPlayer) => {
@@ -192,7 +192,7 @@ const TeamsheetDetailPage: React.FC = () => {
       setActionLoading(true);
       setError(null);
       await teamsheetApi.trash(numericClubId, numericTeamsheetId);
-      navigate(`/clubs/${numericClubId}/teamsheets?view=trash`);
+      navigate(`/clubs/${numericClubId}/?tab=schedule&view=trash`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to move teamsheet to trash');
     } finally {
@@ -227,7 +227,7 @@ const TeamsheetDetailPage: React.FC = () => {
       setActionLoading(true);
       setError(null);
       await teamsheetApi.permanentDelete(numericClubId, numericTeamsheetId);
-      navigate(`/clubs/${numericClubId}/teamsheets?view=trash`);
+      navigate(`/clubs/${numericClubId}/?tab=schedule&view=trash`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to permanently delete teamsheet');
     } finally {

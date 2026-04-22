@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .envelope import build_playerdata_envelope
 from services.playerdata import comparisons, queries, summaries
 from services.playeroverview import queries as overview_queries
 
@@ -335,7 +336,7 @@ class PlayerSeasonSummaryView(BasePlayerDataAPIView):
         filters = _get_common_filters(request)
         payload = self.get_player_summary_payload(player_id=player_id, filters=filters)
         serializer = PlayerSeasonEnrichmentSummarySerializer(payload)
-        return Response(serializer.data)
+        return Response(build_playerdata_envelope(serializer.data))
 
 
 class ClubSeasonSummaryView(BasePlayerDataAPIView):
@@ -343,7 +344,7 @@ class ClubSeasonSummaryView(BasePlayerDataAPIView):
         filters = _get_common_filters(request)
         payload = self.get_club_summary_payload(club_id=club_id, filters=filters)
         serializer = ClubSeasonEnrichmentSummarySerializer(payload)
-        return Response(serializer.data)
+        return Response(build_playerdata_envelope(serializer.data))
 
 
 class PlayerComparisonView(BasePlayerDataAPIView):
@@ -367,7 +368,7 @@ class PlayerComparisonView(BasePlayerDataAPIView):
             filters=filters,
         )
         serializer = PlayerComparisonSerializer(payload)
-        return Response(serializer.data)
+        return Response(build_playerdata_envelope(serializer.data))
 
 
 class EnrichedPlayerListView(BasePlayerDataAPIView):
@@ -384,10 +385,10 @@ class EnrichedPlayerListView(BasePlayerDataAPIView):
 
         serializer = EnrichedPlayerListItemSerializer(raw_results, many=True)
         return Response(
-            {
+            build_playerdata_envelope({
                 "count": count,
                 "results": serializer.data,
-            }
+            })
         )
 
 
@@ -400,7 +401,7 @@ class PlayerOverviewView(BasePlayerDataAPIView):
         }
         payload = self.get_player_overview_payload(player_id=player_id, filters=filters)
         serializer = PlayerOverviewSerializer(payload)
-        return Response(serializer.data)
+        return Response(build_playerdata_envelope(serializer.data))
 
 
 class PlayerOverviewComparisonView(BasePlayerDataAPIView):
@@ -430,4 +431,4 @@ class PlayerOverviewComparisonView(BasePlayerDataAPIView):
             filters=filters,
         )
         serializer = PlayerOverviewComparisonSerializer(payload)
-        return Response(serializer.data)
+        return Response(build_playerdata_envelope(serializer.data))

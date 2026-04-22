@@ -23,6 +23,7 @@ from apps.predictions.services.player_handler import PlayerHandler
 from apps.predictions.services.rankings_handler import RankingsHandler
 from apps.predictions.services.rest_handler import RestHandler
 from apps.predictions.services.unknown_handler import UnknownHandler
+from apps.predictions.services.odds_handler import OddsHandler
 
 _logger = logging.getLogger(__name__)
 
@@ -42,6 +43,7 @@ HANDLER_MAP: dict[IntentClass, type[EngineHandler]] = {
     IntentClass.TEAM_RANKINGS:      RankingsHandler,
     IntentClass.REST_DAYS:          RestHandler,
     IntentClass.GLOSSARY:           GlossaryHandler,
+    IntentClass.ODDS_COMPARISON:  OddsHandler,
     IntentClass.UNKNOWN:            UnknownHandler,
 }
 

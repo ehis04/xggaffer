@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from django.conf import settings
 from django.utils import timezone
 
 from apps.livefootball.models import CompetitionTopScorer, PlayerDirectoryEntry
@@ -85,21 +86,41 @@ TOP_PERFORMING_TEAMS_LIMIT = 10
 NATIVE_STATS_HAT_TRICKS_LIMIT = 8
 NATIVE_STATS_LULL_LIMIT = 8
 
+def _get_native_stats_from_snapshot(key: str, fallback):
+    from apps.livefootball.models import NativeStatsSnapshot
+    snapshot = NativeStatsSnapshot.objects.filter(
+        surface_key=NativeStatsSnapshot.SURFACE_HOMEPAGE,
+        is_active=True,
+    ).first()
+    if snapshot:
+        return snapshot.payload.get(key, fallback)
+    return fallback
+
 def get_livefootball_homepage_payload() -> dict[str, Any]:
+    use_snapshot = getattr(settings, 'USE_PUBLISHED_LIVEFOOTBALL_SNAPSHOT', False)
+
+    if use_snapshot:
+        latest_hat_tricks_data = _get_native_stats_from_snapshot('latest_hat_tricks', {'items': [], 'updated_at': None})
+        strikers_with_a_lull_data = _get_native_stats_from_snapshot('strikers_with_a_lull', {'items': [], 'updated_at': None})
+        all_time_streaks_data = _get_native_stats_from_snapshot('all_time_streaks', {'all_time': [], 'current': [], 'updated_at': None, 'cta': {}})
+    else:
+        latest_hat_tricks_data = get_homepage_latest_hat_tricks()
+        strikers_with_a_lull_data = get_homepage_strikers_with_a_lull()
+        all_time_streaks_data = get_homepage_all_time_streaks()
+
     return {
         "generated_at": timezone.now().isoformat(),
         "league_order": [item["key"] for item in HOMEPAGE_LEAGUE_ORDER],
         "league_snapshot": get_homepage_league_previews(),
         "top_performing_teams": get_homepage_top_performing_teams(),
         "top_performing_scorers": get_homepage_top_performing_scorers(),
-        "latest_hat_tricks": get_homepage_latest_hat_tricks(),
-        "strikers_with_a_lull": get_homepage_strikers_with_a_lull(),
+        "latest_hat_tricks": latest_hat_tricks_data,
+        "strikers_with_a_lull": strikers_with_a_lull_data,
         "recent_matches_by_league": get_homepage_recent_matches_by_league(),
         "upcoming_matches_by_league": get_homepage_upcoming_matches_by_league(),
         "first_vs_last_by_league": get_homepage_first_vs_last_by_league(),
-        "all_time_streaks": get_homepage_all_time_streaks(),
+        "all_time_streaks": all_time_streaks_data,
     }
-
 
 def get_homepage_league_previews() -> list[dict[str, Any]]:
     cards: list[dict[str, Any]] = []

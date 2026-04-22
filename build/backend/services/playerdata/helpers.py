@@ -1,26 +1,39 @@
+"""
+Helper functions for the playerdata service layer.
+
+Handles cleaning values, formatting numbers and dates, building standard API payloads, and supporting player and club comparisons.
+"""
+
 from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
+from common.utils import latest_datetime, serialise_numeric  # noqa: F401 – re-exported for callers
 
+
+# ---------------------------------------------------------------------------
+# String utilities
+# ---------------------------------------------------------------------------
+
+# Trim a string and return None if it is empty
 def clean_optional_str(value: str | None) -> str | None:
     if value is None:
         return None
-
     cleaned = str(value).strip()
     return cleaned or None
 
-
+# Pick the season label from either season_label or season
 def normalise_season_label(
     *,
     season_label: str | None = None,
     season: str | None = None,
 ) -> str | None:
+
     return clean_optional_str(season_label) or clean_optional_str(season)
 
-
+# Pick the ordering field from order_by, ordering, or the default value
 def normalise_order_by(
     *,
     order_by: str | None = None,
@@ -37,7 +50,7 @@ def normalise_order_by(
 
     return default
 
-
+#  Return the best display label for a competition using its name(preferable) or code
 def competition_label(
     competition_name: str | None,
     competition_code: str | None,
@@ -49,10 +62,15 @@ def competition_label(
     return "this competition"
 
 
+# ---------------------------------------------------------------------------
+# Numeric formatting
+# ---------------------------------------------------------------------------
+
+# Format an integer with commas, or return '0' when the value is missing
 def format_int(value: int | None) -> str:
     return f"{value:,}" if value is not None else "0"
 
-
+# Format a number for display, with support for decimals, integers, and missing values
 def format_number(
     value: Decimal | int | float | None,
     *,
@@ -70,7 +88,7 @@ def format_number(
 
     return f"{value:,}"
 
-
+# Format a decimal number to a fixed number of places
 def format_decimal(
     value: Decimal | float | None,
     *,
@@ -80,18 +98,18 @@ def format_decimal(
         return None
     return f"{value:.{decimal_places}f}"
 
-
+# Format a datetime as a UTC display string
 def format_datetime_utc(value: datetime | None) -> str | None:
     if value is None:
         return None
     return value.strftime("%Y-%m-%d %H:%M UTC")
 
 
-def latest_datetime(*values: datetime | None) -> datetime | None:
-    present_values = [value for value in values if value is not None]
-    return max(present_values) if present_values else None
+# ---------------------------------------------------------------------------
+# Ordering resolution
+# ---------------------------------------------------------------------------
 
-
+# Build the ORM ordering list from an allowed field and sort direction
 def resolve_ordering(
     *,
     allowed_fields: dict[str, tuple[str, ...]],
@@ -108,14 +126,11 @@ def resolve_ordering(
     return [f"{prefix}{field}" for field in allowed_fields[order_by]]
 
 
-def serialise_numeric(value: Decimal | int | float | None) -> int | float | None:
-    if value is None:
-        return None
-    if isinstance(value, Decimal):
-        return float(value)
-    return value
+# ---------------------------------------------------------------------------
+# Metric payload construction
+# ---------------------------------------------------------------------------
 
-
+# Build a standard metric dictionary for API responses
 def build_metric_payload(
     *,
     key: str,
@@ -144,6 +159,11 @@ def build_metric_payload(
     }
 
 
+# ---------------------------------------------------------------------------
+# Provider coverage payload construction
+# ---------------------------------------------------------------------------
+
+# Build a dictionary showing provider freshness and coverage details
 def build_provider_coverage_payload(
     *,
     provider: str,
@@ -181,13 +201,18 @@ def build_provider_coverage_payload(
     }
 
 
+# ---------------------------------------------------------------------------
+# Comparison helpers
+# ---------------------------------------------------------------------------
+
+# Return the difference between two metric values
 def metric_difference(
     left_value: Decimal | int,
     right_value: Decimal | int,
 ) -> Decimal | int:
     return left_value - right_value
 
-
+# Decide which side wins a metric comparison and return the result detai
 def winner_for_metric(
     *,
     left_name: str,
@@ -220,6 +245,6 @@ def winner_for_metric(
 
     raise ValueError(f"Unsupported comparison direction: {direction}")
 
-
+# Return True when both values are equal
 def values_equal(left: Any, right: Any) -> bool:
     return left == right
