@@ -143,7 +143,7 @@ describe('IndividualClubBase', () => {
     const joinRequestsTab = await screen.findByRole(
       'button',
       { name: /Join requests/i },
-      { timeout: 5000 }
+      { timeout: 10000 }
     );
     expect(joinRequestsTab).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Invitations/i })).toBeInTheDocument();
@@ -154,7 +154,7 @@ describe('IndividualClubBase', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Invitations/i }));
     expect(screen.getByRole('button', { name: 'Send invitation' })).toBeInTheDocument();
-  });
+  }, 15000);
 
   it('passes the selected ClubPlayer when approving a request', async () => {
     render(

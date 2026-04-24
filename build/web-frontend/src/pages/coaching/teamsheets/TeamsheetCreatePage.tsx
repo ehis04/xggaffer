@@ -10,7 +10,7 @@ import type {
   PlayerSlotAssignment,
 } from '../../../types/teamsheet';
 import { FormationPicker, PlayerSlotSelector, AvailablePlayersList } from '../../../components/teamsheets';
-import styles from './TeamsheetCreatePage.module.css';
+import styles from './css/TeamsheetCreatePage.module.css';
 
 const getSlotDisplayName = (slot: SlotState): string => {
   if (slot.player) {

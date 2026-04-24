@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { clubsApi } from '../../../../services/api';
 import type { ClubContext } from '../IndividualClubBase';
 import type {
@@ -8,6 +8,8 @@ import type {
 } from '../../../../types/club';
 import type { ClubPlayer } from '../../../../types/clubPlayers';
 import styles from './css/MembersTab.module.css';
+import { SectionSkeleton } from '../../../../common/components/SectionSkeleton';
+import { InlineRetry } from '../../../../common/components/InlineRetry';
 
 interface Props {
   ctx: ClubContext;
@@ -78,7 +80,7 @@ const MembersTab = ({ ctx }: Props) => {
   const [selectedPlayers, setSelectedPlayers] = useState<Record<number, string>>({});
   const [revokeNotes, setRevokeNotes] = useState<Record<number, string>>({});
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     const [myReqs] = await Promise.all([clubsApi.listMyJoinRequests()]);
     setMyRequests(myReqs);
 
@@ -92,7 +94,7 @@ const MembersTab = ({ ctx }: Props) => {
       setInvitations(invs.status === 'fulfilled' ? invs.value : []);
       setPlayers(pls.status === 'fulfilled' ? pls.value : []);
     }
-  };
+  }, [clubId, canManage]);
 
   useEffect(() => {
     const init = async () => {
@@ -106,7 +108,7 @@ const MembersTab = ({ ctx }: Props) => {
       }
     };
     void init();
-  }, [clubId]);
+  }, [loadData]);
 
   const myLatestRequest = myRequests.find((r) => r.club === clubId);
   const availableRosterLinks = players.filter((p) => !p.user);
@@ -227,8 +229,21 @@ const MembersTab = ({ ctx }: Props) => {
         { value: 'join', label: 'Join club' },
       ];
 
-  if (loading) return <div className={styles.loading}>Loading members...</div>;
-  if (error) return <div className={styles.errorNotice}>{error}</div>;
+  if (loading) return <SectionSkeleton rows={3} height="56px" gap="12px" />;
+  if (error) {
+    return (
+      <InlineRetry
+        message={error}
+        onRetry={async () => {
+          setLoading(true);
+          setError(null);
+          try { await loadData(); } catch (err) { setError(err instanceof Error ? err.message : 'Failed to load member data.'); }
+          finally { setLoading(false); }
+        }}
+        retrying={loading}
+      />
+    );
+  }
 
   return (
     <div className={styles.tabContent}>

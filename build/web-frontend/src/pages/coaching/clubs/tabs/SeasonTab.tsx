@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { clubsApi } from '../../../../services/api';
 import { liveFootballApi } from '../../../../services/api/livefootballApi';
 import type { ClubContext } from '../IndividualClubBase';
@@ -14,6 +14,8 @@ import type {
   CompetitionListItem,
 } from '../../../../types/livefootball';
 import styles from './css/SeasonTab.module.css';
+import { SectionSkeleton } from '../../../../common/components/SectionSkeleton';
+import { InlineRetry } from '../../../../common/components/InlineRetry';
 
 interface Props {
   ctx: ClubContext;
@@ -82,6 +84,7 @@ const ProSeasonView = ({ clubId, clubName }: { clubId: number; clubName: string 
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     const load = async () => {
@@ -134,10 +137,10 @@ const ProSeasonView = ({ clubId, clubName }: { clubId: number; clubName: string 
       }
     };
     void load();
-  }, [clubId]);
+  }, [clubId, retryKey]);
 
-  if (loading) return <div className={styles.loading}>Loading season data...</div>;
-  if (error) return <div className={styles.errorNotice}>{error}</div>;
+  if (loading) return <SectionSkeleton rows={3} height="56px" gap="12px" />;
+  if (error) return <InlineRetry message={error} onRetry={() => setRetryKey((k) => k + 1)} retrying={loading} />;
 
   const { understat, table, previous, upcoming, competition } = data;
 
@@ -318,10 +321,10 @@ const ManualSeasonView = ({ clubId, canManage }: { clubId: number; canManage: bo
   const [showForm, setShowForm] = useState(false);
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
 
-  const loadResults = async () => {
+  const loadResults = useCallback(async () => {
     const data = await clubsApi.seasonResults.list(clubId);
     setResults(data);
-  };
+  }, [clubId]);
 
   useEffect(() => {
     const init = async () => {
@@ -335,7 +338,7 @@ const ManualSeasonView = ({ clubId, canManage }: { clubId: number; canManage: bo
       }
     };
     void init();
-  }, [clubId]);
+  }, [loadResults]);
 
   const record = clubsApi.seasonResults.deriveRecord(results);
 
@@ -405,8 +408,8 @@ const ManualSeasonView = ({ clubId, canManage }: { clubId: number; canManage: bo
     }
   };
 
-  if (loading) return <div className={styles.loading}>Loading results...</div>;
-  if (error) return <div className={styles.errorNotice}>{error}</div>;
+  if (loading) return <SectionSkeleton rows={3} height="56px" gap="12px" />;
+  if (error) return <InlineRetry message={error} onRetry={async () => { setLoading(true); setError(null); try { await loadResults(); } catch (err) { setError(err instanceof Error ? err.message : 'Failed to load results.'); } finally { setLoading(false); } }} retrying={loading} />;
 
   return (
     <div className={styles.manualLayout}>

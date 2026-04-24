@@ -2,6 +2,7 @@ import { Navigate, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/useAuth';
 import { useEffect, useState } from 'react';
 import { usersApi } from '../../services/api/usersApi';
+import { FullPageLoader } from '../../common/components/FullPageLoader';
 
 interface ProtectedRouteProps {
   children?: React.ReactNode;
@@ -59,11 +60,7 @@ export function ProtectedRoute({ children, requireVerified = true }: ProtectedRo
   }, [isAuthenticated, location.pathname, navigate]);
 
   if (isLoading || checkingProfile) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner" />
-      </div>
-    );
+    return <FullPageLoader />;
   }
 
   if (!isAuthenticated) {

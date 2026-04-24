@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getOddsFixtures, getOddsTeams, predictMatch } from '../../services/api/predictionsApi';
 import type { OddsFixtureItem, PredictionResponse } from '../../types/prediction';
+import type { FreshnessPayload } from '../../common/types/freshness';
+import { FreshnessBadge } from '../../common/components/FreshnessBadge';
 import styles from './css/OddsComparisonPage.module.css';
 
 const LEAGUE_OPTIONS = [
@@ -12,6 +14,7 @@ const LEAGUE_OPTIONS = [
 ];
 
 const OUTCOME_LABEL: Record<string, string> = { H: 'Home win', D: 'Draw', A: 'Away win' };
+const ODDS_REFRESH_MESSAGE = 'Odds data not yet available — check back after 06:00 UTC';
 
 function fmt(n: number) {
   return (n * 100).toFixed(1) + '%';
@@ -73,28 +76,40 @@ export default function OddsComparisonPage() {
 
   const [teams, setTeams] = useState<string[]>([]);
   const [fixtures, setFixtures] = useState<OddsFixtureItem[]>([]);
+  const [freshness, setFreshness] = useState<FreshnessPayload | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dataNull, setDataNull] = useState(false);
 
-  // Reload team list when league changes, reset selections
   useEffect(() => {
     setTeamA('');
     setTeamB('');
     getOddsTeams(league)
-      .then((res) => setTeams(res.teams))
+      .then((envelope) => setTeams(envelope.data?.teams ?? []))
       .catch(() => setTeams([]));
   }, [league]);
 
-  // Reload fixtures on any filter change
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setDataNull(false);
     setFixtures([]);
+    setFreshness(null);
 
     getOddsFixtures(league, view, teamA || undefined, teamB || undefined)
-      .then((res) => { if (!cancelled) setFixtures(res.fixtures); })
-      .catch((err) => { if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load fixtures.'); })
+      .then((envelope) => {
+        if (cancelled) return;
+        setFreshness(envelope.freshness);
+        if (envelope.data === null) {
+          setDataNull(true);
+        } else {
+          setFixtures(envelope.data.fixtures);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load fixtures.');
+      })
       .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
@@ -163,18 +178,27 @@ export default function OddsComparisonPage() {
         </div>
       )}
 
-      {!loading && !error && fixtures.length === 0 && (
+      {!loading && !error && dataNull && (
+        <div className={styles.stateCard}>
+          <p className={styles.stateText}>{ODDS_REFRESH_MESSAGE}</p>
+        </div>
+      )}
+
+      {!loading && !error && !dataNull && fixtures.length === 0 && (
         <div className={styles.stateCard}>
           <p className={styles.stateText}>No fixtures with odds data found for this selection.</p>
         </div>
       )}
 
-      {!loading && !error && fixtures.length > 0 && (
+      {!loading && !error && !dataNull && fixtures.length > 0 && (
         <div className={styles.tableWrapper}>
           <table className={styles.table}>
             <thead>
               <tr>
-                <th className={styles.th}>Fixture</th>
+                <th className={styles.th}>
+                  Fixture
+                  {freshness && <FreshnessBadge freshness={freshness} />}
+                </th>
                 <th className={styles.th}>Date</th>
                 <th className={`${styles.th} ${styles.oddsHeader}`}>Consensus odds (H / D / A)</th>
                 {showResultColumn && <th className={styles.th}>Result</th>}

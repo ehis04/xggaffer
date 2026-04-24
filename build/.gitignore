@@ -93,6 +93,16 @@ cookies.txt
 
 # Celery
 celerybeat-schedule
+backend/celerybeat-schedule
+
+# Hidden/lock files
+.*
+!.gitignore
+!.vscode
+
+# Backend generated folders
+backend/downloaded_files/
+logs/
 
 # Test coverage
 htmlcov/

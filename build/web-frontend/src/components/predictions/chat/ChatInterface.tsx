@@ -22,11 +22,17 @@ const STARTER_QUERIES = [
   'What lineup will Arsenal use?',
 ] as const;
 
-export default function ChatInterface() {
+interface ChatInterfaceProps {
+  starterQueries?: readonly string[];
+}
+
+export default function ChatInterface({ starterQueries }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [inputError, setInputError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+
+  const activeStarters = starterQueries ?? STARTER_QUERIES;
 
   useEffect(() => {
     if (listRef.current) {
@@ -67,7 +73,7 @@ export default function ChatInterface() {
       <div className={styles.messageList} ref={listRef}>
         {messages.length === 0 && (
           <div className={styles.starterChips}>
-            {STARTER_QUERIES.map((q) => (
+            {activeStarters.map((q) => (
               <button
                 key={q}
                 className={styles.chip}

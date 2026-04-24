@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { teamsheetApi } from '../../../services/api';
 import type { Teamsheet } from '../../../types/teamsheet';
-import styles from './TeamsheetCreatePage.module.css';
+import styles from './css/TeamsheetCreatePage.module.css';
 
 const TeamsheetEditPage: React.FC = () => {
   const { clubId, teamsheetId } = useParams<{ clubId: string; teamsheetId: string }>();

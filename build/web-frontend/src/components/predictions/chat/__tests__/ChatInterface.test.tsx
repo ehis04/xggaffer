@@ -66,6 +66,14 @@ describe('ChatInterface', () => {
     expect(screen.getByText('What lineup will Arsenal use?')).toBeInTheDocument();
   });
 
+  it('renders custom starter chips when starterQueries prop is provided', () => {
+    const custom = ['Custom query one', 'Custom query two'] as const;
+    render(<ChatInterface starterQueries={custom} />);
+    expect(screen.getByText('Custom query one')).toBeInTheDocument();
+    expect(screen.getByText('Custom query two')).toBeInTheDocument();
+    expect(screen.queryByText('What is xG?')).not.toBeInTheDocument();
+  });
+
   it('removes starter chips after a starter query is used', async () => {
     vi.mocked(chatQuery).mockResolvedValueOnce(makeEnvelope());
     render(<ChatInterface />);

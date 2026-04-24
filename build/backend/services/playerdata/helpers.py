@@ -12,6 +12,73 @@ from typing import Any
 
 from common.utils import latest_datetime, serialise_numeric  # noqa: F401 – re-exported for callers
 
+# Numeric fields available on PlayerSeasonEnrichment that can receive percentile ranks
+_PERCENTILE_FIELDS: list[str] = [
+    "goals",
+    "assists",
+    "shots",
+    "xg",
+    "xa",
+    "npg",
+    "npxg",
+    "key_passes",
+    "minutes_played",
+    "matches_played",
+]
+
+
+def compute_league_percentiles(
+    *,
+    player_id: int,
+    season_label: str | None,
+    competition_code: str | None,
+) -> dict[str, float | None]:
+    """Return a dict mapping metric key → percentile rank (0-100) for the given player.
+
+    Percentile rank is computed against all PlayerSeasonEnrichment rows that share
+    the same season_label and competition_code.  Returns an empty dict if fewer
+    than two rows are found (percentiles are meaningless with a single data point).
+    """
+    from apps.playerdata.models import PlayerSeasonEnrichment  # local import to avoid circular
+
+    qs = PlayerSeasonEnrichment.objects.all()
+    if season_label:
+        qs = qs.filter(season_label=season_label)
+    if competition_code:
+        qs = qs.filter(competition_code=competition_code)
+
+    rows = list(qs.values("player_id", *_PERCENTILE_FIELDS))
+    if len(rows) < 2:
+        return {}
+
+    # Build per-metric sorted value lists
+    metric_values: dict[str, list[float]] = {}
+    for field in _PERCENTILE_FIELDS:
+        vals = [float(r[field]) for r in rows if r.get(field) is not None]
+        if vals:
+            metric_values[field] = sorted(vals)
+
+    # Find the current player's row(s); pick the first match
+    player_rows = [r for r in rows if r["player_id"] == player_id]
+    if not player_rows:
+        return {}
+    player_row = player_rows[0]
+
+    percentiles: dict[str, float | None] = {}
+    for field in _PERCENTILE_FIELDS:
+        raw = player_row.get(field)
+        if raw is None or field not in metric_values:
+            percentiles[field] = None
+            continue
+        val = float(raw)
+        sorted_vals = metric_values[field]
+        n = len(sorted_vals)
+        # Count how many values are strictly below this one
+        below = sum(1 for v in sorted_vals if v < val)
+        percentiles[field] = (below / n) * 100.0
+
+    return percentiles
+
 
 # ---------------------------------------------------------------------------
 # String utilities

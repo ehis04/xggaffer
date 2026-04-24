@@ -160,10 +160,12 @@ class FootballDataSyncService:
                     "player_external_identities_updated": 0,
                     "club_players_created": 0,
                     "club_players_updated": 0,
+                    "club_players_deactivated": 0,
                 },
             }
 
             errors = []
+            seen_player_ids: set[int] = set()
 
             for raw_player in squad_payload:
                 summary["records_processed"] += 1
@@ -199,6 +201,8 @@ class FootballDataSyncService:
                             )
                         )
 
+                    seen_player_ids.add(player.id)
+
                     if player_created:
                         summary["records_created"] += 1
                         summary["metadata"]["players_created"] += 1
@@ -223,6 +227,24 @@ class FootballDataSyncService:
                 except Exception as exc:
                     summary["error_count"] += 1
                     errors.append(self._format_player_error(raw_player, exc))
+
+            # Deactivate ClubPlayer records for players no longer in the squad.
+            # Only do this when the API returned a non-empty squad so a partial
+            # response doesn't silently wipe the whole roster.
+            if seen_player_ids:
+                departed_count = ClubPlayer.objects.filter(
+                    club=club,
+                    is_active=True,
+                    player__isnull=False,
+                ).exclude(
+                    player_id__in=seen_player_ids,
+                ).update(
+                    is_active=False,
+                    updated_at=timezone.now(),
+                )
+                if departed_count:
+                    summary["records_updated"] += departed_count
+                    summary["metadata"]["club_players_deactivated"] += departed_count
 
             if errors:
                 summary["status"] = ProviderSyncStatus.PARTIAL

@@ -4,15 +4,6 @@
   gap: 16px;
 }
 
-.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 200px;
-  color: var(--tertiary-text);
-  font-size: 0.875rem;
-}
-
 /* ── Top bar ─────────────────────────────────────────────────────────────── */
 
 .topBar {
