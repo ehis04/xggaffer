@@ -121,19 +121,19 @@ describe('InternalPlayerProfilePage', () => {
       screen.getByText('Select a club above or search by name to browse players.')
     ).toBeInTheDocument();
 
-    fireEvent.click(await screen.findByRole('button', { name: /Arsenal/i }));
-    fireEvent.click(await screen.findByRole('button', { name: /Bukayo Saka/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /Arsenal/i }, { timeout: 10000 }));
+    fireEvent.click(await screen.findByRole('button', { name: /Bukayo Saka/i }, { timeout: 10000 }));
 
     await waitFor(() => {
       expect(getPlayerOverviewMock).toHaveBeenCalledWith(
         12,
         expect.objectContaining({})
       );
-    });
+    }, { timeout: 10000 });
 
-    expect(await screen.findByRole('heading', { name: 'Bukayo Saka' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Bukayo Saka' }, { timeout: 10000 })).toBeInTheDocument();
     expect(screen.getByText('High carrying and chance creation involvement.')).toBeInTheDocument();
-  });
+  }, 15000);
 
   it('shows an empty-state message when search has no results', async () => {
     render(

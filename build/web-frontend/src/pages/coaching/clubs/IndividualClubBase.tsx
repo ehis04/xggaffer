@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense } from 'react';
+import { useEffect, useState, lazy, Suspense, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { clubsApi } from '../../../services/api';
 import { Sidebar } from '../../../components/Navigation/SideBar';
@@ -8,6 +8,10 @@ import { SocialUserButtons } from '../../../components/Social/SocialUserButtons'
 import { useAuth } from '../../../context/useAuth';
 import type { Club, ClubMembershipRole } from '../../../types/club';
 import styles from './css/IndividualClubBase.module.css';
+import { AppError } from '../../../common/AppError';
+import { FullPageLoader } from '../../../common/components/FullPageLoader';
+import { StatusBlock } from '../../../common/components/StatusBlock';
+import { ResourceNotFoundPage } from '../../status/ResourceNotFoundpage';
 
 const DashboardTab  = lazy(() => import('./tabs/DashboardTab'));
 const PlayersTab    = lazy(() => import('./tabs/PlayersTab'));
@@ -54,72 +58,70 @@ export const IndividualClubBase = () => {
   const [myClubIds, setMyClubIds] = useState<number[]>([]);
   const [reviewAccess, setReviewAccess] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<AppError | null>(null);
+
+  const fetchClub = useCallback(async () => {
+    if (!Number.isFinite(numericClubId)) return;
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [clubData, myClubsData] = await Promise.all([
+        clubsApi.get(numericClubId, isTrashView ? { trash: 'only' } : undefined),
+        clubsApi.myClubs(),
+      ]);
+
+      setClub(clubData);
+      setMyClubIds(myClubsData.map((c) => c.id));
+
+      try {
+        await clubsApi.listClubJoinRequests(clubData.id);
+        setReviewAccess(true);
+      } catch {
+        setReviewAccess(false);
+      }
+    } catch (err) {
+      setError(err instanceof AppError ? err : new AppError(0, "UNKNOWN", "Failed to load club."));
+    } finally {
+      setLoading(false);
+    }
+  }, [numericClubId, isTrashView]);
 
   useEffect(() => {
-    if (!Number.isFinite(numericClubId)) return;
-
-    const fetchClub = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const [clubData, myClubsData] = await Promise.all([
-          clubsApi.get(numericClubId, isTrashView ? { trash: 'only' } : undefined),
-          clubsApi.myClubs(),
-        ]);
-
-        setClub(clubData);
-        setMyClubIds(myClubsData.map((c) => c.id));
-
-        try {
-          await clubsApi.listClubJoinRequests(clubData.id);
-          setReviewAccess(true);
-        } catch {
-          setReviewAccess(false);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load club.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     void fetchClub();
-  }, [numericClubId, isTrashView]);
+  }, [fetchClub]);
 
   const handleClubUpdate = (updated: Club) => setClub(updated);
 
   if (loading) {
+    return <FullPageLoader label="Loading club" />;
+  }
+
+  if (error?.code === "NOT_FOUND" || !club) {
     return (
-      <div className={styles.pageContainer}>
-        <div className={styles.sidebarSection}>
-          <Sidebar />
-        </div>
-        <div className={styles.pageBody}>
-          <div className={styles.loadingState}>Loading club...</div>
-        </div>
-      </div>
+      <ResourceNotFoundPage
+        backPath="/clubs"
+        backLabel="Back to Clubs"
+      />
     );
   }
 
-  if (error || !club) {
+  if (error) {
     return (
       <div className={styles.pageContainer}>
         <div className={styles.sidebarSection}>
           <Sidebar />
         </div>
         <div className={styles.pageBody}>
-          <div className={styles.errorState}>
-            {error ?? 'Club not found.'}
-            <button
-              type="button"
-              className={styles.backButton}
-              onClick={() => navigate('/clubs')}
-            >
-              Back to clubs
-            </button>
-          </div>
+          <StatusBlock
+            variant="error"
+            message={error.detail}
+            actions={
+              <button type="button" className={styles.retryButton} onClick={fetchClub}>
+                Retry
+              </button>
+            }
+          />
         </div>
       </div>
     );

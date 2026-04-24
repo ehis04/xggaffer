@@ -17,6 +17,8 @@ import type { ClubPlayerInjury, ClubPlayerManualStats } from '../../../../types/
 import type { PlayerDataFilters, PlayerSeasonSummary } from '../../../../types/playerdata';
 import { statusConfig } from '../../../../components/Dashboard/functions/statusConfig';
 import styles from './css/PlayersTab.module.css';
+import { SectionSkeleton } from '../../../../common/components/SectionSkeleton';
+import { InlineRetry } from '../../../../common/components/InlineRetry';
 
 interface Props { ctx: ClubContext }
 
@@ -114,6 +116,7 @@ const PlayersTab = ({ ctx }: Props) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [retrying, setRetrying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
@@ -297,8 +300,21 @@ const PlayersTab = ({ ctx }: Props) => {
       }
     : null;
 
-  if (loading) return <div className={styles.loading}>Loading players...</div>;
-  if (error) return <div className={styles.errorState}>{error}</div>;
+  if (loading) return <SectionSkeleton rows={5} height="56px" gap="8px" />;
+  if (error) {
+    return (
+      <InlineRetry
+        message={error}
+        retrying={retrying}
+        onRetry={async () => {
+          setRetrying(true);
+          setError(null);
+          try { await loadPlayers(); } catch (err) { setError(normalizeError(err)); }
+          finally { setRetrying(false); }
+        }}
+      />
+    );
+  }
 
   return (
     <div className={styles.tabContent}>

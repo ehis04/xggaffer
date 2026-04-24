@@ -128,7 +128,6 @@ BEAT_LOG="$LOG_DIR/beat.log"
 touch "$BEAT_LOG"
 cd "$BACKEND_DIR" && celery -A backend beat \
     -l info \
-    --scheduler django_celery_beat.schedulers:DatabaseScheduler \
     --logfile="$BEAT_LOG" \
     >> "$BEAT_LOG" 2>&1 &
 BEAT_PID=$!

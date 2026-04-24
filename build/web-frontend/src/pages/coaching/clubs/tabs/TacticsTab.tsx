@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { tacticsBoardApi } from '../../../../services/api';
 import { useAuth } from '../../../../context/useAuth';
 import type { TacticsBoardListItem, TacticsBoardType, TacticsPitchOrientation } from '../../../../types/tactics';
 import type { ClubContext } from '../IndividualClubBase';
 import styles from './css/TacticsTab.module.css';
+import { SectionSkeleton } from '../../../../common/components/SectionSkeleton';
+import { InlineRetry } from '../../../../common/components/InlineRetry';
 
 interface Props {
   ctx: ClubContext;
@@ -59,7 +61,7 @@ const TacticsTab = ({ ctx }: Props) => {
 
   const isTrashView = subView === 'trash';
 
-  const loadBoards = async () => {
+  const loadBoards = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -74,9 +76,9 @@ const TacticsTab = ({ ctx }: Props) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [clubId, isTrashView]);
 
-  useEffect(() => { void loadBoards(); }, [clubId, isTrashView]);
+  useEffect(() => { void loadBoards(); }, [loadBoards]);
 
   const openBoard = (boardId: number, isTrashed = false) => {
     navigate(`/clubs/${clubId}/tactics-boards/${boardId}${isTrashed ? '?view=trash' : ''}`);
@@ -184,9 +186,13 @@ const TacticsTab = ({ ctx }: Props) => {
       {actionError && <div className={styles.errorNotice}>{actionError}</div>}
 
       {loading ? (
-        <div className={styles.loading}>Loading tactics boards...</div>
+        <SectionSkeleton rows={3} height="80px" gap="12px" />
       ) : error ? (
-        <div className={styles.errorNotice}>{error}</div>
+        <InlineRetry
+          message={error}
+          onRetry={loadBoards}
+          retrying={loading}
+        />
       ) : boards.length === 0 ? (
         <div className={styles.empty}>
           {isTrashView

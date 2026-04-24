@@ -4,6 +4,7 @@ import type {
   OddsComparisonRequest,
   OddsComparisonResponse,
   OddsFixtureListResponse,
+  OddsTeamsResponse,
   PredictionRequest,
   PredictionResponse,
   TeamsResponse,
@@ -172,21 +173,24 @@ export async function getOddsFixtures(
   view: 'past' | 'future',
   teamA?: string,
   teamB?: string,
-): Promise<OddsFixtureListResponse> {
+): Promise<ApiEnvelope<OddsFixtureListResponse>> {
   const params: Record<string, string> = { league, view };
   if (teamA) params.team_a = teamA;
   if (teamB) params.team_b = teamB;
   return withPredictionsErrorHandling(() =>
-    apiClient.get<OddsFixtureListResponse>(
+    apiClient.get<ApiEnvelope<OddsFixtureListResponse>>(
       buildPredictionsEndpoint('odds/fixtures/'),
       params
     )
   );
 }
 
-export async function getOddsTeams(league: string): Promise<{ league: string; teams: string[] }> {
+export async function getOddsTeams(league: string): Promise<ApiEnvelope<OddsTeamsResponse>> {
   return withPredictionsErrorHandling(() =>
-    apiClient.get(buildPredictionsEndpoint('odds/teams/'), { league })
+    apiClient.get<ApiEnvelope<OddsTeamsResponse>>(
+      buildPredictionsEndpoint('odds/teams/'),
+      { league }
+    )
   );
 }
 

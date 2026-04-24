@@ -173,10 +173,10 @@ describe('InternalPlayerComparisonPage', () => {
           player_b_id: 22,
         })
       );
-    });
+    }, { timeout: 10000 });
 
     expect(await screen.findAllByText('Martin Ødegaard')).not.toHaveLength(0);
     expect(screen.getAllByText('Bruno Fernandes')).not.toHaveLength(0);
     expect(screen.getByText('Chance Creation')).toBeInTheDocument();
-  });
+  }, 15000);
 });

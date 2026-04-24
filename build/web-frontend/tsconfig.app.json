@@ -31,5 +31,5 @@
   "include": [
     "src",
     "../extra_or_junk/CoachingDashboard.tsx"
-  ]
+, "../extra_or_junk/TeamsheetBase.tsx"  ]
 }

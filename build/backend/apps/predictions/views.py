@@ -9,6 +9,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from common.performance import RequestTimer
+
 from .envelope import build_predictions_envelope
 from .serializers import (
     AvailableTeamsRequestSerializer,
@@ -74,88 +76,102 @@ from .services.prediction_helper import build_match_prediction_payload
 logger = logging.getLogger(__name__)
 
 
+
+
 class PredictMatchView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = PredictionRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        data = serializer.validated_data
+        with RequestTimer(endpoint="predictions.predict", method=request.method, params=None) as timer:
+            serializer = PredictionRequestSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            data = serializer.validated_data
 
-        try:
-            from .services.prediction_helper import build_match_prediction_payload
+            try:
+                from .services.prediction_helper import build_match_prediction_payload
 
-            response_payload = build_match_prediction_payload(
-                home_team=data['home_team'],
-                away_team=data['away_team'],
-                league=data['league'],
-                season=data['season'],
-                top_n=data['top_factors'],
-            )
-            response_serializer = PredictionResponseSerializer(data=response_payload)
-            response_serializer.is_valid(raise_exception=True)
-            return Response(build_predictions_envelope(response_serializer.data), status=status.HTTP_200_OK)
+                response_payload = build_match_prediction_payload(
+                    home_team=data['home_team'],
+                    away_team=data['away_team'],
+                    league=data['league'],
+                    season=data['season'],
+                    top_n=data['top_factors'],
+                )
+                response_serializer = PredictionResponseSerializer(data=response_payload)
+                response_serializer.is_valid(raise_exception=True)
+                response = Response(build_predictions_envelope(response_serializer.data), status=status.HTTP_200_OK)
+            except ValueError as exc:
+                response = Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+            except FileNotFoundError as exc:
+                logger.error('Model not found: %s', exc)
+                response = Response({'error': 'Prediction model is not available.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            except Exception as exc:
+                logger.exception('Prediction failed: %s', exc)
+                response = Response({'error': 'An unexpected error occurred during prediction.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        except ValueError as exc:
-            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
-        except FileNotFoundError as exc:
-            logger.error('Model not found: %s', exc)
-            return Response(
-                {'error': 'Prediction model is not available.'},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
-            )
-        except Exception as exc:
-            logger.exception('Prediction failed: %s', exc)
-            return Response(
-                {'error': 'An unexpected error occurred during prediction.'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-
-class AvailableTeamsView(APIView):
-    permission_classes = [AllowAny]
-
-    def get(self, request):
-        serializer = AvailableTeamsRequestSerializer(data=request.query_params)
-        serializer.is_valid(raise_exception=True)
-        data = serializer.validated_data
-
-        try:
-            from .ml.models.match_outcome.feature_service import get_feature_service
-
-            service = get_feature_service(leagues=[data['league']], seasons=[data['season']])
-            teams = service.get_available_teams(league=data['league'], season=data['season'])
-
-            return Response({
-                'league': data['league'],
-                'season': data['season'],
-                'teams': teams,
-                'count': len(teams),
-            })
-        except Exception as exc:
-            logger.exception('Failed to load teams: %s', exc)
-            return Response(
-                {'error': 'Could not load available teams.'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            timer.status_code = response.status_code
+            return response
 
 
 class ModelInfoView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        try:
-            from .ml.models.match_outcome.predict import get_predictor
+        with RequestTimer(endpoint="predictions.model_info", method=request.method, params=dict(request.query_params)) as timer:
+            try:
+                from .ml.models.match_outcome.predict import get_predictor
 
-            predictor = get_predictor()
-            return Response(predictor.get_model_info())
-        except FileNotFoundError:
-            return Response(
-                {'error': 'No trained model available.'},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
-            )
+                predictor = get_predictor()
+                response = Response(predictor.get_model_info())
+            except FileNotFoundError:
+                response = Response({'error': 'No trained model available.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+            timer.status_code = response.status_code
+            return response
 
 
+class AvailableTeamsView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        with RequestTimer(endpoint="predictions.teams", method=request.method, params=dict(request.query_params)) as timer:
+            serializer = AvailableTeamsRequestSerializer(data=request.query_params)
+            serializer.is_valid(raise_exception=True)
+            data = serializer.validated_data
+
+            try:
+                from .ml.models.match_outcome.feature_service import get_feature_service
+
+                service = get_feature_service(leagues=[data['league']], seasons=[data['season']])
+                teams = service.get_available_teams(league=data['league'], season=data['season'])
+                response = Response({'league': data['league'], 'season': data['season'], 'teams': teams, 'count': len(teams)})
+            except Exception as exc:
+                logger.exception('Failed to load teams: %s', exc)
+                response = Response({'error': 'Could not load available teams.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            timer.status_code = response.status_code
+            return response
+
+
+class ChatQueryView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        with RequestTimer(endpoint="predictions.chat", method=request.method, params=None, snapshot_version="none") as timer:
+            serializer = ChatRequestSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            query = serializer.validated_data["query"]
+            try:
+                from .services.chat_service import handle_chat_query
+
+                result = handle_chat_query(query)
+                response = Response(build_predictions_envelope(result), status=status.HTTP_200_OK)
+            except Exception as exc:
+                logger.exception("Chat query failed: %s", exc)
+                response = Response({"error": "Query processing failed."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            timer.status_code = response.status_code
+            return response
 
 class EloRankingView(APIView):
     permission_classes = [AllowAny]
@@ -782,24 +798,6 @@ class AvailableTacticalTeamsView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-class ChatQueryView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        serializer = ChatRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        query = serializer.validated_data["query"]
-        try:
-            from .services.chat_service import handle_chat_query
-
-            result = handle_chat_query(query)
-            return Response(build_predictions_envelope(result), status=status.HTTP_200_OK)
-        except Exception as exc:
-            logger.exception("Chat query failed: %s", exc)
-            return Response(
-                {"error": "Query processing failed."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
 
 class OddsComparisonView(APIView):
     permission_classes = [AllowAny]

@@ -1,0 +1,35 @@
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--brand-darkest-green);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.homeButton {
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  border: 1px solid var(--brand-green-border);
+  background: var(--brand-green);
+  color: var(--primary-text);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.homeButton:hover {
+  background: var(--hover-green);
+}
+
+.countdown {
+  color: var(--tertiary-text);
+  font-size: 0.9rem;
+}

@@ -3,14 +3,16 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import OddsComparisonPage from '../OddsComparisonPage';
-import type { OddsComparisonResponse } from '../../../types/prediction';
+import type { OddsFixtureItem, PredictionResponse } from '../../../types/prediction';
 
-const mockGetOddsComparison = vi.fn();
-const mockGetTeams = vi.fn();
+const mockGetOddsFixtures = vi.fn();
+const mockGetOddsTeams = vi.fn();
+const mockPredictMatch = vi.fn();
 
 vi.mock('../../../services/api/predictionsApi', () => ({
-  getOddsComparison: (...args: unknown[]) => mockGetOddsComparison(...args),
-  getTeams: (...args: unknown[]) => mockGetTeams(...args),
+  getOddsFixtures: (...args: unknown[]) => mockGetOddsFixtures(...args),
+  getOddsTeams: (...args: unknown[]) => mockGetOddsTeams(...args),
+  predictMatch: (...args: unknown[]) => mockPredictMatch(...args),
 }));
 
 const renderPage = () => {
@@ -23,128 +25,107 @@ const renderPage = () => {
   );
 };
 
-const buildResponse = (): OddsComparisonResponse => ({
+const buildFixture = (): OddsFixtureItem => ({
   home_team: 'Arsenal',
   away_team: 'Chelsea',
   league: 'EPL',
-  season: '2024',
-  kickoff: '2026-04-20T15:00:00Z',
-  source: 'the_odds_api',
-  model: {
-    probabilities: {
-      home: 0.51,
-      draw: 0.26,
-      away: 0.23,
-    },
-    prediction: 'Home',
-    version: 'v1',
-    model_type: 'logistic_regression',
-  },
-  market: {
-    devig_home: 0.4445,
-    devig_draw: 0.285,
-    devig_away: 0.2705,
-    favourite: 'home',
+  season: '2025',
+  commence_time: '2026-04-20T15:00:00Z',
+  fetched_at: '2026-04-20T12:00:00Z',
+  bookmakers: [],
+  consensus: {
+    devig_home: 0.51,
+    devig_draw: 0.26,
+    devig_away: 0.23,
     overround: 1.08,
-    source_label: 'the_odds_api',
+    favourite: 'home',
+    source_label: 'market',
   },
-  bookmakers: [
-    {
-      bookmaker: 'Bet365',
-      home_odds: 2.1,
-      draw_odds: 3.4,
-      away_odds: 3.6,
-      devig_home: 0.455,
-      devig_draw: 0.281,
-      devig_away: 0.264,
-      last_seen_at: '2026-04-18T10:00:00Z',
-    },
-  ],
-  comparison: {
-    model_favourite: 'home',
-    market_favourite: 'home',
-    biggest_edge_side: 'home',
-    biggest_edge_points: 6.6,
-    agreement: true,
-    summary: 'xgGaffer is 6.6 percentage points higher on Arsenal than the market.',
+  result: null,
+});
+
+const buildPrediction = (): PredictionResponse => ({
+  home_team: 'Arsenal',
+  away_team: 'Chelsea',
+  league: 'EPL',
+  season: '2025',
+  prediction: 'Home',
+  probabilities: {
+    home: 0.61,
+    draw: 0.24,
+    away: 0.15,
   },
-  benchmark: {
-    sample_size: 360,
-    model_accuracy: 0.555,
-    market_favourite_accuracy: null,
-    model_brier_score: null,
-    market_brier_score: null,
-    evaluation_scope: 'engine4_season_simulation_backtest',
-    source_label: 'engine4_backtest',
+  top_factors: [],
+  metrics: {
+    accuracy: 0.555,
+    brier_score: null,
   },
-  support: {
-    warning:
-      'This comparison is analytical only and not financial advice. If betting stops feeling like entertainment, pause and seek support.',
-    resources: [
-      {
-        label: 'Problem Gambling Ireland',
-        region: 'Ireland',
-        support_type: 'support',
-      },
-    ],
-  },
+  model_type: 'logistic_regression',
+  version: 'v1',
 });
 
 describe('OddsComparisonPage', () => {
   beforeEach(() => {
-    mockGetOddsComparison.mockReset();
-    mockGetTeams.mockReset();
-    mockGetTeams.mockResolvedValue({ teams: ['Arsenal', 'Chelsea'] });
+    mockGetOddsFixtures.mockReset();
+    mockGetOddsTeams.mockReset();
+    mockPredictMatch.mockReset();
+
+    mockGetOddsTeams.mockResolvedValue({ league: 'EPL', teams: ['Arsenal', 'Chelsea'] });
+    mockGetOddsFixtures.mockResolvedValue({
+      league: 'EPL',
+      season: '2025',
+      view: 'future',
+      count: 0,
+      fixtures: [],
+    });
   });
 
-  it('renders the initial empty state', () => {
+  it('renders the initial empty state', async () => {
     renderPage();
 
     expect(screen.getByRole('heading', { name: /odds & market comparison/i })).toBeInTheDocument();
-    expect(screen.getByText(/ready to compare/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/select a league, season, and fixture/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/No fixtures with odds data found/i)).toBeInTheDocument();
   });
 
-  it('blocks submission when teams are the same', async () => {
+  it('reloads fixtures when team filters are changed', async () => {
     renderPage();
 
     await screen.findAllByRole('option', { name: 'Arsenal' });
 
-    fireEvent.change(screen.getByLabelText(/home team/i), {
+    fireEvent.change(screen.getByLabelText(/Team A/i), {
       target: { value: 'Arsenal' },
     });
-    fireEvent.change(screen.getByLabelText(/away team/i), {
-      target: { value: 'Arsenal' },
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /compare fixture/i }));
-
-    expect(mockGetOddsComparison).not.toHaveBeenCalled();
-    expect(
-      await screen.findByText(/home team and away team must be different/i)
-    ).toBeInTheDocument();
-  });
-
-  it('submits a valid request and renders the result', async () => {
-    mockGetOddsComparison.mockResolvedValue(buildResponse());
-
-    renderPage();
-
-    await screen.findAllByRole('option', { name: 'Arsenal' });
-
-    fireEvent.change(screen.getByLabelText(/home team/i), {
-      target: { value: 'Arsenal' },
-    });
-    fireEvent.change(screen.getByLabelText(/away team/i), {
+    fireEvent.change(screen.getByLabelText(/Team B/i), {
       target: { value: 'Chelsea' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /compare fixture/i }));
+    await waitFor(() => {
+      expect(mockGetOddsFixtures).toHaveBeenLastCalledWith(
+        'EPL',
+        'future',
+        'Arsenal',
+        'Chelsea'
+      );
+    });
+  });
+
+  it('renders fixtures and loads prediction for a row', async () => {
+    mockGetOddsFixtures.mockResolvedValue({
+      league: 'EPL',
+      season: '2025',
+      view: 'future',
+      count: 1,
+      fixtures: [buildFixture()],
+    });
+    mockPredictMatch.mockResolvedValue(buildPrediction());
+
+    renderPage();
+
+    const predictButton = await screen.findByRole('button', { name: /Get prediction/i });
+    fireEvent.click(predictButton);
 
     await waitFor(() => {
-      expect(mockGetOddsComparison).toHaveBeenCalledWith({
+      expect(mockPredictMatch).toHaveBeenCalledWith({
         home_team: 'Arsenal',
         away_team: 'Chelsea',
         league: 'EPL',
@@ -152,59 +133,46 @@ describe('OddsComparisonPage', () => {
       });
     });
 
-    expect(await screen.findByText(/arsenal vs chelsea/i)).toBeInTheDocument();
-    expect(screen.getByText(/xggaffer model/i)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /market consensus/i })).toBeInTheDocument();
-    expect(screen.getByText(/problem gambling ireland/i)).toBeInTheDocument();
+    expect(await screen.findByText('Home')).toBeInTheDocument();
+    expect(screen.getByText('61.0% / 24.0% / 15.0%')).toBeInTheDocument();
   });
 
   it('shows a loading state while the request is in flight', async () => {
-    let resolveRequest: ((value: OddsComparisonResponse) => void) = () => {};
+    let resolveRequest: ((value: {
+      league: string;
+      season: string;
+      view: 'future' | 'past';
+      count: number;
+      fixtures: OddsFixtureItem[];
+    }) => void) = () => {};
 
-    mockGetOddsComparison.mockImplementation(
+    mockGetOddsFixtures.mockImplementation(
       () =>
-        new Promise<OddsComparisonResponse>((resolve) => {
+        new Promise((resolve) => {
           resolveRequest = resolve;
         })
     );
 
     renderPage();
 
-    await screen.findAllByRole('option', { name: 'Arsenal' });
+    expect(await screen.findByText(/Loading fixtures/i)).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText(/home team/i), {
-      target: { value: 'Arsenal' },
+    resolveRequest({
+      league: 'EPL',
+      season: '2025',
+      view: 'future',
+      count: 0,
+      fixtures: [],
     });
-    fireEvent.change(screen.getByLabelText(/away team/i), {
-      target: { value: 'Chelsea' },
-    });
 
-    fireEvent.click(screen.getByRole('button', { name: /compare fixture/i }));
-
-    expect(await screen.findByText(/loading comparison/i)).toBeInTheDocument();
-
-    resolveRequest(buildResponse());
-
-    expect(await screen.findByText(/arsenal vs chelsea/i)).toBeInTheDocument();
+    expect(await screen.findByText(/No fixtures with odds data found/i)).toBeInTheDocument();
   });
 
   it('shows a safe error message when the request fails', async () => {
-    mockGetOddsComparison.mockRejectedValue(new Error('No live odds are available.'));
+    mockGetOddsFixtures.mockRejectedValue(new Error('No live odds are available.'));
 
     renderPage();
 
-    await screen.findAllByRole('option', { name: 'Arsenal' });
-
-    fireEvent.change(screen.getByLabelText(/home team/i), {
-      target: { value: 'Arsenal' },
-    });
-    fireEvent.change(screen.getByLabelText(/away team/i), {
-      target: { value: 'Chelsea' },
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /compare fixture/i }));
-
-    expect(await screen.findByText(/comparison unavailable/i)).toBeInTheDocument();
     expect(await screen.findByText(/no live odds are available/i)).toBeInTheDocument();
   });
 });

@@ -6,6 +6,8 @@ import { getTeamsheetStatus } from '../../../../utils/teamsheetStatus';
 import type { TeamsheetListItem } from '../../../../types/teamsheet';
 import type { ClubContext } from '../IndividualClubBase';
 import styles from './css/FormationsTab.module.css';
+import { SectionSkeleton } from '../../../../common/components/SectionSkeleton';
+import { InlineRetry } from '../../../../common/components/InlineRetry';
 
 interface Props {
   ctx: ClubContext;
@@ -225,9 +227,13 @@ const FormationsTab = ({ ctx }: Props) => {
       )}
 
       {loading ? (
-        <div className={styles.loading}>Loading teamsheets...</div>
+        <SectionSkeleton rows={3} height="80px" gap="12px" />
       ) : error ? (
-        <div className={styles.errorNotice}>{error}</div>
+        <InlineRetry
+          message={error}
+          onRetry={fetchTeamsheets}
+          retrying={loading}
+        />
       ) : isTrashView ? (
         <section className={styles.section}>
           <span className={styles.sectionLabel}>Trashed teamsheets</span>

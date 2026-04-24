@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { teamsheetApi } from '../../../services/api';
 import type { TeamsheetListItem } from '../../../types/teamsheet';
 import { getTeamsheetStatus } from '../../../utils/teamsheetStatus';
-import styles from './TeamsheetListPage.module.css';
+import styles from './css/TeamsheetListPage.module.css';
 import { useAuth } from '../../../context/useAuth';
 
 const TeamsheetListPage: React.FC = () => {

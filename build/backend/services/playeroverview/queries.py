@@ -13,6 +13,7 @@ from apps.players.models import Player
 from common.utils import latest_datetime
 from services.livefootball.helpers import shape_competition_item, shape_team_lookup_item
 from services.playerdata.comparisons import build_player_comparison
+from services.playerdata.helpers import compute_league_percentiles
 from services.playerdata.summaries import (
     build_player_provider_coverage_summary,
     build_player_season_summary,
@@ -392,7 +393,12 @@ def _build_general_overview(*, player_name: str, summary: Any | None, livefootba
 
 
 # Build and group the overview metrics for the player response
-def _build_overview_metrics(summary: Any | None, *, position: str | None) -> list[dict[str, Any]]:
+def _build_overview_metrics(
+    summary: Any | None,
+    *,
+    position: str | None,
+    percentiles: dict[str, float | None] | None = None,
+) -> list[dict[str, Any]]:
     if summary is None:
         return []
 
@@ -402,6 +408,10 @@ def _build_overview_metrics(summary: Any | None, *, position: str | None) -> lis
             dict(metric),
             available_provider=getattr(summary, "provider", None),
         )
+        if percentiles is not None:
+            metric_key = preferred_metric.get("key")
+            if metric_key and metric_key in percentiles:
+                preferred_metric["percentile"] = percentiles[metric_key]
         metrics.append(preferred_metric)
     return group_metric_dicts(metrics, position=position)
 
@@ -463,7 +473,16 @@ def get_player_overview(
         summary=summary,
         livefootball_context=livefootball_context,
     )
-    metric_groups = _build_overview_metrics(summary, position=player_block.get("position"))
+    percentiles = compute_league_percentiles(
+        player_id=player_id,
+        season_label=summary.season_label if summary is not None else (season_label or season),
+        competition_code=summary.competition_code if summary is not None else competition_code,
+    ) if summary is not None else {}
+    metric_groups = _build_overview_metrics(
+        summary,
+        position=player_block.get("position"),
+        percentiles=percentiles,
+    )
 
     missing_reasons: list[str] = []
     if summary is None:

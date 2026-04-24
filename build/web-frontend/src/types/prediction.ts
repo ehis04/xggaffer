@@ -179,6 +179,11 @@ export interface OddsFixtureListResponse {
   fixtures: OddsFixtureItem[];
 }
 
+export interface OddsTeamsResponse {
+  league: string;
+  teams: string[];
+}
+
 export interface ChatEntities {
   home_team: string | null;
   away_team: string | null;

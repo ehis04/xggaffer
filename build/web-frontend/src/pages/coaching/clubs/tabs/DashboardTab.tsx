@@ -20,6 +20,8 @@ import type {
   ClubPlayerManualStats,
 } from '../../../../types/club';
 import styles from './css/DashboardTab.module.css';
+import { SectionSkeleton } from '../../../../common/components/SectionSkeleton';
+import { InlineRetry } from '../../../../common/components/InlineRetry';
 
 interface Props {
   ctx: ClubContext;
@@ -171,9 +173,12 @@ const DashboardTab = ({ ctx }: Props) => {
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const [selectedStats, setSelectedStats] = useState<ClubPlayerManualStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     const load = async () => {
+      setError(false);
       try {
         const [playersData, resultsData, feedData] = await Promise.all([
           clubsApi.listPlayers(clubId),
@@ -183,12 +188,14 @@ const DashboardTab = ({ ctx }: Props) => {
         setPlayers(playersData);
         setResults(resultsData);
         setCalendarFeed(feedData);
+      } catch {
+        setError(true);
       } finally {
         setLoading(false);
       }
     };
     void load();
-  }, [clubId]);
+  }, [clubId, retryKey]);
 
   useEffect(() => {
     if (selectedPlayerId === null) {
@@ -222,7 +229,16 @@ const DashboardTab = ({ ctx }: Props) => {
   };
 
   if (loading) {
-    return <div className={styles.loading}>Loading dashboard...</div>;
+    return <SectionSkeleton rows={4} height="120px" gap="16px" />;
+  }
+
+  if (error) {
+    return (
+      <InlineRetry
+        message="Failed to load dashboard"
+        onRetry={() => setRetryKey((k) => k + 1)}
+      />
+    );
   }
 
   return (

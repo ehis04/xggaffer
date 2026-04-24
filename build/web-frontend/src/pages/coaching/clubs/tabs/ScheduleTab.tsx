@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { clubsApi } from '../../../../services/api';
 import { ClubCalendar } from '../../../../components/Clubs';
 import ClubResourcesSection from '../../clubs/resources/ClubResourcesSection';
@@ -14,6 +14,8 @@ import type {
   CreateFixturePayload,
 } from '../../../../types/club';
 import styles from './css/ScheduleTab.module.css';
+import { SectionSkeleton } from '../../../../common/components/SectionSkeleton';
+import { InlineRetry } from '../../../../common/components/InlineRetry';
 
 interface Props {
   ctx: ClubContext;
@@ -108,7 +110,7 @@ const ScheduleTab = ({ ctx }: Props) => {
 
   const canSchedule = canManage && !isProClub;
 
-  const loadScheduling = async () => {
+  const loadScheduling = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -125,9 +127,9 @@ const ScheduleTab = ({ ctx }: Props) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [clubId]);
 
-  useEffect(() => { void loadScheduling(); }, [clubId]);
+  useEffect(() => { void loadScheduling(); }, [loadScheduling]);
 
   // ── Event handlers ──────────────────────────────────────────────────────────
 
@@ -278,8 +280,14 @@ const ScheduleTab = ({ ctx }: Props) => {
         </div>
       </div>
 
-      {loading && <div className={styles.loading}>Loading schedule...</div>}
-      {error && <div className={styles.errorNotice}>{error}</div>}
+      {loading && <SectionSkeleton rows={3} height="56px" gap="12px" />}
+      {error && (
+        <InlineRetry
+          message={error}
+          onRetry={loadScheduling}
+          retrying={loading}
+        />
+      )}
 
       {!loading && !error && (
         <>
