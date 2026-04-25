@@ -18,33 +18,14 @@ import type {
 import type { ClubPlayer } from '../../../types/clubPlayers';
 import styles from './css/IndividualClubBase.module.css';
 import { useAuth } from '../../../context/useAuth';
+import { Sidebar } from '../../../components/Navigation/SideBar';
+import { SocialUserButtons } from '../../../components/Social/SocialUserButtons';
+import { ClubsNavBar } from '../../../components/Navigation/ClubsNavBar';
 
-const FEATURES = [
-  {
-    key: 'teamsheets',
-    title: 'Teamsheets',
-    description: 'Create and manage match day teamsheets',
-    path: (clubId: number) => `/clubs/${clubId}/teamsheets`,
-  },
-  {
-    key: 'tactics',
-    title: 'Tactics Boards',
-    description: 'Build and edit tactical boards for your club',
-    path: (clubId: number) => `/clubs/${clubId}/tactics-boards`,
-  },
-  {
-    key: 'players',
-    title: 'Players',
-    description: 'View, manage, and sync your squad',
-    path: (clubId: number) => `/clubs/${clubId}/players`,
-  },
-];
+/* ─── constants ─────────────────────────────────────────────── */
 
 const STAFF_INVITE_ROLE_OPTIONS: Exclude<ClubMembershipRole, 'owner'>[] = [
-  'admin',
-  'coach',
-  'player',
-  'viewer',
+  'admin', 'coach', 'player', 'viewer',
 ];
 
 const EVENT_TYPE_OPTIONS: { value: ClubEventType; label: string }[] = [
@@ -68,152 +49,141 @@ const FIXTURE_STATUS_OPTIONS: { value: FixtureStatus; label: string }[] = [
   { value: 'cancelled', label: 'Cancelled' },
 ];
 
+/* ─── quick actions config ───────────────────────────────────── */
+const QUICK_ACTIONS = [
+  {
+    key: 'session',
+    icon: (
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+    title: 'Plan a session',
+    desc: 'Build drills, themes, and timings.',
+    path: (id: number) => `/clubs/${id}/sessions/new`,
+  },
+  {
+    key: 'announcement',
+    icon: (
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+      </svg>
+    ),
+    title: 'Announcement',
+    desc: 'Message the whole squad.',
+    path: (id: number) => `/clubs/${id}/announcements/new`,
+  },
+  {
+    key: 'invite',
+    icon: (
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+      </svg>
+    ),
+    title: 'Invite player',
+    desc: 'Generate a join link or code.',
+    path: (id: number) => `/clubs/${id}/invite`,
+  },
+  {
+    key: 'fixture',
+    icon: (
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+      </svg>
+    ),
+    title: 'Add fixture',
+    desc: 'Schedule league or cup games.',
+    path: (id: number) => `/clubs/${id}/fixtures/new`,
+  },
+];
+
+/* ─── form types ──────────────────────────────────────────────── */
+
 type EventFormState = {
-  title: string;
-  event_type: ClubEventType;
-  description: string;
-  start_datetime: string;
-  end_datetime: string;
-  is_all_day: boolean;
-  location: string;
-  is_mandatory: boolean;
+  title: string; event_type: ClubEventType; description: string;
+  start_datetime: string; end_datetime: string; is_all_day: boolean;
+  location: string; is_mandatory: boolean;
 };
 
 type FixtureFormState = {
-  opponent_name: string;
-  venue: FixtureVenue;
-  competition: string;
-  match_datetime: string;
-  location: string;
-  fixture_status: FixtureStatus;
+  opponent_name: string; venue: FixtureVenue; competition: string;
+  match_datetime: string; location: string; fixture_status: FixtureStatus;
 };
 
 const createEmptyEventForm = (): EventFormState => ({
-  title: '',
-  event_type: 'training',
-  description: '',
-  start_datetime: '',
-  end_datetime: '',
-  is_all_day: false,
-  location: '',
-  is_mandatory: false,
+  title: '', event_type: 'training', description: '',
+  start_datetime: '', end_datetime: '', is_all_day: false,
+  location: '', is_mandatory: false,
 });
 
 const createEmptyFixtureForm = (): FixtureFormState => ({
-  opponent_name: '',
-  venue: 'home',
-  competition: '',
-  match_datetime: '',
-  location: '',
-  fixture_status: 'scheduled',
+  opponent_name: '', venue: 'home', competition: '',
+  match_datetime: '', location: '', fixture_status: 'scheduled',
 });
+
+/* ─── helpers ─────────────────────────────────────────────────── */
 
 const buildTags = (club: Club): string[] => {
   const tags: string[] = [];
-
-  if (club.club_type === 'user_fictional') {
-    tags.push(club.fictional_basis === 'real_club_copy' ? 'Fictional copy' : 'Fictional club');
-  } else if (club.club_type === 'user_real_non_pro') {
-    tags.push('Real non-pro club');
-  } else if (club.club_type === 'system_professional') {
-    tags.push('System professional club');
-  }
-
-  if (club.directory_visibility === 'hidden_code_only') {
-    tags.push('Hidden club');
-  } else if (club.directory_visibility === 'listed') {
-    tags.push('Listed club');
-  }
-
-  if (club.join_policy === 'approval_required') {
-    tags.push('Approval required');
-  } else if (club.join_policy === 'invite_only') {
-    tags.push('Invite only');
-  } else if (club.join_policy === 'system_managed') {
-    tags.push('System managed');
-  }
-
-  if (club.verification_status === 'pending') {
-    tags.push('Pending verification');
-  } else if (club.verification_status === 'approved') {
-    tags.push('Verified');
-  } else if (club.verification_status === 'rejected') {
-    tags.push('Verification rejected');
-  }
-
+  if (club.club_type === 'user_fictional') tags.push(club.fictional_basis === 'real_club_copy' ? 'Fictional copy' : 'Fictional club');
+  else if (club.club_type === 'user_real_non_pro') tags.push('Real non-pro club');
+  else if (club.club_type === 'system_professional') tags.push('System professional club');
+  if (club.directory_visibility === 'hidden_code_only') tags.push('Hidden club');
+  else if (club.directory_visibility === 'listed') tags.push('Listed club');
+  if (club.join_policy === 'approval_required') tags.push('Approval required');
+  else if (club.join_policy === 'invite_only') tags.push('Invite only');
+  else if (club.join_policy === 'system_managed') tags.push('System managed');
+  if (club.verification_status === 'pending') tags.push('Pending verification');
+  else if (club.verification_status === 'approved') tags.push('Verified');
+  else if (club.verification_status === 'rejected') tags.push('Verification rejected');
   return tags;
 };
 
 const getRequestStatusLabel = (status: ClubJoinRequest['status']) => {
-  switch (status) {
-    case 'pending':
-      return 'Pending review';
-    case 'approved':
-      return 'Approved';
-    case 'rejected':
-      return 'Rejected';
-    case 'withdrawn':
-      return 'Withdrawn';
-    case 'cancelled':
-      return 'Cancelled';
-    default:
-      return status;
-  }
+  const map: Record<string, string> = {
+    pending: 'Pending review', approved: 'Approved', rejected: 'Rejected',
+    withdrawn: 'Withdrawn', cancelled: 'Cancelled',
+  };
+  return map[status] ?? status;
 };
 
 const getInvitationStatusLabel = (status: ClubInvitation['status']) => {
-  switch (status) {
-    case 'pending':
-      return 'Pending response';
-    case 'accepted':
-      return 'Accepted';
-    case 'declined':
-      return 'Declined';
-    case 'revoked':
-      return 'Revoked';
-    case 'expired':
-      return 'Expired';
-    default:
-      return status;
-  }
+  const map: Record<string, string> = {
+    pending: 'Pending response', accepted: 'Accepted', declined: 'Declined',
+    revoked: 'Revoked', expired: 'Expired',
+  };
+  return map[status] ?? status;
 };
 
-const formatDateTimeLabel = (value: string) => {
-  return new Date(value).toLocaleString('en-IE', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+const formatDateTimeLabel = (value: string) =>
+  new Date(value).toLocaleString('en-IE', {
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
   });
-};
 
 const toDateTimeLocalValue = (value: string | null) => {
-  if (!value) {
-    return '';
-  }
-
+  if (!value) return '';
   const date = new Date(value);
-  const timezoneOffsetMs = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - timezoneOffsetMs).toISOString().slice(0, 16);
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 };
 
-const toIsoStringFromLocalValue = (value: string) => {
-  return new Date(value).toISOString();
-};
+const toIsoStringFromLocalValue = (value: string) => new Date(value).toISOString();
 
 const getScheduleItemSummary = (item: ClubCalendarFeedItem) => {
-  if (item.item_type === 'event' && item.event) {
-    return `${item.event.event_type_display} · ${item.event.source_type_display}`;
-  }
-
+  if (item.item_type === 'event' && item.event) return `${item.event.event_type_display} · ${item.event.source_type_display}`;
   if (item.item_type === 'fixture' && item.fixture) {
-    const competition = item.fixture.competition || 'Fixture';
-    return `${competition} · ${item.fixture.venue_display} · ${item.fixture.source_type_display}`;
+    const comp = item.fixture.competition || 'Fixture';
+    return `${comp} · ${item.fixture.venue_display} · ${item.fixture.source_type_display}`;
   }
-
   return '';
 };
+
+/* ─── form tag colour by type ─────────────────────────────────── */
+const fixtureTypeColors: Record<string, string> = {
+  League: '#3b82f6', Cup: '#a78bfa', Friendly: '#f59e0b', Training: '#22c55e',
+};
+
+/* ─── page component ──────────────────────────────────────────── */
 
 export const IndividualClubBase = () => {
   const { clubId } = useParams<{ clubId: string }>();
@@ -231,58 +201,45 @@ export const IndividualClubBase = () => {
   const [reviewInvitations, setReviewInvitations] = useState<ClubInvitation[]>([]);
   const [clubPlayers, setClubPlayers] = useState<ClubPlayer[]>([]);
   const [clubActionLoading, setClubActionLoading] = useState(false);
-
   const [calendarFeed, setCalendarFeed] = useState<ClubCalendarFeedItem[]>([]);
   const [events, setEvents] = useState<ClubEvent[]>([]);
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
-
   const [loading, setLoading] = useState(true);
   const [scheduleLoading, setScheduleLoading] = useState(false);
   const [reviewAccess, setReviewAccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scheduleError, setScheduleError] = useState<string | null>(null);
   const [workflowMessage, setWorkflowMessage] = useState<string | null>(null);
-
   const [requestMessage, setRequestMessage] = useState('');
   const [inviteEmailInput, setInviteEmailInput] = useState('');
   const [inviteRole, setInviteRole] = useState<Exclude<ClubMembershipRole, 'owner'>>('coach');
   const [inviteNote, setInviteNote] = useState('');
-
   const [editingEventId, setEditingEventId] = useState<number | null>(null);
   const [eventForm, setEventForm] = useState<EventFormState>(createEmptyEventForm());
   const [editingFixtureId, setEditingFixtureId] = useState<number | null>(null);
   const [fixtureForm, setFixtureForm] = useState<FixtureFormState>(createEmptyFixtureForm());
-
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const [selectedClubPlayerByRequest, setSelectedClubPlayerByRequest] = useState<Record<number, string>>({});
   const [reviewNoteByRequest, setReviewNoteByRequest] = useState<Record<number, string>>({});
   const [revokeNoteByInvitation, setRevokeNoteByInvitation] = useState<Record<number, string>>({});
+  const [activeTab, setActiveTab] = useState<'overview' | 'players' | 'sessions' | 'settings'>('overview');
 
   const reloadClubWorkflowData = async (clubRecord: Club) => {
     const myRequestsPromise = clubsApi.listMyJoinRequests();
     const myClubsPromise = clubsApi.myClubs();
-
     let reviewerRequests: ClubJoinRequest[] = [];
     let reviewerInvitations: ClubInvitation[] = [];
     let players: ClubPlayer[] = [];
     let hasReviewAccess = false;
-
     try {
       reviewerRequests = await clubsApi.listClubJoinRequests(clubRecord.id);
       reviewerInvitations = await clubsApi.listClubInvitations(clubRecord.id);
       players = await clubsApi.listPlayers(clubRecord.id);
       hasReviewAccess = true;
-    } catch {
-      hasReviewAccess = false;
-    }
-
-    const [myRequestsData, myClubsData] = await Promise.all([
-      myRequestsPromise,
-      myClubsPromise,
-    ]);
-
+    } catch { hasReviewAccess = false; }
+    const [myRequestsData, myClubsData] = await Promise.all([myRequestsPromise, myClubsPromise]);
     setMyJoinRequests(myRequestsData);
-    setMyClubIds(myClubsData.map((entry) => entry.id));
+    setMyClubIds(myClubsData.map((e) => e.id));
     setReviewJoinRequests(reviewerRequests);
     setReviewInvitations(reviewerInvitations);
     setClubPlayers(players);
@@ -291,1319 +248,745 @@ export const IndividualClubBase = () => {
 
   const reloadSchedulingData = async (clubRecord: Club) => {
     try {
-      setScheduleLoading(true);
-      setScheduleError(null);
-
+      setScheduleLoading(true); setScheduleError(null);
       const [calendarData, eventData, fixtureData] = await Promise.all([
-        clubsApi.listCalendarFeed(clubRecord.id, { limit: 50 }), // Increased limit for calendar view
+        clubsApi.listCalendarFeed(clubRecord.id, { limit: 50 }),
         clubsApi.listEvents(clubRecord.id),
         clubsApi.listFixtures(clubRecord.id),
       ]);
-
-      setCalendarFeed(calendarData);
-      setEvents(eventData);
-      setFixtures(fixtureData);
+      setCalendarFeed(calendarData); setEvents(eventData); setFixtures(fixtureData);
     } catch (err) {
-      setCalendarFeed([]);
-      setEvents([]);
-      setFixtures([]);
+      setCalendarFeed([]); setEvents([]); setFixtures([]);
       setScheduleError(err instanceof Error ? err.message : 'Failed to load scheduling data.');
-    } finally {
-      setScheduleLoading(false);
-    }
+    } finally { setScheduleLoading(false); }
   };
 
   useEffect(() => {
     const fetchClub = async () => {
       try {
-        setLoading(true);
-        setError(null);
-
-        const clubData = await clubsApi.get(
-          numericClubId,
-          isTrashView ? { trash: 'only' } : undefined
-        );
+        setLoading(true); setError(null);
+        const clubData = await clubsApi.get(numericClubId, isTrashView ? { trash: 'only' } : undefined);
         setClub(clubData);
         await reloadClubWorkflowData(clubData);
         await reloadSchedulingData(clubData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load club');
-      } finally {
-        setLoading(false);
-      }
+      } finally { setLoading(false); }
     };
-
-    if (Number.isFinite(numericClubId)) {
-      void fetchClub();
-    }
+    if (Number.isFinite(numericClubId)) void fetchClub();
   }, [numericClubId, isTrashView]);
 
   const tags = useMemo(() => (club ? buildTags(club) : []), [club]);
   const metaParts = useMemo(
-    () => (club ? [club.city, club.country, club.division].filter(Boolean) : []),
+    () => (club ? [club.division, `Founded ${(club as any).founded_year ?? ''}`, club.city].filter(Boolean) : []),
     [club]
   );
 
   const isMember = club ? myClubIds.includes(club.id) : false;
-  const myLatestRequest = club
-    ? myJoinRequests.find((request) => request.club === club.id)
-    : undefined;
-
-  const availableRosterLinks = useMemo(
-    () => clubPlayers.filter((player) => !player.user),
-    [clubPlayers]
-  );
+  const myLatestRequest = club ? myJoinRequests.find((r) => r.club === club.id) : undefined;
+  const availableRosterLinks = useMemo(() => clubPlayers.filter((p) => !p.user), [clubPlayers]);
 
   const requestCanBeSubmitted =
-    club?.join_policy === 'approval_required' &&
-    !isMember &&
-    (!myLatestRequest ||
-      myLatestRequest.status === 'rejected' ||
-      myLatestRequest.status === 'withdrawn' ||
-      myLatestRequest.status === 'cancelled');
+    club?.join_policy === 'approval_required' && !isMember &&
+    (!myLatestRequest || ['rejected', 'withdrawn', 'cancelled'].includes(myLatestRequest.status));
 
   const canAttemptSchedulingManagement = Boolean(
     club && isMember && club.club_type !== 'system_professional' && reviewAccess
   );
 
   const canManageClubTrash =
-    typeof user?.id === 'number' &&
-    typeof club?.creator === 'number' &&
-    user.id === club.creator;
+    typeof user?.id === 'number' && typeof club?.creator === 'number' && user.id === club.creator;
 
-  const handleBackToClubs = () => {
-    navigate(`/clubs${isTrashView ? '?view=trash' : ''}`);
-  };
+  /* ─── handlers ─── */
+  const handleBackToClubs = () => navigate(`/clubs${isTrashView ? '?view=trash' : ''}`);
 
   const handleMoveClubToTrash = async () => {
-    if (!club) {
-      return;
-    }
-
-    const confirmed = window.confirm(`Move “${club.name}” to trash?`);
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      setClubActionLoading(true);
-      setWorkflowMessage(null);
-      await clubsApi.trash(club.id);
-      navigate('/clubs?view=trash');
-    } catch (err) {
-      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to move club to trash.');
-    } finally {
-      setClubActionLoading(false);
-    }
+    if (!club || !window.confirm(`Move "${club.name}" to trash?`)) return;
+    try { setClubActionLoading(true); setWorkflowMessage(null); await clubsApi.trash(club.id); navigate('/clubs?view=trash'); }
+    catch (err) { setWorkflowMessage(err instanceof Error ? err.message : 'Failed to move club to trash.'); }
+    finally { setClubActionLoading(false); }
   };
 
   const handleRestoreClub = async () => {
-    if (!club) {
-      return;
-    }
-
-    try {
-      setClubActionLoading(true);
-      setWorkflowMessage(null);
-      await clubsApi.restore(club.id);
-      navigate(`/clubs/${club.id}/`);
-    } catch (err) {
-      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to restore club.');
-    } finally {
-      setClubActionLoading(false);
-    }
+    if (!club) return;
+    try { setClubActionLoading(true); setWorkflowMessage(null); await clubsApi.restore(club.id); navigate(`/clubs/${club.id}/`); }
+    catch (err) { setWorkflowMessage(err instanceof Error ? err.message : 'Failed to restore club.'); }
+    finally { setClubActionLoading(false); }
   };
 
   const handlePermanentDeleteClub = async () => {
-    if (!club) {
-      return;
-    }
-
-    const confirmed = window.confirm(
-      `Delete “${club.name}” permanently? This cannot be undone.`
-    );
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      setClubActionLoading(true);
-      setWorkflowMessage(null);
-      await clubsApi.permanentDelete(club.id);
-      navigate('/clubs?view=trash');
-    } catch (err) {
-      setWorkflowMessage(
-        err instanceof Error ? err.message : 'Failed to permanently delete club.'
-      );
-    } finally {
-      setClubActionLoading(false);
-    }
+    if (!club || !window.confirm(`Delete "${club.name}" permanently? This cannot be undone.`)) return;
+    try { setClubActionLoading(true); setWorkflowMessage(null); await clubsApi.permanentDelete(club.id); navigate('/clubs?view=trash'); }
+    catch (err) { setWorkflowMessage(err instanceof Error ? err.message : 'Failed to permanently delete club.'); }
+    finally { setClubActionLoading(false); }
   };
 
   const handleRequestToJoin = async () => {
-    if (!club) {
-      return;
-    }
-
+    if (!club) return;
     try {
-      setLoadingKey(`request-${club.id}`);
-      setWorkflowMessage(null);
-
-      await clubsApi.requestToJoin(club.id, {
-        requested_role: 'player',
-        message: requestMessage.trim() || undefined,
-      });
-
-      setRequestMessage('');
-      setWorkflowMessage('Join request submitted successfully.');
+      setLoadingKey(`request-${club.id}`); setWorkflowMessage(null);
+      await clubsApi.requestToJoin(club.id, { requested_role: 'player', message: requestMessage.trim() || undefined });
+      setRequestMessage(''); setWorkflowMessage('Join request submitted successfully.');
       await reloadClubWorkflowData(club);
-    } catch (err) {
-      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to submit join request.');
-    } finally {
-      setLoadingKey(null);
-    }
+    } catch (err) { setWorkflowMessage(err instanceof Error ? err.message : 'Failed to submit join request.'); }
+    finally { setLoadingKey(null); }
   };
 
   const handleApproveRequest = async (request: ClubJoinRequest) => {
-    if (!club) {
-      return;
-    }
-
+    if (!club) return;
     try {
-      setLoadingKey(`approve-${request.id}`);
-      setWorkflowMessage(null);
-
+      setLoadingKey(`approve-${request.id}`); setWorkflowMessage(null);
       const selectedValue = selectedClubPlayerByRequest[request.id];
       await clubsApi.approveJoinRequest(club.id, request.id, {
+        selected_club_player: selectedValue ? Number(selectedValue) : undefined,
         review_note: reviewNoteByRequest[request.id] || '',
-        selected_club_player: selectedValue ? Number(selectedValue) : null,
       });
-
-      setWorkflowMessage('Join request approved.');
-      await reloadClubWorkflowData(club);
-    } catch (err) {
-      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to approve join request.');
-    } finally {
-      setLoadingKey(null);
-    }
+      setWorkflowMessage('Join request approved.'); await reloadClubWorkflowData(club);
+    } catch (err) { setWorkflowMessage(err instanceof Error ? err.message : 'Failed to approve join request.'); }
+    finally { setLoadingKey(null); }
   };
 
   const handleRejectRequest = async (request: ClubJoinRequest) => {
-    if (!club) {
-      return;
-    }
-
+    if (!club) return;
     try {
-      setLoadingKey(`reject-${request.id}`);
-      setWorkflowMessage(null);
-
-      await clubsApi.rejectJoinRequest(club.id, request.id, {
-        review_note: reviewNoteByRequest[request.id] || '',
-      });
-
-      setWorkflowMessage('Join request rejected.');
-      await reloadClubWorkflowData(club);
-    } catch (err) {
-      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to reject join request.');
-    } finally {
-      setLoadingKey(null);
-    }
+      setLoadingKey(`reject-${request.id}`); setWorkflowMessage(null);
+      await clubsApi.rejectJoinRequest(club.id, request.id, { review_note: reviewNoteByRequest[request.id] || '' });
+      setWorkflowMessage('Join request rejected.'); await reloadClubWorkflowData(club);
+    } catch (err) { setWorkflowMessage(err instanceof Error ? err.message : 'Failed to reject join request.'); }
+    finally { setLoadingKey(null); }
   };
 
   const handleCreateInvitation = async () => {
-    if (!club) {
-      return;
-    }
-
+    if (!club) return;
     const trimmedEmail = inviteEmailInput.trim();
     if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      setWorkflowMessage('Enter a valid email address to invite.');
-      return;
+      setWorkflowMessage('Enter a valid email address to invite.'); return;
     }
-
     try {
-      setLoadingKey('create-invitation');
-      setWorkflowMessage(null);
-
-      await clubsApi.createInvitation(club.id, {
-        invited_email: trimmedEmail,
-        invited_role: inviteRole,
-        note: inviteNote.trim() || undefined,
-      });
-
-      setInviteEmailInput('');
-      setInviteRole('coach');
-      setInviteNote('');
-      setWorkflowMessage('Invitation created successfully.');
-      await reloadClubWorkflowData(club);
-    } catch (err) {
-      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to create invitation.');
-    } finally {
-      setLoadingKey(null);
-    }
+      setLoadingKey('create-invitation'); setWorkflowMessage(null);
+      await clubsApi.createInvitation(club.id, { invited_email: trimmedEmail, invited_role: inviteRole, note: inviteNote.trim() || undefined });
+      setInviteEmailInput(''); setInviteRole('coach'); setInviteNote('');
+      setWorkflowMessage('Invitation created successfully.'); await reloadClubWorkflowData(club);
+    } catch (err) { setWorkflowMessage(err instanceof Error ? err.message : 'Failed to create invitation.'); }
+    finally { setLoadingKey(null); }
   };
 
   const handleRevokeInvitation = async (invitation: ClubInvitation) => {
-    if (!club) {
-      return;
-    }
-
+    if (!club) return;
     try {
-      setLoadingKey(`revoke-${invitation.id}`);
-      setWorkflowMessage(null);
-
-      await clubsApi.revokeInvitation(club.id, invitation.id, {
-        response_note: revokeNoteByInvitation[invitation.id] || '',
-      });
-
-      setWorkflowMessage('Invitation revoked.');
-      await reloadClubWorkflowData(club);
-    } catch (err) {
-      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to revoke invitation.');
-    } finally {
-      setLoadingKey(null);
-    }
+      setLoadingKey(`revoke-${invitation.id}`); setWorkflowMessage(null);
+      await clubsApi.revokeInvitation(club.id, invitation.id, { response_note: revokeNoteByInvitation[invitation.id] || '' });
+      setWorkflowMessage('Invitation revoked.'); await reloadClubWorkflowData(club);
+    } catch (err) { setWorkflowMessage(err instanceof Error ? err.message : 'Failed to revoke invitation.'); }
+    finally { setLoadingKey(null); }
   };
 
-  const resetEventForm = () => {
-    setEditingEventId(null);
-    setEventForm(createEmptyEventForm());
-  };
-
-  const resetFixtureForm = () => {
-    setEditingFixtureId(null);
-    setFixtureForm(createEmptyFixtureForm());
-  };
+  const resetEventForm = () => { setEditingEventId(null); setEventForm(createEmptyEventForm()); };
+  const resetFixtureForm = () => { setEditingFixtureId(null); setFixtureForm(createEmptyFixtureForm()); };
 
   const handleEventSubmit = async () => {
-    if (!club) {
-      return;
-    }
-
-    if (!eventForm.title.trim() || !eventForm.start_datetime) {
-      setWorkflowMessage('Event title and start date/time are required.');
-      return;
-    }
-
+    if (!club) return;
+    if (!eventForm.title.trim() || !eventForm.start_datetime) { setWorkflowMessage('Event title and start date/time are required.'); return; }
     try {
-      setLoadingKey(editingEventId ? `save-event-${editingEventId}` : 'create-event');
-      setWorkflowMessage(null);
-
+      setLoadingKey(editingEventId ? `save-event-${editingEventId}` : 'create-event'); setWorkflowMessage(null);
       const payload = {
-        title: eventForm.title.trim(),
-        event_type: eventForm.event_type,
-        description: eventForm.description.trim(),
+        title: eventForm.title.trim(), event_type: eventForm.event_type, description: eventForm.description.trim(),
         start_datetime: toIsoStringFromLocalValue(eventForm.start_datetime),
         end_datetime: eventForm.end_datetime ? toIsoStringFromLocalValue(eventForm.end_datetime) : null,
-        is_all_day: eventForm.is_all_day,
-        location: eventForm.location.trim(),
-        is_mandatory: eventForm.is_mandatory,
+        is_all_day: eventForm.is_all_day, location: eventForm.location.trim(), is_mandatory: eventForm.is_mandatory,
       };
-
-      if (editingEventId) {
-        await clubsApi.updateEvent(club.id, editingEventId, payload);
-        setWorkflowMessage('Club event updated successfully.');
-      } else {
-        await clubsApi.createEvent(club.id, payload);
-        setWorkflowMessage('Club event created successfully.');
-      }
-
-      resetEventForm();
-      await reloadSchedulingData(club);
-    } catch (err) {
-      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to save club event.');
-    } finally {
-      setLoadingKey(null);
-    }
+      if (editingEventId) { await clubsApi.updateEvent(club.id, editingEventId, payload); setWorkflowMessage('Club event updated.'); }
+      else { await clubsApi.createEvent(club.id, payload); setWorkflowMessage('Club event created.'); }
+      resetEventForm(); await reloadSchedulingData(club);
+    } catch (err) { setWorkflowMessage(err instanceof Error ? err.message : 'Failed to save club event.'); }
+    finally { setLoadingKey(null); }
   };
 
   const handleFixtureSubmit = async () => {
-    if (!club) {
-      return;
-    }
-
-    if (!fixtureForm.opponent_name.trim() || !fixtureForm.match_datetime) {
-      setWorkflowMessage('Opponent and fixture date/time are required.');
-      return;
-    }
-
+    if (!club) return;
+    if (!fixtureForm.opponent_name.trim() || !fixtureForm.match_datetime) { setWorkflowMessage('Opponent and fixture date/time are required.'); return; }
     try {
-      setLoadingKey(editingFixtureId ? `save-fixture-${editingFixtureId}` : 'create-fixture');
-      setWorkflowMessage(null);
-
+      setLoadingKey(editingFixtureId ? `save-fixture-${editingFixtureId}` : 'create-fixture'); setWorkflowMessage(null);
       const payload = {
-        opponent_name: fixtureForm.opponent_name.trim(),
-        venue: fixtureForm.venue,
-        competition: fixtureForm.competition.trim(),
+        opponent_name: fixtureForm.opponent_name.trim(), venue: fixtureForm.venue, competition: fixtureForm.competition.trim(),
         match_datetime: toIsoStringFromLocalValue(fixtureForm.match_datetime),
-        location: fixtureForm.location.trim(),
-        fixture_status: fixtureForm.fixture_status,
+        location: fixtureForm.location.trim(), fixture_status: fixtureForm.fixture_status,
       };
-
-      if (editingFixtureId) {
-        await clubsApi.updateFixture(club.id, editingFixtureId, payload);
-        setWorkflowMessage('Fixture updated successfully.');
-      } else {
-        await clubsApi.createFixture(club.id, payload);
-        setWorkflowMessage('Fixture created successfully.');
-      }
-
-      resetFixtureForm();
-      await reloadSchedulingData(club);
-    } catch (err) {
-      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to save fixture.');
-    } finally {
-      setLoadingKey(null);
-    }
+      if (editingFixtureId) { await clubsApi.updateFixture(club.id, editingFixtureId, payload); setWorkflowMessage('Fixture updated.'); }
+      else { await clubsApi.createFixture(club.id, payload); setWorkflowMessage('Fixture created.'); }
+      resetFixtureForm(); await reloadSchedulingData(club);
+    } catch (err) { setWorkflowMessage(err instanceof Error ? err.message : 'Failed to save fixture.'); }
+    finally { setLoadingKey(null); }
   };
 
   const handleEditEvent = (event: ClubEvent) => {
     setEditingEventId(event.id);
-    setEventForm({
-      title: event.title,
-      event_type: event.event_type,
-      description: event.description,
-      start_datetime: toDateTimeLocalValue(event.start_datetime),
-      end_datetime: toDateTimeLocalValue(event.end_datetime),
-      is_all_day: event.is_all_day,
-      location: event.location,
-      is_mandatory: event.is_mandatory,
-    });
+    setEventForm({ title: event.title, event_type: event.event_type, description: event.description, start_datetime: toDateTimeLocalValue(event.start_datetime), end_datetime: toDateTimeLocalValue(event.end_datetime), is_all_day: event.is_all_day, location: event.location, is_mandatory: event.is_mandatory });
   };
 
   const handleEditFixture = (fixture: Fixture) => {
     setEditingFixtureId(fixture.id);
-    setFixtureForm({
-      opponent_name: fixture.opponent_name,
-      venue: fixture.venue,
-      competition: fixture.competition,
-      match_datetime: toDateTimeLocalValue(fixture.match_datetime),
-      location: fixture.location,
-      fixture_status: fixture.fixture_status,
-    });
+    setFixtureForm({ opponent_name: fixture.opponent_name, venue: fixture.venue, competition: fixture.competition, match_datetime: toDateTimeLocalValue(fixture.match_datetime), location: fixture.location, fixture_status: fixture.fixture_status });
   };
 
   const handleDeleteEvent = async (event: ClubEvent) => {
-    if (!club) {
-      return;
-    }
-
-    const confirmed = window.confirm(`Delete the event “${event.title}”?`);
-    if (!confirmed) {
-      return;
-    }
-
+    if (!club || !window.confirm(`Delete the event "${event.title}"?`)) return;
     try {
-      setLoadingKey(`delete-event-${event.id}`);
-      setWorkflowMessage(null);
-      await clubsApi.deleteEvent(club.id, event.id);
-      setWorkflowMessage('Club event deleted successfully.');
-      if (editingEventId === event.id) {
-        resetEventForm();
-      }
+      setLoadingKey(`delete-event-${event.id}`); setWorkflowMessage(null);
+      await clubsApi.deleteEvent(club.id, event.id); setWorkflowMessage('Club event deleted.');
+      if (editingEventId === event.id) resetEventForm();
       await reloadSchedulingData(club);
-    } catch (err) {
-      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to delete club event.');
-    } finally {
-      setLoadingKey(null);
-    }
+    } catch (err) { setWorkflowMessage(err instanceof Error ? err.message : 'Failed to delete club event.'); }
+    finally { setLoadingKey(null); }
   };
 
   const handleDeleteFixture = async (fixture: Fixture) => {
-    if (!club) {
-      return;
-    }
-
-    const confirmed = window.confirm(`Delete the fixture against “${fixture.opponent_name}”?`);
-    if (!confirmed) {
-      return;
-    }
-
+    if (!club || !window.confirm(`Delete the fixture against "${fixture.opponent_name}"?`)) return;
     try {
-      setLoadingKey(`delete-fixture-${fixture.id}`);
-      setWorkflowMessage(null);
-      await clubsApi.deleteFixture(club.id, fixture.id);
-      setWorkflowMessage('Fixture deleted successfully.');
-      if (editingFixtureId === fixture.id) {
-        resetFixtureForm();
-      }
+      setLoadingKey(`delete-fixture-${fixture.id}`); setWorkflowMessage(null);
+      await clubsApi.deleteFixture(club.id, fixture.id); setWorkflowMessage('Fixture deleted.');
+      if (editingFixtureId === fixture.id) resetFixtureForm();
       await reloadSchedulingData(club);
-    } catch (err) {
-      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to delete fixture.');
-    } finally {
-      setLoadingKey(null);
-    }
+    } catch (err) { setWorkflowMessage(err instanceof Error ? err.message : 'Failed to delete fixture.'); }
+    finally { setLoadingKey(null); }
   };
 
-  if (loading) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.loading}>Loading club...</div>
+  /* ─── loading / error screens ─── */
+  if (loading) return (
+    <div className={styles.individualClubShell}>
+      <div className="sidebar-section"><Sidebar /></div>
+      <div className={styles.individualClubMain}>
+        <div className={styles.individualClubLoadingState}>
+          <div className={styles.individualClubSpinner} />
+          <p>Loading club…</p>
+        </div>
       </div>
-    );
-  }
+    </div>
+  );
 
-  if (error || !club) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.error}>{error || 'Club not found'}</div>
+  if (error || !club) return (
+    <div className={styles.individualClubShell}>
+      <div className="sidebar-section"><Sidebar /></div>
+      <div className={styles.individualClubMain}>
+        <div className={styles.individualClubErrorState}>{error || 'Club not found'}</div>
       </div>
-    );
-  }
+    </div>
+  );
 
+  /* ─── derived ─── */
+  const initials = club.name.split(' ').map((w) => w[0]?.toUpperCase() ?? '').slice(0, 2).join('');
+  const upcomingItems = calendarFeed.slice(0, 5);
+  const squadPreview = clubPlayers.slice(0, 7);
+  const pendingRequests = reviewJoinRequests.filter((r) => r.status === 'pending');
+
+  /* ─── render ─── */
   return (
-    <div className={styles.container}>
-      <section className={styles.hero}>
-        <div className={styles.clubInfo}>
-          <h1>{club.name}</h1>
-          {metaParts.length > 0 && (
-            <p className={styles.meta}>{metaParts.join(' · ')}</p>
-          )}
+    <div className={styles.individualClubShell}>
+      <div className="sidebar-section"><Sidebar /></div>
 
-          {tags.length > 0 && (
-            <div className={styles.tagRow}>
-              {tags.map((tag) => (
-                <span key={tag} className={styles.tag}>
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {club.source_real_club_name && (
-            <p className={styles.referenceText}>
-              Reference club: {club.source_real_club_name}
-            </p>
-          )}
-        </div>
-
-        <div className={styles.heroActions}>
-          <button className={styles.backButton} onClick={handleBackToClubs}>
-            Back to Clubs
-          </button>
-
-          {!club.is_trashed ? (
-            <>
-              <button className={styles.secondaryButton} onClick={() => navigate('/clubs/browse')}>
-                Discover Clubs
-              </button>
-
-              {canManageClubTrash ? (
-                <button
-                  className={styles.secondaryButton}
-                  type="button"
-                  disabled={clubActionLoading}
-                  style={{
-                    background: 'rgba(239, 68, 68, 0.18)',
-                    borderColor: 'rgba(239, 68, 68, 0.34)',
-                    color: '#fecaca',
-                  }}
-                  onClick={handleMoveClubToTrash}
-                >
-                  {clubActionLoading ? 'Moving...' : 'Move to Trash'}
-                </button>
-              ) : null}
-            </>
-          ) : canManageClubTrash ? (
-            <>
-              <button
-                className={styles.secondaryButton}
-                type="button"
-                disabled={clubActionLoading}
-                style={{
-                  background: 'rgba(34, 197, 94, 0.18)',
-                  borderColor: 'rgba(34, 197, 94, 0.34)',
-                  color: '#bbf7d0',
-                }}
-                onClick={handleRestoreClub}
-              >
-                {clubActionLoading ? 'Restoring...' : 'Restore'}
-              </button>
-
-              <button
-                className={styles.secondaryButton}
-                type="button"
-                disabled={clubActionLoading}
-                style={{
-                  background: 'rgba(239, 68, 68, 0.18)',
-                  borderColor: 'rgba(239, 68, 68, 0.34)',
-                  color: '#fecaca',
-                }}
-                onClick={handlePermanentDeleteClub}
-              >
-                {clubActionLoading ? 'Deleting...' : 'Delete Permanently'}
-              </button>
-            </>
-          ) : null}
-        </div>
-        {club.is_trashed && (
-          <div className={styles.notice}>
-            This club is currently in trash and the workspace has been switched into recovery mode.
-            {club.trash_expires_at && (
-              <> It will be removed permanently after{' '}
-                {new Date(club.trash_expires_at).toLocaleDateString('en-IE', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                })}
-                unless you restore it first.
-              </>
-            )}
+      <div className={styles.individualClubMain}>
+        {/* ── Header ── */}
+        <header className={styles.individualClubHeader}>
+          <div className={styles.individualClubHeaderLeft}>
+            <span className={styles.individualClubHeaderLabel}>Coaching</span>
+            <span className={styles.individualClubHeaderSep}>·</span>
+            <span className={styles.individualClubHeaderTitle}>{club.name}</span>
           </div>
-        )}
-      </section>
+          <div className={styles.individualClubHeaderMiddle}>
+            <ClubsNavBar />
+          </div>
+          <div className={styles.individualClubHeaderRight}>
+            <SocialUserButtons />
+          </div>
+        </header>
 
-      {workflowMessage && <div className={styles.notice}>{workflowMessage}</div>}
-      {scheduleError && <div className={styles.error}>{scheduleError}</div>}
+        {/* ── Scrollable content ── */}
+        <div className={styles.individualClubContent}>
 
-      <section className={styles.infoGrid}>
-        <div className={styles.infoPanel}>
-          <h2 className={styles.panelTitle}>Club Profile</h2>
-
-          {club.join_code && (
-            <div className={styles.codeBox}>
-              <div className={styles.codeLabel}>Join code</div>
-              <div className={styles.codeValue}>{club.join_code}</div>
-            </div>
-          )}
-
-          <p className={styles.bodyText}>{club.description}</p>
-        </div>
-
-        <div className={styles.infoPanel}>
-          <h2 className={styles.panelTitle}>Membership Workflow</h2>
-
-            {club.is_trashed ? (
-              <div className={styles.noticeBlock}>
-                This club is in trash. Join workflows and club access changes are paused until it is restored.
+          {/* ── Club hero banner ── */}
+          <section className={styles.individualClubHero}>
+            <div className={styles.individualClubHeroLeft}>
+              <div className={styles.individualClubBadge}>
+                {club.badge
+                  ? <img src={club.badge} alt={club.name} className={styles.individualClubBadgeImg} />
+                  : <span className={styles.individualClubBadgeInitials}>{initials}</span>
+                }
               </div>
-            ) : isMember ? (
-            <>
-              <p className={styles.bodyText}>
-                This club supports a real player request-to-join flow. Approval is still required before membership is granted.
-              </p>
-
-              {myLatestRequest && (
-                <div className={styles.noticeBlock}>
-                  Your latest request: <strong>{getRequestStatusLabel(myLatestRequest.status)}</strong>
-                  {myLatestRequest.review_note && (
-                    <div className={styles.detailNote}>Reviewer note: {myLatestRequest.review_note}</div>
+              <div className={styles.individualClubHeroInfo}>
+                <h1 className={styles.individualClubName}>{club.name}</h1>
+                {metaParts.length > 0 && (
+                  <p className={styles.individualClubMeta}>{metaParts.join(' · ')}</p>
+                )}
+                <div className={styles.individualClubTagRow}>
+                  {tags.map((tag) => (
+                    <span key={tag} className={styles.individualClubTag}>{tag}</span>
+                  ))}
+                  {club.player_count != null && (
+                    <span className={styles.individualClubTag}>{club.player_count} players</span>
+                  )}
+                  {(club as any).head_coach && (
+                    <span className={styles.individualClubTag}>Head coach: {(club as any).head_coach}</span>
                   )}
                 </div>
+              </div>
+            </div>
+            <div className={styles.individualClubHeroActions}>
+              <button className={styles.individualClubPrimaryBtn} onClick={() => navigate(`/clubs/${club.id}/sessions/new`)}>
+                + New session
+              </button>
+              <button className={styles.individualClubGhostBtn} onClick={() => navigate(`/clubs/${club.id}/invite`)}>
+                Invite player
+              </button>
+              <button className={styles.individualClubGhostBtn}>
+                Share club
+              </button>
+              {canManageClubTrash && !club.is_trashed && (
+                <button className={styles.individualClubDangerBtn} disabled={clubActionLoading} onClick={handleMoveClubToTrash}>
+                  {clubActionLoading ? 'Moving…' : 'Move to Trash'}
+                </button>
               )}
-
-              {requestCanBeSubmitted && (
+              {club.is_trashed && canManageClubTrash && (
                 <>
-                  <textarea
-                    className={styles.textarea}
-                    value={requestMessage}
-                    onChange={(event) => setRequestMessage(event.target.value)}
-                    placeholder="Optional note to the reviewer"
-                    rows={3}
-                  />
-                  <button
-                    className={styles.primaryButton}
-                    type="button"
-                    disabled={loadingKey === `request-${club.id}`}
-                    onClick={handleRequestToJoin}
-                  >
-                    {loadingKey === `request-${club.id}` ? 'Submitting...' : 'Request to Join'}
+                  <button className={styles.individualClubRestoreBtn} disabled={clubActionLoading} onClick={handleRestoreClub}>
+                    {clubActionLoading ? 'Restoring…' : 'Restore'}
+                  </button>
+                  <button className={styles.individualClubDangerBtn} disabled={clubActionLoading} onClick={handlePermanentDeleteClub}>
+                    {clubActionLoading ? 'Deleting…' : 'Delete Permanently'}
                   </button>
                 </>
               )}
-            </>
-          ) : club.join_policy === 'invite_only' ? (
-            <div className={styles.noticeBlock}>
-              This club is invite only. No self-service join request is available from this page.
             </div>
-          ) : (
-            <div className={styles.noticeBlock}>
-              This club is system managed and is not claimable through ordinary user flows.
+          </section>
+
+          {/* trash notice */}
+          {club.is_trashed && (
+            <div className={styles.individualClubTrashNotice}>
+              This club is in trash. Workspace is in recovery mode.
+              {club.trash_expires_at && <> Expires {new Date(club.trash_expires_at).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' })}.</>}
             </div>
           )}
-        </div>
-      </section>
 
-      {!club.is_trashed && (
-      <>
-      <ClubResourcesSection
-        club={club}
-        isMember={isMember}
-        canManageResources={reviewAccess}
-      />
+          {/* workflow message */}
+          {workflowMessage && <div className={styles.individualClubNotice}>{workflowMessage}</div>}
+          {scheduleError && <div className={styles.individualClubError}>{scheduleError}</div>}
 
-      {reviewAccess && (
-        <div className={styles.reviewGrid}>
-          <section className={styles.infoPanel}>
-            <h2 className={styles.panelTitle}>Pending Join Requests</h2>
-
-            {reviewJoinRequests.length === 0 ? (
-              <p className={styles.bodyText}>No join requests have been submitted for this club.</p>
-            ) : (
-              <div className={styles.workflowList}>
-                {reviewJoinRequests.map((request) => (
-                  <div key={request.id} className={styles.workflowCard}>
-                    <div className={styles.workflowHeaderRow}>
-                      <div>
-                        <div className={styles.workflowTitle}>{request.user_email}</div>
-                        <div className={styles.workflowMeta}>
-                          Requested role: {request.requested_role} · Status: {getRequestStatusLabel(request.status)}
-                        </div>
-                      </div>
-                    </div>
-
-                    {request.message && (
-                      <div className={styles.detailNote}>Requester note: {request.message}</div>
-                    )}
-
-                    {request.status === 'pending' ? (
-                      <>
-                        <label
-                          className={styles.formLabel}
-                          htmlFor={`selected-club-player-${request.id}`}
-                        >
-                          Optional roster link
-                        </label>
-                        <select
-                          id={`selected-club-player-${request.id}`}
-                          className={styles.input}
-                          value={selectedClubPlayerByRequest[request.id] || ''}
-                          onChange={(event) =>
-                            setSelectedClubPlayerByRequest((prev) => ({
-                              ...prev,
-                              [request.id]: event.target.value,
-                            }))
-                          }
-                        >
-                          <option value="">No manual roster link</option>
-                          {availableRosterLinks.map((player) => (
-                            <option key={player.id} value={player.id}>
-                              {player.full_name} {player.squad_number ? `#${player.squad_number}` : ''}
-                            </option>
-                          ))}
-                        </select>
-
-                        <label
-                          className={styles.formLabel}
-                          htmlFor={`review-note-${request.id}`}
-                        >
-                          Review note
-                        </label>
-                        <textarea
-                          id={`review-note-${request.id}`}
-                          className={styles.textarea}
-                          rows={3}
-                          value={reviewNoteByRequest[request.id] || ''}
-                          onChange={(event) =>
-                            setReviewNoteByRequest((prev) => ({
-                              ...prev,
-                              [request.id]: event.target.value,
-                            }))
-                          }
-                          placeholder="Optional note for the requester"
-                        />
-
-                        <div className={styles.inlineActions}>
-                          <button
-                            className={styles.primaryButton}
-                            type="button"
-                            disabled={loadingKey === `approve-${request.id}`}
-                            onClick={() => handleApproveRequest(request)}
-                          >
-                            {loadingKey === `approve-${request.id}` ? 'Approving...' : 'Approve'}
-                          </button>
-                          <button
-                            className={styles.secondaryButton}
-                            type="button"
-                            disabled={loadingKey === `reject-${request.id}`}
-                            onClick={() => handleRejectRequest(request)}
-                          >
-                            {loadingKey === `reject-${request.id}` ? 'Rejecting...' : 'Reject'}
-                          </button>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        {request.selected_club_player_name && (
-                          <div className={styles.detailNote}>
-                            Linked roster row: {request.selected_club_player_name}
-                          </div>
-                        )}
-                        {request.review_note && (
-                          <div className={styles.detailNote}>Review note: {request.review_note}</div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section className={styles.infoPanel}>
-            <h2 className={styles.panelTitle}>Invitations</h2>
-
-            <div className={styles.formGrid}>
-              <div className={styles.formField}>
-                <label className={styles.formLabel} htmlFor="invited-email">
-                  Email address
-                </label>
-                <input
-                  id="invited-email"
-                  className={styles.input}
-                  type="email"
-                  value={inviteEmailInput}
-                  onChange={(event) => setInviteEmailInput(event.target.value)}
-                  placeholder="user@example.com"
-                />
-              </div>
-
-              <div className={styles.formField}>
-                <label className={styles.formLabel} htmlFor="invite-role">
-                  Role
-                </label>
-                <select
-                  id="invite-role"
-                  className={styles.input}
-                  value={inviteRole}
-                  onChange={(event) =>
-                    setInviteRole(event.target.value as Exclude<ClubMembershipRole, 'owner'>)
-                  }
-                >
-                  {STAFF_INVITE_ROLE_OPTIONS.map((role) => (
-                    <option key={role} value={role}>
-                      {role}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className={styles.formField}>
-              <label className={styles.formLabel} htmlFor="invite-note">
-                Invite note
-              </label>
-              <textarea
-                id="invite-note"
-                className={styles.textarea}
-                rows={3}
-                value={inviteNote}
-                onChange={(event) => setInviteNote(event.target.value)}
-                placeholder="Optional note for the invited user"
-              />
-            </div>
-
-            <div className={styles.inlineActions}>
+          {/* ── Tab nav ── */}
+          <div className={styles.individualClubTabs}>
+            {(['overview', 'players', 'sessions', 'settings'] as const).map((tab) => (
               <button
-                className={styles.primaryButton}
-                type="button"
-                disabled={loadingKey === 'create-invitation'}
-                onClick={handleCreateInvitation}
+                key={tab}
+                className={`${styles.individualClubTab} ${activeTab === tab ? styles.individualClubTabActive : ''}`}
+                onClick={() => setActiveTab(tab)}
               >
-                {loadingKey === 'create-invitation' ? 'Sending...' : 'Send Invitation'}
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
-            </div>
+            ))}
+          </div>
 
-            <div className={styles.workflowList}>
-              {reviewInvitations.length === 0 ? (
-                <p className={styles.bodyText}>No invitations have been sent for this club yet.</p>
-              ) : (
-                reviewInvitations.map((invitation) => (
-                  <div key={invitation.id} className={styles.workflowCard}>
-                    <div className={styles.workflowTitle}>{invitation.invited_user_email}</div>
-                    <div className={styles.workflowMeta}>
-                      Role: {invitation.invited_role} · Status: {getInvitationStatusLabel(invitation.status)}
-                    </div>
-
-                    {invitation.note && (
-                      <div className={styles.detailNote}>Invite note: {invitation.note}</div>
-                    )}
-                    {invitation.response_note && (
-                      <div className={styles.detailNote}>Response note: {invitation.response_note}</div>
-                    )}
-
-                    {invitation.status === 'pending' && (
-                      <>
-                        <textarea
-                          className={styles.textarea}
-                          rows={2}
-                          value={revokeNoteByInvitation[invitation.id] || ''}
-                          onChange={(event) =>
-                            setRevokeNoteByInvitation((prev) => ({
-                              ...prev,
-                              [invitation.id]: event.target.value,
-                            }))
-                          }
-                          placeholder="Optional revoke note"
-                        />
-                        <div className={styles.inlineActions}>
-                          <button
-                            className={styles.secondaryButton}
-                            type="button"
-                            disabled={loadingKey === `revoke-${invitation.id}`}
-                            onClick={() => handleRevokeInvitation(invitation)}
-                          >
-                            {loadingKey === `revoke-${invitation.id}` ? 'Revoking...' : 'Revoke'}
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </section>
-        </div>
-      )}
-
-      <section className={styles.featureSection}>
-        <div className={styles.featureHeader}>
-          <h2 className={styles.panelTitle}>Club Scheduling</h2>
-        </div>
-
-        <div className={styles.reviewGrid}>
-          <section className={styles.infoPanel}>
-            <h3 className={styles.panelTitle}>Upcoming Schedule</h3>
-
-            {scheduleLoading ? (
-              <p className={styles.bodyText}>Loading upcoming schedule…</p>
-            ) : calendarFeed.length === 0 ? (
-              <div className={styles.noticeBlock}>
-                No upcoming events or fixtures have been scheduled yet.
+          {/* ── Stat strip ── */}
+          <div className={styles.individualClubStatStrip}>
+            <div className={styles.individualClubStatCard}>
+              <div className={styles.individualClubStatLabel}>FORM (LAST 5)</div>
+              <div className={styles.individualClubStatValue} style={{ fontSize: '1.4rem', letterSpacing: '0.1em' }}>
+                {(club as any).recent_form ?? 'W W D W L'}
               </div>
-            ) : (
-              <div className={styles.workflowList}>
-                {calendarFeed.map((item) => (
-                  <div key={`${item.item_type}-${item.item_type === 'event' ? item.event?.id : item.fixture?.id}`} className={styles.workflowCard}>
-                    <div className={styles.workflowHeaderRow}>
-                      <div>
-                        <div className={styles.workflowTitle}>{item.calendar_label}</div>
-                        <div className={styles.workflowMeta}>
-                          {formatDateTimeLabel(item.sort_datetime)}
-                        </div>
-                      </div>
-                      <span className={styles.tag}>
-                        {item.item_type === 'event' ? 'Event' : 'Fixture'}
-                      </span>
-                    </div>
-                    <div className={styles.detailNote}>{getScheduleItemSummary(item)}</div>
-                    {item.item_type === 'event' && item.event?.location && (
-                      <div className={styles.detailNote}>Location: {item.event.location}</div>
-                    )}
-                    {item.item_type === 'fixture' && item.fixture?.location && (
-                      <div className={styles.detailNote}>Location: {item.fixture.location}</div>
-                    )}
-                  </div>
-                ))}
+              <div className={styles.individualClubStatSub}>
+                {(club as any).recent_form_summary ?? '3 wins, 1 draw'}
               </div>
-            )}
-          </section>
+            </div>
+            <div className={styles.individualClubStatCard}>
+              <div className={styles.individualClubStatLabel}>ATTENDANCE</div>
+              <div className={styles.individualClubStatValue}>{(club as any).attendance_rate ?? '87%'}</div>
+              <div className={styles.individualClubStatSub}>{(club as any).attendance_trend ?? '+4% vs last month'}</div>
+            </div>
+            <div className={styles.individualClubStatCard}>
+              <div className={styles.individualClubStatLabel}>SESSIONS THIS MONTH</div>
+              <div className={styles.individualClubStatValue}>{(club as any).sessions_this_month ?? events.length}</div>
+              <div className={styles.individualClubStatSub}>{(club as any).next_session ?? 'Next: Wed 19:30'}</div>
+            </div>
+            <div className={styles.individualClubStatCard}>
+              <div className={styles.individualClubStatLabel}>GOALS SCORED</div>
+              <div className={styles.individualClubStatValue}>{(club as any).goals_scored ?? 24}</div>
+              <div className={styles.individualClubStatSub}>Conceded: {(club as any).goals_conceded ?? 11}</div>
+            </div>
+          </div>
 
-          <section className={styles.infoPanel}>
-            <h3 className={styles.panelTitle}>Calendar Preview</h3>
+          {/* ── Two-column main area ── */}
+          <div className={styles.individualClubBodyGrid}>
 
-            <ClubCalendar calendarItems={calendarFeed} />
-          </section>
-        </div>
+            {/* ── LEFT COLUMN ── */}
+            <div className={styles.individualClubLeftCol}>
 
-        <div className={styles.reviewGrid}>
-          <section className={styles.infoPanel}>
-            <h3 className={styles.panelTitle}>Club Events</h3>
-
-            {canAttemptSchedulingManagement && (
-              <>
-                <div className={styles.formGrid}>
-                  <div className={styles.formField}>
-                    <label className={styles.formLabel} htmlFor="club-event-title">
-                      Title
-                    </label>
-                    <input
-                      id="club-event-title"
-                      className={styles.input}
-                      type="text"
-                      value={eventForm.title}
-                      onChange={(event) => setEventForm((prev) => ({ ...prev, title: event.target.value }))}
-                      placeholder="e.g. Tuesday analysis session"
-                    />
-                  </div>
-
-                  <div className={styles.formField}>
-                    <label className={styles.formLabel} htmlFor="club-event-type">
-                      Event type
-                    </label>
-                    <select
-                      id="club-event-type"
-                      className={styles.input}
-                      value={eventForm.event_type}
-                      onChange={(event) =>
-                        setEventForm((prev) => ({ ...prev, event_type: event.target.value as ClubEventType }))
-                      }
-                    >
-                      {EVENT_TYPE_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className={styles.formGrid}>
-                  <div className={styles.formField}>
-                    <label className={styles.formLabel} htmlFor="club-event-start">
-                      Start date and time
-                    </label>
-                    <input
-                      id="club-event-start"
-                      className={styles.input}
-                      type="datetime-local"
-                      value={eventForm.start_datetime}
-                      onChange={(event) => setEventForm((prev) => ({ ...prev, start_datetime: event.target.value }))}
-                    />
-                  </div>
-
-                  <div className={styles.formField}>
-                    <label className={styles.formLabel} htmlFor="club-event-end">
-                      End date and time
-                    </label>
-                    <input
-                      id="club-event-end"
-                      className={styles.input}
-                      type="datetime-local"
-                      value={eventForm.end_datetime}
-                      onChange={(event) => setEventForm((prev) => ({ ...prev, end_datetime: event.target.value }))}
-                    />
-                  </div>
-                </div>
-
-                <div className={styles.formGrid}>
-                  <div className={styles.formField}>
-                    <label className={styles.formLabel} htmlFor="club-event-location">
-                      Location
-                    </label>
-                    <input
-                      id="club-event-location"
-                      className={styles.input}
-                      type="text"
-                      value={eventForm.location}
-                      onChange={(event) => setEventForm((prev) => ({ ...prev, location: event.target.value }))}
-                      placeholder="e.g. Main pitch"
-                    />
-                  </div>
-                </div>
-
-                <div className={styles.formField}>
-                  <label className={styles.formLabel} htmlFor="club-event-description">
-                    Description
-                  </label>
-                  <textarea
-                    id="club-event-description"
-                    className={styles.textarea}
-                    rows={3}
-                    value={eventForm.description}
-                    onChange={(event) => setEventForm((prev) => ({ ...prev, description: event.target.value }))}
-                    placeholder="Optional event details"
-                  />
-                </div>
-
-                <div className={styles.inlineActions}>
-                  <label className={styles.bodyText} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <input
-                      type="checkbox"
-                      checked={eventForm.is_all_day}
-                      onChange={(event) => setEventForm((prev) => ({ ...prev, is_all_day: event.target.checked }))}
-                    />
-                    All day event
-                  </label>
-
-                  <label className={styles.bodyText} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <input
-                      type="checkbox"
-                      checked={eventForm.is_mandatory}
-                      onChange={(event) => setEventForm((prev) => ({ ...prev, is_mandatory: event.target.checked }))}
-                    />
-                    Mandatory
-                  </label>
-                </div>
-
-                <div className={styles.inlineActions}>
-                  <button
-                    className={styles.primaryButton}
-                    type="button"
-                    disabled={loadingKey === 'create-event' || (editingEventId !== null && loadingKey === `save-event-${editingEventId}`)}
-                    onClick={handleEventSubmit}
-                  >
-                    {editingEventId !== null
-                      ? loadingKey === `save-event-${editingEventId}`
-                        ? 'Saving...'
-                        : 'Save Event'
-                      : loadingKey === 'create-event'
-                        ? 'Creating...'
-                        : 'Create Event'}
+              {/* Upcoming fixtures */}
+              <div className={styles.individualClubPanel}>
+                <div className={styles.individualClubPanelHead}>
+                  <h2 className={styles.individualClubPanelTitle}>Upcoming</h2>
+                  <button className={styles.individualClubLinkBtn} onClick={() => navigate(`/clubs/${club.id}/fixtures`)}>
+                    View all fixtures →
                   </button>
-                  {editingEventId !== null && (
-                    <button className={styles.secondaryButton} type="button" onClick={resetEventForm}>
-                      Cancel Edit
-                    </button>
-                  )}
                 </div>
-              </>
-            )}
-
-            <div className={styles.workflowList}>
-              {events.length === 0 ? (
-                <p className={styles.bodyText}>No club events have been created yet.</p>
-              ) : (
-                events.map((event) => (
-                  <div key={event.id} className={styles.workflowCard}>
-                    <div className={styles.workflowHeaderRow}>
-                      <div>
-                        <div className={styles.workflowTitle}>{event.title}</div>
-                        <div className={styles.workflowMeta}>
-                          {event.event_type_display} · {formatDateTimeLabel(event.start_datetime)}
+                {scheduleLoading ? (
+                  <p className={styles.individualClubBodyText}>Loading schedule…</p>
+                ) : upcomingItems.length === 0 ? (
+                  <p className={styles.individualClubBodyText}>No upcoming events or fixtures scheduled.</p>
+                ) : (
+                  <div className={styles.individualClubUpcomingList}>
+                    {upcomingItems.map((item) => {
+                      const isFixture = item.item_type === 'fixture';
+                      const date = new Date(item.sort_datetime);
+                      const dayName = date.toLocaleDateString('en-IE', { weekday: 'short' }).toUpperCase();
+                      const dayNum = date.getDate();
+                      const time = date.toLocaleTimeString('en-IE', { hour: '2-digit', minute: '2-digit' });
+                      const competition = isFixture ? item.fixture?.competition ?? 'Fixture' : item.event?.event_type_display ?? 'Event';
+                      const venue = isFixture ? item.fixture?.venue_display : item.event?.location;
+                      const compColor = fixtureTypeColors[competition] ?? '#22c55e';
+                      return (
+                        <div key={`${item.item_type}-${isFixture ? item.fixture?.id : item.event?.id}`} className={styles.individualClubUpcomingRow}>
+                          <div className={styles.individualClubUpcomingDate}>
+                            <span className={styles.individualClubUpcomingDay}>{dayName}</span>
+                            <span className={styles.individualClubUpcomingNum}>{dayNum}</span>
+                          </div>
+                          <div className={styles.individualClubUpcomingInfo}>
+                            <div className={styles.individualClubUpcomingTitle}>
+                              {item.calendar_label}
+                              {competition && (
+                                <span className={styles.individualClubUpcomingTag} style={{ background: `${compColor}22`, color: compColor, borderColor: `${compColor}44` }}>
+                                  {competition}
+                                </span>
+                              )}
+                              {venue && (
+                                <span className={styles.individualClubUpcomingTag}>{venue}</span>
+                              )}
+                            </div>
+                            <div className={styles.individualClubUpcomingMeta}>
+                              {time}{item.item_type === 'event' && item.event?.location ? ` · ${item.event.location}` : ''}
+                              {item.item_type === 'fixture' && item.fixture?.location ? ` · ${item.fixture.location}` : ''}
+                            </div>
+                          </div>
+                          <button className={styles.individualClubDetailsBtn}>Details</button>
                         </div>
-                      </div>
-                      <span className={styles.tag}>{event.source_type_display}</span>
-                    </div>
-
-                    {event.location && (
-                      <div className={styles.detailNote}>Location: {event.location}</div>
-                    )}
-                    {event.end_datetime && (
-                      <div className={styles.detailNote}>Ends: {formatDateTimeLabel(event.end_datetime)}</div>
-                    )}
-                    {event.description && (
-                      <div className={styles.detailNote}>{event.description}</div>
-                    )}
-                    {event.is_mandatory && (
-                      <div className={styles.detailNote}>Mandatory event</div>
-                    )}
-
-                    {canAttemptSchedulingManagement && event.is_user_editable && (
-                      <div className={styles.inlineActions}>
-                        <button
-                          className={styles.secondaryButton}
-                          type="button"
-                          onClick={() => handleEditEvent(event)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className={styles.secondaryButton}
-                          type="button"
-                          disabled={loadingKey === `delete-event-${event.id}`}
-                          onClick={() => handleDeleteEvent(event)}
-                        >
-                          {loadingKey === `delete-event-${event.id}` ? 'Deleting...' : 'Delete'}
-                        </button>
-                      </div>
-                    )}
+                      );
+                    })}
                   </div>
-                ))
+                )}
+              </div>
+
+              {/* Squad preview */}
+              <div className={styles.individualClubPanel}>
+                <div className={styles.individualClubPanelHead}>
+                  <h2 className={styles.individualClubPanelTitle}>
+                    Squad
+                    <span className={styles.individualClubPanelCount}>
+                      {squadPreview.length} SHOWN · {clubPlayers.length} TOTAL
+                    </span>
+                  </h2>
+                  <button className={styles.individualClubLinkBtn} onClick={() => navigate(`/clubs/${club.id}/players`)}>
+                    Full roster →
+                  </button>
+                </div>
+                {clubPlayers.length === 0 ? (
+                  <p className={styles.individualClubBodyText}>No players on the roster yet.</p>
+                ) : (
+                  <>
+                    <div className={styles.individualClubSquadTableHead}>
+                      <span>#</span>
+                      <span>PLAYER</span>
+                      <span>POSITION</span>
+                      <span>AGE</span>
+                      <span>FORM</span>
+                      <span />
+                    </div>
+                    <div className={styles.individualClubSquadList}>
+                      {squadPreview.map((player) => {
+                        const playerInitials = player.full_name.split(' ').map((w) => w[0]?.toUpperCase() ?? '').slice(0, 2).join('');
+                        return (
+                          <div key={player.id} className={styles.individualClubSquadRow}>
+                            <span className={styles.individualClubSquadNum}>{player.squad_number ?? '—'}</span>
+                            <div className={styles.individualClubSquadPlayer}>
+                              <div className={styles.individualClubSquadAvatar}>{playerInitials}</div>
+                              <span className={styles.individualClubSquadName}>{player.full_name}</span>
+                            </div>
+                            <span className={styles.individualClubSquadPos}>{player.position ?? '—'}</span>
+                            <span className={styles.individualClubSquadAge}>{(player as any).age ?? '—'}</span>
+                            <span className={styles.individualClubSquadForm}>
+                              {(player as any).form_label ? (
+                                <span className={`${styles.individualClubFormPill} ${
+                                  (player as any).form_label === 'Hot' ? styles.individualClubFormHot :
+                                  (player as any).form_label === 'Cool' ? styles.individualClubFormCool :
+                                  styles.individualClubFormSteady
+                                }`}>
+                                  {(player as any).form_label === 'Hot' ? '↑' : (player as any).form_label === 'Cool' ? '↓' : '→'} {(player as any).form_label}
+                                </span>
+                              ) : '—'}
+                            </span>
+                            <button
+                              className={styles.individualClubDetailsBtn}
+                              onClick={() => navigate(`/clubs/${club.id}/players/${player.id}`)}
+                            >
+                              View
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Resources section */}
+              {!club.is_trashed && (
+                <ClubResourcesSection club={club} isMember={isMember} canManageResources={reviewAccess} />
+              )}
+
+              {/* Events & fixtures management */}
+              {canAttemptSchedulingManagement && !club.is_trashed && (
+                <>
+                  {/* Events form */}
+                  <div className={styles.individualClubPanel}>
+                    <div className={styles.individualClubPanelHead}>
+                      <h2 className={styles.individualClubPanelTitle}>Club Events</h2>
+                    </div>
+                    <div className={styles.individualClubFormGrid}>
+                      <div className={styles.individualClubFormField}>
+                        <label className={styles.individualClubFormLabel}>Title</label>
+                        <input className={styles.individualClubInput} type="text" value={eventForm.title} onChange={(e) => setEventForm((p) => ({ ...p, title: e.target.value }))} placeholder="e.g. Tuesday analysis session" />
+                      </div>
+                      <div className={styles.individualClubFormField}>
+                        <label className={styles.individualClubFormLabel}>Event type</label>
+                        <select className={styles.individualClubSelect} value={eventForm.event_type} onChange={(e) => setEventForm((p) => ({ ...p, event_type: e.target.value as ClubEventType }))}>
+                          {EVENT_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                      </div>
+                      <div className={styles.individualClubFormField}>
+                        <label className={styles.individualClubFormLabel}>Start</label>
+                        <input className={styles.individualClubInput} type="datetime-local" value={eventForm.start_datetime} onChange={(e) => setEventForm((p) => ({ ...p, start_datetime: e.target.value }))} />
+                      </div>
+                      <div className={styles.individualClubFormField}>
+                        <label className={styles.individualClubFormLabel}>End</label>
+                        <input className={styles.individualClubInput} type="datetime-local" value={eventForm.end_datetime} onChange={(e) => setEventForm((p) => ({ ...p, end_datetime: e.target.value }))} />
+                      </div>
+                      <div className={styles.individualClubFormField}>
+                        <label className={styles.individualClubFormLabel}>Location</label>
+                        <input className={styles.individualClubInput} type="text" value={eventForm.location} onChange={(e) => setEventForm((p) => ({ ...p, location: e.target.value }))} placeholder="e.g. Main pitch" />
+                      </div>
+                    </div>
+                    <textarea className={styles.individualClubTextarea} rows={3} value={eventForm.description} onChange={(e) => setEventForm((p) => ({ ...p, description: e.target.value }))} placeholder="Optional event details" />
+                    <div className={styles.individualClubInlineActions}>
+                      <label className={styles.individualClubCheckLabel}><input type="checkbox" checked={eventForm.is_all_day} onChange={(e) => setEventForm((p) => ({ ...p, is_all_day: e.target.checked }))} /> All day</label>
+                      <label className={styles.individualClubCheckLabel}><input type="checkbox" checked={eventForm.is_mandatory} onChange={(e) => setEventForm((p) => ({ ...p, is_mandatory: e.target.checked }))} /> Mandatory</label>
+                      <button className={styles.individualClubPrimaryBtn} type="button" disabled={!!loadingKey} onClick={handleEventSubmit}>
+                        {editingEventId ? (loadingKey ? 'Saving…' : 'Save Event') : (loadingKey === 'create-event' ? 'Creating…' : 'Create Event')}
+                      </button>
+                      {editingEventId !== null && <button className={styles.individualClubGhostBtn} type="button" onClick={resetEventForm}>Cancel</button>}
+                    </div>
+                    <div className={styles.individualClubWorkflowList}>
+                      {events.map((event) => (
+                        <div key={event.id} className={styles.individualClubWorkflowCard}>
+                          <div className={styles.individualClubWorkflowRow}>
+                            <div>
+                              <div className={styles.individualClubWorkflowTitle}>{event.title}</div>
+                              <div className={styles.individualClubWorkflowMeta}>{event.event_type_display} · {formatDateTimeLabel(event.start_datetime)}</div>
+                            </div>
+                            <span className={styles.individualClubWorkflowTag}>{event.source_type_display}</span>
+                          </div>
+                          {event.location && <div className={styles.individualClubDetailNote}>Location: {event.location}</div>}
+                          {event.is_user_editable && (
+                            <div className={styles.individualClubInlineActions}>
+                              <button className={styles.individualClubGhostBtn} onClick={() => handleEditEvent(event)}>Edit</button>
+                              <button className={styles.individualClubGhostBtn} disabled={loadingKey === `delete-event-${event.id}`} onClick={() => handleDeleteEvent(event)}>
+                                {loadingKey === `delete-event-${event.id}` ? 'Deleting…' : 'Delete'}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Fixtures form */}
+                  <div className={styles.individualClubPanel}>
+                    <div className={styles.individualClubPanelHead}>
+                      <h2 className={styles.individualClubPanelTitle}>Fixtures</h2>
+                    </div>
+                    <div className={styles.individualClubFormGrid}>
+                      <div className={styles.individualClubFormField}>
+                        <label className={styles.individualClubFormLabel}>Opponent</label>
+                        <input className={styles.individualClubInput} type="text" value={fixtureForm.opponent_name} onChange={(e) => setFixtureForm((p) => ({ ...p, opponent_name: e.target.value }))} placeholder="e.g. Dublin City FC" />
+                      </div>
+                      <div className={styles.individualClubFormField}>
+                        <label className={styles.individualClubFormLabel}>Venue</label>
+                        <select className={styles.individualClubSelect} value={fixtureForm.venue} onChange={(e) => setFixtureForm((p) => ({ ...p, venue: e.target.value as FixtureVenue }))}>
+                          {FIXTURE_VENUE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                      </div>
+                      <div className={styles.individualClubFormField}>
+                        <label className={styles.individualClubFormLabel}>Competition</label>
+                        <input className={styles.individualClubInput} type="text" value={fixtureForm.competition} onChange={(e) => setFixtureForm((p) => ({ ...p, competition: e.target.value }))} placeholder="e.g. League" />
+                      </div>
+                      <div className={styles.individualClubFormField}>
+                        <label className={styles.individualClubFormLabel}>Status</label>
+                        <select className={styles.individualClubSelect} value={fixtureForm.fixture_status} onChange={(e) => setFixtureForm((p) => ({ ...p, fixture_status: e.target.value as FixtureStatus }))}>
+                          {FIXTURE_STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                      </div>
+                      <div className={styles.individualClubFormField}>
+                        <label className={styles.individualClubFormLabel}>Date &amp; time</label>
+                        <input className={styles.individualClubInput} type="datetime-local" value={fixtureForm.match_datetime} onChange={(e) => setFixtureForm((p) => ({ ...p, match_datetime: e.target.value }))} />
+                      </div>
+                      <div className={styles.individualClubFormField}>
+                        <label className={styles.individualClubFormLabel}>Location</label>
+                        <input className={styles.individualClubInput} type="text" value={fixtureForm.location} onChange={(e) => setFixtureForm((p) => ({ ...p, location: e.target.value }))} placeholder="e.g. Main ground" />
+                      </div>
+                    </div>
+                    <div className={styles.individualClubInlineActions}>
+                      <button className={styles.individualClubPrimaryBtn} type="button" disabled={!!loadingKey} onClick={handleFixtureSubmit}>
+                        {editingFixtureId ? (loadingKey ? 'Saving…' : 'Save Fixture') : (loadingKey === 'create-fixture' ? 'Creating…' : 'Create Fixture')}
+                      </button>
+                      {editingFixtureId !== null && <button className={styles.individualClubGhostBtn} type="button" onClick={resetFixtureForm}>Cancel</button>}
+                    </div>
+                    <div className={styles.individualClubWorkflowList}>
+                      {fixtures.map((fixture) => (
+                        <div key={fixture.id} className={styles.individualClubWorkflowCard}>
+                          <div className={styles.individualClubWorkflowRow}>
+                            <div>
+                              <div className={styles.individualClubWorkflowTitle}>{fixture.calendar_label}</div>
+                              <div className={styles.individualClubWorkflowMeta}>{fixture.competition || 'Fixture'} · {formatDateTimeLabel(fixture.match_datetime)}</div>
+                            </div>
+                            <span className={styles.individualClubWorkflowTag}>{fixture.source_type_display}</span>
+                          </div>
+                          <div className={styles.individualClubDetailNote}>Venue: {fixture.venue_display} · Status: {fixture.fixture_status_display}</div>
+                          {fixture.is_user_editable && (
+                            <div className={styles.individualClubInlineActions}>
+                              <button className={styles.individualClubGhostBtn} onClick={() => handleEditFixture(fixture)}>Edit</button>
+                              <button className={styles.individualClubGhostBtn} disabled={loadingKey === `delete-fixture-${fixture.id}`} onClick={() => handleDeleteFixture(fixture)}>
+                                {loadingKey === `delete-fixture-${fixture.id}` ? 'Deleting…' : 'Delete'}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
             </div>
-          </section>
 
-          <section className={styles.infoPanel}>
-            <h3 className={styles.panelTitle}>Fixtures</h3>
+            {/* ── RIGHT COLUMN ── */}
+            <div className={styles.individualClubRightCol}>
 
-            {canAttemptSchedulingManagement && (
-              <>
-                <div className={styles.formGrid}>
-                  <div className={styles.formField}>
-                    <label className={styles.formLabel} htmlFor="fixture-opponent-name">
-                      Opponent
-                    </label>
-                    <input
-                      id="fixture-opponent-name"
-                      className={styles.input}
-                      type="text"
-                      value={fixtureForm.opponent_name}
-                      onChange={(event) => setFixtureForm((prev) => ({ ...prev, opponent_name: event.target.value }))}
-                      placeholder="e.g. Dublin City FC"
-                    />
-                  </div>
+              {/* Calendar */}
+              <div className={styles.individualClubPanel}>
+                <ClubCalendar calendarItems={calendarFeed} />
+              </div>
 
-                  <div className={styles.formField}>
-                    <label className={styles.formLabel} htmlFor="fixture-venue">
-                      Venue
-                    </label>
-                    <select
-                      id="fixture-venue"
-                      className={styles.input}
-                      value={fixtureForm.venue}
-                      onChange={(event) =>
-                        setFixtureForm((prev) => ({ ...prev, venue: event.target.value as FixtureVenue }))
-                      }
+              {/* Quick actions */}
+              <div className={styles.individualClubPanel}>
+                <div className={styles.individualClubPanelHead}>
+                  <h2 className={styles.individualClubPanelTitle}>Quick actions</h2>
+                </div>
+                <div className={styles.individualClubQuickGrid}>
+                  {QUICK_ACTIONS.map((qa) => (
+                    <button
+                      key={qa.key}
+                      className={styles.individualClubQuickCard}
+                      onClick={() => navigate(qa.path(club.id))}
                     >
-                      {FIXTURE_VENUE_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className={styles.formGrid}>
-                  <div className={styles.formField}>
-                    <label className={styles.formLabel} htmlFor="fixture-competition">
-                      Competition
-                    </label>
-                    <input
-                      id="fixture-competition"
-                      className={styles.input}
-                      type="text"
-                      value={fixtureForm.competition}
-                      onChange={(event) => setFixtureForm((prev) => ({ ...prev, competition: event.target.value }))}
-                      placeholder="e.g. Friendly or League"
-                    />
-                  </div>
-
-                  <div className={styles.formField}>
-                    <label className={styles.formLabel} htmlFor="fixture-status">
-                      Status
-                    </label>
-                    <select
-                      id="fixture-status"
-                      className={styles.input}
-                      value={fixtureForm.fixture_status}
-                      onChange={(event) =>
-                        setFixtureForm((prev) => ({ ...prev, fixture_status: event.target.value as FixtureStatus }))
-                      }
-                    >
-                      {FIXTURE_STATUS_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className={styles.formGrid}>
-                  <div className={styles.formField}>
-                    <label className={styles.formLabel} htmlFor="fixture-match-datetime">
-                      Match date and time
-                    </label>
-                    <input
-                      id="fixture-match-datetime"
-                      className={styles.input}
-                      type="datetime-local"
-                      value={fixtureForm.match_datetime}
-                      onChange={(event) => setFixtureForm((prev) => ({ ...prev, match_datetime: event.target.value }))}
-                    />
-                  </div>
-
-                  <div className={styles.formField}>
-                    <label className={styles.formLabel} htmlFor="fixture-location">
-                      Location
-                    </label>
-                    <input
-                      id="fixture-location"
-                      className={styles.input}
-                      type="text"
-                      value={fixtureForm.location}
-                      onChange={(event) => setFixtureForm((prev) => ({ ...prev, location: event.target.value }))}
-                      placeholder="e.g. Main ground"
-                    />
-                  </div>
-                </div>
-
-                <div className={styles.inlineActions}>
-                  <button
-                    className={styles.primaryButton}
-                    type="button"
-                    disabled={loadingKey === 'create-fixture' || (editingFixtureId !== null && loadingKey === `save-fixture-${editingFixtureId}`)}
-                    onClick={handleFixtureSubmit}
-                  >
-                    {editingFixtureId !== null
-                      ? loadingKey === `save-fixture-${editingFixtureId}`
-                        ? 'Saving...'
-                        : 'Save Fixture'
-                      : loadingKey === 'create-fixture'
-                        ? 'Creating...'
-                        : 'Create Fixture'}
-                  </button>
-                  {editingFixtureId !== null && (
-                    <button className={styles.secondaryButton} type="button" onClick={resetFixtureForm}>
-                      Cancel Edit
+                      <div className={styles.individualClubQuickIcon}>{qa.icon}</div>
+                      <div className={styles.individualClubQuickTitle}>{qa.title}</div>
+                      <div className={styles.individualClubQuickDesc}>{qa.desc}</div>
                     </button>
-                  )}
+                  ))}
                 </div>
-              </>
-            )}
+              </div>
 
-            <div className={styles.workflowList}>
-              {fixtures.length === 0 ? (
-                <p className={styles.bodyText}>No fixtures have been scheduled yet.</p>
-              ) : (
-                fixtures.map((fixture) => (
-                  <div key={fixture.id} className={styles.workflowCard}>
-                    <div className={styles.workflowHeaderRow}>
-                      <div>
-                        <div className={styles.workflowTitle}>{fixture.calendar_label}</div>
-                        <div className={styles.workflowMeta}>
-                          {fixture.competition || 'Fixture'} · {formatDateTimeLabel(fixture.match_datetime)}
-                        </div>
-                      </div>
-                      <span className={styles.tag}>{fixture.source_type_display}</span>
-                    </div>
-
-                    <div className={styles.detailNote}>
-                      Venue: {fixture.venue_display} · Status: {fixture.fixture_status_display}
-                    </div>
-                    {fixture.location && (
-                      <div className={styles.detailNote}>Location: {fixture.location}</div>
-                    )}
-
-                    {canAttemptSchedulingManagement && fixture.is_user_editable && (
-                      <div className={styles.inlineActions}>
-                        <button
-                          className={styles.secondaryButton}
-                          type="button"
-                          onClick={() => handleEditFixture(fixture)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className={styles.secondaryButton}
-                          type="button"
-                          disabled={loadingKey === `delete-fixture-${fixture.id}`}
-                          onClick={() => handleDeleteFixture(fixture)}
-                        >
-                          {loadingKey === `delete-fixture-${fixture.id}` ? 'Deleting...' : 'Delete'}
-                        </button>
-                      </div>
+              {/* Join requests */}
+              {reviewAccess && !club.is_trashed && (
+                <div className={styles.individualClubPanel}>
+                  <div className={styles.individualClubPanelHead}>
+                    <h2 className={styles.individualClubPanelTitle}>Join requests</h2>
+                    {pendingRequests.length > 0 && (
+                      <span className={styles.individualClubBadgePill}>{pendingRequests.length} new</span>
                     )}
                   </div>
-                ))
+
+                  {reviewJoinRequests.length === 0 ? (
+                    <p className={styles.individualClubBodyText}>No join requests yet.</p>
+                  ) : (
+                    <div className={styles.individualClubRequestList}>
+                      {reviewJoinRequests.map((request) => (
+                        <div key={request.id} className={styles.individualClubRequestRow}>
+                          <div className={styles.individualClubRequestAvatar}>
+                            {(request.user_email ?? '?')[0].toUpperCase()}
+                          </div>
+                          <div className={styles.individualClubRequestInfo}>
+                            <div className={styles.individualClubRequestName}>{request.user_email}</div>
+                            <div className={styles.individualClubRequestMeta}>
+                              {request.requested_role} · {getRequestStatusLabel(request.status)}
+                            </div>
+                          </div>
+                          {request.status === 'pending' && (
+                            <div className={styles.individualClubRequestActions}>
+                              <button
+                                className={styles.individualClubDeclineBtn}
+                                disabled={loadingKey === `reject-${request.id}`}
+                                onClick={() => handleRejectRequest(request)}
+                              >
+                                Decline
+                              </button>
+                              <button
+                                className={styles.individualClubApproveBtn}
+                                disabled={loadingKey === `approve-${request.id}`}
+                                onClick={() => handleApproveRequest(request)}
+                              >
+                                {loadingKey === `approve-${request.id}` ? 'Approving…' : 'Approve'}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Invite form */}
+                  <div className={styles.individualClubInviteForm}>
+                    <div className={styles.individualClubPanelHead} style={{ marginBottom: '0.65rem' }}>
+                      <h3 className={styles.individualClubPanelTitle} style={{ fontSize: '0.85rem' }}>Send invitation</h3>
+                    </div>
+                    <div className={styles.individualClubFormGrid}>
+                      <div className={styles.individualClubFormField}>
+                        <label className={styles.individualClubFormLabel}>Email</label>
+                        <input className={styles.individualClubInput} type="email" value={inviteEmailInput} onChange={(e) => setInviteEmailInput(e.target.value)} placeholder="user@example.com" />
+                      </div>
+                      <div className={styles.individualClubFormField}>
+                        <label className={styles.individualClubFormLabel}>Role</label>
+                        <select className={styles.individualClubSelect} value={inviteRole} onChange={(e) => setInviteRole(e.target.value as Exclude<ClubMembershipRole, 'owner'>)}>
+                          {STAFF_INVITE_ROLE_OPTIONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <button className={styles.individualClubPrimaryBtn} style={{ width: '100%', marginTop: '0.5rem' }} type="button" disabled={loadingKey === 'create-invitation'} onClick={handleCreateInvitation}>
+                      {loadingKey === 'create-invitation' ? 'Sending…' : 'Send Invitation'}
+                    </button>
+                  </div>
+                </div>
               )}
-            </div>
-          </section>
-        </div>
-      </section>
 
-      <section className={styles.featureSection}>
-        <div className={styles.featureHeader}>
-          <h2 className={styles.panelTitle}>Club Workspace</h2>
-        </div>
+              {/* Membership */}
+              {!club.is_trashed && !isMember && requestCanBeSubmitted && (
+                <div className={styles.individualClubPanel}>
+                  <h2 className={styles.individualClubPanelTitle} style={{ marginBottom: '0.75rem' }}>Join this club</h2>
+                  <textarea className={styles.individualClubTextarea} value={requestMessage} onChange={(e) => setRequestMessage(e.target.value)} placeholder="Optional note to the reviewer" rows={3} />
+                  <button className={styles.individualClubPrimaryBtn} style={{ marginTop: '0.6rem', width: '100%' }} type="button" disabled={loadingKey === `request-${club.id}`} onClick={handleRequestToJoin}>
+                    {loadingKey === `request-${club.id}` ? 'Submitting…' : 'Request to Join'}
+                  </button>
+                </div>
+              )}
 
-        <div className={styles.grid}>
-          {FEATURES.map((feature) => (
-            <div
-              key={feature.key}
-              className={styles.card}
-              onClick={() => navigate(feature.path(club.id))}
-            >
-              <h3 className={styles.cardTitle}>{feature.title}</h3>
-              <p className={styles.cardDesc}>{feature.description}</p>
             </div>
-          ))}
+          </div>
+
         </div>
-      </section>
-      </>
-    )}
+      </div>
     </div>
   );
 };

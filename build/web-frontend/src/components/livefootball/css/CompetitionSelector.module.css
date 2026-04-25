@@ -1,0 +1,89 @@
+/* ─── CompetitionSelector.module.css ────────────────────────────────────────
+   Prefix: lfcs-
+   Styled dropdown matching the dark-green design system.
+────────────────────────────────────────────────────────────────────────── */
+
+.lfcs-root {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── Label ───────────────────────────────────────────────────────────────── */
+.lfcs-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--hover-lightest-green);
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+.lfcs-required {
+  color: #f87171;
+}
+
+/* ── Select ──────────────────────────────────────────────────────────────── */
+.lfcs-select {
+  width: 100%;
+  background: var(--brand-lightest-green-border);
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 10px;
+  padding: 10px 36px 10px 14px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--primary-text);
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  /* Custom chevron */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%233dd68c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  transition: border-color 0.18s;
+}
+
+.lfcs-select:focus {
+  border-color: var(--hover-lightest-green);
+}
+
+.lfcs-select:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.lfcs-select--error {
+  border-color: #f87171;
+}
+
+.lfcs-select option {
+  background: #0d1f16;
+  color: var(--primary-text);
+}
+
+/* ── Helper text ─────────────────────────────────────────────────────────── */
+.lfcs-helper {
+  font-size: 12px;
+  color: var(--tertiary-text);
+  line-height: 1.4;
+}
+
+/* ── Selected competition meta ───────────────────────────────────────────── */
+.lfcs-selected-meta {
+  font-size: 12px;
+  color: var(--hover-lightest-green);
+  background: color-mix(in srgb, var(--hover-lightest-green) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--hover-lightest-green) 22%, transparent);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+/* ── Error ───────────────────────────────────────────────────────────────── */
+.lfcs-error {
+  font-size: 12px;
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 8px;
+  padding: 8px 12px;
+}

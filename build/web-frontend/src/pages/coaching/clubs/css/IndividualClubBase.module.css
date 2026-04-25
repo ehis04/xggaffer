@@ -1,355 +1,731 @@
-.container {
-  max-width: 980px;
-  margin: 0 auto;
-  padding: 2rem;
-}
+/* ─────────────────────────────────────────────────────────────
+   IndividualClubBase.module.css
+   All class names are prefixed: individualClub
+   ───────────────────────────────────────────────────────────── */
 
-.loading {
-  text-align: centre;
-  padding: 4rem 2rem;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.error,
-.notice {
-  border-radius: 12px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-}
-
-.error {
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.28);
-  color: #fca5a5;
-}
-
-.notice {
-  background: rgba(59, 130, 246, 0.10);
-  border: 1px solid rgba(59, 130, 246, 0.24);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.hero {
+/* ── shell ── */
+.individualClubShell {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-  padding: 1.5rem;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  height: 100vh;
+  overflow: hidden;
+  background: var(--brand-light-green);
 }
 
-.clubInfo h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: white;
-  margin: 0;
-}
-
-.meta {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.95rem;
-  margin-top: 0.35rem;
-}
-
-.heroActions {
+.individualClubMain {
+  flex: 1;
+  min-width: 0;
   display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  overflow: hidden;
+  margin-left: 80px;
 }
 
-.backButton,
-.secondaryButton,
-.primaryButton {
-  padding: 0.85rem 1.2rem;
-  border-radius: 10px;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.2s, opacity 0.2s;
+/* ── header ── */
+.individualClubHeader {
+  height: 56px;
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
 }
 
-.primaryButton,
-.backButton {
-  background: #3b82f6;
-  border: none;
-}
-
-.primaryButton:hover:not(:disabled),
-.backButton:hover:not(:disabled) {
-  background: #2563eb;
-  transform: translateY(-1px);
-}
-
-.secondaryButton {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-}
-
-.secondaryButton:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12);
-  transform: translateY(-1px);
-}
-
-.primaryButton:disabled,
-.secondaryButton:disabled,
-.backButton:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.tagRow {
+.individualClubHeaderLeft {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  margin-top: 1rem;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.individualClubHeaderLabel  { color: var(--secondary-text); }
+.individualClubHeaderSep    { color: var(--tertiary-text); }
+.individualClubHeaderTitle  { color: var(--primary-text); }
+
+.individualClubHeaderMiddle {
+  display: flex; align-items: center; justify-content: center;
+}
+.individualClubHeaderRight {
+  display: flex; align-items: center; justify-content: flex-end; gap: 16px;
 }
 
-.tag {
-  display: inline-flex;
-  align-items: centre;
-  min-height: 30px;
-  padding: 0 0.8rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 0.8rem;
-  font-weight: 600;
+/* ── scrollable content ── */
+.individualClubContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.referenceText {
-  margin: 0.9rem 0 0 0;
-  color: rgba(255, 255, 255, 0.68);
+/* ── loading / error ── */
+.individualClubLoadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  gap: 1rem;
+  color: var(--secondary-text);
   font-size: 0.9rem;
 }
-
-.infoGrid,
-.reviewGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+.individualClubSpinner {
+  width: 28px; height: 28px;
+  border: 2.5px solid var(--brand-light-green-border);
+  border-top-color: var(--hover-light-green);
+  border-radius: 50%;
+  animation: icbSpin 0.75s linear infinite;
+}
+@keyframes icbSpin { to { transform: rotate(360deg); } }
+.individualClubErrorState {
+  margin: 2rem;
+  padding: 1rem 1.25rem;
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 12px;
+  color: #f87171;
+  font-size: 0.88rem;
 }
 
-.infoPanel,
-.featureSection {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  padding: 1.25rem;
+/* ── hero banner ── */
+.individualClubHero {
+  background: var(--brand-card-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 16px;
+  padding: 1.5rem 1.75rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
 }
 
-.panelTitle {
-  margin: 0 0 0.9rem 0;
-  font-size: 1.1rem;
+.individualClubHeroLeft {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.individualClubBadge {
+  width: 72px; height: 72px;
+  border-radius: 16px;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1.5px solid rgba(34, 197, 94, 0.35);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.individualClubBadgeImg {
+  width: 100%; height: 100%;
+  object-fit: cover; border-radius: 14px;
+}
+.individualClubBadgeInitials {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--hover-light-green);
+  letter-spacing: -0.01em;
+}
+
+.individualClubHeroInfo { flex: 1; min-width: 0; }
+
+.individualClubName {
+  font-size: 1.5rem;
   font-weight: 700;
-  color: white;
+  color: var(--primary-text);
+  margin: 0 0 0.25rem;
+  letter-spacing: -0.02em;
 }
 
-.bodyText {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.84);
-  line-height: 1.6;
-}
-
-.codeBox {
-  margin-top: 1rem;
-  padding: 1rem;
-  border-radius: 14px;
-  background: rgba(59, 130, 246, 0.10);
-  border: 1px solid rgba(59, 130, 246, 0.22);
-}
-
-.codeLabel {
-  color: rgba(255, 255, 255, 0.7);
+.individualClubMeta {
   font-size: 0.82rem;
-  margin-bottom: 0.25rem;
+  color: var(--secondary-text);
+  margin: 0 0 0.6rem;
 }
 
-.codeValue {
-  color: white;
-  font-size: 1.05rem;
+.individualClubTagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.individualClubTag {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--secondary-text);
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 5px;
+  padding: 0.15rem 0.5rem;
+}
+
+.individualClubHeroActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  align-items: stretch;
+  min-width: 130px;
+}
+
+/* ── notices ── */
+.individualClubTrashNotice {
+  padding: 0.85rem 1.1rem;
+  background: rgba(251,191,36,0.08);
+  border: 1px solid rgba(251,191,36,0.2);
+  border-radius: 10px;
+  font-size: 0.84rem;
+  color: #fbbf24;
+  line-height: 1.5;
+}
+.individualClubNotice {
+  padding: 0.75rem 1rem;
+  background: rgba(34,197,94,0.08);
+  border: 1px solid rgba(34,197,94,0.18);
+  border-radius: 10px;
+  font-size: 0.84rem;
+  color: var(--hover-light-green);
+}
+.individualClubError {
+  padding: 0.75rem 1rem;
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 10px;
+  font-size: 0.84rem;
+  color: #f87171;
+}
+
+/* ── tab bar ── */
+.individualClubTabs {
+  display: flex;
+  gap: 0.2rem;
+  border-bottom: 1px solid var(--brand-light-green-border);
+  padding-bottom: 0;
+}
+.individualClubTab {
+  padding: 0.45rem 1rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--secondary-text);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  margin-bottom: -1px;
+}
+.individualClubTab:hover { color: var(--primary-text); }
+.individualClubTabActive {
+  color: var(--primary-text);
+  border-bottom-color: var(--hover-light-green);
+  font-weight: 600;
+}
+
+/* ── stat strip ── */
+.individualClubStatStrip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.85rem;
+}
+@media (max-width: 900px) { .individualClubStatStrip { grid-template-columns: repeat(2, 1fr); } }
+
+.individualClubStatCard {
+  background: var(--brand-card-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.individualClubStatLabel {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--tertiary-text);
+  text-transform: uppercase;
+}
+.individualClubStatValue {
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: var(--primary-text);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+.individualClubStatSub {
+  font-size: 0.75rem;
+  color: var(--hover-light-green);
+  margin-top: 0.1rem;
+}
+
+/* ── body grid ── */
+.individualClubBodyGrid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 1rem;
+  align-items: start;
+}
+@media (max-width: 1100px) { .individualClubBodyGrid { grid-template-columns: 1fr; } }
+
+.individualClubLeftCol  { display: flex; flex-direction: column; gap: 1rem; }
+.individualClubRightCol { display: flex; flex-direction: column; gap: 1rem; }
+
+/* ── panels ── */
+.individualClubPanel {
+  background: var(--brand-card-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 14px;
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.individualClubPanelHead {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;
+}
+.individualClubPanelTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--primary-text);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.individualClubPanelCount {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--tertiary-text);
+  font-weight: 400;
+}
+.individualClubBodyText {
+  font-size: 0.83rem;
+  color: var(--secondary-text);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── upcoming list ── */
+.individualClubUpcomingList { display: flex; flex-direction: column; gap: 0.5rem; }
+.individualClubUpcomingRow {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 0.9rem;
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 10px;
+  transition: border-color 0.12s ease;
+}
+.individualClubUpcomingRow:hover { border-color: var(--brand-light-green-border-med); }
+
+.individualClubUpcomingDate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 36px;
+  flex-shrink: 0;
+}
+.individualClubUpcomingDay {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--tertiary-text);
+}
+.individualClubUpcomingNum {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--primary-text);
+  line-height: 1;
+}
+
+.individualClubUpcomingInfo { flex: 1; min-width: 0; }
+.individualClubUpcomingTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary-text);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.individualClubUpcomingTag {
+  font-size: 0.66rem;
+  font-weight: 600;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid var(--brand-light-green-border);
+  background: var(--brand-lightest-green);
+  color: var(--secondary-text);
+}
+.individualClubUpcomingMeta {
+  font-size: 0.75rem;
+  color: var(--secondary-text);
+  margin-top: 0.15rem;
+}
+
+/* ── squad table ── */
+.individualClubSquadTableHead {
+  display: grid;
+  grid-template-columns: 32px 1fr 80px 50px 90px 60px;
+  gap: 0.5rem;
+  padding: 0 0.5rem;
+  font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.08em;
+  color: var(--tertiary-text);
+  text-transform: uppercase;
 }
-
-.noticeBlock {
-  margin-top: 1rem;
-  padding: 0.95rem;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.78);
-  line-height: 1.55;
+.individualClubSquadList { display: flex; flex-direction: column; gap: 0.3rem; }
+.individualClubSquadRow {
+  display: grid;
+  grid-template-columns: 32px 1fr 80px 50px 90px 60px;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.55rem 0.5rem;
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 8px;
+  transition: border-color 0.12s ease;
 }
+.individualClubSquadRow:hover { border-color: var(--brand-light-green-border-med); }
 
-.detailNote {
-  margin-top: 0.6rem;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 0.9rem;
-  line-height: 1.5;
+.individualClubSquadNum {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--hover-light-green);
+  text-align: center;
+  background: rgba(34,197,94,0.1);
+  border-radius: 5px;
+  padding: 0.1rem 0.3rem;
 }
-
-.input,
-.textarea {
-  width: 100%;
-  margin-top: 0.75rem;
-  padding: 0.9rem 1rem;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: white;
-  font-size: 0.95rem;
-  box-sizing: border-box;
+.individualClubSquadPlayer { display: flex; align-items: center; gap: 0.55rem; }
+.individualClubSquadAvatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: rgba(34,197,94,0.15);
+  border: 1px solid rgba(34,197,94,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.68rem; font-weight: 700; color: var(--hover-light-green);
+  flex-shrink: 0;
 }
-
-.input:focus,
-.textarea:focus {
-  outline: none;
-  border-color: rgba(59, 130, 246, 0.8);
+.individualClubSquadName {
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--primary-text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+.individualClubSquadPos { font-size: 0.78rem; color: var(--secondary-text); font-weight: 500; }
+.individualClubSquadAge { font-size: 0.78rem; color: var(--secondary-text); text-align: center; }
+.individualClubSquadForm { display: flex; align-items: center; }
 
-.textarea {
-  resize: vertical;
+.individualClubFormPill {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
 }
+.individualClubFormHot  { background: rgba(34,197,94,0.15); color: #4ade80; }
+.individualClubFormCool { background: rgba(59,130,246,0.15); color: #93c5fd; }
+.individualClubFormSteady { background: rgba(156,163,175,0.12); color: #9ca3af; }
 
-.formGrid {
+/* ── calendar (panel inherits from .individualClubPanel) ── */
+
+/* ── quick actions ── */
+.individualClubQuickGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 0.6rem;
 }
-
-.formField {
-  display: flex;
-  flex-direction: column;
-}
-
-.formLabel {
-  margin-top: 0.9rem;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 0.88rem;
-  font-weight: 600;
-}
-
-.workflowList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-  margin-top: 1rem;
-}
-
-.workflowCard {
-  padding: 1rem;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.workflowHeaderRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 0.75rem;
-}
-
-.workflowTitle {
-  color: white;
-  font-size: 1rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-.workflowMeta {
-  margin-top: 0.2rem;
-  color: rgba(255, 255, 255, 0.66);
-  font-size: 0.88rem;
-}
-
-.inlineActions {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  margin-top: 0.9rem;
-}
-
-.infoList {
-  margin: 0;
-  padding-left: 1.1rem;
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.7;
-}
-
-.featureHeader {
-  margin-bottom: 1rem;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 1rem;
-}
-
-.card {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 14px;
-  padding: 1.25rem;
+.individualClubQuickCard {
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 10px;
+  padding: 0.85rem;
+  text-align: left;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  transition: all 0.12s ease;
 }
-
-.card:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.18);
-  transform: translateY(-1px);
+.individualClubQuickCard:hover {
+  border-color: var(--brand-light-green-border-med);
+  background: rgba(34,197,94,0.06);
 }
+.individualClubQuickIcon { color: var(--hover-light-green); }
+.individualClubQuickTitle { font-size: 0.82rem; font-weight: 600; color: var(--primary-text); }
+.individualClubQuickDesc { font-size: 0.73rem; color: var(--secondary-text); line-height: 1.4; }
 
-.cardTitle {
-  font-size: 1.05rem;
+/* ── join request list ── */
+.individualClubBadgePill {
+  font-size: 0.65rem;
   font-weight: 700;
-  color: white;
-  margin: 0 0 0.45rem 0;
+  padding: 0.15rem 0.55rem;
+  border-radius: 20px;
+  background: rgba(34,197,94,0.15);
+  color: var(--hover-light-green);
+  border: 1px solid rgba(34,197,94,0.3);
+}
+.individualClubRequestList { display: flex; flex-direction: column; gap: 0.5rem; }
+.individualClubRequestRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 10px;
+}
+.individualClubRequestAvatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: rgba(34,197,94,0.12);
+  border: 1px solid rgba(34,197,94,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.78rem; font-weight: 700; color: var(--hover-light-green);
+  flex-shrink: 0;
+}
+.individualClubRequestInfo { flex: 1; min-width: 0; }
+.individualClubRequestName {
+  font-size: 0.83rem; font-weight: 600; color: var(--primary-text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.individualClubRequestMeta { font-size: 0.73rem; color: var(--secondary-text); margin-top: 0.1rem; }
+.individualClubRequestActions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+
+.individualClubInviteForm {
+  border-top: 1px solid var(--brand-light-green-border);
+  padding-top: 0.85rem;
+  margin-top: 0.25rem;
 }
 
-.cardDesc {
-  color: rgba(255, 255, 255, 0.62);
-  font-size: 0.9rem;
-  margin: 0;
-  line-height: 1.5;
+/* ── workflow cards ── */
+.individualClubWorkflowList { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.25rem; }
+.individualClubWorkflowCard {
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.individualClubWorkflowRow {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem;
+}
+.individualClubWorkflowTitle { font-size: 0.84rem; font-weight: 600; color: var(--primary-text); }
+.individualClubWorkflowMeta  { font-size: 0.74rem; color: var(--secondary-text); margin-top: 0.1rem; }
+.individualClubWorkflowTag {
+  font-size: 0.65rem; font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 5px;
+  background: rgba(34,197,94,0.1);
+  border: 1px solid rgba(34,197,94,0.2);
+  color: var(--hover-light-green);
+  white-space: nowrap; flex-shrink: 0;
+}
+.individualClubDetailNote { font-size: 0.75rem; color: var(--secondary-text); }
+
+/* ── form fields ── */
+.individualClubFormGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+.individualClubFormField {
+  display: flex; flex-direction: column; gap: 0.28rem;
+}
+.individualClubFormLabel {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--tertiary-text);
+  text-transform: uppercase;
+}
+.individualClubInput {
+  padding: 0.5rem 0.75rem;
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 7px;
+  color: var(--primary-text);
+  font-size: 0.84rem;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.12s ease;
+}
+.individualClubInput:focus  { border-color: var(--hover-light-green); }
+.individualClubInput::placeholder { color: var(--tertiary-text); }
+
+.individualClubSelect {
+  padding: 0.5rem 0.75rem;
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 7px;
+  color: var(--primary-text);
+  font-size: 0.84rem;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  padding-right: 1.8rem;
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+}
+.individualClubSelect:focus { border-color: var(--hover-light-green); }
+.individualClubSelect option { background: var(--brand-card-green); }
+
+.individualClubTextarea {
+  padding: 0.55rem 0.75rem;
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 7px;
+  color: var(--primary-text);
+  font-size: 0.84rem;
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.12s ease;
+}
+.individualClubTextarea:focus { border-color: var(--hover-light-green); }
+.individualClubTextarea::placeholder { color: var(--tertiary-text); }
+
+.individualClubInlineActions {
+  display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+}
+.individualClubCheckLabel {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 0.82rem; color: var(--secondary-text); cursor: pointer;
 }
 
-@media (max-width: 920px) {
-  .hero,
-  .infoGrid,
-  .reviewGrid,
-  .formGrid {
-    grid-template-columns: 1fr;
-    flex-direction: column;
-  }
+/* ── buttons ── */
+.individualClubPrimaryBtn {
+  padding: 0.48rem 1.1rem;
+  background: var(--hover-light-green);
+  border: none;
+  border-radius: 8px;
+  color: #0a1a0c;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.12s ease;
+  white-space: nowrap;
 }
+.individualClubPrimaryBtn:hover:not(:disabled) { filter: brightness(1.08); }
+.individualClubPrimaryBtn:disabled { opacity: 0.45; cursor: not-allowed; }
 
-@media (max-width: 640px) {
-  .container {
-    padding: 1rem;
-  }
-
-  .heroActions,
-  .inlineActions {
-    width: 100%;
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .backButton,
-  .secondaryButton,
-  .primaryButton {
-    width: 100%;
-  }
-
-  .workflowHeaderRow {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+.individualClubGhostBtn {
+  padding: 0.45rem 0.9rem;
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border-med);
+  border-radius: 8px;
+  color: var(--secondary-text);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
 }
+.individualClubGhostBtn:hover:not(:disabled) {
+  color: var(--primary-text);
+  border-color: var(--brand-light-green-border-med);
+  background: var(--brand-light-green-border);
+}
+.individualClubGhostBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.individualClubDangerBtn {
+  padding: 0.45rem 0.9rem;
+  background: rgba(239,68,68,0.12);
+  border: 1px solid rgba(239,68,68,0.25);
+  border-radius: 8px;
+  color: #fca5a5;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease;
+  white-space: nowrap;
+}
+.individualClubDangerBtn:hover:not(:disabled) { background: rgba(239,68,68,0.22); }
+.individualClubDangerBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.individualClubRestoreBtn {
+  padding: 0.45rem 0.9rem;
+  background: rgba(34,197,94,0.12);
+  border: 1px solid rgba(34,197,94,0.25);
+  border-radius: 8px;
+  color: #bbf7d0;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease;
+  white-space: nowrap;
+}
+.individualClubRestoreBtn:hover:not(:disabled) { background: rgba(34,197,94,0.2); }
+.individualClubRestoreBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.individualClubLinkBtn {
+  background: none;
+  border: none;
+  color: var(--hover-light-green);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.12s ease;
+  white-space: nowrap;
+}
+.individualClubLinkBtn:hover { opacity: 0.8; }
+
+.individualClubDetailsBtn {
+  padding: 0.3rem 0.7rem;
+  background: var(--brand-card-green);
+  border: 1px solid var(--brand-light-green-border-med);
+  border-radius: 6px;
+  color: var(--secondary-text);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.individualClubDetailsBtn:hover { color: var(--primary-text); background: var(--brand-light-green-border); }
+
+.individualClubDeclineBtn {
+  padding: 0.32rem 0.7rem;
+  background: transparent;
+  border: 1px solid var(--brand-light-green-border-med);
+  border-radius: 6px;
+  color: var(--secondary-text);
+  font-size: 0.74rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+}
+.individualClubDeclineBtn:hover { background: rgba(255,255,255,0.04); }
+.individualClubDeclineBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.individualClubApproveBtn {
+  padding: 0.32rem 0.7rem;
+  background: var(--hover-light-green);
+  border: none;
+  border-radius: 6px;
+  color: #0a1a0c;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.12s ease;
+  white-space: nowrap;
+}
+.individualClubApproveBtn:hover:not(:disabled) { filter: brightness(1.08); }
+.individualClubApproveBtn:disabled { opacity: 0.45; cursor: not-allowed; }

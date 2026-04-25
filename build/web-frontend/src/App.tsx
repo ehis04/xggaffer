@@ -221,6 +221,7 @@ function App() {
                 path="/clubs/:clubId/tactics-boards/:boardId"
                 element={<TacticsBoardEditorPage />}
               />
+              <Route path="/clubs/create/" element={<CreateClubPage />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

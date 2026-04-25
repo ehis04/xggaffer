@@ -1,3 +1,12 @@
+/**
+ * FixturesPanel.tsx
+ *
+ * Displays previous and upcoming fixtures for a selected competition,
+ * with ML win-probability chips fetched in parallel for each match.
+ *
+ * CSS: FixturesPanel.module.css  (prefix: lffp-)
+ */
+
 import React, { useState, useEffect } from 'react';
 import type {
   CompetitionFixtureItem,
@@ -5,6 +14,9 @@ import type {
 } from '../../types/livefootball';
 import { predictMatch } from '../../services/api/predictionsApi';
 import MatchPredictionChip from '../predictions/MatchPredictionChip';
+import styles from './css/FixturesPanel.module.css';
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const COMPETITION_CODE_TO_LEAGUE: Record<string, string> = {
   PL:  'EPL',
@@ -14,20 +26,15 @@ const COMPETITION_CODE_TO_LEAGUE: Record<string, string> = {
   FL1: 'Ligue_1',
 };
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
 const parseSeasonYear = (label: string): string =>
   label.match(/\d{4}/)?.[0] ?? '2024';
 
 const formatKickoff = (value?: string | null): string => {
-  if (!value) {
-    return 'Kick-off not available';
-  }
-
+  if (!value) return 'TBC';
   const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return 'Kick-off not available';
-  }
-
+  if (Number.isNaN(date.getTime())) return 'TBC';
   return new Intl.DateTimeFormat('en-GB', {
     day: '2-digit',
     month: 'short',
@@ -38,43 +45,32 @@ const formatKickoff = (value?: string | null): string => {
 
 const formatStatus = (status?: string | null): string => {
   const value = (status || '').trim();
-
-  if (!value) {
-    return 'Unknown';
-  }
-
+  if (!value) return 'Unknown';
   const knownLabels: Record<string, string> = {
     FINISHED: 'Finished',
     AWARDED: 'Awarded',
-    AFTER_EXTRA_TIME: 'After extra time',
-    PENALTY_SHOOTOUT: 'Penalties',
+    AFTER_EXTRA_TIME: 'AET',
+    PENALTY_SHOOTOUT: 'Pens',
     SCHEDULED: 'Scheduled',
     TIMED: 'Timed',
     POSTPONED: 'Postponed',
     SUSPENDED: 'Suspended',
-    IN_PLAY: 'In play',
+    IN_PLAY: 'Live',
     PAUSED: 'Paused',
     LIVE: 'Live',
   };
-
-  return knownLabels[value] ?? value.replace(/_/g, ' ').toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+  return knownLabels[value] ??
+    value.replace(/_/g, ' ').toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 };
+
+const isLiveStatus = (status?: string | null): boolean =>
+  status === 'IN_PLAY' || status === 'LIVE' || status === 'PAUSED';
 
 const getTeamLabel = (name: {
   short_name?: string | null;
   tla?: string | null;
   name: string;
-}): string => {
-  if (name.short_name?.trim()) {
-    return name.short_name.trim();
-  }
-
-  if (name.tla?.trim()) {
-    return name.tla.trim();
-  }
-
-  return name.name;
-};
+}): string => name.short_name?.trim() || name.tla?.trim() || name.name;
 
 const hasScore = (fixture: CompetitionFixtureItem): boolean =>
   fixture.home_score !== null &&
@@ -82,16 +78,73 @@ const hasScore = (fixture: CompetitionFixtureItem): boolean =>
   fixture.away_score !== null &&
   fixture.away_score !== undefined;
 
-const renderScore = (fixture: CompetitionFixtureItem): string => {
-  if (!hasScore(fixture)) {
-    return '—';
-  }
-
-  return `${fixture.home_score} - ${fixture.away_score}`;
-};
+const renderScore = (fixture: CompetitionFixtureItem): string =>
+  hasScore(fixture) ? `${fixture.home_score} – ${fixture.away_score}` : 'vs';
 
 const fixtureKey = (fixture: CompetitionFixtureItem): string =>
   `${fixture.home_team.name}|${fixture.away_team.name}|${fixture.kickoff_at}`;
+
+// ─── FixtureCard sub-component ───────────────────────────────────────────────
+
+interface FixtureCardProps {
+  fixture: CompetitionFixtureItem;
+  probs: { home: number; draw: number; away: number } | null | undefined;
+  predictionsLoading: boolean;
+}
+
+const FixtureCard: React.FC<FixtureCardProps> = ({ fixture, probs, predictionsLoading }) => {
+  const live = isLiveStatus(fixture.status);
+  const scored = hasScore(fixture);
+
+  return (
+    <article className={`${styles['lffp-fixture-card']} ${live ? styles['lffp-fixture-card--live'] : ''}`}>
+      {/* Status row */}
+      <div className={styles['lffp-fixture-meta']}>
+        <span className={`${styles['lffp-status-badge']} ${live ? styles['lffp-status-badge--live'] : ''}`}>
+          {formatStatus(fixture.status)}
+        </span>
+        {fixture.matchday && (
+          <span className={styles['lffp-matchday']}>MD {fixture.matchday}</span>
+        )}
+        <MatchPredictionChip
+          homeProb={probs?.home ?? null}
+          drawProb={probs?.draw ?? null}
+          awayProb={probs?.away ?? null}
+          isLoading={predictionsLoading}
+        />
+      </div>
+
+      {/* Score row */}
+      <div className={styles['lffp-fixture-body']}>
+        {/* Home */}
+        <div className={styles['lffp-team']}>
+          <span className={styles['lffp-team-name']}>{getTeamLabel(fixture.home_team)}</span>
+          {fixture.home_team.name !== getTeamLabel(fixture.home_team) && (
+            <span className={styles['lffp-team-full']}>{fixture.home_team.name}</span>
+          )}
+        </div>
+
+        {/* Score / kickoff */}
+        <div className={styles['lffp-score-block']}>
+          <span className={`${styles['lffp-score']} ${scored ? styles['lffp-score--result'] : ''}`}>
+            {renderScore(fixture)}
+          </span>
+          <span className={styles['lffp-kickoff']}>{formatKickoff(fixture.kickoff_at)}</span>
+        </div>
+
+        {/* Away */}
+        <div className={`${styles['lffp-team']} ${styles['lffp-team--right']}`}>
+          <span className={styles['lffp-team-name']}>{getTeamLabel(fixture.away_team)}</span>
+          {fixture.away_team.name !== getTeamLabel(fixture.away_team) && (
+            <span className={styles['lffp-team-full']}>{fixture.away_team.name}</span>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+};
+
+// ─── FixtureListSection sub-component ────────────────────────────────────────
 
 interface FixtureListSectionProps {
   title: string;
@@ -107,100 +160,27 @@ const FixtureListSection: React.FC<FixtureListSectionProps> = ({
   emptyMessage,
   predictions,
   predictionsLoading,
-}) => {
-  return (
-    <section>
-      <h3>{title}</h3>
+}) => (
+  <section className={styles['lffp-list-section']}>
+    <h3 className={styles['lffp-list-section-title']}>{title}</h3>
+    {fixtures.length === 0 ? (
+      <div className={styles['lffp-empty']}>{emptyMessage}</div>
+    ) : (
+      <div className={styles['lffp-fixture-list']}>
+        {fixtures.map((fixture) => (
+          <FixtureCard
+            key={fixture.id || fixture.external_match_id || fixtureKey(fixture)}
+            fixture={fixture}
+            probs={predictions.get(fixtureKey(fixture))}
+            predictionsLoading={predictionsLoading}
+          />
+        ))}
+      </div>
+    )}
+  </section>
+);
 
-      {fixtures.length === 0 ? (
-        <div>{emptyMessage}</div>
-      ) : (
-        <div>
-          {fixtures.map((fixture) => {
-            const key = fixtureKey(fixture);
-            const probs = predictions.get(key);
-
-            return (
-              <article
-                key={fixture.id || fixture.external_match_id}
-                style={{
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: '12px',
-                  padding: '0.9rem',
-                  marginBottom: '0.75rem',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    flexWrap: 'wrap',
-                    marginBottom: '0.5rem',
-                  }}
-                >
-                  <strong>
-                    {getTeamLabel(fixture.home_team)} v {getTeamLabel(fixture.away_team)}
-                  </strong>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <MatchPredictionChip
-                      homeProb={probs?.home ?? null}
-                      drawProb={probs?.draw ?? null}
-                      awayProb={probs?.away ?? null}
-                      isLoading={predictionsLoading}
-                    />
-                    <span>{formatStatus(fixture.status)}</span>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr auto 1fr',
-                    gap: '0.75rem',
-                    alignItems: 'center',
-                  }}
-                >
-                  <div>
-                    <div>
-                      <strong>{getTeamLabel(fixture.home_team)}</strong>
-                    </div>
-                    {fixture.home_team.name !== getTeamLabel(fixture.home_team) ? (
-                      <small>{fixture.home_team.name}</small>
-                    ) : null}
-                  </div>
-
-                  <div style={{ textAlign: 'center' }}>
-                    <div>
-                      <strong>{renderScore(fixture)}</strong>
-                    </div>
-                    <small>{formatKickoff(fixture.kickoff_at)}</small>
-                    {fixture.matchday ? (
-                      <div>
-                        <small>MD {fixture.matchday}</small>
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div style={{ textAlign: 'right' }}>
-                    <div>
-                      <strong>{getTeamLabel(fixture.away_team)}</strong>
-                    </div>
-                    {fixture.away_team.name !== getTeamLabel(fixture.away_team) ? (
-                      <small>{fixture.away_team.name}</small>
-                    ) : null}
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      )}
-    </section>
-  );
-};
+// ─── FixturesPanel (public component) ────────────────────────────────────────
 
 export interface FixturesPanelProps {
   fixtures: CompetitionPreviousNextFixturesResponse | null;
@@ -228,18 +208,14 @@ const FixturesPanel: React.FC<FixturesPanelProps> = ({
 
   useEffect(() => {
     if (!fixtures) return;
-
     const allFixtures = [...fixtures.previous, ...fixtures.next];
     if (allFixtures.length === 0) return;
 
     setPredictionsLoading(true);
-
     const league = COMPETITION_CODE_TO_LEAGUE[fixtures.competition.code ?? ''] ?? null;
 
     const requests = allFixtures.map((fixture) => {
-      if (!league) {
-        return Promise.resolve({ key: fixtureKey(fixture), probs: null });
-      }
+      if (!league) return Promise.resolve({ key: fixtureKey(fixture), probs: null });
       const season = parseSeasonYear(fixture.season_label);
       return predictMatch({
         home_team: fixture.home_team.name,
@@ -254,38 +230,37 @@ const FixturesPanel: React.FC<FixturesPanelProps> = ({
     Promise.allSettled(requests).then((results) => {
       const map = new Map<string, { home: number; draw: number; away: number } | null>();
       results.forEach((result) => {
-        if (result.status === 'fulfilled') {
-          map.set(result.value.key, result.value.probs);
-        }
+        if (result.status === 'fulfilled') map.set(result.value.key, result.value.probs);
       });
       setPredictions(map);
       setPredictionsLoading(false);
     });
   }, [fixtures]);
 
+  // ── State variants ──
   if (isLoading) {
     return (
-      <section className={className}>
-        <h2>{title}</h2>
-        <div>Loading fixtures…</div>
+      <section className={`${styles['lffp-root']} ${className ?? ''}`}>
+        <h2 className={styles['lffp-title']}>{title}</h2>
+        <div className={styles['lffp-state']}>Loading fixtures…</div>
       </section>
     );
   }
 
   if (error) {
     return (
-      <section className={className}>
-        <h2>{title}</h2>
-        <div role="alert">{error}</div>
+      <section className={`${styles['lffp-root']} ${className ?? ''}`}>
+        <h2 className={styles['lffp-title']}>{title}</h2>
+        <div className={styles['lffp-state-error']} role="alert">{error}</div>
       </section>
     );
   }
 
   if (!fixtures) {
     return (
-      <section className={className}>
-        <h2>{title}</h2>
-        <div>Select a competition to view fixtures.</div>
+      <section className={`${styles['lffp-root']} ${className ?? ''}`}>
+        <h2 className={styles['lffp-title']}>{title}</h2>
+        <div className={styles['lffp-state']}>Select a competition to view fixtures.</div>
       </section>
     );
   }
@@ -293,10 +268,11 @@ const FixturesPanel: React.FC<FixturesPanelProps> = ({
   const hasAnyFixtures = fixtures.previous.length > 0 || fixtures.next.length > 0;
 
   return (
-    <section className={className}>
-      <div style={{ marginBottom: '1rem' }}>
-        <h2>{title}</h2>
-        <p>
+    <section className={`${styles['lffp-root']} ${className ?? ''}`}>
+      {/* Panel header */}
+      <div className={styles['lffp-panel-header']}>
+        <h2 className={styles['lffp-title']}>{title}</h2>
+        <p className={styles['lffp-competition-meta']}>
           {fixtures.competition.name}
           {fixtures.competition.area_name ? ` · ${fixtures.competition.area_name}` : ''}
           {fixtures.season_label ? ` · ${fixtures.season_label}` : ''}
@@ -304,15 +280,11 @@ const FixturesPanel: React.FC<FixturesPanelProps> = ({
       </div>
 
       {!hasAnyFixtures ? (
-        <div>No fixtures are available for this competition yet.</div>
+        <div className={styles['lffp-state']}>
+          No fixtures are available for this competition yet.
+        </div>
       ) : (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '1rem',
-          }}
-        >
+        <div className={styles['lffp-columns']}>
           <FixtureListSection
             title={previousTitle}
             fixtures={fixtures.previous}
@@ -320,7 +292,6 @@ const FixturesPanel: React.FC<FixturesPanelProps> = ({
             predictions={predictions}
             predictionsLoading={predictionsLoading}
           />
-
           <FixtureListSection
             title={nextTitle}
             fixtures={fixtures.next}

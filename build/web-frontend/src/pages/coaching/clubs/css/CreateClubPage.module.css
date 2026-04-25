@@ -1,206 +1,550 @@
-.container {
-  max-width: 940px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-.header {
+.createClubShell {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--brand-light-green);
 }
 
-.title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: white;
-  margin: 0;
-}
-
-.subtitle {
-  margin: 0.45rem 0 0 0;
-  color: rgba(255, 255, 255, 0.64);
-  font-size: 0.96rem;
-  max-width: 720px;
-}
-
-.backButton,
-.secondaryButton,
-.submitButton {
-  padding: 0.85rem 1.2rem;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.2s, opacity 0.2s;
-}
-
-.backButton,
-.secondaryButton {
-  background: rgba(255, 255, 255, 0.08);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-}
-
-.backButton:hover,
-.secondaryButton:hover {
-  background: rgba(255, 255, 255, 0.12);
-  transform: translateY(-1px);
-}
-
-.submitButton {
-  background: #3b82f6;
-  border: none;
-  color: white;
-}
-
-.submitButton:hover:not(:disabled) {
-  background: #2563eb;
-  transform: translateY(-1px);
-}
-
-.submitButton:disabled,
-.secondaryButton:disabled,
-.backButton:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.error,
-.notice {
-  border-radius: 12px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-}
-
-.error {
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.28);
-  color: #fca5a5;
-}
-
-.notice {
-  background: rgba(59, 130, 246, 0.10);
-  border: 1px solid rgba(59, 130, 246, 0.24);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.form {
+.createClubMain {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  overflow: hidden;
+  margin-left: 80px;
 }
 
-.panel {
+.createClubHeader {
+  height: 56px;
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+}
+
+.createClubHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.createClubHeaderLabel { color: var(--secondary-text); }
+.createClubHeaderSep   { color: var(--tertiary-text); }
+.createClubHeaderTitle { color: var(--primary-text); }
+
+.createClubHeaderMiddle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.createClubHeaderRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.createClubContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 1.25rem;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.sectionTitle {
-  margin: 0;
-  color: white;
-  font-size: 1.12rem;
+.createClubHero {
+  background: var(--brand-card-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 16px;
+  padding: 1.75rem 2rem;
+}
+
+.createClubHeroBreadcrumb {
+  font-size: 0.68rem;
   font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--hover-light-green);
+  margin-bottom: 0.6rem;
+  opacity: 0.85;
 }
 
-.field {
+.createClubHeroTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--primary-text);
+  margin: 0 0 0.4rem;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.createClubHeroSub {
+  font-size: 0.87rem;
+  color: var(--secondary-text);
+  margin: 0;
+  max-width: 480px;
+  line-height: 1.55;
+}
+
+.createClubPanel {
+  background: var(--brand-card-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 16px;
+  padding: 1.4rem 1.6rem;
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 1rem;
 }
 
-.label {
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 0.88rem;
-  font-weight: 600;
+.createClubPanelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
-.input,
-.textarea {
-  padding: 0.85rem 1rem;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 10px;
-  color: white;
+.createClubPanelTitle {
   font-size: 0.95rem;
-  outline: none;
-  transition: border-color 0.2s;
+  font-weight: 600;
+  color: var(--primary-text);
+  margin: 0;
 }
 
-.input:focus,
-.textarea:focus {
-  border-color: rgba(59, 130, 246, 0.8);
+.createClubPanelRequired {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--hover-light-green);
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
 }
 
-.input option {
-  background: #111827;
-  color: white;
+.createClubPanelOptional {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--tertiary-text);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
 }
 
-.textarea {
-  resize: vertical;
-  min-height: 96px;
+.createClubForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.row {
+.createClubField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.createClubRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 0.85rem;
 }
 
-.noticeBlock {
-  padding: 0.95rem;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.76);
-  line-height: 1.55;
-  font-size: 0.92rem;
+@media (max-width: 600px) {
+  .createClubRow { grid-template-columns: 1fr; }
 }
 
-.input:invalid {
-  border-color: rgba(239, 68, 68, 0.4);
+.createClubRow:has(> :nth-child(3)) {
+  grid-template-columns: 1fr 1fr 1fr;
 }
 
-.input:invalid:focus {
-  border-color: rgba(239, 68, 68, 0.6);
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+.createClubLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--tertiary-text);
+  text-transform: uppercase;
 }
 
-.formActions {
+.createClubInput {
+  padding: 0.58rem 0.85rem;
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 8px;
+  color: var(--primary-text);
+  font-size: 0.87rem;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease;
+}
+.createClubInput:focus { border-color: var(--hover-light-green); }
+.createClubInput::placeholder { color: var(--tertiary-text); }
+
+.createClubSelect {
+  padding: 0.58rem 0.85rem;
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 8px;
+  color: var(--primary-text);
+  font-size: 0.87rem;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.createClubSelect:focus { border-color: var(--hover-light-green); }
+.createClubSelect option { background: var(--brand-card-green); }
+
+.createClubTextarea {
+  padding: 0.65rem 0.85rem;
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 8px;
+  color: var(--primary-text);
+  font-size: 0.87rem;
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease;
+}
+.createClubTextarea:focus { border-color: var(--hover-light-green); }
+.createClubTextarea::placeholder { color: var(--tertiary-text); }
+
+.createClubInputError {
+  font-size: 0.78rem;
+  color: #fca5a5;
+  margin: 0;
+}
+
+.createClubFormatPills {
   display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
+  gap: 0.4rem;
   flex-wrap: wrap;
 }
 
-@media (max-width: 700px) {
-  .container {
-    padding: 1rem;
-  }
+.createClubFormatPill {
+  padding: 0.3rem 0.85rem;
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 7px;
+  color: var(--secondary-text);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.createClubFormatPill:hover {
+  color: var(--primary-text);
+  border-color: var(--brand-light-green-border-med);
+}
+.createClubFormatPillActive {
+  background: var(--hover-light-green);
+  border-color: var(--hover-light-green);
+  color: #0a1a0c;
+  font-weight: 600;
+}
 
-  .header {
-    flex-direction: column;
-  }
+.createClubVisibilityRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
 
-  .row {
-    grid-template-columns: 1fr;
-  }
+.createClubVisibilityCard {
+  padding: 1rem 1.15rem;
+  background: var(--brand-lightest-green);
+  border: 1.5px solid var(--brand-light-green-border);
+  border-radius: 10px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.createClubVisibilityCard:hover {
+  border-color: var(--brand-light-green-border-med);
+}
+.createClubVisibilityCardActive {
+  border-color: var(--hover-light-green);
+  background: rgba(34, 197, 94, 0.08);
+}
 
-  .formActions {
-    flex-direction: column;
-    align-items: stretch;
-  }
+.createClubVisibilityTitle {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--primary-text);
+}
 
-  .submitButton,
-  .secondaryButton,
-  .backButton {
-    width: 100%;
-  }
+.createClubVisibilitySub {
+  font-size: 0.78rem;
+  color: var(--secondary-text);
+  line-height: 1.4;
+}
+
+.createClubActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.25rem 0;
+}
+
+.createClubActionsRight {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.createClubCancelBtn {
+  padding: 0.55rem 1.1rem;
+  background: transparent;
+  border: 1px solid var(--brand-light-green-border-med);
+  border-radius: 8px;
+  color: var(--secondary-text);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.createClubCancelBtn:hover {
+  color: var(--primary-text);
+  background: var(--brand-light-green-border);
+}
+
+.createClubDraftBtn {
+  padding: 0.55rem 1.1rem;
+  background: transparent;
+  border: 1px solid var(--brand-light-green-border-med);
+  border-radius: 8px;
+  color: var(--secondary-text);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.createClubDraftBtn:hover:not(:disabled) {
+  color: var(--primary-text);
+  background: var(--brand-light-green-border);
+}
+.createClubDraftBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.createClubSubmitBtn {
+  padding: 0.55rem 1.35rem;
+  background: var(--hover-light-green);
+  border: none;
+  border-radius: 8px;
+  color: #0a1a0c;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.12s ease;
+}
+.createClubSubmitBtn:hover:not(:disabled) { filter: brightness(1.08); }
+.createClubSubmitBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.createClubPreviewRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.createClubPreviewBadge {
+  width: 56px;
+  height: 56px;
+  border-radius: 13px;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1.5px solid rgba(34, 197, 94, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.createClubPreviewInitials {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--hover-light-green);
+}
+
+.createClubPreviewInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.createClubPreviewName {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--primary-text);
+}
+
+.createClubPreviewMeta {
+  font-size: 0.78rem;
+  color: var(--secondary-text);
+}
+
+.createClubPreviewTags {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.createClubPreviewTag {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--secondary-text);
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 4px;
+  padding: 0.12rem 0.45rem;
+}
+
+.createClubUploadBtn {
+  padding: 0.38rem 0.85rem;
+  background: transparent;
+  border: 1px solid var(--brand-light-green-border-med);
+  border-radius: 7px;
+  color: var(--secondary-text);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.createClubUploadBtn:hover {
+  color: var(--primary-text);
+  background: var(--brand-light-green-border);
+}
+
+.createClubAutoGenBadge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--hover-light-green);
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 4px;
+  padding: 0.15rem 0.55rem;
+}
+
+.createClubCodeWrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--brand-lightest-green);
+  border: 1.5px dashed var(--brand-light-green-border-med);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+}
+
+.createClubCodeInner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.createClubCodeLabel {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--tertiary-text);
+  text-transform: uppercase;
+}
+
+.createClubCodeValue {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--primary-text);
+}
+
+.createClubCodeChar {
+  display: inline-block;
+}
+
+.createClubCodeSep {
+  display: inline-block;
+  color: var(--hover-light-green);
+  margin: 0 0.2rem;
+}
+
+.createClubCopyBtn {
+  padding: 0.42rem 1rem;
+  background: var(--brand-card-green);
+  border: 1px solid var(--brand-light-green-border-med);
+  border-radius: 7px;
+  color: var(--primary-text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  flex-shrink: 0;
+}
+.createClubCopyBtn:hover { background: var(--brand-light-green-border); }
+
+.createClubCodeHint {
+  font-size: 0.8rem;
+  color: var(--tertiary-text);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.createClubNextHint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  background: rgba(34, 197, 94, 0.07);
+  border: 1px solid rgba(34, 197, 94, 0.18);
+  border-radius: 10px;
+  padding: 0.85rem 1.1rem;
+  font-size: 0.83rem;
+  color: var(--secondary-text);
+  line-height: 1.5;
+}
+.createClubNextHint strong { color: var(--primary-text); }
+
+.createClubNextIcon {
+  font-size: 0.9rem;
+  color: var(--hover-light-green);
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}
+
+.createClubError {
+  padding: 0.8rem 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  color: #f87171;
+}
+
+.createClubNotice {
+  padding: 0.8rem 1rem;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  color: #fbbf24;
+  line-height: 1.5;
 }
