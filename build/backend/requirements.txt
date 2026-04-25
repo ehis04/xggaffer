@@ -37,6 +37,8 @@ whitenoise
 psycopg2-binary
 
 joblib
+feedparser
+textstat
 
 pandas
 playwright

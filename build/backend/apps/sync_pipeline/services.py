@@ -70,18 +70,16 @@ def publish_snapshot(
             metadata=metadata or {},
         )
 
-        previous_active = (
+        (
             PublishedSnapshot.objects
             .select_for_update()
             .filter(surface=surface, is_active=True)
-            .first()
+            .update(
+                is_active=False,
+                status=PublishStatus.INVALIDATED,
+                invalidated_at=now,
+            )
         )
-
-        if previous_active:
-            previous_active.is_active = False
-            previous_active.status = PublishStatus.INVALIDATED
-            previous_active.invalidated_at = now
-            previous_active.save(update_fields=['is_active', 'status', 'invalidated_at'])
 
         candidate.is_active = True
         candidate.status = PublishStatus.ACTIVE

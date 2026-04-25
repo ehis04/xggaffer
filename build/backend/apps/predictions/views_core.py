@@ -22,7 +22,7 @@ from .serializers import (
 )
 from django.db.models import Max
 from django.utils import timezone
-from .models import FixtureOddsSnapshot, HistoricalMarketBenchmark, ScrapedMatch
+from .models import FixtureOddsSnapshot, HistoricalMarketBenchmark, OddsAccuracyStats, ScrapedMatch
 from apps.livefootball.models import Competition, CompetitionFixture
 
 _LEAGUE_COMPETITION_CODE = {
@@ -33,8 +33,9 @@ _LEAGUE_COMPETITION_CODE = {
     'Ligue_1': 'FL1',
 }
 
-# football-data.org (livefootball) uses abbreviated names; map to The Odds API names
+# football-data.org → FDCOUK canonical (the names the ML model and snapshots use)
 _LF_TO_SNAPSHOT_NAME = {
+    # EPL
     'Man City': 'Manchester City',
     'Man United': 'Manchester United',
     'Newcastle': 'Newcastle United',
@@ -43,14 +44,52 @@ _LF_TO_SNAPSHOT_NAME = {
     'Leeds United': 'Leeds',
     'Wolverhampton': 'Wolverhampton Wanderers',
     'Spurs': 'Tottenham',
+    # La Liga
+    'Alavés': 'Alaves',
     'Athletic': 'Athletic Club',
+    'Atleti': 'Atletico Madrid',
+    'Barça': 'Barcelona',
+    'Celta': 'Celta Vigo',
+    'Sevilla FC': 'Sevilla',
+    # Bundesliga
     'Bayern': 'Bayern Munich',
+    'Leverkusen': 'Bayer Leverkusen',
+    'Dortmund': 'Borussia Dortmund',
+    "M'gladbach": 'Borussia M.Gladbach',
+    'Frankfurt': 'Eintracht Frankfurt',
+    '1. FC Köln': 'FC Cologne',
+    'Heidenheim': 'FC Heidenheim',
+    'HSV': 'Hamburger SV',
+    'Mainz': 'Mainz 05',
+    'RB Leipzig': 'RasenBallsport Leipzig',
+    'Stuttgart': 'VfB Stuttgart',
+    'Bremen': 'Werder Bremen',
+    # Serie A
+    'Milan': 'AC Milan',
+    'Como 1907': 'Como',
+    'AC Pisa': 'Pisa',
+    'Parma': 'Parma Calcio 1913',
+    # Ligue 1
     'Angers SCO': 'Angers',
+    'Olympique Lyon': 'Lyon',
+    'PSG': 'Paris Saint Germain',
+    'RC Lens': 'Lens',
+    'FC Metz': 'Metz',
+    'Stade Rennais': 'Rennes',
+}
+
+# Normalise FDCOUK snapshot names that differ from the ML model's (Understat) canonical name
+_SNAP_ALIAS = {
+    'Parma': 'Parma Calcio 1913',
 }
 
 
 def _lf_to_snapshot(name: str) -> str:
     return _LF_TO_SNAPSHOT_NAME.get(name, name)
+
+
+def _snap_to_canonical(name: str) -> str:
+    return _SNAP_ALIAS.get(name, name)
 from .serializers import (
     AvailableTeamsRequestSerializer,
     ChatRequestSerializer,
@@ -122,7 +161,7 @@ class ModelInfoView(APIView):
                 from .ml.models.match_outcome.predict import get_predictor
 
                 predictor = get_predictor()
-                response = Response(predictor.get_model_info())
+                response = Response(build_predictions_envelope(predictor.get_model_info()))
             except FileNotFoundError:
                 response = Response({'error': 'No trained model available.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
@@ -144,15 +183,19 @@ class AvailableTeamsView(APIView):
 
                 service = get_feature_service(leagues=[data['league']], seasons=[data['season']])
                 teams = service.get_available_teams(league=data['league'], season=data['season'])
-                response = Response({'league': data['league'], 'season': data['season'], 'teams': teams, 'count': len(teams)})
+                response = Response(build_predictions_envelope({
+                    'league': data['league'],
+                    'season': data['season'],
+                    'teams': teams,
+                    'count': len(teams),
+                }))
             except Exception as exc:
                 logger.exception('Failed to load teams: %s', exc)
                 response = Response({'error': 'Could not load available teams.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
             timer.status_code = response.status_code
             return response
-
-
+            
 class ChatQueryView(APIView):
     permission_classes = [AllowAny]
 
@@ -161,15 +204,22 @@ class ChatQueryView(APIView):
             serializer = ChatRequestSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             query = serializer.validated_data["query"]
+            image_b64 = request.data.get("image_b64") or None
+            image_media_type = request.data.get("image_media_type") or None
             try:
                 from .services.chat_service import handle_chat_query
-
-                result = handle_chat_query(query)
+                result = handle_chat_query(
+                    query,
+                    image_b64=image_b64,
+                    image_media_type=image_media_type,
+                )
                 response = Response(build_predictions_envelope(result), status=status.HTTP_200_OK)
             except Exception as exc:
                 logger.exception("Chat query failed: %s", exc)
-                response = Response({"error": "Query processing failed."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+                response = Response(
+                    {"error": "Query processing failed."},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
             timer.status_code = response.status_code
             return response
 
@@ -1163,7 +1213,7 @@ class OddsTeamsView(APIView):
                     .distinct()
                 )
 
-        return Response({"league": league, "teams": sorted(names)})
+        return Response(build_predictions_envelope({"league": league, "teams": sorted(names)}))
 
 
 class OddsFixtureListView(APIView):
@@ -1297,10 +1347,10 @@ class OddsFixtureListView(APIView):
                     "result": result,
                 })
 
-            return Response({
+            return Response(build_predictions_envelope({
                 "league": league, "season": season, "view": view,
                 "count": len(fixtures), "fixtures": fixtures,
-            })
+            }))
 
         # ------------------------------------------------------------------
         # Standard path: FixtureOddsSnapshot as primary source
@@ -1335,16 +1385,23 @@ class OddsFixtureListView(APIView):
             snapshots.sort(key=lambda s: s.commence_time)
 
         fixtures = []
+        seen_matchups: set[tuple[str, str]] = set()
         for snapshot in snapshots:
+            h = _snap_to_canonical(snapshot.home_team)
+            a = _snap_to_canonical(snapshot.away_team)
+            matchup_key = (h, a)
+            if matchup_key in seen_matchups:
+                continue
             consensus = _build_consensus(snapshot)
             if consensus is None:
                 continue
+            seen_matchups.add(matchup_key)
 
-            result = result_map.get((snapshot.home_team, snapshot.away_team))
+            result = result_map.get(matchup_key)
 
             fixtures.append({
-                "home_team": snapshot.home_team,
-                "away_team": snapshot.away_team,
+                "home_team": h,
+                "away_team": a,
                 "league": snapshot.league,
                 "season": snapshot.season,
                 "commence_time": snapshot.commence_time.isoformat(),
@@ -1354,10 +1411,31 @@ class OddsFixtureListView(APIView):
                 "result": result,
             })
 
-        return Response({
+        return Response(build_predictions_envelope({
             "league": league,
             "season": season,
             "view": view,
             "count": len(fixtures),
             "fixtures": fixtures,
-        })
+        }))
+
+
+class OddsAccuracyView(APIView):
+    """Return pre-computed model vs market accuracy stats for a league/season."""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        league = request.query_params.get("league", "EPL")
+        season = request.query_params.get("season", "2025")
+        stats = OddsAccuracyStats.objects.filter(league=league, season=season).first()
+        if stats is None:
+            return Response(build_predictions_envelope(None))
+        return Response(build_predictions_envelope({
+            "league": league,
+            "season": season,
+            "model_wins": stats.model_wins,
+            "market_wins": stats.market_wins,
+            "ties": stats.ties,
+            "total_evaluated": stats.total_evaluated,
+            "computed_at": stats.computed_at.isoformat(),
+        }))

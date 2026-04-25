@@ -33,6 +33,8 @@ app.conf.task_routes = {
     'apps.livefootball.tasks.rebuild_livefootball_publication':           {'queue': 'queue_publication'},
     'apps.playerdata.tasks.rebuild_playerdata_publication_task':          {'queue': 'queue_publication'},
     'apps.predictions.tasks.rebuild_predictions_publication_task':        {'queue': 'queue_publication'},
+    'apps.predictions.tasks.compute_odds_accuracy_task':                  {'queue': 'queue_publication'},
+    'apps.community.tasks.update_user_interest_profiles_task':            {'queue': 'queue_publication'},
 }
 
 # Confirms Celery is receiving and executing tasks

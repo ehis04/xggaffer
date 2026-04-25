@@ -624,7 +624,7 @@ def get_player_season_enrichment(
         season=season,
         competition_code=competition_code,
         competition_name=competition_name,
-    ).order_by("-season_label", "-last_synced_at", "-updated_at", "-id")
+    ).order_by("-season_label", "-matches_played", "-last_synced_at", "-updated_at", "-id")
 
     enrichment = queryset.first()
     return _to_player_record(enrichment) if enrichment else None
@@ -697,7 +697,7 @@ def list_enriched_players(
         default="last_synced_at",
     )
 
-    queryset = _apply_player_filters(
+    filtered_qs = _apply_player_filters(
         _player_queryset(),
         player_id=player_id,
         club_id=club_id,
@@ -713,7 +713,18 @@ def list_enriched_players(
         min_assists=min_assists,
         min_xg=min_xg,
         min_xa=min_xa,
-    ).order_by(
+    )
+
+    # Keep only the best record per player (most matches played) to avoid
+    # showing duplicate players when multiple providers cover the same player+season.
+    best_ids = (
+        filtered_qs
+        .order_by("player_id", "-matches_played", "-last_synced_at", "-updated_at")
+        .distinct("player_id")
+        .values_list("id", flat=True)
+    )
+
+    queryset = _player_queryset().filter(id__in=best_ids).order_by(
         *resolve_ordering(
             allowed_fields=PLAYER_ORDERING_FIELDS,
             order_by=resolved_order_by,

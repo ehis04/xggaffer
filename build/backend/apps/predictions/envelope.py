@@ -3,7 +3,7 @@ from __future__ import annotations
 from django.conf import settings
 
 from apps.sync_pipeline.selectors import compute_surface_freshness
-from common.response_envelopes import build_degraded_envelope, build_envelope
+from common.response_envelope import build_degraded_envelope, build_envelope
 
 SURFACE = 'predictions'
 

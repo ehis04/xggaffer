@@ -444,3 +444,20 @@ class InferenceSnapshotRecord(models.Model):
     def __str__(self):
         active = 'ACTIVE' if self.is_active else 'inactive'
         return f'InferenceSnapshotRecord({self.algorithm}, {active}, {self.snapshot_published_at})'
+
+
+class OddsAccuracyStats(models.Model):
+    league = models.CharField(max_length=32)
+    season = models.CharField(max_length=8)
+    model_wins = models.IntegerField(default=0)
+    market_wins = models.IntegerField(default=0)
+    ties = models.IntegerField(default=0)
+    total_evaluated = models.IntegerField(default=0)
+    computed_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('league', 'season')
+        indexes = [models.Index(fields=['league', 'season'])]
+
+    def __str__(self):
+        return f'OddsAccuracyStats({self.league} {self.season}: model={self.model_wins} market={self.market_wins})'

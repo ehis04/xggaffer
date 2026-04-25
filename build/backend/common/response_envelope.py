@@ -13,15 +13,19 @@ def build_envelope(
     freshness_payload: FreshnessPayload,
     version: str = ENVELOPE_VERSION,
     warnings: Optional[list] = None,
+    data_version: Optional[str] = None,
 ) -> dict:
-    return {
+    result = {
         'data': data,
         'freshness': freshness_payload.to_dict(),
         'version': version,
         'warnings': warnings or [],
         'generated_at': iso_or_none(utcnow()),
     }
-
+    if data_version is not None:
+        result['data_version'] = data_version
+    return result
+    
 
 def build_degraded_envelope(
     freshness_payload: FreshnessPayload,

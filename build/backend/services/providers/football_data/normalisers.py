@@ -1,3 +1,8 @@
+"""
+Normalisers for football-data payloads
+
+Converts raw football-data API responses into the internal dictionary structure used by the application
+"""
 
 from datetime import date, datetime
 from typing import Any

@@ -157,6 +157,16 @@ def rebuild_predictions_publication_task(self):
     except Exception as exc:
         _logger.error('rebuild_predictions_publication_task failed: %s', exc)
 
+@shared_task(name='apps.predictions.tasks.compute_odds_accuracy_task', bind=True)
+def compute_odds_accuracy_task(self):
+    from django.core.management import call_command
+    try:
+        call_command('compute_odds_accuracy', league='all', season='2025')
+        _logger.info('compute_odds_accuracy_task: completed for all leagues')
+    except Exception as exc:
+        _logger.error('compute_odds_accuracy_task failed: %s', exc, exc_info=True)
+
+
 @shared_task(name='apps.predictions.tasks.refresh_upcoming_fixture_odds_task', bind=True, max_retries=1)
 def refresh_upcoming_fixture_odds_task(self, sport_keys=None, max_fixtures=None):
     from apps.predictions.services.odds.service import (

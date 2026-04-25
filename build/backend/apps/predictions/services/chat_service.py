@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import time
 from time import perf_counter
 
 from apps.predictions.services.availability_handler import AvailabilityHandler
@@ -45,7 +44,7 @@ HANDLER_MAP: dict[IntentClass, type[EngineHandler]] = {
     IntentClass.TEAM_RANKINGS:      RankingsHandler,
     IntentClass.REST_DAYS:          RestHandler,
     IntentClass.GLOSSARY:           GlossaryHandler,
-    IntentClass.ODDS_COMPARISON:  OddsHandler,
+    IntentClass.ODDS_COMPARISON:    OddsHandler,
     IntentClass.UNKNOWN:            UnknownHandler,
 }
 
@@ -58,7 +57,12 @@ FALLBACK_RESPONSE = {
     "query_type": IntentClass.UNKNOWN.value,
 }
 
-def handle_chat_query(raw_query: str) -> dict:
+
+def handle_chat_query(
+    raw_query: str,
+    image_b64: str | None = None,
+    image_media_type: str | None = None,
+) -> dict:
     from django.conf import settings
     _perf_enabled = getattr(settings, "ENABLE_PERFORMANCE_LOGGING", False)
     _perf_logger = logging.getLogger("xggaffer.performance")
@@ -97,7 +101,12 @@ def handle_chat_query(raw_query: str) -> dict:
 
     try:
         narrator = LLMNarrator()
-        prose, used_fallback = narrator.narrate(payload, raw_query)
+        prose, used_fallback = narrator.narrate(
+            payload,
+            raw_query,
+            image_b64=image_b64,
+            image_media_type=image_media_type,
+        )
     except Exception as exc:
         _logger.exception("Narrator failed unexpectedly: %s", exc)
         prose = FALLBACK_RESPONSE["prose"]

@@ -89,6 +89,67 @@ class TheOddsApiClient:
             commence_time_to=commence_time_to,
         )
 
+    def fetch_historical_match_odds(
+        self,
+        *,
+        sport_key: str,
+        date: datetime | str,
+        regions: str | list[str] | tuple[str, ...] | None = DEFAULT_REGIONS,
+        bookmakers: str | list[str] | tuple[str, ...] | None = None,
+        markets: str = DEFAULT_MARKETS,
+        odds_format: str = DEFAULT_ODDS_FORMAT,
+        date_format: str = DEFAULT_DATE_FORMAT,
+    ) -> dict[str, Any]:
+        if not sport_key:
+            raise OddsConfigurationError("sport_key is required for historical odds requests.")
+
+        params = self._build_odds_params(
+            regions=regions,
+            bookmakers=bookmakers,
+            markets=markets,
+            odds_format=odds_format,
+            date_format=date_format,
+            commence_time_from=None,
+            commence_time_to=None,
+        )
+        params["date"] = self._normalise_datetime_param(date)
+
+        endpoint = f"{self.base_url}/v4/historical/sports/{sport_key}/odds"
+        return self._get_historical(endpoint, params)
+
+    def _get_historical(self, url: str, params: dict[str, str]) -> dict[str, Any]:
+        try:
+            response = self.session.get(
+                url,
+                params=params,
+                timeout=self.timeout_seconds,
+            )
+        except requests.RequestException as exc:
+            raise OddsSourceError(f"Odds source request failed: {exc}") from exc
+
+        response_payload = self._safe_json(response)
+        request_meta = self._extract_request_meta(response)
+
+        if response.status_code >= 400:
+            raise OddsSourceError(self._build_error_message(response, response_payload))
+
+        # Historical endpoint wraps events: {"timestamp": ..., "data": [...]}
+        if isinstance(response_payload, dict):
+            data = response_payload.get("data", [])
+        elif isinstance(response_payload, list):
+            data = response_payload
+        else:
+            data = []
+
+        if not isinstance(data, list):
+            raise OddsSourceError("Historical odds source returned an unexpected response shape.")
+
+        return {
+            "data": data,
+            "request_meta": request_meta,
+            "source": "the_odds_api",
+        }
+
     def _get(self, url: str, params: dict[str, str]) -> dict[str, Any]:
         try:
             response = self.session.get(

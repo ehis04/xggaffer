@@ -410,9 +410,11 @@ CELERY_BEAT_SCHEDULE = {
         "options": {"expires": 3600, "queue": "queue_sofascore"},
     },
     "refresh-whoscored-cycle": {
+        # Once daily at 04:00 UTC — WhoScored stats don't change intra-day and
+        # the browser-based scraper is expensive; daily is sufficient.
         "task": "apps.sync_pipeline.tasks.refresh_whoscored_cycle_task",
-        "schedule": crontab(minute=30, hour="*/3"),
-        "options": {"expires": 3600, "queue": "queue_whoscored"},
+        "schedule": crontab(minute=0, hour=4),
+        "options": {"expires": 7200, "queue": "queue_whoscored"},
     },
     "refresh-native-stats-cycle": {
         "task": "apps.sync_pipeline.tasks.refresh_native_stats_cycle_task",
@@ -463,6 +465,29 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.sync_pipeline.tasks.aggregate_sync_health_task",
         "schedule": crontab(minute="*/30"),
         "options": {"expires": 1800},
+    },
+    "compute-odds-accuracy": {
+        # Runs 30 min after the fixture sync window (*/15) to ensure results are up to date
+        "task": "apps.predictions.tasks.compute_odds_accuracy_task",
+        "schedule": crontab(minute=30, hour="*/6"),
+        "options": {"expires": 3600, "queue": "queue_publication"},
+    },
+    "update-community-interest-profiles": {
+        "task": "apps.community.tasks.update_user_interest_profiles_task",
+        "schedule": crontab(minute=0, hour="*/1"),
+        "options": {"expires": 3300, "queue": "queue_publication"},
+    },
+    "ingest-rss-feeds": {
+        # Pull fresh articles from RSS feeds every hour.
+        "task": "apps.articles.tasks.ingest_rss_feeds_task",
+        "schedule": crontab(minute=0, hour="*/1"),
+        "options": {"expires": 3300},
+    },
+    "generate-article-recommendations": {
+        # Rebuild per-user article recommendations once per day at 05:00 UTC.
+        "task": "apps.articles.tasks.generate_recommendations_task",
+        "schedule": crontab(minute=0, hour=5),
+        "options": {"expires": 7200},
     },
 }
 

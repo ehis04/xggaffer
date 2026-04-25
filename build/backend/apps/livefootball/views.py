@@ -3,6 +3,15 @@ from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.core.cache import cache
+from common.cache_keys import (
+    make_cache_key,
+    CACHE_TTL_OVERVIEW,
+    CACHE_TTL_LEAGUES_META,
+    CACHE_TTL_EXPECTED_TABLE,
+    CACHE_TTL_COMPARE,
+)
+from .publication import get_active_snapshot_version
 
 from common.performance import RequestTimer
 from .envelope import build_livefootball_envelope
@@ -343,9 +352,19 @@ class PlayerSearchView(LiveFootballProtectedAPIView):
 class LiveFootballOverviewView(LiveFootballProtectedAPIView):
     def get(self, request):
         with RequestTimer(endpoint="livefootball.overview", method=request.method, params=dict(request.query_params)) as timer:
+            cache_key = make_cache_key("livefootball", "overview")
+            cached = cache.get(cache_key)
+            if cached is not None:
+                timer.cache_status = "hit"
+                timer.status_code = 200
+                return Response(cached, status=status.HTTP_200_OK)
+
+            snapshot_version = get_active_snapshot_version()
             payload = get_livefootball_homepage_payload()
             serializer = LiveFootballOverviewSerializer(payload)
-            response = Response(build_livefootball_envelope(serializer.data), status=status.HTTP_200_OK)
+            envelope = build_livefootball_envelope(serializer.data, data_version=snapshot_version)
+            cache.set(cache_key, envelope, timeout=CACHE_TTL_OVERVIEW)
+            response = Response(envelope, status=status.HTTP_200_OK)
             timer.status_code = response.status_code
             return response
 
@@ -353,11 +372,22 @@ class LiveFootballOverviewView(LiveFootballProtectedAPIView):
 class LeaguesMetaView(LiveFootballProtectedAPIView):
     def get(self, request):
         with RequestTimer(endpoint="livefootball.leagues_meta", method=request.method, params=dict(request.query_params)) as timer:
+            cache_key = make_cache_key("livefootball", "leagues_meta")
+            cached = cache.get(cache_key)
+            if cached is not None:
+                timer.cache_status = "hit"
+                timer.status_code = 200
+                return Response(cached, status=status.HTTP_200_OK)
+
+            snapshot_version = get_active_snapshot_version()
             payload = get_leagues_meta_payload()
             serializer = LeaguesMetaResponseSerializer(payload)
-            response = Response(serializer.data, status=status.HTTP_200_OK)
+            envelope = build_livefootball_envelope(serializer.data, data_version=snapshot_version)
+            cache.set(cache_key, envelope, timeout=CACHE_TTL_LEAGUES_META)
+            response = Response(envelope, status=status.HTTP_200_OK)
             timer.status_code = response.status_code
             return response
+
 
 class LeagueExpectedTableView(LiveFootballProtectedAPIView):
     def get(self, request, competition_id):
@@ -366,6 +396,20 @@ class LeagueExpectedTableView(LiveFootballProtectedAPIView):
             mode = request.query_params.get("mode")
             projection_window = request.query_params.get("projection_window")
             matchweek = self._parse_optional_int(request.query_params.get("matchweek"), "matchweek")
+
+            cache_key = make_cache_key(
+                "livefootball", "expected_table",
+                competition_id=competition_id,
+                season=season_label,
+                mode=mode,
+                matchweek=matchweek,
+                projection_window=projection_window,
+            )
+            cached = cache.get(cache_key)
+            if cached is not None:
+                timer.cache_status = "hit"
+                timer.status_code = 200
+                return Response(cached, status=status.HTTP_200_OK)
 
             try:
                 payload = get_league_expected_table_payload(
@@ -388,8 +432,11 @@ class LeagueExpectedTableView(LiveFootballProtectedAPIView):
                 timer.status_code = response.status_code
                 return response
 
+            snapshot_version = get_active_snapshot_version()
             serializer = LeagueExpectedTableResponseSerializer(payload)
-            response = Response(serializer.data, status=status.HTTP_200_OK)
+            envelope = build_livefootball_envelope(serializer.data, data_version=snapshot_version)
+            cache.set(cache_key, envelope, timeout=CACHE_TTL_EXPECTED_TABLE)
+            response = Response(envelope, status=status.HTTP_200_OK)
             timer.status_code = response.status_code
             return response
 
@@ -409,6 +456,20 @@ class LeagueCompareView(LiveFootballProtectedAPIView):
             mode = request.query_params.get("mode")
             projection_window = request.query_params.get("projection_window")
             matchweek = self._parse_optional_int(request.query_params.get("matchweek"), "matchweek")
+
+            cache_key = make_cache_key(
+                "livefootball", "compare",
+                competition_id=competition_id,
+                season=season_label,
+                mode=mode,
+                matchweek=matchweek,
+                projection_window=projection_window,
+            )
+            cached = cache.get(cache_key)
+            if cached is not None:
+                timer.cache_status = "hit"
+                timer.status_code = 200
+                return Response(cached, status=status.HTTP_200_OK)
 
             try:
                 payload = get_league_compare_payload(
@@ -431,8 +492,11 @@ class LeagueCompareView(LiveFootballProtectedAPIView):
                 timer.status_code = response.status_code
                 return response
 
+            snapshot_version = get_active_snapshot_version()
             serializer = LeagueCompareResponseSerializer(payload)
-            response = Response(serializer.data, status=status.HTTP_200_OK)
+            envelope = build_livefootball_envelope(serializer.data, data_version=snapshot_version)
+            cache.set(cache_key, envelope, timeout=CACHE_TTL_COMPARE)
+            response = Response(envelope, status=status.HTTP_200_OK)
             timer.status_code = response.status_code
             return response
 
@@ -443,7 +507,7 @@ class LeagueCompareView(LiveFootballProtectedAPIView):
             return int(value)
         except (TypeError, ValueError):
             raise ValidationError({field_name: "Must be an integer."})
-
+            
             
 class LeagueCompareView(LiveFootballProtectedAPIView):
     def get(self, request, competition_id):

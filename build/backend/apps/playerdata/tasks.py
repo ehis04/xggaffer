@@ -17,7 +17,7 @@ from common.constants import DatasetName, ProviderName
 _logger = logging.getLogger(__name__)
 
 SUPPORTED_LEAGUES = ['EPL', 'La_Liga', 'Bundesliga', 'Serie_A', 'Ligue_1']
-CURRENT_SEASON = '2024'
+CURRENT_SEASON = '2025'
 
 
 @shared_task(name='apps.playerdata.tasks.refresh_understat_all_leagues_task', bind=True, max_retries=3)

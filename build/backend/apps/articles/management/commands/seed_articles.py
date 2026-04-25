@@ -4,7 +4,6 @@ from django.utils.text import slugify
 from apps.articles.models import *
 import random
 import datetime
-import uuid
 
 class Command(BaseCommand):
     help = "Seed initial articles, authors, sites and topics"
@@ -68,7 +67,7 @@ class Command(BaseCommand):
             },
             {
                 'name': 'The Athletic',
-                'domain': 'https://theatheletic.com',
+                'domain': 'https://www.nytimes.com/athletic',
                 'reputation_score': 85.0,
                 'trust_score': 90.0
             },
@@ -104,6 +103,12 @@ class Command(BaseCommand):
             },
         ]
 
+        site_aliases = {
+            'ESPN FC': 'ESPN',
+            'The Guardian Football': 'The Guardian',
+            'BBC Sport': 'BBC',
+        }
+
         sites = {}
         for s in sites_data:
             site, created = Site.objects.get_or_create(
@@ -119,16 +124,21 @@ class Command(BaseCommand):
                 self.stdout.write(f'  ✓ Created site: {s["name"]}')
 
         def get_site_by_name(name):
+            canonical_name = site_aliases.get(name, name)
+            if canonical_name in sites:
+                return sites[canonical_name]
+
             if name in sites:
                 return sites[name]
-            unique_domain = f"https://{slugify(name)}-{uuid.uuid4().hex[:8]}.local"
+
+            fallback_domain = f"https://www.{slugify(canonical_name)}.com"
             site, created = Site.objects.get_or_create(
-                name=name,
-                defaults={'domain': unique_domain, 'reputation_score': 50.0, 'trust_score': 50.0}
+                name=canonical_name,
+                defaults={'domain': fallback_domain, 'reputation_score': 50.0, 'trust_score': 50.0}
             )
-            sites[name] = site
+            sites[canonical_name] = site
             if created:
-                self.stdout.write(f'  ✓ Created site (missing ref): {name}')
+                self.stdout.write(f'  ✓ Created site (missing ref): {canonical_name}')
             return site
 
         existing_sites = set(sites.keys())
@@ -281,14 +291,17 @@ class Command(BaseCommand):
 
             publication_date = timezone.now() - datetime.timedelta(days=random.randint(0, 30))
 
-            article, created = Article.objects.get_or_create(
+            article, created = Article.objects.update_or_create(
                 title=article_data['title'],
                 defaults={
                     'slug': slug,
                     'url': url,
+                    'summary': article_data.get('summary', ''),
                     'content': article_data.get('content', ''),
                     'site': site_obj,
                     'publication_date': publication_date,
+                    'word_count': article_data.get('word_count', 0),
+                    'read_time_minutes': article_data.get('read_time_minutes', 5),
                     'readability_score': article_data.get('readability_score', 50.0),
                     'engagement_score': article_data.get('engagement_score', 50.0),
                     'quality_score': article_data.get('quality_score', 50.0),
@@ -307,7 +320,8 @@ class Command(BaseCommand):
                 )
                 article.topics.add(topic_obj)
 
-            self.stdout.write(f' Created article: {article.title[:60]}...')
+            action = 'Created' if created else 'Updated'
+            self.stdout.write(f' {action} article: {article.title[:60]}...')
 
         self.stdout.write('\n Seeding complete!')
         self.stdout.write(f'  Topics: {Topic.objects.count()}')

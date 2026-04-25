@@ -30,6 +30,7 @@ urlpatterns = [
 
     # Community and learning modules
     path('api/community/', include('apps.community.urls')),
+    path('api/articles/', include('apps.articles.urls')),
     #path('api/laws/', include('apps.laws.urls')),
     #path('api/quizzes/', include('apps.quizzes.urls')),
     path('api/referee/', include('apps.referee.urls')),

@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import logging
 
-from apps.livefootball.models import Competition, CompetitionTableSnapshot
+from .models import Competition, CompetitionTableSnapshot
+from apps.sync_pipeline.models import PublishedSnapshot
 from apps.sync_pipeline.services import publish_snapshot
 from common.constants import ProviderName
+from django.core.cache import cache
+from common.cache_keys import make_surface_pattern
 
 _logger = logging.getLogger(__name__)
 
@@ -39,3 +42,20 @@ def run_livefootball_publication(source_max_fetched_at=None) -> None:
         metadata={'validation_warnings': warnings},
     )
     _logger.info('Livefootball publication promoted: version=%s', snapshot.version)
+    pattern = make_surface_pattern("livefootball")
+    deleted = cache.delete_pattern(pattern)
+    _logger.info('Livefootball cache cleared: pattern=%s deleted=%s', pattern, deleted)
+
+def get_active_snapshot_version() -> str | None:
+    try:
+        snapshot = (
+            PublishedSnapshot.objects
+            .filter(surface=LIVEFOOTBALL_SURFACE, is_active=True)
+            .order_by('-version')
+            .first()
+        )
+        if snapshot is None:
+            return None
+        return str(snapshot.version)
+    except Exception:
+        return None

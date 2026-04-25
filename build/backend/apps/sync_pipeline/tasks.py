@@ -126,6 +126,19 @@ def refresh_understat_cycle_task(self):
             raise self.retry(exc=exc, countdown=60)
 
 
+def _kill_orphaned_chrome():
+    """Kill any Chrome/Chromedriver processes left over from a failed WhoScored session."""
+    import subprocess
+    try:
+        subprocess.run(
+            ['pkill', '-f', 'chrome'],
+            capture_output=True,
+            timeout=10,
+        )
+    except Exception:
+        pass
+
+
 @shared_task(name='apps.sync_pipeline.tasks.refresh_whoscored_cycle_task', bind=True, max_retries=1)
 def refresh_whoscored_cycle_task(self):
     provider = ProviderName.WHOSCORED
@@ -137,7 +150,7 @@ def refresh_whoscored_cycle_task(self):
     WHOSCORED_DATASETS = ['matches', 'players', 'teams']
     current_season = str(timezone.now().year - 1)
 
-    with acquire_task_lock(lock_key, timeout_seconds=1800):
+    with acquire_task_lock(lock_key, timeout_seconds=3600):
         run = open_sync_run(provider, dataset, scope, TRIGGERED_BY_CELERY)
         total_seen = 0
 
@@ -146,6 +159,13 @@ def refresh_whoscored_cycle_task(self):
             from apps.predictions.data_collection.core.enums import SOURCE_WHOSCORED
 
             for league in SUPPORTED_LEAGUES:
+                league_client = None
+                try:
+                    from apps.predictions.data_collection.extractors.whoscored.matches import get_whoscored_client
+                    league_client = get_whoscored_client(league, current_season)
+                except Exception as exc:
+                    _logger.warning('WhoScored client init failed for %s: %s', league, exc)
+
                 for ds in WHOSCORED_DATASETS:
                     try:
                         result = collect_source_dataset(
@@ -160,9 +180,20 @@ def refresh_whoscored_cycle_task(self):
                     except Exception as exc:
                         _logger.warning('WhoScored collect failed for %s/%s/%s: %s', league, ds, current_season, exc)
 
+                # Explicitly close the browser after each league to prevent memory accumulation
+                if league_client is not None:
+                    try:
+                        driver = getattr(league_client, '_driver', None)
+                        if driver is not None:
+                            driver.quit()
+                    except Exception:
+                        pass
+                _kill_orphaned_chrome()
+
             close_sync_run_success(run, rows_seen=total_seen, rows_changed=total_seen)
             trigger_publication_rebuild('predictions')
         except Exception as exc:
+            _kill_orphaned_chrome()
             close_sync_run_failure(run, error_summary=str(exc))
 
 

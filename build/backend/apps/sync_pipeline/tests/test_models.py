@@ -1,4 +1,5 @@
 import pytest
+from django.db import IntegrityError
 from django.utils import timezone
 
 from apps.sync_pipeline.models import PublishedSnapshot, SourceHealth, SyncRun
@@ -38,11 +39,11 @@ class TestPublishedSnapshot:
             surface='livefootball', version='v1', status=PublishStatus.ACTIVE,
             built_at=now, is_active=True,
         )
-        PublishedSnapshot.objects.create(
-            surface='livefootball', version='v2', status=PublishStatus.ACTIVE,
-            built_at=now, is_active=True,
-        )
-        assert PublishedSnapshot.objects.filter(surface='livefootball', is_active=True).count() == 2
+        with pytest.raises(IntegrityError):
+            PublishedSnapshot.objects.create(
+                surface='livefootball', version='v2', status=PublishStatus.ACTIVE,
+                built_at=now, is_active=True,
+            )
 
     def test_str_representation(self):
         snap = PublishedSnapshot(surface='predictions', version='20240101T000000Z', is_active=True, status='active')

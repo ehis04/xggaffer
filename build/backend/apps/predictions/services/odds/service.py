@@ -620,6 +620,37 @@ class OddsComparisonService:
 
         return bookmaker
 
+    def fetch_and_store_historical_odds(
+        self,
+        *,
+        sport_key: str,
+        league: str,
+        season: str,
+        date: datetime,
+        regions: str | list[str] | tuple[str, ...] | None = DEFAULT_REGIONS,
+        bookmakers: str | list[str] | tuple[str, ...] | None = None,
+        markets: str = "h2h",
+        odds_format: str = "decimal",
+        date_format: str = "iso",
+    ) -> dict[str, Any]:
+        raw_response = self.client.fetch_historical_match_odds(
+            sport_key=sport_key,
+            date=date,
+            regions=regions,
+            bookmakers=bookmakers,
+            markets=markets,
+            odds_format=odds_format,
+            date_format=date_format,
+        )
+
+        return self._build_fixture_payload(
+            raw_response=raw_response,
+            sport_key=sport_key,
+            league=league,
+            season=season,
+            persist=True,
+        )
+
     def get_stored_fixture_odds(
         self,
         *,

@@ -42,6 +42,13 @@ class PublishedSnapshot(models.Model):
         indexes = [
             models.Index(fields=['surface', 'is_active']),
         ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['surface'],
+                condition=models.Q(is_active=True),
+                name='uniq_active_snapshot_per_surface',
+            ),
+        ]
 
     def __str__(self):
         active = 'ACTIVE' if self.is_active else self.status

@@ -37,6 +37,7 @@ class RequestTimer:
         self.params_hash = _hash_params(params)
         self.status_code = status_code
         self.snapshot_version = snapshot_version
+        self.cache_status = "miss"
         self._start: float = 0.0
 
     def __enter__(self) -> "RequestTimer":
@@ -52,7 +53,7 @@ class RequestTimer:
             "method": self.method,
             "params_hash": self.params_hash,
             "duration_ms": duration_ms,
-            "cache_status": "miss",
+            "cache_status": self.cache_status,
             "status_code": self.status_code,
             "snapshot_version": self.snapshot_version,
         })
