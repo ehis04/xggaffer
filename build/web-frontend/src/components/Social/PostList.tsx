@@ -18,22 +18,6 @@ export interface PostListProps {
   onPostClick?: (postId: number) => void;
 }
 
-export interface Post {
-  id: number;
-  author: number;
-  text_body: string;
-  created_at: string;
-  no_of_likes: number;
-  no_of_comments: number;
-  visibility: string;
-  post_tags: Array<{
-    hashtag: { id: number; body: string; usage_count: number };
-  }>;
-  is_liked: boolean;
-  hashtags: string[];
-  time_since_posted: string;
-}
-
 export const PostList: React.FC<PostListProps> = ({
   refreshTrigger = 0,
   username,
@@ -47,7 +31,7 @@ export const PostList: React.FC<PostListProps> = ({
   const getPosts = async () => {
     try {
       const url = getPostsUrl(postListType, username);
-      const data = await apiClient.get<PaginatedResponse<Post>>(url);
+      const data = await apiClient.get<PaginatedResponse<PostData>>(url);
       setPosts(data.results);
       return data;
     } catch (error) {

@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import { chatQuery } from '../../../services/api/predictionsApi';
 import type { ChatResponse } from '../../../types/prediction';
 import type { ApiEnvelope } from '../../../common/types/response';
+import type { FileAttachmentData } from '../FileAttachment';
+import type { PinnedOutput } from '../PinnedOutputsPanel';
 import { FreshnessBadge } from '../../../common/components/FreshnessBadge';
 import ChatInput from './ChatInput';
 import StructuredResponseBlock from './StructuredResponseBlock';
@@ -24,9 +26,19 @@ const STARTER_QUERIES = [
 
 interface ChatInterfaceProps {
   starterQueries?: readonly string[];
+  onMessagesChange?: (messages: Array<{ role: string; content: string }>) => void;
+  onPin?: (output: PinnedOutput) => void;
+  attachment?: FileAttachmentData | null;
+  onAttachmentUsed?: () => void;
 }
 
-export default function ChatInterface({ starterQueries }: ChatInterfaceProps) {
+export default function ChatInterface({
+  starterQueries,
+  onMessagesChange,
+  onPin,
+  attachment,
+  onAttachmentUsed,
+}: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [inputError, setInputError] = useState<string | null>(null);
@@ -41,18 +53,34 @@ export default function ChatInterface({ starterQueries }: ChatInterfaceProps) {
   }, [messages.length, isLoading]);
 
   async function handleSubmit(query: string) {
+    let fullQuery = query;
+    let imageB64: string | undefined;
+    let imageMediaType: string | undefined;
+
+    if (attachment) {
+      if (attachment.type === 'image') {
+        imageB64 = attachment.content;
+        imageMediaType = attachment.media_type;
+      } else {
+        fullQuery = `${query}\n\n${attachment.context_text}`;
+      }
+      onAttachmentUsed?.();
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
       content: query,
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const next = [...messages, userMessage];
+    setMessages(next);
+    onMessagesChange?.(next.map(m => ({ role: m.role, content: m.content })));
     setIsLoading(true);
     setInputError(null);
 
     try {
-      const envelope = await chatQuery(query);
+      const envelope = await chatQuery(fullQuery, imageB64, imageMediaType);
       const chatData = envelope.data;
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -60,7 +88,9 @@ export default function ChatInterface({ starterQueries }: ChatInterfaceProps) {
         content: chatData?.prose ?? '',
         envelope,
       };
-      setMessages((prev) => [...prev, assistantMessage]);
+      const withAssistant = [...next, assistantMessage];
+      setMessages(withAssistant);
+      onMessagesChange?.(withAssistant.map(m => ({ role: m.role, content: m.content })));
     } catch {
       setInputError('Something went wrong. Please try again.');
     } finally {
@@ -73,7 +103,7 @@ export default function ChatInterface({ starterQueries }: ChatInterfaceProps) {
       <div className={styles.messageList} ref={listRef}>
         {messages.length === 0 && (
           <div className={styles.starterChips}>
-            {activeStarters.map((q) => (
+            {activeStarters.map(q => (
               <button
                 key={q}
                 className={styles.chip}
@@ -86,7 +116,7 @@ export default function ChatInterface({ starterQueries }: ChatInterfaceProps) {
           </div>
         )}
 
-        {messages.map((msg) => {
+        {messages.map(msg => {
           const chatData = msg.envelope?.data ?? null;
           return (
             <div
@@ -107,6 +137,7 @@ export default function ChatInterface({ starterQueries }: ChatInterfaceProps) {
                       partial={chatData.structured_data.partial}
                       error={chatData.structured_data.error}
                       onExampleClick={handleSubmit}
+                      onPin={onPin}
                     />
                   )}
                 </>

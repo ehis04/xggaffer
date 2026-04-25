@@ -1,4 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '../../../common/query/queryKeys';
+import { STALE_TIME_STANDARD } from '../../../common/query/queryClient';
 import { Link, useSearchParams } from 'react-router-dom';
 import LeagueSelector from '../../../components/livefootball/leagues/LeagueSelector';
 import LeagueTable from '../../../components/livefootball/leagues/LeagueTable';
@@ -7,7 +10,6 @@ import liveFootballApi from '../../../services/api/livefootballApi';
 import type {
   CompetitionTableResponse,
   LeagueMetaItem,
-  LeaguesMetaResponse,
 } from '../../../types/livefootball';
 import styles from './css/LeaguesPage.module.css';
 
@@ -44,49 +46,16 @@ const normalizeError = (error: unknown): string => {
 const LeaguesPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [meta, setMeta] = useState<LeaguesMetaResponse | null>(null);
-  const [metaLoading, setMetaLoading] = useState(true);
-  const [metaError, setMetaError] = useState<string | null>(null);
+  const { data: metaEnvelope, isPending: metaLoading, isError: metaErrored } = useQuery({
+    queryKey: queryKeys.livefootball.leaguesMeta(),
+    queryFn: () => liveFootballApi.getLeaguesMeta(),
+    staleTime: STALE_TIME_STANDARD,
+  });
+  const meta = metaEnvelope?.data ?? null;
 
   const [table, setTable] = useState<CompetitionTableResponse | null>(null);
   const [tableLoading, setTableLoading] = useState(false);
   const [tableError, setTableError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let isActive = true;
-
-    const loadMeta = async (): Promise<void> => {
-      try {
-        setMetaLoading(true);
-        setMetaError(null);
-
-        const payload = await liveFootballApi.getLeaguesMeta();
-
-        if (!isActive) {
-          return;
-        }
-
-        setMeta(payload);
-      } catch (error) {
-        if (!isActive) {
-          return;
-        }
-
-        setMeta(null);
-        setMetaError(normalizeError(error));
-      } finally {
-        if (isActive) {
-          setMetaLoading(false);
-        }
-      }
-    };
-
-    void loadMeta();
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
 
   const leagues = meta?.leagues ?? [];
 
@@ -224,10 +193,10 @@ const LeaguesPage: React.FC = () => {
     .filter(Boolean)
     .join(' · ');
 
-    const predictHref =
-      selectedLeague && selectedSeason
-        ? `/livefootball/leagues/predict?competition=${selectedLeague.id}&season=${selectedSeason}&mode=current_expected`
-        : '/livefootball/leagues/predict';
+  const predictHref =
+    selectedLeague && selectedSeason
+      ? `/livefootball/leagues/predict?competition=${selectedLeague.id}&season=${selectedSeason}&mode=current_expected`
+      : '/livefootball/leagues/predict';
 
   return (
     <main className={styles.page}>
@@ -240,12 +209,12 @@ const LeaguesPage: React.FC = () => {
         </div>
 
         <div className={styles.actions}>
-        <Link to={predictHref} className={styles.compareButton}>
+          <Link to={predictHref} className={styles.compareButton}>
             Open predictions
-        </Link>
-        <Link to={compareHref} className={styles.compareButton}>
+          </Link>
+          <Link to={compareHref} className={styles.compareButton}>
             Compare with predictions
-        </Link>
+          </Link>
         </div>
       </header>
 
@@ -282,14 +251,14 @@ const LeaguesPage: React.FC = () => {
         </section>
       ) : null}
 
-      {!metaLoading && metaError ? (
+      {!metaLoading && metaErrored ? (
         <section className={styles.stateCard}>
           <h2 className={styles.stateTitle}>Leagues unavailable</h2>
-          <p className={styles.stateText}>{metaError}</p>
+          <p className={styles.stateText}>Failed to load league metadata.</p>
         </section>
       ) : null}
 
-      {!metaLoading && !metaError && leagues.length === 0 ? (
+      {!metaLoading && !metaErrored && leagues.length === 0 ? (
         <section className={styles.stateCard}>
           <h2 className={styles.stateTitle}>No leagues available</h2>
           <p className={styles.stateText}>
@@ -298,7 +267,7 @@ const LeaguesPage: React.FC = () => {
         </section>
       ) : null}
 
-      {!metaLoading && !metaError && selectedLeague ? (
+      {!metaLoading && !metaErrored && selectedLeague ? (
         <section className={styles.tableCard}>
           <div className={styles.tableHeader}>
             <div>

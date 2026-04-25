@@ -15,6 +15,24 @@ import {
   mockPredictionResponse,
   mockTeamsResponse,
 } from '../../pages/predictions/__mocks__/predictionFixtures';
+import type { ApiEnvelope } from '../../common/types/response';
+
+function makeEnvelope<T>(data: T): ApiEnvelope<T> {
+  return {
+    data,
+    freshness: {
+      source_fetched_at: null,
+      snapshot_published_at: null,
+      is_stale: false,
+      is_degraded: false,
+      stale_reason: null,
+      sla_seconds: 21600,
+    },
+    version: '1',
+    warnings: [],
+    generated_at: '2026-01-01T00:00:00Z',
+  };
+}
 
 function createJsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -36,23 +54,23 @@ describe('predictionsApi', () => {
   });
 
   it('loads available teams', async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(createJsonResponse(mockTeamsResponse));
+    vi.mocked(fetch).mockResolvedValueOnce(createJsonResponse(makeEnvelope(mockTeamsResponse)));
 
-    const result = await getTeams('EPL', '2024');
+    const result = await getTeams('EPL', '2025');
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(String(vi.mocked(fetch).mock.calls[0][0])).toContain('/teams/');
-    expect(result).toEqual(mockTeamsResponse);
+    expect(result.data).toEqual(mockTeamsResponse);
   });
 
   it('loads model info', async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(createJsonResponse(mockModelInfoResponse));
+    vi.mocked(fetch).mockResolvedValueOnce(createJsonResponse(makeEnvelope(mockModelInfoResponse)));
 
     const result = await getModelInfo();
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(String(vi.mocked(fetch).mock.calls[0][0])).toContain('/model-info/');
-    expect(result.metrics.accuracy).toBe(0.555);
+    expect(result.data?.metrics.accuracy).toBe(0.555);
   });
 
   it('posts a match prediction request', async () => {

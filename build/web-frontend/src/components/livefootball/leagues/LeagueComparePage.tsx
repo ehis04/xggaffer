@@ -72,10 +72,15 @@ const LeagueComparePage: React.FC = () => {
         setMetaLoading(true);
         setMetaError(null);
 
-        const payload = await liveFootballApi.getLeaguesMeta();
+        const envelope = await liveFootballApi.getLeaguesMeta();
 
         if (!isActive) {
           return;
+        }
+
+        const payload = envelope.data;
+        if (!payload) {
+          throw new Error('No league metadata available.');
         }
 
         setMeta(payload);
@@ -199,10 +204,15 @@ const LeagueComparePage: React.FC = () => {
         setComparisonLoading(true);
         setComparisonError(null);
 
-        const payload = await liveFootballApi.getLeagueComparison(selectedLeague.id, {
+        const envelope = await liveFootballApi.getLeagueComparison(selectedLeague.id, {
           season: selectedSeason,
           mode: selectedMode,
         });
+
+        const payload = envelope.data;
+        if (!payload) {
+          throw new Error('No league comparison data available.');
+        }
 
         if (!isActive) {
           return;

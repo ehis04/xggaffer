@@ -70,4 +70,3 @@ describe('PredictionPage', () => {
     Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: DESKTOP_WIDTH });
   });
 });
-

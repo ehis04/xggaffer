@@ -165,7 +165,7 @@ const buildActivityFeed = (
 };
 
 const DashboardTab = ({ ctx }: Props) => {
-  const { club, clubId } = ctx;
+  const { clubId } = ctx;
 
   const [players, setPlayers] = useState<ClubPlayer[]>([]);
   const [results, setResults] = useState<ClubSeasonResult[]>([]);
@@ -215,10 +215,7 @@ const DashboardTab = ({ ctx }: Props) => {
 
   const cardPlayers = players.map(mapPlayerToCardData);
   const squadStats = deriveSquadStats(players);
-  const isProClub = club.club_type === 'system_professional';
-  const seasonStats: SeasonStats = isProClub
-    ? { wins: 0, draws: 0, losses: 0, goals_scored: 0, goals_conceded: 0 }
-    : deriveSeasonStats(results);
+  const seasonStats: SeasonStats = deriveSeasonStats(results);
 
   const sessions = mapCalendarToSessions(calendarFeed);
   const activity = buildActivityFeed(players, results, calendarFeed);

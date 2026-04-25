@@ -9,7 +9,7 @@ import type {
 
 export const mockTeamsResponse: TeamsResponse = {
   league: 'EPL',
-  season: '2024',
+  season: '2025',
   teams: ['Arsenal', 'Chelsea', 'Liverpool', 'Manchester City'],
   count: 4,
 };
@@ -25,7 +25,7 @@ export const mockModelInfoResponse: ModelInfoResponse = {
   feature_count: 42,
   training_info: {
     trained_on_leagues: ['EPL'],
-    trained_on_seasons: ['2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024'],
+    trained_on_seasons: ['2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025'],
   },
   contract_version: 'v1',
 };
@@ -34,7 +34,7 @@ export const mockPredictionRequest: PredictionRequest = {
   home_team: 'Arsenal',
   away_team: 'Chelsea',
   league: 'EPL',
-  season: '2024',
+  season: '2025',
   top_factors: 5,
 };
 
@@ -42,7 +42,7 @@ export const mockPredictionResponse: PredictionResponse = {
   home_team: 'Arsenal',
   away_team: 'Chelsea',
   league: 'EPL',
-  season: '2024',
+  season: '2025',
   prediction: 'Home',
   probabilities: {
     home: 0.61,
@@ -82,7 +82,7 @@ export const mockOddsComparisonRequest: OddsComparisonRequest = {
   home_team: 'Arsenal',
   away_team: 'Chelsea',
   league: 'EPL',
-  season: '2024',
+  season: '2025',
   bookmakers: ['paddypower', 'bet365'],
   use_cached: true,
 };
@@ -91,7 +91,7 @@ export const mockOddsComparisonResponse: OddsComparisonResponse = {
   home_team: 'Arsenal',
   away_team: 'Chelsea',
   league: 'EPL',
-  season: '2024',
+  season: '2025',
   kickoff: '2026-04-20T19:00:00Z',
   source: 'the_odds_api',
   model: {

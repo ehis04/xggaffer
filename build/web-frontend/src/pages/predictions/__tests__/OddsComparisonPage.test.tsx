@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import OddsComparisonPage from '../OddsComparisonPage';
 import type { OddsFixtureItem, PredictionResponse } from '../../../types/prediction';
@@ -16,12 +17,21 @@ vi.mock('../../../services/api/predictionsApi', () => ({
 }));
 
 const renderPage = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
   return render(
-    <MemoryRouter initialEntries={['/coaching/predictions/odds']}>
-      <Routes>
-        <Route path="/coaching/predictions/odds" element={<OddsComparisonPage />} />
-      </Routes>
-    </MemoryRouter>
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={['/coaching/predictions/odds']}>
+        <Routes>
+          <Route path="/coaching/predictions/odds" element={<OddsComparisonPage />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>
   );
 };
 
@@ -70,13 +80,25 @@ describe('OddsComparisonPage', () => {
     mockGetOddsTeams.mockReset();
     mockPredictMatch.mockReset();
 
-    mockGetOddsTeams.mockResolvedValue({ league: 'EPL', teams: ['Arsenal', 'Chelsea'] });
+    mockGetOddsTeams.mockResolvedValue({
+      data: { league: 'EPL', teams: ['Arsenal', 'Chelsea'] },
+      freshness: { status: 'fresh' },
+      version: '1.0',
+      warnings: [],
+      generated_at: new Date().toISOString(),
+    });
     mockGetOddsFixtures.mockResolvedValue({
-      league: 'EPL',
-      season: '2025',
-      view: 'future',
-      count: 0,
-      fixtures: [],
+      data: {
+        league: 'EPL',
+        season: '2025',
+        view: 'future' as const,
+        count: 0,
+        fixtures: [],
+      },
+      freshness: { status: 'fresh' },
+      version: '1.0',
+      warnings: [],
+      generated_at: new Date().toISOString(),
     });
   });
 
@@ -90,7 +112,9 @@ describe('OddsComparisonPage', () => {
   it('reloads fixtures when team filters are changed', async () => {
     renderPage();
 
-    await screen.findAllByRole('option', { name: 'Arsenal' });
+    // Wait for teams to be loaded and Arsenal options to appear
+    const arsenalOptions = await screen.findAllByText('Arsenal');
+    expect(arsenalOptions.length).toBeGreaterThan(0);
 
     fireEvent.change(screen.getByLabelText(/Team A/i), {
       target: { value: 'Arsenal' },
@@ -111,11 +135,17 @@ describe('OddsComparisonPage', () => {
 
   it('renders fixtures and loads prediction for a row', async () => {
     mockGetOddsFixtures.mockResolvedValue({
-      league: 'EPL',
-      season: '2025',
-      view: 'future',
-      count: 1,
-      fixtures: [buildFixture()],
+      data: {
+        league: 'EPL',
+        season: '2025',
+        view: 'future' as const,
+        count: 1,
+        fixtures: [buildFixture()],
+      },
+      freshness: { status: 'fresh' },
+      version: '1.0',
+      warnings: [],
+      generated_at: new Date().toISOString(),
     });
     mockPredictMatch.mockResolvedValue(buildPrediction());
 
@@ -139,11 +169,17 @@ describe('OddsComparisonPage', () => {
 
   it('shows a loading state while the request is in flight', async () => {
     let resolveRequest: ((value: {
-      league: string;
-      season: string;
-      view: 'future' | 'past';
-      count: number;
-      fixtures: OddsFixtureItem[];
+      data: {
+        league: string;
+        season: string;
+        view: 'future' | 'past';
+        count: number;
+        fixtures: OddsFixtureItem[];
+      };
+      freshness: { status: string };
+      version: string;
+      warnings: [];
+      generated_at: string;
     }) => void) = () => {};
 
     mockGetOddsFixtures.mockImplementation(
@@ -158,11 +194,17 @@ describe('OddsComparisonPage', () => {
     expect(await screen.findByText(/Loading fixtures/i)).toBeInTheDocument();
 
     resolveRequest({
-      league: 'EPL',
-      season: '2025',
-      view: 'future',
-      count: 0,
-      fixtures: [],
+      data: {
+        league: 'EPL',
+        season: '2025',
+        view: 'future',
+        count: 0,
+        fixtures: [],
+      },
+      freshness: { status: 'fresh' },
+      version: '1.0',
+      warnings: [],
+      generated_at: new Date().toISOString(),
     });
 
     expect(await screen.findByText(/No fixtures with odds data found/i)).toBeInTheDocument();
@@ -173,6 +215,6 @@ describe('OddsComparisonPage', () => {
 
     renderPage();
 
-    expect(await screen.findByText(/no live odds are available/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Failed to load fixtures/i)).toBeInTheDocument();
   });
 });

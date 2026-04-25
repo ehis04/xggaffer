@@ -137,10 +137,15 @@ const LeagueCustomPage: React.FC = () => {
         setMetaLoading(true);
         setMetaError(null);
 
-        const payload = await liveFootballApi.getLeaguesMeta();
+        const envelope = await liveFootballApi.getLeaguesMeta();
 
         if (!isActive) {
           return;
+        }
+
+        const payload = envelope.data;
+        if (!payload) {
+          throw new Error('No league metadata available.');
         }
 
         setMeta(payload);

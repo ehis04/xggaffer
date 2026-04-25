@@ -29,7 +29,11 @@
     "noUncheckedSideEffectImports": true
   },
   "include": [
-    "src",
-    "../extra_or_junk/CoachingDashboard.tsx"
-, "../extra_or_junk/TeamsheetBase.tsx"  ]
+    "src"
+  ],
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/__tests__/**"
+  ]
 }

@@ -1,4 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '../../../common/query/queryKeys';
+import { STALE_TIME_STANDARD } from '../../../common/query/queryClient';
+import { buildLeagueProjectionParams } from '../../../services/api/livefootballApi';
 import { Link, useSearchParams } from 'react-router-dom';
 import CommentaryPanel from '../../../components/livefootball/leagues/CommentaryPanel';
 import LeagueSelector from '../../../components/livefootball/leagues/LeagueSelector';
@@ -8,9 +12,7 @@ import SeasonSelector from '../../../components/livefootball/leagues/SeasonSelec
 import ChatInterface from '../../../components/predictions/chat/ChatInterface';
 import liveFootballApi from '../../../services/api/livefootballApi';
 import type {
-  LeagueExpectedTableResponse,
   LeagueMetaItem,
-  LeaguesMetaResponse,
 } from '../../../types/livefootball';
 import styles from './css/LeagueComparePage.module.css';
 
@@ -24,36 +26,6 @@ const MODE_LABELS: Record<ProjectionMode, string> = {
 
 const MODE_ORDER: ProjectionMode[] = ['current_expected', 'pre_season', 'as_of_matchweek'];
 type UnavailableMode = LeagueMetaItem['unavailable_modes'][number];
-
-const normalizeError = (error: unknown): string => {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  if (typeof error === 'string') {
-    return error;
-  }
-
-  if (error && typeof error === 'object') {
-    const values = Object.values(error as Record<string, unknown>).flatMap((value) => {
-      if (Array.isArray(value)) {
-        return value.map(String);
-      }
-
-      if (value === null || value === undefined) {
-        return [];
-      }
-
-      return [String(value)];
-    });
-
-    if (values.length > 0) {
-      return values.join(' ');
-    }
-  }
-
-  return 'Something went wrong.';
-};
 
 const parsePositiveInteger = (value: string | null): number | null => {
   if (!value) {
@@ -71,49 +43,12 @@ const parsePositiveInteger = (value: string | null): number | null => {
 const LeaguePredictPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [meta, setMeta] = useState<LeaguesMetaResponse | null>(null);
-  const [metaLoading, setMetaLoading] = useState(true);
-  const [metaError, setMetaError] = useState<string | null>(null);
-
-  const [prediction, setPrediction] = useState<LeagueExpectedTableResponse | null>(null);
-  const [predictionLoading, setPredictionLoading] = useState(false);
-  const [predictionError, setPredictionError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let isActive = true;
-
-    const loadMeta = async (): Promise<void> => {
-      try {
-        setMetaLoading(true);
-        setMetaError(null);
-
-        const payload = await liveFootballApi.getLeaguesMeta();
-
-        if (!isActive) {
-          return;
-        }
-
-        setMeta(payload);
-      } catch (error) {
-        if (!isActive) {
-          return;
-        }
-
-        setMeta(null);
-        setMetaError(normalizeError(error));
-      } finally {
-        if (isActive) {
-          setMetaLoading(false);
-        }
-      }
-    };
-
-    void loadMeta();
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
+  const { data: metaEnvelope, isPending: metaLoading, isError: metaErrored } = useQuery({
+    queryKey: queryKeys.livefootball.leaguesMeta(),
+    queryFn: () => liveFootballApi.getLeaguesMeta(),
+    staleTime: STALE_TIME_STANDARD,
+  });
+  const meta = metaEnvelope?.data ?? null;
 
   const leagues = meta?.leagues ?? [];
 
@@ -224,53 +159,6 @@ const LeaguePredictPage: React.FC = () => {
     setSearchParams(nextParams, { replace: true });
   }, [searchParams, selectedLeague, selectedSeason, selectedMode, selectedMatchweek, setSearchParams]);
 
-  useEffect(() => {
-    if (!selectedLeague || !selectedSeason || !selectedMode) {
-      setPrediction(null);
-      setPredictionError(null);
-      setPredictionLoading(false);
-      return;
-    }
-
-    let isActive = true;
-
-    const loadPrediction = async (): Promise<void> => {
-      try {
-        setPredictionLoading(true);
-        setPredictionError(null);
-
-        const payload = await liveFootballApi.getLeagueExpectedTable(selectedLeague.id, {
-          season: selectedSeason,
-          mode: selectedMode,
-          matchweek: selectedMode === 'as_of_matchweek' ? selectedMatchweek : undefined,
-        });
-
-        if (!isActive) {
-          return;
-        }
-
-        setPrediction(payload);
-      } catch (error) {
-        if (!isActive) {
-          return;
-        }
-
-        setPrediction(null);
-        setPredictionError(normalizeError(error));
-      } finally {
-        if (isActive) {
-          setPredictionLoading(false);
-        }
-      }
-    };
-
-    void loadPrediction();
-
-    return () => {
-      isActive = false;
-    };
-  }, [selectedLeague, selectedSeason, selectedMode, selectedMatchweek]);
-
   const handleLeagueChange = (competitionId: number): void => {
     const nextLeague = leagues.find((league: LeagueMetaItem) => league.id === competitionId);
     const currentSeasonParam = searchParams.get('season');
@@ -329,7 +217,6 @@ const LeaguePredictPage: React.FC = () => {
   const handleSeasonChange = (season: string): void => {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set('season', season);
-
     setSearchParams(nextParams);
   };
 
@@ -361,6 +248,22 @@ const LeaguePredictPage: React.FC = () => {
   }, [selectedLeague]);
 
   const filtersReady = Boolean(selectedLeague && selectedSeason && selectedMode);
+
+  const predictionParams = useMemo(() => ({
+    season: selectedSeason ?? undefined,
+    mode: selectedMode ?? undefined,
+    matchweek: selectedMode === 'as_of_matchweek' ? (selectedMatchweek ?? undefined) : undefined,
+  }), [selectedSeason, selectedMode, selectedMatchweek]);
+
+  const builtPredictionParams = buildLeagueProjectionParams(predictionParams);
+
+  const { data: predictionEnvelope, isPending: predictionLoading, isError: predictionErrored } = useQuery({
+    queryKey: queryKeys.livefootball.expectedTable(selectedLeague?.id ?? 0, builtPredictionParams ?? {}),
+    queryFn: () => liveFootballApi.getLeagueExpectedTable(selectedLeague!.id, predictionParams),
+    enabled: Boolean(selectedLeague && selectedSeason && selectedMode),
+    staleTime: STALE_TIME_STANDARD,
+  });
+  const prediction = predictionEnvelope?.data ?? null;
   const totalMatchweeks = prediction?.metadata.total_matchweeks ?? null;
 
   return (
@@ -454,14 +357,14 @@ const LeaguePredictPage: React.FC = () => {
         </section>
       ) : null}
 
-      {!metaLoading && metaError ? (
+      {!metaLoading && metaErrored ? (
         <section className={styles.stateCard}>
           <h2 className={styles.stateTitle}>Predictions unavailable</h2>
-          <p className={styles.stateText}>{metaError}</p>
+          <p className={styles.stateText}>Failed to load league metadata.</p>
         </section>
       ) : null}
 
-      {!metaLoading && !metaError && !filtersReady ? (
+      {!metaLoading && !metaErrored && !filtersReady ? (
         <section className={styles.stateCard}>
           <h2 className={styles.stateTitle}>No prediction options available</h2>
           <p className={styles.stateText}>
@@ -470,7 +373,7 @@ const LeaguePredictPage: React.FC = () => {
         </section>
       ) : null}
 
-      {!metaLoading && !metaError && filtersReady ? (
+      {!metaLoading && !metaErrored && filtersReady ? (
         <>
           {predictionLoading ? (
             <section className={styles.stateCard}>
@@ -479,14 +382,14 @@ const LeaguePredictPage: React.FC = () => {
             </section>
           ) : null}
 
-          {!predictionLoading && predictionError ? (
+          {!predictionLoading && predictionErrored ? (
             <section className={styles.stateCard}>
               <h2 className={styles.stateTitle}>Could not load prediction</h2>
-              <p className={styles.stateText}>{predictionError}</p>
+              <p className={styles.stateText}>Could not load prediction data.</p>
             </section>
           ) : null}
 
-          {!predictionLoading && !predictionError && prediction ? (
+          {!predictionLoading && !predictionErrored && prediction ? (
             <>
               <PredictionSummary payload={prediction} />
               <CommentaryPanel commentary={prediction.commentary} />

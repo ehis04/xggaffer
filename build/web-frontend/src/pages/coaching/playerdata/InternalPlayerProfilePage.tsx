@@ -13,7 +13,7 @@ import type {
 } from '../../../types/playerdata';
 import styles from './css/InternalPlayerProfilePage.module.css';
 
-const SEASON = '2024';
+const SEASON = '2025';
 
 const getMetricValue = (
   metric: { formatted_value?: string | null; value?: number | null },

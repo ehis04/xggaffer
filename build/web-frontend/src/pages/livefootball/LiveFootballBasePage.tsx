@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getLiveFootballOverview } from '../../services/api/livefootballApi';
-import type { LiveFootballOverview } from '../../types/livefootball';
-import type { ApiEnvelope } from '../../common/types/response';
 import { FreshnessBadge } from '../../common/components/FreshnessBadge';
+import { queryKeys } from '../../common/query/queryKeys';
+import { STALE_TIME_SHORT } from '../../common/query/queryClient';
+import { usePageTiming } from '../../common/hooks/usePageTiming';
 
 import LiveFootballHeroHeader from '../../components/livefootball/home/LiveFootballHeroHeader';
 import RotatingLeaguePreviewCard from '../../components/livefootball/home/RotatingLeaguePreviewCard';
@@ -15,45 +17,17 @@ import OverviewDataState from '../../components/livefootball/home/OverviewDataSt
 import styles from './css/LiveFootballBasePage.module.css';
 
 const LiveFootballBasePage: React.FC = () => {
-  const [envelope, setEnvelope] = useState<ApiEnvelope<LiveFootballOverview> | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { markDataReceived } = usePageTiming('LiveFootballBasePage');
+
+  const { data: envelope, isPending, isError } = useQuery({
+    queryKey: queryKeys.livefootball.overview(),
+    queryFn: getLiveFootballOverview,
+    staleTime: STALE_TIME_SHORT,
+  });
 
   useEffect(() => {
-    let isMounted = true;
-
-    const loadOverview = async (): Promise<void> => {
-      setIsLoading(true);
-      setErrorMessage(null);
-
-      try {
-        const result = await getLiveFootballOverview();
-
-        if (!isMounted) {
-          return;
-        }
-
-        setEnvelope(result);
-      } catch (error) {
-        if (!isMounted) {
-          return;
-        }
-
-        console.error('Failed to load live football overview', error);
-        setErrorMessage('Could not load the Live Football homepage right now.');
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void loadOverview();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+    if (envelope) markDataReceived();
+  }, [envelope]);
 
   const overview = envelope?.data ?? null;
 
@@ -61,22 +35,22 @@ const LiveFootballBasePage: React.FC = () => {
     <main className={styles.page}>
       <LiveFootballHeroHeader generatedAt={overview?.generated_at ?? null} />
 
-      {isLoading ? (
+      {isPending ? (
         <OverviewDataState
           title="Loading Live Football overview"
           description="Pulling the homepage data from the aggregated overview endpoint."
         />
       ) : null}
 
-      {!isLoading && errorMessage ? (
+      {!isPending && isError ? (
         <OverviewDataState
           title="Live Football overview unavailable"
-          description={errorMessage}
+          description="Could not load the Live Football homepage right now."
           variant="error"
         />
       ) : null}
 
-      {!isLoading && !errorMessage && envelope && !overview ? (
+      {!isPending && !isError && envelope && !overview ? (
         <OverviewDataState
           title="Live Football overview unavailable"
           description="Data is temporarily unavailable. Please try again shortly."
@@ -84,7 +58,7 @@ const LiveFootballBasePage: React.FC = () => {
         />
       ) : null}
 
-      {!isLoading && !errorMessage && overview ? (
+      {!isPending && !isError && overview ? (
         <>
           <div style={{ padding: '0 1rem 0.5rem' }}>
             <FreshnessBadge freshness={envelope?.freshness} />

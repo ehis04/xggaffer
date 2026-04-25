@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import LiveFootballBasePage from '../LiveFootballBasePage';
 import { getLiveFootballOverview } from '../../../services/api/livefootballApi';
@@ -85,10 +86,23 @@ describe('LiveFootballBasePage', () => {
     vi.clearAllMocks();
   });
 
+  const renderWithQueryClient = (component: React.ReactElement) => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+      },
+    });
+    return render(
+      <QueryClientProvider client={queryClient}>
+        {component}
+      </QueryClientProvider>
+    );
+  };
+
   it('renders loading state first', () => {
     mockedGetLiveFootballOverview.mockReturnValue(new Promise(() => {}));
 
-    render(
+    renderWithQueryClient(
       <MemoryRouter>
         <LiveFootballBasePage />
       </MemoryRouter>
@@ -100,7 +114,7 @@ describe('LiveFootballBasePage', () => {
   it('renders error state when overview request fails', async () => {
     mockedGetLiveFootballOverview.mockRejectedValue(new Error('boom'));
 
-    render(
+    renderWithQueryClient(
       <MemoryRouter>
         <LiveFootballBasePage />
       </MemoryRouter>
@@ -116,7 +130,7 @@ describe('LiveFootballBasePage', () => {
   it('renders success state with core homepage sections', async () => {
     mockedGetLiveFootballOverview.mockResolvedValue({ data: overviewPayload } as any);
 
-    render(
+    renderWithQueryClient(
       <MemoryRouter>
         <LiveFootballBasePage />
       </MemoryRouter>
@@ -124,18 +138,17 @@ describe('LiveFootballBasePage', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('hero-header')).toBeInTheDocument();
+      expect(screen.getByTestId('rotating-card')).toHaveTextContent('cards-1');
+      expect(screen.getByText('Top performing teams')).toBeInTheDocument();
+      expect(screen.getByText('Recent matches by league')).toBeInTheDocument();
+      expect(screen.getByText('First vs last by league')).toBeInTheDocument();
     });
-
-    expect(screen.getByTestId('rotating-card')).toHaveTextContent('cards-1');
-    expect(screen.getByText('Top performing teams')).toBeInTheDocument();
-    expect(screen.getByText('Recent matches by league')).toBeInTheDocument();
-    expect(screen.getByText('First vs last by league')).toBeInTheDocument();
   });
 
   it('only makes one overview request on initial render', async () => {
     mockedGetLiveFootballOverview.mockResolvedValue({ data: overviewPayload } as any);
 
-    render(
+    renderWithQueryClient(
       <MemoryRouter>
         <LiveFootballBasePage />
       </MemoryRouter>

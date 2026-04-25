@@ -13,7 +13,6 @@ interface ProfileHeaderProps {
 
 export const ProfileHeader = ({
   userData,
-  loggedInUser,
   followStatus,
   isOwnProfile,
   onEditProfile,

@@ -6,6 +6,7 @@ export interface ApiEnvelope<T> {
   version: string;
   warnings: string[];
   generated_at: string;
+  data_version?: string;
 }
 
 export interface DegradedEnvelope extends ApiEnvelope<null> {

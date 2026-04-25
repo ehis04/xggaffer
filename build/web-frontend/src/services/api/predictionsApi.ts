@@ -95,20 +95,20 @@ const withPredictionsErrorHandling = async <T>(request: () => Promise<T>): Promi
 };
 
 export async function getTeams(
-  league = 'EPL',
-  season = '2025'
-): Promise<TeamsResponse> {
+  league: string,
+  season: string
+): Promise<ApiEnvelope<TeamsResponse>> {
   return withPredictionsErrorHandling(() =>
-    apiClient.get<TeamsResponse>(
+    apiClient.get<ApiEnvelope<TeamsResponse>>(
       buildPredictionsEndpoint('teams/'),
       { league, season }
     )
   );
 }
 
-export async function getModelInfo(): Promise<ModelInfoResponse> {
+export async function getModelInfo(): Promise<ApiEnvelope<ModelInfoResponse>> {
   return withPredictionsErrorHandling(() =>
-    apiClient.get<ModelInfoResponse>(
+    apiClient.get<ApiEnvelope<ModelInfoResponse>>(
       buildPredictionsEndpoint('model-info/')
     )
   );
@@ -121,8 +121,6 @@ export async function predictMatch(
     apiClient.post<ApiEnvelope<PredictionResponse> | PredictionResponse>(
       buildPredictionsEndpoint('predict/'),
       {
-        league: 'EPL',
-        season: '2025',
         top_factors: 5,
         ...request,
       }
@@ -194,11 +192,40 @@ export async function getOddsTeams(league: string): Promise<ApiEnvelope<OddsTeam
   );
 }
 
-export async function chatQuery(query: string): Promise<ApiEnvelope<ChatResponse>> {
+export interface OddsAccuracyResponse {
+  league: string;
+  season: string;
+  model_wins: number;
+  market_wins: number;
+  ties: number;
+  total_evaluated: number;
+  computed_at: string;
+}
+
+export async function getOddsAccuracy(
+  league: string,
+  season: string = '2025',
+): Promise<ApiEnvelope<OddsAccuracyResponse | null>> {
+  return withPredictionsErrorHandling(() =>
+    apiClient.get<ApiEnvelope<OddsAccuracyResponse | null>>(
+      buildPredictionsEndpoint('odds/accuracy/'),
+      { league, season }
+    )
+  );
+}
+
+export async function chatQuery(
+  query: string,
+  imageB64?: string,
+  imageMediaType?: string,
+): Promise<ApiEnvelope<ChatResponse>> {
   return withPredictionsErrorHandling(() =>
     apiClient.post<ApiEnvelope<ChatResponse>>(
       buildPredictionsEndpoint('chat/'),
-      { query }
+      {
+        query,
+        ...(imageB64 && { image_b64: imageB64, image_media_type: imageMediaType }),
+      }
     )
   );
 }

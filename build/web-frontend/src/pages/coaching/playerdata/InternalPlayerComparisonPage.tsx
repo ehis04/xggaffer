@@ -12,7 +12,7 @@ import type {
 } from "../../../types/playerdata";
 import styles from "./css/InternalPlayerComparisonPage.module.css";
 
-const SEASON = "2024";
+const SEASON = '2025';
 const PROVIDER = "understat";
 
 const ComparisonMetricGroup: React.FC<{
@@ -368,7 +368,7 @@ const InternalPlayerComparisonPage: React.FC = () => {
           <section className={styles["icp-hero"]}>
             <h1 className={styles["icp-title"]}>Player Comparison</h1>
             <p className={styles["icp-subtitle"]}>
-              Select two players to compare their 2024/25 season stats side by
+              Select two players to compare their {SEASON}/{String(Number(SEASON) + 1).slice(2)} season stats side by
               side.
             </p>
           </section>
