@@ -216,7 +216,6 @@
   white-space: nowrap;
 }
 
-/* ── club grid ── */
 .clubGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -227,7 +226,6 @@
 @media (max-width: 860px)  { .clubGrid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 540px)  { .clubGrid { grid-template-columns: 1fr; } }
 
-/* ── individual club card ── */
 .clubCard {
   background: var(--brand-card-green);
   border: 1px solid var(--brand-light-green-border);
@@ -316,7 +314,6 @@
   margin-top: auto;
 }
 
-/* ── workflow panel ── */
 .workflowPanel {
   background: var(--brand-card-green);
   border: 1px solid var(--brand-light-green-border);
@@ -440,7 +437,6 @@
   line-height: 1.5;
 }
 
-/* ── load more ── */
 .loadMore {
   display: flex;
   justify-content: center;
@@ -464,7 +460,6 @@
   background: var(--brand-light-green-border);
 }
 
-/* ── states ── */
 .loadingState {
   display: flex;
   flex-direction: column;
@@ -515,7 +510,6 @@
   color: var(--hover-light-green);
 }
 
-/* ── buttons ── */
 .viewBtn {
   padding: 0.38rem 0.9rem;
   background: transparent;

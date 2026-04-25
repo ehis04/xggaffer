@@ -1,280 +1,277 @@
-.calendar {
-  background: rgba(15, 23, 42, 0.96);
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  border-radius: 12px;
-  padding: 1rem;
+.clubCalendarRoot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
   width: 100%;
 }
 
-.header {
+.clubCalendarHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  gap: 0.5rem;
+  margin-bottom: 0.1rem;
 }
 
-.title {
-  color: #f1f5f9;
-  font-size: 1.1rem;
+.clubCalendarMonth {
+  font-size: 0.88rem;
   font-weight: 600;
+  color: var(--primary-text);
   margin: 0;
+  letter-spacing: -0.01em;
 }
 
-.navButton {
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #f1f5f9;
+.clubCalendarNavBtns {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.clubCalendarNavBtn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
   border-radius: 6px;
-  width: 2rem;
-  height: 2rem;
-  font-size: 1.25rem;
+  color: var(--secondary-text);
+  font-size: 1rem;
   line-height: 1;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s;
+  transition: all 0.12s ease;
+  padding: 0;
+}
+.clubCalendarNavBtn:hover {
+  color: var(--primary-text);
+  border-color: var(--brand-light-green-border-med);
+  background: var(--brand-light-green-border);
 }
 
-.navButton:hover {
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.dayHeaders {
+.clubCalendarDayHeaders {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 2px;
-  margin-bottom: 0.5rem;
 }
 
-.dayHeader {
+.clubCalendarDayHeader {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--tertiary-text);
   text-align: center;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: #94a3b8;
-  padding: 0.5rem 0;
-}
-
-.grid {
-  display: grid;
-  gap: 2px;
-}
-
-.week {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-}
-
-.day {
-  aspect-ratio: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  padding: 2px;
-  min-height: 48px;
-  position: relative;
-  border-radius: 6px;
-}
-
-.activeDay {
-  background: rgba(30, 41, 59, 0.8);
-  transition: background-color 0.15s;
-}
-
-.hasEvents {
-  cursor: pointer;
-}
-
-.hasEvents:hover {
-  background: rgba(51, 65, 85, 0.9);
-}
-
-.emptyDay {
-  background: transparent;
-}
-
-.today {
-  background: rgba(59, 130, 246, 0.2);
-  border: 1px solid rgba(59, 130, 246, 0.4);
-}
-
-.today:hover {
-  background: rgba(59, 130, 246, 0.3);
-}
-
-.selectedDay {
-  background: rgba(99, 102, 241, 0.35) !important;
-  border: 1px solid rgba(99, 102, 241, 0.6) !important;
-}
-
-.dayNumber {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #f1f5f9;
-  margin-bottom: 2px;
-  padding: 1px 2px;
-}
-
-.events {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  width: 100%;
-}
-
-.event {
-  width: 100%;
-  height: 10px;
-  border-radius: 2px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.55rem;
-  font-weight: 600;
-  color: white;
+  padding: 0.2rem 0;
   text-transform: uppercase;
 }
 
-.eventType {
-  background: rgba(34, 197, 94, 0.8);
+.clubCalendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
 }
 
-.fixtureType {
-  background: rgba(239, 68, 68, 0.8);
-}
-
-.moreEvents {
-  font-size: 0.55rem;
-  color: #94a3b8;
-  text-align: center;
-  margin-top: 1px;
-}
-
-/* ── Event preview panel ── */
-
-.preview {
-  margin-top: 1rem;
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.previewHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.6rem 0.875rem;
-  background: rgba(99, 102, 241, 0.15);
-  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
-}
-
-.previewDate {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: #c7d2fe;
-}
-
-.previewClose {
-  background: none;
-  border: none;
-  color: #94a3b8;
-  font-size: 1.25rem;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-}
-
-.previewClose:hover {
-  color: #f1f5f9;
-}
-
-.previewItems {
+.clubCalendarCell {
+  position: relative;
+  aspect-ratio: 1;
   display: flex;
   flex-direction: column;
-  gap: 0;
-}
-
-.previewItem {
-  padding: 0.75rem 0.875rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
-}
-
-.previewItem:last-child {
-  border-bottom: none;
-}
-
-.previewEvent {
-  border-left: 3px solid rgba(34, 197, 94, 0.7);
-}
-
-.previewFixture {
-  border-left: 3px solid rgba(239, 68, 68, 0.7);
-}
-
-.previewItemTitle {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: #f1f5f9;
-  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.25rem;
+  justify-content: flex-start;
+  padding-top: 4px;
+  border-radius: 7px;
+  cursor: default;
+  transition: background 0.1s ease;
+  min-height: 0;
 }
 
-.previewItemType {
+.clubCalendarCellEmpty {
+  background: transparent;
+  pointer-events: none;
+}
+
+.clubCalendarCellHasEvents {
+  cursor: pointer;
+}
+.clubCalendarCellHasEvents:hover {
+  background: var(--brand-lightest-green);
+}
+
+.clubCalendarCellToday {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1.5px solid var(--hover-light-green);
+}
+.clubCalendarCellToday .clubCalendarCellNum {
+  color: var(--hover-light-green);
+  font-weight: 700;
+}
+
+.clubCalendarCellSelected {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1.5px solid var(--hover-light-green);
+}
+.clubCalendarCellSelected .clubCalendarCellNum {
+  color: var(--hover-light-green);
+  font-weight: 700;
+}
+
+.clubCalendarCellNum {
   font-size: 0.72rem;
   font-weight: 500;
-  color: #94a3b8;
-  background: rgba(148, 163, 184, 0.1);
-  padding: 0.1rem 0.4rem;
-  border-radius: 4px;
-  text-transform: capitalize;
+  color: var(--secondary-text);
+  line-height: 1;
 }
 
-.previewItemMeta {
-  font-size: 0.78rem;
-  color: #94a3b8;
-  margin-bottom: 0.2rem;
+.clubCalendarDots {
+  display: flex;
+  gap: 2px;
+  margin-top: 3px;
+  align-items: center;
+  justify-content: center;
 }
 
-.previewItemDetail {
-  font-size: 0.78rem;
-  color: rgba(148, 163, 184, 0.8);
+.clubCalendarDotTraining,
+.clubCalendarDotFixture {
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.clubCalendarDotTraining {
+  background: var(--hover-light-green);
+}
+
+.clubCalendarDotFixture {
+  background: #f59e0b;
+}
+
+.clubCalendarPreview {
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
   margin-top: 0.15rem;
 }
 
-.previewItemMandatory {
-  font-size: 0.72rem;
-  color: #fbbf24;
-  margin-top: 0.25rem;
-  font-weight: 500;
-}
-
-/* ── Legend ── */
-
-.legend {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(148, 163, 184, 0.14);
-}
-
-.legendItem {
+.clubCalendarPreviewHead {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
-  font-size: 0.8rem;
-  color: #94a3b8;
 }
 
-.legendItem .event {
-  width: 16px;
-  height: 16px;
+.clubCalendarPreviewDate {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--primary-text);
+}
+
+.clubCalendarPreviewClose {
+  background: none;
+  border: none;
+  color: var(--tertiary-text);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.1s ease;
+}
+.clubCalendarPreviewClose:hover {
+  color: var(--primary-text);
+}
+
+.clubCalendarPreviewItems {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.clubCalendarPreviewItem {
+  background: var(--brand-card-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  border-left: 3px solid transparent;
+}
+
+.clubCalendarPreviewItemEvent {
+  border-left-color: var(--hover-light-green);
+}
+
+.clubCalendarPreviewItemFixture {
+  border-left-color: #f59e0b;
+}
+
+.clubCalendarPreviewItemTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.clubCalendarPreviewItemTitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary-text);
+}
+
+.clubCalendarPreviewItemBadge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--brand-light-green-border);
+  color: var(--secondary-text);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.clubCalendarPreviewItemMeta {
+  font-size: 0.72rem;
+  color: var(--secondary-text);
+}
+
+.clubCalendarPreviewItemDetail {
+  font-size: 0.71rem;
+  color: var(--tertiary-text);
+  line-height: 1.4;
+}
+
+.clubCalendarPreviewItemMandatory {
+  display: inline-block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  color: var(--hover-light-green);
+  margin-top: 0.1rem;
+}
+
+.clubCalendarLegend {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding-top: 0.25rem;
+}
+
+.clubCalendarLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.clubCalendarLegendLabel {
   font-size: 0.7rem;
+  color: var(--secondary-text);
 }

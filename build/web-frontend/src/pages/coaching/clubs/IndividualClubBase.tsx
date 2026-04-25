@@ -22,8 +22,6 @@ import { Sidebar } from '../../../components/Navigation/SideBar';
 import { SocialUserButtons } from '../../../components/Social/SocialUserButtons';
 import { ClubsNavBar } from '../../../components/Navigation/ClubsNavBar';
 
-/* ─── constants ─────────────────────────────────────────────── */
-
 const STAFF_INVITE_ROLE_OPTIONS: Exclude<ClubMembershipRole, 'owner'>[] = [
   'admin', 'coach', 'player', 'viewer',
 ];
@@ -49,7 +47,6 @@ const FIXTURE_STATUS_OPTIONS: { value: FixtureStatus; label: string }[] = [
   { value: 'cancelled', label: 'Cancelled' },
 ];
 
-/* ─── quick actions config ───────────────────────────────────── */
 const QUICK_ACTIONS = [
   {
     key: 'session',
@@ -97,8 +94,6 @@ const QUICK_ACTIONS = [
   },
 ];
 
-/* ─── form types ──────────────────────────────────────────────── */
-
 type EventFormState = {
   title: string; event_type: ClubEventType; description: string;
   start_datetime: string; end_datetime: string; is_all_day: boolean;
@@ -120,8 +115,6 @@ const createEmptyFixtureForm = (): FixtureFormState => ({
   opponent_name: '', venue: 'home', competition: '',
   match_datetime: '', location: '', fixture_status: 'scheduled',
 });
-
-/* ─── helpers ─────────────────────────────────────────────────── */
 
 const buildTags = (club: Club): string[] => {
   const tags: string[] = [];
@@ -178,12 +171,10 @@ const getScheduleItemSummary = (item: ClubCalendarFeedItem) => {
   return '';
 };
 
-/* ─── form tag colour by type ─────────────────────────────────── */
 const fixtureTypeColors: Record<string, string> = {
   League: '#3b82f6', Cup: '#a78bfa', Friendly: '#f59e0b', Training: '#22c55e',
 };
 
-/* ─── page component ──────────────────────────────────────────── */
 
 export const IndividualClubBase = () => {
   const { clubId } = useParams<{ clubId: string }>();
@@ -297,7 +288,6 @@ export const IndividualClubBase = () => {
   const canManageClubTrash =
     typeof user?.id === 'number' && typeof club?.creator === 'number' && user.id === club.creator;
 
-  /* ─── handlers ─── */
   const handleBackToClubs = () => navigate(`/clubs${isTrashView ? '?view=trash' : ''}`);
 
   const handleMoveClubToTrash = async () => {
@@ -451,7 +441,6 @@ export const IndividualClubBase = () => {
     finally { setLoadingKey(null); }
   };
 
-  /* ─── loading / error screens ─── */
   if (loading) return (
     <div className={styles.individualClubShell}>
       <div className="sidebar-section"><Sidebar /></div>
@@ -473,19 +462,16 @@ export const IndividualClubBase = () => {
     </div>
   );
 
-  /* ─── derived ─── */
   const initials = club.name.split(' ').map((w) => w[0]?.toUpperCase() ?? '').slice(0, 2).join('');
   const upcomingItems = calendarFeed.slice(0, 5);
   const squadPreview = clubPlayers.slice(0, 7);
   const pendingRequests = reviewJoinRequests.filter((r) => r.status === 'pending');
 
-  /* ─── render ─── */
   return (
     <div className={styles.individualClubShell}>
       <div className="sidebar-section"><Sidebar /></div>
 
       <div className={styles.individualClubMain}>
-        {/* ── Header ── */}
         <header className={styles.individualClubHeader}>
           <div className={styles.individualClubHeaderLeft}>
             <span className={styles.individualClubHeaderLabel}>Coaching</span>
@@ -500,10 +486,8 @@ export const IndividualClubBase = () => {
           </div>
         </header>
 
-        {/* ── Scrollable content ── */}
         <div className={styles.individualClubContent}>
 
-          {/* ── Club hero banner ── */}
           <section className={styles.individualClubHero}>
             <div className={styles.individualClubHeroLeft}>
               <div className={styles.individualClubBadge}>
@@ -558,7 +542,6 @@ export const IndividualClubBase = () => {
             </div>
           </section>
 
-          {/* trash notice */}
           {club.is_trashed && (
             <div className={styles.individualClubTrashNotice}>
               This club is in trash. Workspace is in recovery mode.
@@ -566,24 +549,9 @@ export const IndividualClubBase = () => {
             </div>
           )}
 
-          {/* workflow message */}
           {workflowMessage && <div className={styles.individualClubNotice}>{workflowMessage}</div>}
           {scheduleError && <div className={styles.individualClubError}>{scheduleError}</div>}
 
-          {/* ── Tab nav ── */}
-          <div className={styles.individualClubTabs}>
-            {(['overview', 'players', 'sessions', 'settings'] as const).map((tab) => (
-              <button
-                key={tab}
-                className={`${styles.individualClubTab} ${activeTab === tab ? styles.individualClubTabActive : ''}`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
-          </div>
-
-          {/* ── Stat strip ── */}
           <div className={styles.individualClubStatStrip}>
             <div className={styles.individualClubStatCard}>
               <div className={styles.individualClubStatLabel}>FORM (LAST 5)</div>
@@ -611,14 +579,11 @@ export const IndividualClubBase = () => {
             </div>
           </div>
 
-          {/* ── Two-column main area ── */}
           <div className={styles.individualClubBodyGrid}>
 
-            {/* ── LEFT COLUMN ── */}
             <div className={styles.individualClubLeftCol}>
 
-              {/* Upcoming fixtures */}
-              <div className={styles.individualClubPanel}>
+                <div className={styles.individualClubPanel}>
                 <div className={styles.individualClubPanelHead}>
                   <h2 className={styles.individualClubPanelTitle}>Upcoming</h2>
                   <button className={styles.individualClubLinkBtn} onClick={() => navigate(`/clubs/${club.id}/fixtures`)}>
@@ -671,7 +636,6 @@ export const IndividualClubBase = () => {
                 )}
               </div>
 
-              {/* Squad preview */}
               <div className={styles.individualClubPanel}>
                 <div className={styles.individualClubPanelHead}>
                   <h2 className={styles.individualClubPanelTitle}>
@@ -733,15 +697,12 @@ export const IndividualClubBase = () => {
                 )}
               </div>
 
-              {/* Resources section */}
               {!club.is_trashed && (
                 <ClubResourcesSection club={club} isMember={isMember} canManageResources={reviewAccess} />
               )}
 
-              {/* Events & fixtures management */}
               {canAttemptSchedulingManagement && !club.is_trashed && (
                 <>
-                  {/* Events form */}
                   <div className={styles.individualClubPanel}>
                     <div className={styles.individualClubPanelHead}>
                       <h2 className={styles.individualClubPanelTitle}>Club Events</h2>
@@ -803,7 +764,6 @@ export const IndividualClubBase = () => {
                     </div>
                   </div>
 
-                  {/* Fixtures form */}
                   <div className={styles.individualClubPanel}>
                     <div className={styles.individualClubPanelHead}>
                       <h2 className={styles.individualClubPanelTitle}>Fixtures</h2>
@@ -871,35 +831,12 @@ export const IndividualClubBase = () => {
               )}
             </div>
 
-            {/* ── RIGHT COLUMN ── */}
             <div className={styles.individualClubRightCol}>
 
-              {/* Calendar */}
               <div className={styles.individualClubPanel}>
                 <ClubCalendar calendarItems={calendarFeed} />
               </div>
 
-              {/* Quick actions */}
-              <div className={styles.individualClubPanel}>
-                <div className={styles.individualClubPanelHead}>
-                  <h2 className={styles.individualClubPanelTitle}>Quick actions</h2>
-                </div>
-                <div className={styles.individualClubQuickGrid}>
-                  {QUICK_ACTIONS.map((qa) => (
-                    <button
-                      key={qa.key}
-                      className={styles.individualClubQuickCard}
-                      onClick={() => navigate(qa.path(club.id))}
-                    >
-                      <div className={styles.individualClubQuickIcon}>{qa.icon}</div>
-                      <div className={styles.individualClubQuickTitle}>{qa.title}</div>
-                      <div className={styles.individualClubQuickDesc}>{qa.desc}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Join requests */}
               {reviewAccess && !club.is_trashed && (
                 <div className={styles.individualClubPanel}>
                   <div className={styles.individualClubPanelHead}>
@@ -947,7 +884,6 @@ export const IndividualClubBase = () => {
                     </div>
                   )}
 
-                  {/* Invite form */}
                   <div className={styles.individualClubInviteForm}>
                     <div className={styles.individualClubPanelHead} style={{ marginBottom: '0.65rem' }}>
                       <h3 className={styles.individualClubPanelTitle} style={{ fontSize: '0.85rem' }}>Send invitation</h3>
@@ -971,7 +907,7 @@ export const IndividualClubBase = () => {
                 </div>
               )}
 
-              {/* Membership */}
+
               {!club.is_trashed && !isMember && requestCanBeSubmitted && (
                 <div className={styles.individualClubPanel}>
                   <h2 className={styles.individualClubPanelTitle} style={{ marginBottom: '0.75rem' }}>Join this club</h2>

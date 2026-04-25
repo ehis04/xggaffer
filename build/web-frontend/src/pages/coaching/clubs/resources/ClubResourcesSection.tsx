@@ -25,265 +25,91 @@ interface ClubResourcesSectionProps {
 }
 
 type ResourceStatusMap = Record<number, ClubResourceMyStatus>;
-
 type UnknownRecord = Record<string, unknown>;
 
-const ACCEPTED_RESOURCE_TYPES =
-  '.pdf,.docx,.pptx,.xlsx,.csv,.png,.jpg,.jpeg,.webp';
-
+const ACCEPTED_RESOURCE_TYPES = '.pdf,.docx,.pptx,.xlsx,.csv,.png,.jpg,.jpeg,.webp';
 const ACCEPTED_EXTENSIONS = ACCEPTED_RESOURCE_TYPES.split(',').map((e) => e.trim());
 
 function extractDrfMessage(data: unknown): string | null {
   if (!data || typeof data !== 'object') return null;
   const obj = data as Record<string, unknown>;
-  // DRF returns field errors as { field: ["msg"] } or { field: "msg" }
   for (const value of Object.values(obj)) {
-    if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') {
-      return value[0];
-    }
-    if (typeof value === 'string' && value.length > 0) {
-      return value;
-    }
+    if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') return value[0];
+    if (typeof value === 'string' && value.length > 0) return value;
   }
   return null;
 }
 
 function classifyUploadError(err: unknown): string {
-  // Network failure — fetch never completed
-  if (err instanceof TypeError) {
-    return 'File upload failed: your internet connection was interrupted. Check your connection and try again.';
-  }
-
+  if (err instanceof TypeError) return 'File upload failed: your internet connection was interrupted.';
   const apiErr = err as { status?: number; data?: unknown };
   const status = apiErr.status;
-
-  // Extract the actual message from DRF field-level errors (e.g. { file: ["..."] })
   const drfMessage = extractDrfMessage(apiErr.data);
   const rawMessage = drfMessage ?? (err instanceof Error ? err.message : '');
   const lower = rawMessage.toLowerCase();
-
-  if (status === 413 || lower.includes('too large') || lower.includes('exceeds') || lower.includes('size limit')) {
-    return 'File upload failed: the file is too large. Try compressing it or splitting it into smaller files.';
-  }
-  if (
-    status === 415 ||
-    lower.includes('unsupported file type') ||
-    lower.includes('unsupported format') ||
-    lower.includes('file type') ||
-    lower.includes('extension')
-  ) {
-    return `File upload failed: that file type is not accepted. Supported types are ${ACCEPTED_EXTENSIONS.join(', ')}.`;
-  }
-  if (status === 400) {
-    return rawMessage
-      ? `File upload failed: ${rawMessage}`
-      : 'File upload failed: the request was invalid. Check the file and try again.';
-  }
-  if (status === 403) {
-    return 'File upload failed: you do not have permission to upload files for this club.';
-  }
-  if (status === 401) {
-    return 'File upload failed: you need to be logged in to upload files.';
-  }
-  if (status !== undefined && status >= 500) {
-    return 'File upload failed: a server error occurred. Please try again later.';
-  }
-
-  return rawMessage
-    ? `File upload failed: ${rawMessage}`
-    : 'File upload failed: something went wrong. Please try again later.';
+  if (status === 413 || lower.includes('too large') || lower.includes('exceeds')) return 'File upload failed: the file is too large.';
+  if (status === 415 || lower.includes('unsupported file type') || lower.includes('extension')) return `File upload failed: unsupported type. Accepted: ${ACCEPTED_EXTENSIONS.join(', ')}.`;
+  if (status === 400) return rawMessage ? `File upload failed: ${rawMessage}` : 'File upload failed: invalid request.';
+  if (status === 403) return 'File upload failed: you do not have permission.';
+  if (status === 401) return 'File upload failed: you must be logged in.';
+  if (status !== undefined && status >= 500) return 'File upload failed: server error. Try again later.';
+  return rawMessage ? `File upload failed: ${rawMessage}` : 'File upload failed: something went wrong.';
 }
 
 const HEARTBEAT_INTERVAL_MS = 15000;
 
-const IMPORT_TYPE_OPTIONS: Array<{
-  value: ClubImportType;
-  label: string;
-  description: string;
-}> = [
-  {
-    value: 'player_profile_update',
-    label: 'Player profile update',
-    description: 'Update club-local ClubPlayer fields such as display name, number, position, or height.',
-  },
-  {
-    value: 'player_season_stats',
-    label: 'Player season stats',
-    description: 'Create or update season-level player enrichment rows for linked canonical players.',
-  },
-  {
-    value: 'squad_metrics',
-    label: 'Squad metrics',
-    description: 'Create or update season-level club enrichment rows such as wins, goals, xG, and PPDA.',
-  },
-  {
-    value: 'other',
-    label: 'Other / raw preview',
-    description: 'Preview the CSV/XLSX contents without requiring a structured import schema.',
-  },
+const IMPORT_TYPE_OPTIONS: Array<{ value: ClubImportType; label: string; description: string }> = [
+  { value: 'player_profile_update', label: 'Player profile update', description: 'Update club-local ClubPlayer fields such as display name, number, position, or height.' },
+  { value: 'player_season_stats', label: 'Player season stats', description: 'Create or update season-level player enrichment rows for linked canonical players.' },
+  { value: 'squad_metrics', label: 'Squad metrics', description: 'Create or update season-level club enrichment rows such as wins, goals, xG, and PPDA.' },
+  { value: 'other', label: 'Other / raw preview', description: 'Preview the CSV/XLSX contents without requiring a structured import schema.' },
 ];
 
-const getFileKindLabel = (resource: ClubResource): string => {
-  switch (resource.file_kind) {
-    case 'pdf':
-      return 'PDF';
-    case 'docx':
-      return 'DOCX';
-    case 'pptx':
-      return 'PPTX';
-    case 'xlsx':
-      return 'XLSX';
-    case 'csv':
-      return 'CSV';
-    case 'image':
-      return 'Image';
-    default:
-      return 'File';
-  }
+const getFileKindLabel = (r: ClubResource): string => {
+  const map: Record<string, string> = { pdf: 'PDF', docx: 'DOCX', pptx: 'PPTX', xlsx: 'XLSX', csv: 'CSV', image: 'Image' };
+  return map[r.file_kind] ?? 'File';
 };
-
-const getVisibilityLabel = (value: ClubResourceEngagementVisibility): string => {
-  return value === 'club_visible' ? 'Club visible' : 'Staff only';
+const getVisibilityLabel = (v: ClubResourceEngagementVisibility) => v === 'club_visible' ? 'Club visible' : 'Staff only';
+const getImportTypeLabel = (v: ClubImportType) => IMPORT_TYPE_OPTIONS.find((o) => o.value === v)?.label ?? v;
+const getImportStatusLabel = (v: string): string => {
+  const map: Record<string, string> = { uploaded: 'Uploaded', validating: 'Validating', preview_ready: 'Preview ready', confirmed: 'Confirmed', processing: 'Processing', completed: 'Completed', failed: 'Failed', cancelled: 'Cancelled' };
+  return map[v] ?? v;
 };
-
-const getImportTypeLabel = (value: ClubImportType): string => {
-  return (
-    IMPORT_TYPE_OPTIONS.find((option) => option.value === value)?.label ?? value
-  );
-};
-
-const getImportStatusLabel = (value: string): string => {
-  switch (value) {
-    case 'uploaded':
-      return 'Uploaded';
-    case 'validating':
-      return 'Validating';
-    case 'preview_ready':
-      return 'Preview ready';
-    case 'confirmed':
-      return 'Confirmed';
-    case 'processing':
-      return 'Processing';
-    case 'completed':
-      return 'Completed';
-    case 'failed':
-      return 'Failed';
-    case 'cancelled':
-      return 'Cancelled';
-    default:
-      return value;
-  }
-};
-
-const formatFileSize = (bytes: number): string => {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
-
-const formatDateTime = (value: string | null): string | null => {
-  if (!value) {
-    return null;
-  }
-
-  return new Date(value).toLocaleString('en-IE', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
-
-const getMyStatusLabel = (status: ClubResourceMyStatus | undefined): string => {
-  if (!status?.my_view_summary) {
-    return 'Not opened';
-  }
-
-  if (status.my_view_summary.completed) {
-    return 'Completed';
-  }
-
-  if (status.my_view_summary.opened) {
-    return 'Opened';
-  }
-
+const formatFileSize = (bytes: number) => bytes < 1024 ? `${bytes} B` : bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+const formatDateTime = (v: string | null): string | null => v ? new Date(v).toLocaleString('en-IE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null;
+const getMyStatusLabel = (s: ClubResourceMyStatus | undefined): string => {
+  if (!s?.my_view_summary) return 'Not opened';
+  if (s.my_view_summary.completed) return 'Completed';
+  if (s.my_view_summary.opened) return 'Opened';
   return 'Not opened';
 };
 
-const asRecord = (value: unknown): UnknownRecord => {
-  return value && typeof value === 'object' && !Array.isArray(value)
-    ? (value as UnknownRecord)
-    : {};
+const asRecord = (v: unknown): UnknownRecord => (v && typeof v === 'object' && !Array.isArray(v)) ? (v as UnknownRecord) : {};
+const asArray = <T,>(v: unknown): T[] => Array.isArray(v) ? (v as T[]) : [];
+const formatUnknownValue = (v: unknown): string => {
+  if (v === null || v === undefined || v === '') return '—';
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  if (Array.isArray(v)) return v.map(formatUnknownValue).join(', ');
+  try { return JSON.stringify(v); } catch { return String(v); }
+};
+const getPreviewCounts = (j: ClubImportJob | null) => asRecord(asRecord(j?.preview_payload).counts);
+const getReportCounts = (j: ClubImportJob | null) => asRecord(asRecord(j?.report_payload).counts);
+const getPreviewRows = (j: ClubImportJob | null) => asArray<UnknownRecord>(asRecord(j?.preview_payload).rows);
+const getPreviewHeaders = (j: ClubImportJob | null) => asArray<string>(asRecord(j?.preview_payload).headers);
+const getRawPreviewRows = (j: ClubImportJob | null) => asArray<UnknownRecord>(asRecord(j?.preview_payload).rows);
+const getReportErrors = (j: ClubImportJob | null) => asArray<UnknownRecord>(asRecord(j?.report_payload).errors);
+const getErrorSummaryMessage = (j: ClubImportJob | null): string | null => {
+  const s = asRecord(j?.error_summary); const m = s.message;
+  return typeof m === 'string' && m.trim() ? m : null;
 };
 
-const asArray = <T,>(value: unknown): T[] => {
-  return Array.isArray(value) ? (value as T[]) : [];
+const FileKindIcon = ({ kind }: { kind: string }) => {
+  const icons: Record<string, string> = { pdf: '📄', docx: '📝', pptx: '📊', xlsx: '📈', csv: '🗂', image: '🖼' };
+  return <span style={{ fontSize: '1.1rem' }}>{icons[kind] ?? '📁'}</span>;
 };
 
-const formatUnknownValue = (value: unknown): string => {
-  if (value === null || value === undefined || value === '') {
-    return '—';
-  }
-
-  if (typeof value === 'string') {
-    return value;
-  }
-
-  if (typeof value === 'number' || typeof value === 'boolean') {
-    return String(value);
-  }
-
-  if (Array.isArray(value)) {
-    return value.map((item) => formatUnknownValue(item)).join(', ');
-  }
-
-  try {
-    return JSON.stringify(value);
-  } catch {
-    return String(value);
-  }
-};
-
-const getPreviewCounts = (job: ClubImportJob | null): UnknownRecord => {
-  return asRecord(asRecord(job?.preview_payload).counts);
-};
-
-const getReportCounts = (job: ClubImportJob | null): UnknownRecord => {
-  return asRecord(asRecord(job?.report_payload).counts);
-};
-
-const getPreviewRows = (job: ClubImportJob | null): UnknownRecord[] => {
-  return asArray<UnknownRecord>(asRecord(job?.preview_payload).rows);
-};
-
-const getPreviewHeaders = (job: ClubImportJob | null): string[] => {
-  return asArray<string>(asRecord(job?.preview_payload).headers);
-};
-
-const getRawPreviewRows = (job: ClubImportJob | null): UnknownRecord[] => {
-  return asArray<UnknownRecord>(asRecord(job?.preview_payload).rows);
-};
-
-const getReportErrors = (job: ClubImportJob | null): UnknownRecord[] => {
-  return asArray<UnknownRecord>(asRecord(job?.report_payload).errors);
-};
-
-const getErrorSummaryMessage = (job: ClubImportJob | null): string | null => {
-  const summary = asRecord(job?.error_summary);
-  const message = summary.message;
-  return typeof message === 'string' && message.trim() ? message : null;
-};
-
-export const ClubResourcesSection = ({
-  club,
-  isMember,
-  canManageResources,
-}: ClubResourcesSectionProps) => {
+export const ClubResourcesSection = ({ club, isMember, canManageResources }: ClubResourcesSectionProps) => {
   const uploadTitleInputId = `club-resource-upload-title-${club.id}`;
   const uploadDescriptionInputId = `club-resource-upload-description-${club.id}`;
   const uploadVisibilitySelectId = `club-resource-upload-visibility-${club.id}`;
@@ -295,50 +121,34 @@ export const ClubResourcesSection = ({
   const [resourceStatuses, setResourceStatuses] = useState<ResourceStatusMap>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadDescription, setUploadDescription] = useState('');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
-  const [uploadVisibility, setUploadVisibility] =
-    useState<ClubResourceEngagementVisibility>('staff_only');
+  const [uploadVisibility, setUploadVisibility] = useState<ClubResourceEngagementVisibility>('staff_only');
   const [uploading, setUploading] = useState(false);
-
   const [resourceActionMessage, setResourceActionMessage] = useState<string | null>(null);
   const [resourceUploadError, setResourceUploadError] = useState<string | null>(null);
-
-  const [selectedEngagement, setSelectedEngagement] =
-    useState<ClubResourceEngagement | null>(null);
-  const [selectedEngagementResourceId, setSelectedEngagementResourceId] =
-    useState<number | null>(null);
+  const [selectedEngagement, setSelectedEngagement] = useState<ClubResourceEngagement | null>(null);
+  const [selectedEngagementResourceId, setSelectedEngagementResourceId] = useState<number | null>(null);
   const [engagementLoading, setEngagementLoading] = useState(false);
-
   const [viewerResource, setViewerResource] = useState<ClubResource | null>(null);
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
-  const viewerFile = useMemo(
-    () =>
-      viewerUrl
-        ? import.meta.env.DEV
-          ? { url: viewerUrl, withCredentials: true }
-          : viewerUrl
-        : null,
-    [viewerUrl],
-  );
+  const viewerFile = useMemo(() => viewerUrl ? (import.meta.env.DEV ? { url: viewerUrl, withCredentials: true } : viewerUrl) : null, [viewerUrl]);
   const [viewerLoading, setViewerLoading] = useState(false);
   const [viewerError, setViewerError] = useState<string | null>(null);
   const [viewerPage, setViewerPage] = useState(1);
   const [viewerPageCount, setViewerPageCount] = useState(0);
-
   const [canAccessImports, setCanAccessImports] = useState(false);
   const [importJobs, setImportJobs] = useState<ClubImportJobListItem[]>([]);
   const [importLoading, setImportLoading] = useState(false);
   const [selectedImportJob, setSelectedImportJob] = useState<ClubImportJob | null>(null);
   const [selectedResourceId, setSelectedResourceId] = useState<number | null>(null);
-  const [selectedImportType, setSelectedImportType] =
-    useState<ClubImportType>('player_profile_update');
+  const [selectedImportType, setSelectedImportType] = useState<ClubImportType>('player_profile_update');
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [creatingPreview, setCreatingPreview] = useState(false);
   const [loadingImportDetail, setLoadingImportDetail] = useState(false);
   const [committingImport, setCommittingImport] = useState(false);
+  const [showUploadForm, setShowUploadForm] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const currentPageRef = useRef(1);
@@ -346,444 +156,175 @@ export const ClubResourcesSection = ({
   const lastHeartbeatAtRef = useRef<number | null>(null);
 
   const importableResources = useMemo(
-    () =>
-      resources.filter(
-        (resource) =>
-          !resource.is_archived &&
-          (resource.file_kind === 'csv' || resource.file_kind === 'xlsx'),
-      ),
-    [resources],
+    () => resources.filter((r) => !r.is_archived && (r.file_kind === 'csv' || r.file_kind === 'xlsx')),
+    [resources]
   );
 
   useEffect(() => {
-    if (!selectedResourceId && importableResources.length > 0) {
-      setSelectedResourceId(importableResources[0].id);
-    }
-
-    if (
-      selectedResourceId &&
-      !importableResources.some((resource) => resource.id === selectedResourceId)
-    ) {
-      setSelectedResourceId(importableResources[0]?.id ?? null);
-    }
+    if (!selectedResourceId && importableResources.length > 0) setSelectedResourceId(importableResources[0].id);
+    if (selectedResourceId && !importableResources.some((r) => r.id === selectedResourceId)) setSelectedResourceId(importableResources[0]?.id ?? null);
   }, [importableResources, selectedResourceId]);
 
-  const loadStatuses = useCallback(
-    async (resourceList: ClubResource[]) => {
-      if (!isMember || resourceList.length === 0) {
-        setResourceStatuses({});
-        return;
-      }
-
-      const statusEntries = await Promise.all(
-        resourceList.map(async (resource) => {
-          try {
-            const status = await clubsApi.getMyResourceStatus(club.id, resource.id);
-            return [resource.id, status] as const;
-          } catch {
-            return [resource.id, null] as const;
-          }
-        }),
-      );
-
-      const nextStatuses: ResourceStatusMap = {};
-      statusEntries.forEach(([resourceId, status]) => {
-        if (status) {
-          nextStatuses[resourceId] = status;
-        }
-      });
-
-      setResourceStatuses(nextStatuses);
-    },
-    [club.id, isMember],
-  );
+  const loadStatuses = useCallback(async (list: ClubResource[]) => {
+    if (!isMember || list.length === 0) { setResourceStatuses({}); return; }
+    const entries = await Promise.all(list.map(async (r) => { try { const s = await clubsApi.getMyResourceStatus(club.id, r.id); return [r.id, s] as const; } catch { return [r.id, null] as const; } }));
+    const next: ResourceStatusMap = {};
+    entries.forEach(([id, s]) => { if (s) next[id] = s; });
+    setResourceStatuses(next);
+  }, [club.id, isMember]);
 
   const loadResources = useCallback(async () => {
-    if (!isMember) {
-      setResources([]);
-      setResourceStatuses({});
-      return;
-    }
-
+    if (!isMember) { setResources([]); setResourceStatuses({}); return; }
     try {
-      setLoading(true);
-      setError(null);
-
-      const resourceList = await clubsApi.listResources(club.id);
-      setResources(resourceList);
-      await loadStatuses(resourceList);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load club resources.');
-    } finally {
-      setLoading(false);
-    }
+      setLoading(true); setError(null);
+      const list = await clubsApi.listResources(club.id);
+      setResources(list); await loadStatuses(list);
+    } catch (err) { setError(err instanceof Error ? err.message : 'Failed to load club resources.'); }
+    finally { setLoading(false); }
   }, [club.id, isMember, loadStatuses]);
 
   const loadImportJobs = useCallback(async () => {
-    if (!isMember) {
-      setCanAccessImports(false);
-      setImportJobs([]);
-      setSelectedImportJob(null);
-      return;
-    }
-
+    if (!isMember) { setCanAccessImports(false); setImportJobs([]); setSelectedImportJob(null); return; }
     try {
       setImportLoading(true);
       const jobs = await clubsApi.listImportJobs(club.id);
-      setImportJobs(jobs);
-      setCanAccessImports(true);
-    } catch {
-      setCanAccessImports(false);
-      setImportJobs([]);
-      setSelectedImportJob(null);
-    } finally {
-      setImportLoading(false);
-    }
+      setImportJobs(jobs); setCanAccessImports(true);
+    } catch { setCanAccessImports(false); setImportJobs([]); setSelectedImportJob(null); }
+    finally { setImportLoading(false); }
   }, [club.id, isMember]);
 
-  useEffect(() => {
-    void loadResources();
-    void loadImportJobs();
-  }, [loadResources, loadImportJobs]);
+  useEffect(() => { void loadResources(); void loadImportJobs(); }, [loadResources, loadImportJobs]);
 
-  const sendHeartbeat = useCallback(
-    async (resourceId: number, activeSecondsDelta: number, pageReached: number | null) => {
-      await clubsApi.sendResourceHeartbeat(club.id, resourceId, {
-        active_seconds_delta: activeSecondsDelta,
-        page_reached: pageReached,
-      });
-    },
-    [club.id],
-  );
+  const sendHeartbeat = useCallback(async (resourceId: number, activeDelta: number, page: number | null) => {
+    await clubsApi.sendResourceHeartbeat(club.id, resourceId, { active_seconds_delta: activeDelta, page_reached: page });
+  }, [club.id]);
 
   const flushPdfHeartbeat = useCallback(() => {
-    const activeResource = activeViewerResourceRef.current;
-    const lastHeartbeatAt = lastHeartbeatAtRef.current;
-
-    if (!activeResource || !lastHeartbeatAt) {
-      return;
-    }
-
-    const elapsedSeconds = Math.max(
-      0,
-      Math.floor((Date.now() - lastHeartbeatAt) / 1000),
-    );
-
-    if (elapsedSeconds > 0) {
-      void sendHeartbeat(activeResource.id, elapsedSeconds, currentPageRef.current)
-        .then(() => clubsApi.getMyResourceStatus(club.id, activeResource.id))
-        .then((status) => {
-          setResourceStatuses((current) => ({
-            ...current,
-            [activeResource.id]: status,
-          }));
-        })
-        .catch(() => {
-          return;
-        });
-    }
-
-    lastHeartbeatAtRef.current = Date.now();
-  }, [club.id, sendHeartbeat]);
+    const active = activeViewerResourceRef.current;
+    const last = lastHeartbeatAtRef.current;
+    if (!active || !last) return;
+    const elapsed = Math.max(0, Math.floor((Date.now() - last) / 1000));
+    if (elapsed <= 0) return;
+    lastHeartbeatAtRef.current = null;
+    void sendHeartbeat(active.id, elapsed, currentPageRef.current);
+  }, [sendHeartbeat]);
 
   useEffect(() => {
-    if (!viewerResource || !viewerUrl || !viewerResource.can_inline_view) {
-      return;
-    }
-
+    if (!viewerResource || !viewerUrl) return;
     activeViewerResourceRef.current = viewerResource;
-    currentPageRef.current = viewerPage;
     lastHeartbeatAtRef.current = Date.now();
-
-    void sendHeartbeat(viewerResource.id, 0, viewerPage)
-      .then(() => clubsApi.getMyResourceStatus(club.id, viewerResource.id))
-      .then((status) => {
-        setResourceStatuses((current) => ({
-          ...current,
-          [viewerResource.id]: status,
-        }));
-      })
-      .catch(() => {
-        return;
-      });
-
-    const intervalId = window.setInterval(() => {
-      const lastHeartbeatAt = lastHeartbeatAtRef.current;
-      if (!lastHeartbeatAt) {
-        return;
-      }
-
-      const elapsedSeconds = Math.max(
-        0,
-        Math.floor((Date.now() - lastHeartbeatAt) / 1000),
-      );
-
-      if (elapsedSeconds <= 0) {
-        return;
-      }
-
+    void clubsApi.getMyResourceStatus(club.id, viewerResource.id)
+      .then((s) => setResourceStatuses((c) => ({ ...c, [viewerResource.id]: s }))).catch(() => undefined);
+    const id = window.setInterval(() => {
+      const last = lastHeartbeatAtRef.current;
+      if (!last) return;
+      const elapsed = Math.max(0, Math.floor((Date.now() - last) / 1000));
+      if (elapsed <= 0) return;
       lastHeartbeatAtRef.current = Date.now();
-
-      void sendHeartbeat(viewerResource.id, elapsedSeconds, currentPageRef.current)
+      void sendHeartbeat(viewerResource.id, elapsed, currentPageRef.current)
         .then(() => clubsApi.getMyResourceStatus(club.id, viewerResource.id))
-        .then((status) => {
-          setResourceStatuses((current) => ({
-            ...current,
-            [viewerResource.id]: status,
-          }));
-        })
-        .catch(() => {
-          return;
-        });
+        .then((s) => setResourceStatuses((c) => ({ ...c, [viewerResource.id]: s }))).catch(() => undefined);
     }, HEARTBEAT_INTERVAL_MS);
-
-    return () => {
-      window.clearInterval(intervalId);
-      flushPdfHeartbeat();
-      activeViewerResourceRef.current = null;
-    };
+    return () => { window.clearInterval(id); flushPdfHeartbeat(); activeViewerResourceRef.current = null; };
   }, [club.id, flushPdfHeartbeat, sendHeartbeat, viewerPage, viewerResource, viewerUrl]);
 
-  useEffect(() => {
-    currentPageRef.current = viewerPage;
-  }, [viewerPage]);
+  useEffect(() => { currentPageRef.current = viewerPage; }, [viewerPage]);
 
-  const handleUploadSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    if (!uploadTitle.trim()) {
-      setResourceActionMessage('Resource title is required.');
-      return;
-    }
-
-    if (!uploadFile) {
-      setResourceActionMessage('Choose a supported file before uploading.');
-      return;
-    }
-
+  const handleUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!uploadTitle.trim()) { setResourceActionMessage('Resource title is required.'); return; }
+    if (!uploadFile) { setResourceActionMessage('Choose a supported file before uploading.'); return; }
     try {
-      setUploading(true);
-      setResourceActionMessage(null);
-      setResourceUploadError(null);
-
-      await clubsApi.uploadResource(club.id, {
-        title: uploadTitle.trim(),
-        description: uploadDescription.trim(),
-        file: uploadFile,
-        engagement_visibility: uploadVisibility,
-      });
-
-      setUploadTitle('');
-      setUploadDescription('');
-      setUploadFile(null);
-      setUploadVisibility('staff_only');
+      setUploading(true); setResourceActionMessage(null); setResourceUploadError(null);
+      await clubsApi.uploadResource(club.id, { title: uploadTitle.trim(), description: uploadDescription.trim(), file: uploadFile, engagement_visibility: uploadVisibility });
+      setUploadTitle(''); setUploadDescription(''); setUploadFile(null); setUploadVisibility('staff_only');
       if (fileInputRef.current) fileInputRef.current.value = '';
-      setResourceActionMessage('Resource uploaded successfully.');
+      setResourceActionMessage('Resource uploaded successfully.'); setShowUploadForm(false);
       await loadResources();
-    } catch (err) {
-      setResourceUploadError(classifyUploadError(err));
-    } finally {
-      setUploading(false);
-    }
+    } catch (err) { setResourceUploadError(classifyUploadError(err)); }
+    finally { setUploading(false); }
   };
 
   const handleOpenResource = async (resource: ClubResource) => {
     try {
-      setResourceActionMessage(null);
-      setViewerError(null);
-      setViewerLoading(true);
-
+      setResourceActionMessage(null); setViewerError(null); setViewerLoading(true);
       const access = await clubsApi.getResourceAccess(club.id, resource.id);
-
       if (resource.can_inline_view) {
-        setViewerResource(resource);
-        setViewerUrl(access.access_url);
-        setViewerPage(1);
-        setViewerPageCount(0);
+        setViewerResource(resource); setViewerUrl(access.access_url); setViewerPage(1); setViewerPageCount(0);
       } else {
-        await clubsApi.sendResourceHeartbeat(club.id, resource.id, {
-          active_seconds_delta: 0,
-          page_reached: null,
-        });
-
-        const latestStatus = await clubsApi.getMyResourceStatus(club.id, resource.id);
-        setResourceStatuses((current) => ({
-          ...current,
-          [resource.id]: latestStatus,
-        }));
-
+        await clubsApi.sendResourceHeartbeat(club.id, resource.id, { active_seconds_delta: 0, page_reached: null });
+        const s = await clubsApi.getMyResourceStatus(club.id, resource.id);
+        setResourceStatuses((c) => ({ ...c, [resource.id]: s }));
         window.open(access.access_url, '_blank', 'noopener,noreferrer');
       }
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to open this resource.';
-      setViewerError(message);
-      setResourceActionMessage(message);
-    } finally {
-      setViewerLoading(false);
-    }
+      const m = err instanceof Error ? err.message : 'Failed to open this resource.';
+      setViewerError(m); setResourceActionMessage(m);
+    } finally { setViewerLoading(false); }
   };
 
   const handleDownloadResource = async (resource: ClubResource) => {
     try {
-      setResourceActionMessage(null);
-      setViewerError(null);
-      setViewerLoading(true);
-
+      setResourceActionMessage(null); setViewerError(null); setViewerLoading(true);
       const access = await clubsApi.getResourceAccess(club.id, resource.id);
-
       const link = document.createElement('a');
-      link.href = access.access_url;
-      link.download = resource.original_filename ?? 'resource';
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      const latestStatus = await clubsApi.getMyResourceStatus(club.id, resource.id);
-      setResourceStatuses((current) => ({
-        ...current,
-        [resource.id]: latestStatus,
-      }));
+      link.href = access.access_url; link.download = resource.original_filename ?? 'resource';
+      link.target = '_blank'; link.rel = 'noopener noreferrer';
+      document.body.appendChild(link); link.click(); document.body.removeChild(link);
+      const s = await clubsApi.getMyResourceStatus(club.id, resource.id);
+      setResourceStatuses((c) => ({ ...c, [resource.id]: s }));
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to download this resource.';
-      setViewerError(message);
-      setResourceActionMessage(message);
-    } finally {
-      setViewerLoading(false);
-    }
+      const m = err instanceof Error ? err.message : 'Failed to download this resource.';
+      setViewerError(m); setResourceActionMessage(m);
+    } finally { setViewerLoading(false); }
   };
 
   const handleCloseViewer = async () => {
     flushPdfHeartbeat();
-
     if (viewerResource) {
-      try {
-        const latestStatus = await clubsApi.getMyResourceStatus(club.id, viewerResource.id);
-        setResourceStatuses((current) => ({
-          ...current,
-          [viewerResource.id]: latestStatus,
-        }));
-      } catch {
-        return;
-      }
+      try { const s = await clubsApi.getMyResourceStatus(club.id, viewerResource.id); setResourceStatuses((c) => ({ ...c, [viewerResource.id]: s })); } catch { return; }
     }
-
-    setViewerResource(null);
-    setViewerUrl(null);
-    setViewerPage(1);
-    setViewerPageCount(0);
-    setViewerError(null);
-    activeViewerResourceRef.current = null;
-    lastHeartbeatAtRef.current = null;
+    setViewerResource(null); setViewerUrl(null); setViewerPage(1); setViewerPageCount(0);
+    setViewerError(null); activeViewerResourceRef.current = null; lastHeartbeatAtRef.current = null;
   };
 
   const handleLoadEngagement = async (resource: ClubResource) => {
     try {
-      setEngagementLoading(true);
-      setResourceActionMessage(null);
-
-      const engagement = await clubsApi.getResourceEngagement(club.id, resource.id);
-      setSelectedEngagement(engagement);
-      setSelectedEngagementResourceId(resource.id);
+      setEngagementLoading(true); setResourceActionMessage(null);
+      const eng = await clubsApi.getResourceEngagement(club.id, resource.id);
+      setSelectedEngagement(eng); setSelectedEngagementResourceId(resource.id);
     } catch (err) {
-      setSelectedEngagement(null);
-      setSelectedEngagementResourceId(resource.id);
-      setResourceActionMessage(
-        err instanceof Error
-          ? err.message
-          : 'Detailed engagement is only available to authorised club staff.',
-      );
-    } finally {
-      setEngagementLoading(false);
-    }
+      setSelectedEngagement(null); setSelectedEngagementResourceId(resource.id);
+      setResourceActionMessage(err instanceof Error ? err.message : 'Detailed engagement is only available to authorised club staff.');
+    } finally { setEngagementLoading(false); }
   };
 
   const handleCreateImportPreview = async () => {
-    if (!selectedResourceId) {
-      setImportMessage('Select a CSV or XLSX resource first.');
-      return;
-    }
-
+    if (!selectedResourceId) { setImportMessage('Select a CSV or XLSX resource first.'); return; }
     try {
-      setCreatingPreview(true);
-      setImportMessage(null);
-
-      const job = await clubsApi.createImportJob(club.id, {
-        source_resource: selectedResourceId,
-        import_type: selectedImportType,
-      });
-
-      setSelectedImportJob(job);
-      await loadImportJobs();
-
-      if (job.status === 'preview_ready') {
-        setImportMessage('Preview created successfully.');
-      } else if (job.status === 'failed') {
-        setImportMessage('Import preview failed. Review the report below.');
-      } else {
-        setImportMessage(`Import job created with status: ${getImportStatusLabel(job.status)}.`);
-      }
-    } catch (err) {
-      setImportMessage(
-        err instanceof Error ? err.message : 'Failed to create import preview.',
-      );
-    } finally {
-      setCreatingPreview(false);
-    }
+      setCreatingPreview(true); setImportMessage(null);
+      const job = await clubsApi.createImportJob(club.id, { source_resource: selectedResourceId, import_type: selectedImportType });
+      setSelectedImportJob(job); await loadImportJobs();
+      setImportMessage(job.status === 'preview_ready' ? 'Preview created successfully.' : job.status === 'failed' ? 'Import preview failed. Review the report below.' : `Import job created with status: ${getImportStatusLabel(job.status)}.`);
+    } catch (err) { setImportMessage(err instanceof Error ? err.message : 'Failed to create import preview.'); }
+    finally { setCreatingPreview(false); }
   };
 
   const handleSelectImportJob = async (jobId: number) => {
-    try {
-      setLoadingImportDetail(true);
-      setImportMessage(null);
-      const detail = await clubsApi.getImportJob(club.id, jobId);
-      setSelectedImportJob(detail);
-    } catch (err) {
-      setImportMessage(
-        err instanceof Error ? err.message : 'Failed to load import job details.',
-      );
-    } finally {
-      setLoadingImportDetail(false);
-    }
+    try { setLoadingImportDetail(true); setImportMessage(null); const d = await clubsApi.getImportJob(club.id, jobId); setSelectedImportJob(d); }
+    catch (err) { setImportMessage(err instanceof Error ? err.message : 'Failed to load import job details.'); }
+    finally { setLoadingImportDetail(false); }
   };
 
   const handleCommitImport = async () => {
-    if (!selectedImportJob) {
-      return;
-    }
-
-    const confirmed = window.confirm(
-      'This will commit the matched preview rows to the database. Continue?',
-    );
-    if (!confirmed) {
-      return;
-    }
-
+    if (!selectedImportJob || !window.confirm('This will commit the matched preview rows to the database. Continue?')) return;
     try {
-      setCommittingImport(true);
-      setImportMessage(null);
-
-      const committedJob = await clubsApi.commitImportJob(club.id, selectedImportJob.id, {
-        confirm: true,
-      });
-
-      setSelectedImportJob(committedJob);
-      await loadImportJobs();
-      setImportMessage(
-        committedJob.status === 'completed'
-          ? 'Import committed successfully.'
-          : `Commit finished with status: ${getImportStatusLabel(committedJob.status)}.`,
-      );
-    } catch (err) {
-      setImportMessage(
-        err instanceof Error ? err.message : 'Failed to commit import job.',
-      );
-    } finally {
-      setCommittingImport(false);
-    }
+      setCommittingImport(true); setImportMessage(null);
+      const committed = await clubsApi.commitImportJob(club.id, selectedImportJob.id, { confirm: true });
+      setSelectedImportJob(committed); await loadImportJobs();
+      setImportMessage(committed.status === 'completed' ? 'Import committed successfully.' : `Commit finished with status: ${getImportStatusLabel(committed.status)}.`);
+    } catch (err) { setImportMessage(err instanceof Error ? err.message : 'Failed to commit import job.'); }
+    finally { setCommittingImport(false); }
   };
 
   const previewCounts = getPreviewCounts(selectedImportJob);
@@ -792,839 +333,490 @@ export const ClubResourcesSection = ({
   const allRawPreviewRows = getRawPreviewRows(selectedImportJob);
   const rawPreviewRows = allRawPreviewRows.slice(0, 5);
   const rawPreviewRowCount = allRawPreviewRows.length;
-  const isRawPreview =
-    Boolean(asRecord(selectedImportJob?.preview_payload).raw_preview) ||
-    selectedImportJob?.import_type === 'other';
+  const isRawPreview = Boolean(asRecord(selectedImportJob?.preview_payload).raw_preview) || selectedImportJob?.import_type === 'other';
   const reportCounts = getReportCounts(selectedImportJob);
   const reportErrors = getReportErrors(selectedImportJob);
-  const previewCanCommit = Boolean(
-    asRecord(selectedImportJob?.preview_payload).can_commit,
-  );
-  const selectedImportOption = IMPORT_TYPE_OPTIONS.find(
-    (option) => option.value === selectedImportType,
-  );
+  const previewCanCommit = Boolean(asRecord(selectedImportJob?.preview_payload).can_commit);
+  const selectedImportOption = IMPORT_TYPE_OPTIONS.find((o) => o.value === selectedImportType);
 
   if (!isMember) {
     return (
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <div>
-            <h2 className={styles.title}>Club Resources</h2>
-            <p className={styles.subtitle}>
-              Resources become available once you are an active member of the club.
-            </p>
-          </div>
+      <div className={styles.clubResourceSection}>
+        <div className={styles.clubResourceSectionHead}>
+          <h2 className={styles.clubResourceSectionTitle}>Club Resources</h2>
+          <p className={styles.clubResourceSectionSub}>Resources become available once you are an active member of the club.</p>
         </div>
-      </section>
+      </div>
     );
   }
 
+  const visibleResources = resources.filter(
+    (r) => r.engagement_visibility === 'club_visible' || (r.engagement_visibility === 'staff_only' && canManageResources)
+  );
+
   return (
-    <section className={styles.section}>
-      <div className={styles.sectionHeader}>
+    <section className={styles.clubResourceSection}>
+
+      <div className={styles.clubResourceSectionHead}>
         <div>
-          <h2 className={styles.title}>Club Resources</h2>
-          <p className={styles.subtitle}>
+          <h2 className={styles.clubResourceSectionTitle}>Club Resources</h2>
+          <p className={styles.clubResourceSectionSub}>
             {canManageResources
               ? 'Upload learning material, analysis packs, spreadsheets, and other club files.'
-              : 'Access learning material, analysis packs, spreadsheets, and other club files.'
+              : 'Access learning material, analysis packs, and other club files.'
             }
           </p>
         </div>
+        {canManageResources && (
+          <button
+            className={styles.clubResourceUploadTrigger}
+            type="button"
+            onClick={() => setShowUploadForm((v) => !v)}
+          >
+            {showUploadForm ? '✕ Cancel upload' : '+ Upload file'}
+          </button>
+        )}
       </div>
 
-      {error && <div className={styles.error}>{error}</div>}
-      {resourceUploadError && <div className={styles.error}>{resourceUploadError}</div>}
-      {resourceActionMessage && <div className={styles.message}>{resourceActionMessage}</div>}
+      {error && <div className={styles.clubResourceError}>{error}</div>}
+      {resourceUploadError && <div className={styles.clubResourceError}>{resourceUploadError}</div>}
+      {resourceActionMessage && <div className={styles.clubResourceNotice}>{resourceActionMessage}</div>}
 
-      <div className={styles.grid}>
-        {canManageResources && (
-          <div className={styles.card}>
-            <h3 className={styles.cardTitle}>Upload resource</h3>
-            <p className={styles.cardSubtitle}>
-              Coaches and authorised staff can upload PDFs, Word, PowerPoint, Excel, CSV, and images.
-            </p>
-
-          <form className={styles.form} onSubmit={handleUploadSubmit}>
-            <div className={styles.formGroup}>
-              <label className={styles.label} htmlFor={uploadTitleInputId}>
-                Title
-              </label>
-              <input
-                id={uploadTitleInputId}
-                className={styles.input}
-                type="text"
-                value={uploadTitle}
-                onChange={(event) => setUploadTitle(event.target.value)}
-                placeholder="e.g. Matchday analysis pack"
-              />
+      {canManageResources && showUploadForm && (
+        <div className={styles.clubResourceUploadPanel}>
+          <h3 className={styles.clubResourcePanelTitle}>Upload resource</h3>
+          <p className={styles.clubResourcePanelSub}>
+            Coaches and authorised staff can upload PDFs, Word, PowerPoint, Excel, CSV, and images.
+          </p>
+          <form className={styles.clubResourceForm} onSubmit={handleUploadSubmit}>
+            <div className={styles.clubResourceFormGrid}>
+              <div className={styles.clubResourceFormField}>
+                <label className={styles.clubResourceLabel} htmlFor={uploadTitleInputId}>TITLE</label>
+                <input id={uploadTitleInputId} className={styles.clubResourceInput} type="text" value={uploadTitle} onChange={(e) => setUploadTitle(e.target.value)} placeholder="e.g. Matchday analysis pack" />
+              </div>
+              <div className={styles.clubResourceFormField}>
+                <label className={styles.clubResourceLabel} htmlFor={uploadVisibilitySelectId}>VISIBILITY</label>
+                <select id={uploadVisibilitySelectId} className={styles.clubResourceSelect} value={uploadVisibility} onChange={(e) => setUploadVisibility(e.target.value as ClubResourceEngagementVisibility)}>
+                  <option value="staff_only">Staff only</option>
+                  <option value="club_visible">Club visible</option>
+                </select>
+              </div>
             </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.label} htmlFor={uploadDescriptionInputId}>
-                Description
-              </label>
-              <textarea
-                id={uploadDescriptionInputId}
-                className={styles.textarea}
-                rows={4}
-                value={uploadDescription}
-                onChange={(event) => setUploadDescription(event.target.value)}
-                placeholder="Optional context for players and staff."
-              />
+            <div className={styles.clubResourceFormField}>
+              <label className={styles.clubResourceLabel} htmlFor={uploadDescriptionInputId}>DESCRIPTION</label>
+              <textarea id={uploadDescriptionInputId} className={styles.clubResourceTextarea} rows={3} value={uploadDescription} onChange={(e) => setUploadDescription(e.target.value)} placeholder="Optional context for players and staff." />
             </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.label} htmlFor={uploadVisibilitySelectId}>
-                Engagement visibility
-              </label>
-              <select
-                id={uploadVisibilitySelectId}
-                className={styles.select}
-                value={uploadVisibility}
-                onChange={(event) =>
-                  setUploadVisibility(event.target.value as ClubResourceEngagementVisibility)
-                }
-              >
-                <option value="staff_only">Staff only</option>
-                <option value="club_visible">Club visible</option>
-              </select>
+            <div className={styles.clubResourceFormField}>
+              <label className={styles.clubResourceLabel} htmlFor={uploadFileInputId}>FILE</label>
+              <input ref={fileInputRef} id={uploadFileInputId} className={styles.clubResourceFileInput} type="file" accept={ACCEPTED_RESOURCE_TYPES} onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)} />
+              <p className={styles.clubResourceHelperText}>Supported: PDF, DOCX, PPTX, XLSX, CSV, PNG, JPG, JPEG, WEBP.</p>
             </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.label} htmlFor={uploadFileInputId}>
-                File
-              </label>
-              <input
-                ref={fileInputRef}
-                id={uploadFileInputId}
-                className={styles.fileInput}
-                type="file"
-                accept={ACCEPTED_RESOURCE_TYPES}
-                onChange={(event) => {
-                  setUploadFile(event.target.files?.[0] ?? null);
-                }}
-              />
-              <p className={styles.helperText}>
-                Supported formats: PDF, DOCX, PPTX, XLSX, CSV, PNG, JPG, JPEG, and WEBP.
-              </p>
-            </div>
-
-            <div className={styles.actionRow}>
-              <button
-                className={styles.primaryButton}
-                type="submit"
-                disabled={uploading}
-              >
+            <div className={styles.clubResourceActionRow}>
+              <button className={styles.clubResourcePrimaryBtn} type="submit" disabled={uploading}>
                 {uploading ? 'Uploading…' : 'Upload resource'}
               </button>
             </div>
           </form>
         </div>
-        )}
+      )}
 
-        <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Resource library</h3>
-          <p className={styles.cardSubtitle}>
-            Open club resources and review engagement where permitted.
-          </p>
+      <div className={styles.clubResourceLibrary}>
+        {loading ? (
+          <div className={styles.clubResourceEmpty}>Loading club resources…</div>
+        ) : visibleResources.length === 0 ? (
+          <div className={styles.clubResourceEmpty}>
+            {resources.length === 0 ? 'No resources uploaded yet.' : 'No resources available for your access level.'}
+          </div>
+        ) : (
+          <div className={styles.clubResourceGrid}>
+            {visibleResources.map((resource) => {
+              const myStatus = resourceStatuses[resource.id];
+              const statusLabel = getMyStatusLabel(myStatus);
+              const isEngagementOpen = selectedEngagementResourceId === resource.id;
 
-          {loading ? (
-            <div className={styles.loading}>Loading club resources…</div>
-          ) : (() => {
-            const visibleResources = resources.filter((resource) =>
-              resource.engagement_visibility === 'club_visible' ||
-              (resource.engagement_visibility === 'staff_only' && canManageResources)
-            );
-            return visibleResources.length === 0 ? (
-              <div className={styles.emptyState}>
-                {resources.length === 0
-                  ? 'No resources uploaded yet.'
-                  : 'No resources available for your access level.'
-                }
-              </div>
-            ) : (
-              <div className={styles.resourceList}>
-                {visibleResources.map((resource) => {
-                  const myStatus = resourceStatuses[resource.id];
-
-                  return (
-                    <div key={resource.id} className={styles.resourceCard}>
-                      <div className={styles.resourceHeader}>
-                      <div className={styles.resourceTitleGroup}>
-                        <h4 className={styles.resourceTitle}>{resource.title}</h4>
-                        <p className={styles.resourceSubtitle}>
-                          {resource.original_filename}
-                        </p>
-                      </div>
-
-                      <span className={styles.statusPill}>
-                        {getFileKindLabel(resource)}
-                      </span>
+              return (
+                <div key={resource.id} className={styles.clubResourceCard}>
+                  <div className={styles.clubResourceCardTop}>
+                    <div className={styles.clubResourceCardIcon}>
+                      <FileKindIcon kind={resource.file_kind} />
                     </div>
-
-                    {resource.description && (
-                      <p className={styles.resourceDescription}>{resource.description}</p>
-                    )}
-
-                    <div className={styles.metadataRow}>
-                      <div className={styles.metadataItem}>
-                        <span className={styles.metadataLabel}>Size</span>
-                        <span className={styles.metadataValue}>
-                          {formatFileSize(resource.file_size_bytes)}
-                        </span>
-                      </div>
-
-                      <div className={styles.metadataItem}>
-                        <span className={styles.metadataLabel}>Visibility</span>
-                        <span className={styles.metadataValue}>
-                          {getVisibilityLabel(resource.engagement_visibility)}
-                        </span>
-                      </div>
-
-                      <div className={styles.metadataItem}>
-                        <span className={styles.metadataLabel}>Mode</span>
-                        <span className={styles.metadataValue}>
-                          {resource.can_inline_view ? 'Inline PDF' : 'Open / download'}
-                        </span>
-                      </div>
-
-                      <div className={styles.metadataItem}>
-                        <span className={styles.metadataLabel}>Your status</span>
-                        <span className={styles.metadataValue}>
-                          {getMyStatusLabel(myStatus)}
-                        </span>
-                      </div>
+                    <div className={styles.clubResourceCardInfo}>
+                      <div className={styles.clubResourceCardName}>{resource.title}</div>
+                      <div className={styles.clubResourceCardFile}>{resource.original_filename}</div>
                     </div>
-
-                    <div className={styles.metadataRow}>
-                      <div className={styles.metadataItem}>
-                        <span className={styles.metadataLabel}>Uploaded</span>
-                        <span className={styles.metadataValue}>
-                          {formatDateTime(resource.created_at) ?? '—'}
-                        </span>
-                      </div>
-
-                      <div className={styles.metadataItem}>
-                        <span className={styles.metadataLabel}>Opened count</span>
-                        <span className={styles.metadataValue}>
-                          {myStatus?.opened_count ?? resource.opened_count ?? 0}
-                        </span>
-                      </div>
-
-                      <div className={styles.metadataItem}>
-                        <span className={styles.metadataLabel}>Completed count</span>
-                        <span className={styles.metadataValue}>
-                          {myStatus?.completed_count ?? resource.completed_count ?? 0}
-                        </span>
-                      </div>
-
-                      <div className={styles.metadataItem}>
-                        <span className={styles.metadataLabel}>Last opened</span>
-                        <span className={styles.metadataValue}>
-                          {formatDateTime(
-                            myStatus?.my_view_summary?.last_opened_at ?? resource.latest_opened_at,
-                          ) ?? '—'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className={styles.actionRow}>
-                      <button
-                        className={styles.primaryButton}
-                        type="button"
-                        disabled={viewerLoading}
-                        onClick={() => handleOpenResource(resource)}
-                      >
-                        {resource.can_inline_view ? 'Open inline' : 'Open'}
-                      </button>
-
-                      <button
-                        className={styles.secondaryButton}
-                        type="button"
-                        disabled={viewerLoading}
-                        onClick={() => handleDownloadResource(resource)}
-                      >
-                        Download
-                      </button>
-
-                      <button
-                        className={styles.secondaryButton}
-                        type="button"
-                        disabled={engagementLoading}
-                        onClick={() => handleLoadEngagement(resource)}
-                      >
-                        {selectedEngagementResourceId === resource.id && engagementLoading
-                          ? 'Loading…'
-                          : 'View engagement'}
-                      </button>
-                    </div>
-
-                    {selectedEngagementResourceId === resource.id && selectedEngagement && (
-                      <div className={styles.engagementPanel}>
-                        <div className={styles.engagementSummary}>
-                          <span>Total viewers: {selectedEngagement.total_viewers}</span>
-                          <span>Opened: {selectedEngagement.opened_count}</span>
-                          <span>Completed: {selectedEngagement.completed_count}</span>
-                        </div>
-
-                        {selectedEngagement.resource_views.length === 0 ? (
-                          <div className={styles.emptyState}>No engagement recorded yet.</div>
-                        ) : (
-                          <div className={styles.engagementTableWrapper}>
-                            <table className={styles.engagementTable}>
-                              <thead>
-                                <tr>
-                                  <th>User</th>
-                                  <th>Opened</th>
-                                  <th>Completed</th>
-                                  <th>Active seconds</th>
-                                  <th>Highest page</th>
-                                  <th>Last opened</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {selectedEngagement.resource_views.map((viewRow) => (
-                                  <tr key={viewRow.id}>
-                                    <td>{viewRow.user_email}</td>
-                                    <td>{viewRow.opened ? 'Yes' : 'No'}</td>
-                                    <td>{viewRow.completed ? 'Yes' : 'No'}</td>
-                                    <td>{viewRow.total_active_seconds}</td>
-                                    <td>{viewRow.highest_page_reached}</td>
-                                    <td>{formatDateTime(viewRow.last_opened_at) ?? '—'}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    <span className={styles.clubResourceKindPill}>{getFileKindLabel(resource)}</span>
                   </div>
-                );
-              })}
-            </div>
-          )})()}
-        </div>
-      </div>
 
-      {canAccessImports && (
-        <div className={styles.importSection}>
-          <div className={styles.card}>
-            <h3 className={styles.cardTitle}>Structured imports</h3>
-            <p className={styles.cardSubtitle}>
-              Create a preview from a CSV/XLSX resource, review the matched rows, then explicitly confirm the commit.
-            </p>
-
-            {importMessage && <div className={styles.message}>{importMessage}</div>}
-
-            <div className={styles.importBuilder}>
-              <div className={styles.formGroup}>
-                <label className={styles.label} htmlFor={importResourceSelectId}>
-                  Source resource
-                </label>
-                <select
-                  id={importResourceSelectId}
-                  className={styles.select}
-                  value={selectedResourceId ?? ''}
-                  onChange={(event) => setSelectedResourceId(Number(event.target.value) || null)}
-                >
-                  {importableResources.length === 0 ? (
-                    <option value="">No CSV/XLSX resources available</option>
-                  ) : (
-                    <>
-                      <option value="">Select a resource</option>
-                      {importableResources.map((resource) => (
-                        <option key={resource.id} value={resource.id}>
-                          {resource.title} · {resource.original_filename}
-                        </option>
-                      ))}
-                    </>
+                  {resource.description && (
+                    <p className={styles.clubResourceCardDesc}>{resource.description}</p>
                   )}
-                </select>
-              </div>
 
-              <div className={styles.formGroup}>
-                <label className={styles.label} htmlFor={importTypeSelectId}>
-                  Import type
-                </label>
-                <select
-                  id={importTypeSelectId}
-                  className={styles.select}
-                  value={selectedImportType}
-                  onChange={(event) =>
-                    setSelectedImportType(event.target.value as ClubImportType)
-                  }
-                >
-                  {IMPORT_TYPE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <p className={styles.helperText}>
-                  {selectedImportOption?.description}
-                </p>
-              </div>
-
-              <div className={styles.actionRow}>
-                <button
-                  type="button"
-                  className={styles.primaryButton}
-                  disabled={creatingPreview || !selectedResourceId}
-                  onClick={() => void handleCreateImportPreview()}
-                >
-                  {creatingPreview ? 'Creating preview…' : 'Create preview'}
-                </button>
-              </div>
-            </div>
-
-            <div className={styles.importGrid}>
-              <div className={styles.importHistory}>
-                <div className={styles.importHistoryHeader}>
-                  <h4 className={styles.importHistoryTitle}>Import history</h4>
-                  {importLoading && <span className={styles.mutedText}>Loading…</span>}
-                </div>
-
-                {importJobs.length === 0 ? (
-                  <div className={styles.emptyState}>
-                    No import jobs yet.
-                  </div>
-                ) : (
-                  <div className={styles.importJobList}>
-                    {importJobs.map((job) => {
-                      const isSelected = selectedImportJob?.id === job.id;
-
-                      return (
-                        <button
-                          key={job.id}
-                          type="button"
-                          className={`${styles.importJobCard} ${isSelected ? styles.importJobCardSelected : ''}`}
-                          onClick={() => void handleSelectImportJob(job.id)}
-                        >
-                          <div className={styles.importJobHeader}>
-                            <div>
-                              <div className={styles.importJobTitle}>
-                                {getImportTypeLabel(job.import_type)}
-                              </div>
-                              <div className={styles.importJobMeta}>
-                                {job.source_resource_original_filename}
-                              </div>
-                            </div>
-                            <span className={`${styles.previewBadge} ${styles[`status_${job.status}`] ?? ''}`}>
-                              {getImportStatusLabel(job.status)}
-                            </span>
-                          </div>
-
-                          <div className={styles.importJobMeta}>
-                            {job.valid_row_count} valid · {job.warning_count} warnings
-                          </div>
-                          <div className={styles.importJobMeta}>
-                            Created {formatDateTime(job.created_at) ?? '—'}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <div className={styles.importDetail}>
-                {loadingImportDetail ? (
-                  <div className={styles.loading}>Loading import details…</div>
-                ) : !selectedImportJob ? (
-                  <div className={styles.emptyState}>
-                    Select an import job to review its preview or final report.
-                  </div>
-                ) : (
-                  <div className={styles.selectedJobCard}>
-                    <div className={styles.selectedJobHeader}>
-                      <div>
-                        <h4 className={styles.selectedJobTitle}>
-                          {getImportTypeLabel(selectedImportJob.import_type)}
-                        </h4>
-                        <p className={styles.selectedJobSubtitle}>
-                          {selectedImportJob.source_resource_original_filename}
-                        </p>
-                      </div>
-
-                      <span className={`${styles.previewBadge} ${styles[`status_${selectedImportJob.status}`] ?? ''}`}>
-                        {getImportStatusLabel(selectedImportJob.status)}
+                  <div className={styles.clubResourceMeta}>
+                    <div className={styles.clubResourceMetaItem}>
+                      <span className={styles.clubResourceMetaLabel}>Size</span>
+                      <span className={styles.clubResourceMetaValue}>{formatFileSize(resource.file_size_bytes)}</span>
+                    </div>
+                    <div className={styles.clubResourceMetaItem}>
+                      <span className={styles.clubResourceMetaLabel}>Visibility</span>
+                      <span className={styles.clubResourceMetaValue}>{getVisibilityLabel(resource.engagement_visibility)}</span>
+                    </div>
+                    <div className={styles.clubResourceMetaItem}>
+                      <span className={styles.clubResourceMetaLabel}>Your status</span>
+                      <span className={`${styles.clubResourceMetaValue} ${statusLabel === 'Completed' ? styles.clubResourceStatusComplete : statusLabel === 'Opened' ? styles.clubResourceStatusOpened : ''}`}>
+                        {statusLabel}
                       </span>
                     </div>
-
-                    <div className={styles.previewCounts}>
-                      <div className={styles.countCard}>
-                        <span className={styles.countLabel}>Total rows</span>
-                        <span className={styles.countValue}>
-                          {formatUnknownValue(previewCounts.total_rows ?? reportCounts.total_rows ?? 0)}
-                        </span>
-                      </div>
-                      <div className={styles.countCard}>
-                        <span className={styles.countLabel}>Valid rows</span>
-                        <span className={styles.countValue}>
-                          {formatUnknownValue(previewCounts.valid_rows ?? reportCounts.valid_rows ?? 0)}
-                        </span>
-                      </div>
-                      <div className={styles.countCard}>
-                        <span className={styles.countLabel}>Warnings</span>
-                        <span className={styles.countValue}>
-                          {formatUnknownValue(previewCounts.warning_count ?? selectedImportJob.warning_count)}
-                        </span>
-                      </div>
-                      <div className={styles.countCard}>
-                        <span className={styles.countLabel}>Imported</span>
-                        <span className={styles.countValue}>
-                          {formatUnknownValue(reportCounts.imported_rows ?? selectedImportJob.imported_row_count)}
-                        </span>
-                      </div>
-                      <div className={styles.countCard}>
-                        <span className={styles.countLabel}>Skipped</span>
-                        <span className={styles.countValue}>
-                          {formatUnknownValue(reportCounts.skipped_rows ?? selectedImportJob.skipped_row_count)}
-                        </span>
-                      </div>
-                      <div className={styles.countCard}>
-                        <span className={styles.countLabel}>Failed</span>
-                        <span className={styles.countValue}>
-                          {formatUnknownValue(reportCounts.failed_rows ?? selectedImportJob.failed_row_count)}
-                        </span>
-                      </div>
+                    <div className={styles.clubResourceMetaItem}>
+                      <span className={styles.clubResourceMetaLabel}>Uploaded</span>
+                      <span className={styles.clubResourceMetaValue}>{formatDateTime(resource.created_at) ?? '—'}</span>
                     </div>
+                  </div>
 
-                    {selectedImportJob.status === 'preview_ready' && previewCanCommit && (
-                      <div className={styles.commitBar}>
-                        <div className={styles.commitText}>
-                          Review the preview carefully before confirming the final commit.
-                        </div>
-                        <button
-                          type="button"
-                          className={styles.commitButton}
-                          disabled={committingImport}
-                          onClick={() => void handleCommitImport()}
-                        >
-                          {committingImport ? 'Committing…' : 'Confirm and commit'}
-                        </button>
-                      </div>
+                  <div className={styles.clubResourceCardActions}>
+                    <button className={styles.clubResourcePrimaryBtn} type="button" disabled={viewerLoading} onClick={() => handleOpenResource(resource)}>
+                      {resource.can_inline_view ? 'Open inline' : 'Open'}
+                    </button>
+                    <button className={styles.clubResourceGhostBtn} type="button" disabled={viewerLoading} onClick={() => handleDownloadResource(resource)}>
+                      Download
+                    </button>
+                    {canManageResources && (
+                      <button className={styles.clubResourceGhostBtn} type="button" disabled={engagementLoading} onClick={() => handleLoadEngagement(resource)}>
+                        {isEngagementOpen && engagementLoading ? 'Loading…' : 'Engagement'}
+                      </button>
                     )}
+                  </div>
 
-                    {selectedImportJob.status === 'preview_ready' && !previewCanCommit && (
-                      <div className={styles.message}>
-                        {selectedImportJob.import_type === 'other'
-                          ? 'This preview cannot be committed; it is a raw file review only.'
-                          : 'This preview cannot be committed as a structured import. It is shown for file review only.'
-                        }
+                  {isEngagementOpen && selectedEngagement && (
+                    <div className={styles.clubResourceEngagementPanel}>
+                      <div className={styles.clubResourceEngagementSummary}>
+                        <span>Viewers: {selectedEngagement.total_viewers}</span>
+                        <span>Opened: {selectedEngagement.opened_count}</span>
+                        <span>Completed: {selectedEngagement.completed_count}</span>
                       </div>
-                    )}
-
-                    {isRawPreview && rawPreviewRows.length > 0 ? (
-                      <div className={styles.previewSection}>
-                        <h5 className={styles.subsectionTitle}>Raw preview</h5>
-                        <div className={styles.mutedText}>
-                          This preview shows the imported CSV/XLSX rows without requiring a structured import schema.
-                        </div>
-                        <div className={styles.previewRowList}>
-                          <table>
+                      {selectedEngagement.resource_views.length === 0 ? (
+                        <div className={styles.clubResourceEmpty}>No engagement recorded yet.</div>
+                      ) : (
+                        <div className={styles.clubResourceTableWrap}>
+                          <table className={styles.clubResourceTable}>
                             <thead>
                               <tr>
-                                <th>#</th>
-                                <th>Status</th>
-                                {previewHeaders.map((header) => (
-                                  <th key={header}>{header}</th>
-                                ))}
+                                <th>User</th><th>Opened</th><th>Completed</th><th>Active sec</th><th>Highest page</th><th>Last opened</th>
                               </tr>
                             </thead>
                             <tbody>
-                              {rawPreviewRows.map((row, index) => {
-                                const rowNumber = typeof row.row_number === 'number'
-                                  ? row.row_number
-                                  : index + 1;
-                                const rowStatus = typeof row.status === 'string' ? row.status : 'preview';
-                                const rawData = asRecord(row.raw_data);
-
-                                return (
-                                  <tr key={rowNumber}>
-                                    <td>{formatUnknownValue(rowNumber)}</td>
-                                    <td>{rowStatus}</td>
-                                    {previewHeaders.map((header) => (
-                                      <td key={header}>{formatUnknownValue(rawData[header])}</td>
-                                    ))}
-                                  </tr>
-                                );
-                              })}
+                              {selectedEngagement.resource_views.map((v) => (
+                                <tr key={v.id}>
+                                  <td>{v.user_email}</td>
+                                  <td>{v.opened ? 'Yes' : 'No'}</td>
+                                  <td>{v.completed ? 'Yes' : 'No'}</td>
+                                  <td>{v.total_active_seconds}</td>
+                                  <td>{v.highest_page_reached}</td>
+                                  <td>{formatDateTime(v.last_opened_at) ?? '—'}</td>
+                                </tr>
+                              ))}
                             </tbody>
                           </table>
                         </div>
-                        {rawPreviewRowCount > 5 && (
-                          <div className={styles.mutedText}>
-                            Showing the first 5 preview rows. Use the job detail payload for the full persisted preview.
-                          </div>
-                        )}
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {canAccessImports && (
+        <div className={styles.clubResourceImportSection}>
+          <div className={styles.clubResourceSectionHead}>
+            <div>
+              <h3 className={styles.clubResourcePanelTitle}>Structured imports</h3>
+              <p className={styles.clubResourcePanelSub}>Create a preview from a CSV/XLSX resource, review matched rows, then confirm the commit.</p>
+            </div>
+          </div>
+
+          {importMessage && <div className={styles.clubResourceNotice}>{importMessage}</div>}
+
+          <div className={styles.clubResourceImportBuilder}>
+            <div className={styles.clubResourceFormGrid}>
+              <div className={styles.clubResourceFormField}>
+                <label className={styles.clubResourceLabel} htmlFor={importResourceSelectId}>SOURCE RESOURCE</label>
+                <select id={importResourceSelectId} className={styles.clubResourceSelect} value={selectedResourceId ?? ''} onChange={(e) => setSelectedResourceId(Number(e.target.value) || null)}>
+                  {importableResources.length === 0
+                    ? <option value="">No CSV/XLSX resources available</option>
+                    : <><option value="">Select a resource</option>{importableResources.map((r) => <option key={r.id} value={r.id}>{r.title} · {r.original_filename}</option>)}</>
+                  }
+                </select>
+              </div>
+              <div className={styles.clubResourceFormField}>
+                <label className={styles.clubResourceLabel} htmlFor={importTypeSelectId}>IMPORT TYPE</label>
+                <select id={importTypeSelectId} className={styles.clubResourceSelect} value={selectedImportType} onChange={(e) => setSelectedImportType(e.target.value as ClubImportType)}>
+                  {IMPORT_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+                {selectedImportOption && <p className={styles.clubResourceHelperText}>{selectedImportOption.description}</p>}
+              </div>
+            </div>
+            <button className={styles.clubResourcePrimaryBtn} type="button" disabled={creatingPreview || !selectedResourceId} onClick={() => void handleCreateImportPreview()}>
+              {creatingPreview ? 'Creating preview…' : 'Create preview'}
+            </button>
+          </div>
+
+          <div className={styles.clubResourceImportGrid}>
+            <div className={styles.clubResourceImportHistory}>
+              <div className={styles.clubResourceImportHistoryHead}>
+                <span className={styles.clubResourcePanelTitle} style={{ fontSize: '0.85rem' }}>Import history</span>
+                {importLoading && <span className={styles.clubResourceMutedText}>Loading…</span>}
+              </div>
+              {importJobs.length === 0 ? (
+                <div className={styles.clubResourceEmpty}>No import jobs yet.</div>
+              ) : (
+                <div className={styles.clubResourceImportJobList}>
+                  {importJobs.map((job) => {
+                    const isSelected = selectedImportJob?.id === job.id;
+                    return (
+                      <button
+                        key={job.id}
+                        type="button"
+                        className={`${styles.clubResourceImportJobCard} ${isSelected ? styles.clubResourceImportJobCardActive : ''}`}
+                        onClick={() => void handleSelectImportJob(job.id)}
+                      >
+                        <div className={styles.clubResourceImportJobRow}>
+                          <div className={styles.clubResourceImportJobTitle}>{getImportTypeLabel(job.import_type)}</div>
+                          <span className={`${styles.clubResourceStatusPill} ${styles[`clubResourceStatus_${job.status}`] ?? ''}`}>
+                            {getImportStatusLabel(job.status)}
+                          </span>
+                        </div>
+                        <div className={styles.clubResourceImportJobMeta}>{job.source_resource_original_filename}</div>
+                        <div className={styles.clubResourceImportJobMeta}>{job.valid_row_count} valid · {job.warning_count} warnings</div>
+                        <div className={styles.clubResourceImportJobMeta}>Created {formatDateTime(job.created_at) ?? '—'}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className={styles.clubResourceImportDetail}>
+              {loadingImportDetail ? (
+                <div className={styles.clubResourceEmpty}>Loading import details…</div>
+              ) : !selectedImportJob ? (
+                <div className={styles.clubResourceEmpty}>Select an import job to review its preview or final report.</div>
+              ) : (
+                <div className={styles.clubResourceImportDetailCard}>
+                  <div className={styles.clubResourceImportDetailHead}>
+                    <div>
+                      <div className={styles.clubResourceImportJobTitle}>{getImportTypeLabel(selectedImportJob.import_type)}</div>
+                      <div className={styles.clubResourceImportJobMeta}>{selectedImportJob.source_resource_original_filename}</div>
+                    </div>
+                    <span className={`${styles.clubResourceStatusPill} ${styles[`clubResourceStatus_${selectedImportJob.status}`] ?? ''}`}>
+                      {getImportStatusLabel(selectedImportJob.status)}
+                    </span>
+                  </div>
+
+                  <div className={styles.clubResourceCountRow}>
+                    {[
+                      ['Valid', selectedImportJob.valid_row_count],
+                      ['Warnings', selectedImportJob.warning_count],
+                      ['Imported', formatUnknownValue(reportCounts.imported_rows ?? selectedImportJob.imported_row_count)],
+                      ['Skipped', formatUnknownValue(reportCounts.skipped_rows ?? selectedImportJob.skipped_row_count)],
+                      ['Failed', formatUnknownValue(reportCounts.failed_rows ?? selectedImportJob.failed_row_count)],
+                    ].map(([label, val]) => (
+                      <div key={label as string} className={styles.clubResourceCountCard}>
+                        <span className={styles.clubResourceCountLabel}>{label}</span>
+                        <span className={styles.clubResourceCountValue}>{val}</span>
                       </div>
-                    ) : previewRows.length > 0 ? (
-                      <div className={styles.previewSection}>
-                        <h5 className={styles.subsectionTitle}>Preview rows</h5>
-                        <div className={styles.previewRowList}>
-                          {previewRows.slice(0, 10).map((row) => {
-                            const rowNumber = row.row_number;
-                            const rowStatus = typeof row.status === 'string' ? row.status : 'unknown';
-                            const warnings = asArray<string>(row.warnings);
-                            const errors = asArray<string>(row.errors);
-                            const currentValues = asRecord(row.current_values);
-                            const proposedChanges = asRecord(row.proposed_changes);
+                    ))}
+                  </div>
 
-                            return (
-                              <div
-                                key={typeof rowNumber === 'number' ? rowNumber : Math.random()}
-                                className={styles.previewRowCard}
-                              >
-                                <div className={styles.previewRowHeader}>
-                                  <div>
-                                    <div className={styles.previewRowTitle}>
-                                      Row {formatUnknownValue(rowNumber)}
-                                    </div>
-                                    <div className={styles.previewRowMeta}>
-                                      {formatUnknownValue(row.target_label)} · {formatUnknownValue(row.match_method)}
-                                    </div>
-                                  </div>
+                  {selectedImportJob.status === 'preview_ready' && previewCanCommit && (
+                    <div className={styles.clubResourceCommitBar}>
+                      <span className={styles.clubResourceCommitText}>Review the preview carefully before confirming the final commit.</span>
+                      <button className={styles.clubResourceCommitBtn} type="button" disabled={committingImport} onClick={() => void handleCommitImport()}>
+                        {committingImport ? 'Committing…' : 'Confirm and commit'}
+                      </button>
+                    </div>
+                  )}
+                  {selectedImportJob.status === 'preview_ready' && !previewCanCommit && (
+                    <div className={styles.clubResourceNotice}>
+                      {selectedImportJob.import_type === 'other' ? 'This preview cannot be committed; it is a raw file review only.' : 'This preview cannot be committed as a structured import.'}
+                    </div>
+                  )}
 
-                                  <span className={`${styles.previewBadge} ${styles[`status_${rowStatus}`] ?? ''}`}>
-                                    {rowStatus}
-                                  </span>
-                                </div>
-
-                                <div className={styles.previewColumns}>
-                                  <div className={styles.previewColumn}>
-                                    <h6 className={styles.previewColumnTitle}>Current values</h6>
-                                    {Object.keys(currentValues).length === 0 ? (
-                                      <div className={styles.mutedText}>No existing values shown.</div>
-                                    ) : (
-                                      <div className={styles.keyValueList}>
-                                        {Object.entries(currentValues).map(([key, value]) => (
-                                          <div key={key} className={styles.keyValueItem}>
-                                            <span className={styles.keyValueKey}>{key}</span>
-                                            <span className={styles.keyValueValue}>
-                                              {formatUnknownValue(value)}
-                                            </span>
-                                          </div>
-                                        ))}
+                  {isRawPreview && rawPreviewRows.length > 0 ? (
+                    <div className={styles.clubResourcePreviewSection}>
+                      <div className={styles.clubResourcePanelTitle} style={{ fontSize: '0.82rem' }}>Raw preview</div>
+                      <div className={styles.clubResourceTableWrap}>
+                        <table className={styles.clubResourceTable}>
+                          <thead><tr><th>#</th><th>Status</th>{previewHeaders.map((h) => <th key={h}>{h}</th>)}</tr></thead>
+                          <tbody>
+                            {rawPreviewRows.map((row, i) => {
+                              const num = typeof row.row_number === 'number' ? row.row_number : i + 1;
+                              const st = typeof row.status === 'string' ? row.status : 'preview';
+                              const raw = asRecord(row.raw_data);
+                              return <tr key={num}><td>{formatUnknownValue(num)}</td><td>{st}</td>{previewHeaders.map((h) => <td key={h}>{formatUnknownValue(raw[h])}</td>)}</tr>;
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                      {rawPreviewRowCount > 5 && <div className={styles.clubResourceMutedText}>Showing the first 5 rows.</div>}
+                    </div>
+                  ) : previewRows.length > 0 ? (
+                    <div className={styles.clubResourcePreviewSection}>
+                      <div className={styles.clubResourcePanelTitle} style={{ fontSize: '0.82rem' }}>Preview rows</div>
+                      {previewRows.slice(0, 10).map((row) => {
+                        const rowNumber = row.row_number;
+                        const rowStatus = typeof row.status === 'string' ? row.status : 'unknown';
+                        const warnings = asArray<string>(row.warnings);
+                        const errors = asArray<string>(row.errors);
+                        const currentValues = asRecord(row.current_values);
+                        const proposedChanges = asRecord(row.proposed_changes);
+                        return (
+                          <div key={typeof rowNumber === 'number' ? rowNumber : Math.random()} className={styles.clubResourcePreviewRowCard}>
+                            <div className={styles.clubResourcePreviewRowHead}>
+                              <div>
+                                <div className={styles.clubResourceImportJobTitle}>Row {formatUnknownValue(rowNumber)}</div>
+                                <div className={styles.clubResourceImportJobMeta}>{formatUnknownValue(row.target_label)} · {formatUnknownValue(row.match_method)}</div>
+                              </div>
+                              <span className={`${styles.clubResourceStatusPill} ${styles[`clubResourceStatus_${rowStatus}`] ?? ''}`}>{rowStatus}</span>
+                            </div>
+                            <div className={styles.clubResourcePreviewCols}>
+                              <div>
+                                <div className={styles.clubResourcePreviewColTitle}>Current values</div>
+                                {Object.keys(currentValues).length === 0 ? (
+                                  <div className={styles.clubResourceMutedText}>No existing values shown.</div>
+                                ) : (
+                                  <div className={styles.clubResourceKVList}>
+                                    {Object.entries(currentValues).map(([k, v]) => (
+                                      <div key={k} className={styles.clubResourceKVItem}>
+                                        <span className={styles.clubResourceKVKey}>{k}</span>
+                                        <span className={styles.clubResourceKVVal}>{formatUnknownValue(v)}</span>
                                       </div>
-                                    )}
-                                  </div>
-
-                                  <div className={styles.previewColumn}>
-                                    <h6 className={styles.previewColumnTitle}>Proposed changes</h6>
-                                    {Object.keys(proposedChanges).length === 0 ? (
-                                      <div className={styles.mutedText}>No changes proposed.</div>
-                                    ) : (
-                                      <div className={styles.changesList}>
-                                        {Object.entries(proposedChanges).map(([key, value]) => {
-                                          const change = asRecord(value);
-
-                                          return (
-                                            <div key={key} className={styles.changeItem}>
-                                              <div className={styles.changeKey}>{key}</div>
-                                              <div className={styles.changeValues}>
-                                                <span>{formatUnknownValue(change.from)}</span>
-                                                <span className={styles.changeArrow}>→</span>
-                                                <span>{formatUnknownValue(change.to)}</span>
-                                              </div>
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {warnings.length > 0 && (
-                                  <div className={styles.warningPanel}>
-                                    <h6 className={styles.warningTitle}>Warnings</h6>
-                                    <ul className={styles.warningList}>
-                                      {warnings.map((warning, index) => (
-                                        <li key={`${warning}-${index}`}>{warning}</li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-
-                                {errors.length > 0 && (
-                                  <div className={styles.errorPanel}>
-                                    <h6 className={styles.errorTitle}>Errors</h6>
-                                    <ul className={styles.errorList}>
-                                      {errors.map((rowError, index) => (
-                                        <li key={`${rowError}-${index}`}>{rowError}</li>
-                                      ))}
-                                    </ul>
+                                    ))}
                                   </div>
                                 )}
                               </div>
-                            );
-                          })}
-                        </div>
-
-                        {previewRows.length > 10 && (
-                          <div className={styles.mutedText}>
-                            Showing the first 10 preview rows. Use the job detail payload for the full persisted preview.
+                              <div>
+                                <div className={styles.clubResourcePreviewColTitle}>Proposed changes</div>
+                                {Object.keys(proposedChanges).length === 0 ? (
+                                  <div className={styles.clubResourceMutedText}>No changes proposed.</div>
+                                ) : (
+                                  <div className={styles.clubResourceKVList}>
+                                    {Object.entries(proposedChanges).map(([k, v]) => {
+                                      const change = asRecord(v);
+                                      return (
+                                        <div key={k} className={styles.clubResourceKVItem}>
+                                          <span className={styles.clubResourceKVKey}>{k}</span>
+                                          <div className={styles.clubResourceChangeValues}>
+                                            <span>{formatUnknownValue(change.from)}</span>
+                                            <span className={styles.clubResourceChangeArrow}>→</span>
+                                            <span>{formatUnknownValue(change.to)}</span>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            {warnings.length > 0 && (
+                              <div className={styles.clubResourceWarningPanel}>
+                                <div className={styles.clubResourceWarningTitle}>Warnings</div>
+                                <ul className={styles.clubResourceWarningList}>{warnings.map((w, i) => <li key={`${w}-${i}`}>{w}</li>)}</ul>
+                              </div>
+                            )}
+                            {errors.length > 0 && (
+                              <div className={styles.clubResourceErrorPanel}>
+                                <div className={styles.clubResourceWarningTitle}>Errors</div>
+                                <ul className={styles.clubResourceWarningList}>{errors.map((e, i) => <li key={`${e}-${i}`}>{e}</li>)}</ul>
+                              </div>
+                            )}
                           </div>
-                        )}
+                        );
+                      })}
+                      {previewRows.length > 10 && <div className={styles.clubResourceMutedText}>Showing the first 10 rows.</div>}
+                    </div>
+                  ) : null}
+
+                  {(selectedImportJob.status === 'completed' || selectedImportJob.status === 'failed') && (
+                    <div className={styles.clubResourceReportSection}>
+                      <div className={styles.clubResourcePanelTitle} style={{ fontSize: '0.82rem' }}>Final report</div>
+                      <div className={styles.clubResourceCountRow}>
+                        {[
+                          ['Created', formatUnknownValue(reportCounts.created_rows ?? 0)],
+                          ['Updated', formatUnknownValue(reportCounts.updated_rows ?? 0)],
+                          ['No change', formatUnknownValue(reportCounts.no_change_rows ?? 0)],
+                        ].map(([l, v]) => (
+                          <div key={l as string} className={styles.clubResourceCountCard}>
+                            <span className={styles.clubResourceCountLabel}>{l}</span>
+                            <span className={styles.clubResourceCountValue}>{v}</span>
+                          </div>
+                        ))}
                       </div>
-                    ) : null}
-
-                    {(selectedImportJob.status === 'completed' || selectedImportJob.status === 'failed') && (
-                      <div className={styles.reportPanel}>
-                        <h5 className={styles.subsectionTitle}>Final report</h5>
-
-                        <div className={styles.reportGrid}>
-                          <div className={styles.countCard}>
-                            <span className={styles.countLabel}>Created</span>
-                            <span className={styles.countValue}>
-                              {formatUnknownValue(reportCounts.created_rows ?? 0)}
-                            </span>
-                          </div>
-                          <div className={styles.countCard}>
-                            <span className={styles.countLabel}>Updated</span>
-                            <span className={styles.countValue}>
-                              {formatUnknownValue(reportCounts.updated_rows ?? 0)}
-                            </span>
-                          </div>
-                          <div className={styles.countCard}>
-                            <span className={styles.countLabel}>No change</span>
-                            <span className={styles.countValue}>
-                              {formatUnknownValue(reportCounts.no_change_rows ?? 0)}
-                            </span>
-                          </div>
+                      {getErrorSummaryMessage(selectedImportJob) && (
+                        <div className={styles.clubResourceErrorPanel}>
+                          <div className={styles.clubResourceWarningTitle}>Summary</div>
+                          <div>{getErrorSummaryMessage(selectedImportJob)}</div>
                         </div>
-
-                        {getErrorSummaryMessage(selectedImportJob) && (
-                          <div className={styles.errorPanel}>
-                            <h6 className={styles.errorTitle}>Summary</h6>
-                            <div>{getErrorSummaryMessage(selectedImportJob)}</div>
-                          </div>
-                        )}
-
-                        {reportErrors.length > 0 && (
-                          <div className={styles.errorPanel}>
-                            <h6 className={styles.errorTitle}>Report errors</h6>
-                            <ul className={styles.errorList}>
-                              {reportErrors.map((reportError, index) => {
-                                const details = asRecord(reportError.details);
-                                const missingRequired = asArray<string>(details.missing_required_headers);
-                                const missingGroups = asArray<unknown>(details.missing_header_groups);
-                                const duplicates = asArray<string>(details.duplicate_headers);
-                                return (
-                                  <li key={index}>
-                                    <div>{formatUnknownValue(asRecord(reportError).message)}</div>
-                                    {missingRequired.length > 0 && (
-                                      <div className={styles.errorDetail}>
-                                        Missing required columns: <strong>{missingRequired.join(', ')}</strong>
-                                      </div>
-                                    )}
-                                    {missingGroups.map((group, gi) => (
-                                      <div key={gi} className={styles.errorDetail}>
-                                        At least one of these columns is required: <strong>{asArray<string>(group).join(', ')}</strong>
-                                      </div>
-                                    ))}
-                                    {duplicates.length > 0 && (
-                                      <div className={styles.errorDetail}>
-                                        Duplicate columns: <strong>{duplicates.join(', ')}</strong>
-                                      </div>
-                                    )}
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+                      )}
+                      {reportErrors.length > 0 && (
+                        <div className={styles.clubResourceErrorPanel}>
+                          <div className={styles.clubResourceWarningTitle}>Report errors</div>
+                          <ul className={styles.clubResourceWarningList}>
+                            {reportErrors.map((re, i) => {
+                              const details = asRecord(re.details);
+                              const missing = asArray<string>(details.missing_required_headers);
+                              const groups = asArray<unknown>(details.missing_header_groups);
+                              const dups = asArray<string>(details.duplicate_headers);
+                              return (
+                                <li key={i}>
+                                  <div>{formatUnknownValue(asRecord(re).message)}</div>
+                                  {missing.length > 0 && <div className={styles.clubResourceErrorDetail}>Missing required columns: <strong>{missing.join(', ')}</strong></div>}
+                                  {groups.map((g, gi) => <div key={gi} className={styles.clubResourceErrorDetail}>At least one required: <strong>{asArray<string>(g).join(', ')}</strong></div>)}
+                                  {dups.length > 0 && <div className={styles.clubResourceErrorDetail}>Duplicates: <strong>{dups.join(', ')}</strong></div>}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
       )}
 
       {viewerResource && viewerUrl && (
-        <div className={styles.viewerOverlay} role="dialog" aria-modal="true">
-          <div className={styles.viewerCard}>
-            <div className={styles.viewerHeader}>
+        <div className={styles.clubResourceViewerOverlay} role="dialog" aria-modal="true">
+          <div className={styles.clubResourceViewerCard}>
+            <div className={styles.clubResourceViewerHead}>
               <div>
-                <h3 className={styles.viewerTitle}>{viewerResource.title}</h3>
-                <p className={styles.viewerSubtitle}>
-                  {viewerResource.original_filename}
-                </p>
+                <h3 className={styles.clubResourceViewerTitle}>{viewerResource.title}</h3>
+                <p className={styles.clubResourceViewerSub}>{viewerResource.original_filename}</p>
               </div>
-
-              <button
-                type="button"
-                className={styles.secondaryButton}
-                disabled={!viewerResource || !viewerUrl || viewerLoading}
-                onClick={() => viewerResource && handleDownloadResource(viewerResource)}
-              >
-                Download
-              </button>
-
-              <button
-                type="button"
-                className={styles.closeButton}
-                onClick={() => void handleCloseViewer()}
-              >
-                Close
-              </button>
-            </div>
-
-            {viewerError && <div className={styles.error}>{viewerError}</div>}
-
-            <div className={styles.viewerControls}>
-              <button
-                type="button"
-                className={styles.secondaryButton}
-                disabled={viewerPage <= 1}
-                onClick={() => setViewerPage((current) => Math.max(1, current - 1))}
-              >
-                Previous
-              </button>
-
-              <div className={styles.pageIndicator}>
-                Page {viewerPage}{viewerPageCount ? ` of ${viewerPageCount}` : ''}
+              <div className={styles.clubResourceViewerHeadActions}>
+                <button className={styles.clubResourceGhostBtn} type="button" disabled={!viewerResource || !viewerUrl || viewerLoading} onClick={() => viewerResource && handleDownloadResource(viewerResource)}>Download</button>
+                <button className={styles.clubResourceGhostBtn} type="button" onClick={() => void handleCloseViewer()}>✕ Close</button>
               </div>
-
-              <button
-                type="button"
-                className={styles.secondaryButton}
-                disabled={viewerPageCount === 0 || viewerPage >= viewerPageCount}
-                onClick={() =>
-                  setViewerPage((current) =>
-                    viewerPageCount ? Math.min(viewerPageCount, current + 1) : current + 1,
-                  )
-                }
-              >
-                Next
-              </button>
             </div>
-
-            <div className={styles.viewerBody}>
+            {viewerError && <div className={styles.clubResourceError}>{viewerError}</div>}
+            <div className={styles.clubResourceViewerControls}>
+              <button className={styles.clubResourceGhostBtn} type="button" disabled={viewerPage <= 1} onClick={() => setViewerPage((p) => Math.max(1, p - 1))}>← Previous</button>
+              <span className={styles.clubResourceViewerPageIndicator}>Page {viewerPage}{viewerPageCount ? ` of ${viewerPageCount}` : ''}</span>
+              <button className={styles.clubResourceGhostBtn} type="button" disabled={viewerPageCount === 0 || viewerPage >= viewerPageCount} onClick={() => setViewerPage((p) => viewerPageCount ? Math.min(viewerPageCount, p + 1) : p + 1)}>Next →</button>
+            </div>
+            <div className={styles.clubResourceViewerBody}>
               <Document
                 file={viewerFile}
-                loading={<div className={styles.emptyState}>Loading PDF…</div>}
-                onLoadSuccess={({ numPages }) => {
-                  setViewerPageCount(numPages);
-                  setViewerPage(1);
-                  currentPageRef.current = 1;
-                }}
-                onLoadError={() => {
-                  setViewerError('Failed to render PDF preview.');
-                }}
-                className={styles.document}
+                loading={<div className={styles.clubResourceEmpty}>Loading PDF…</div>}
+                onLoadSuccess={({ numPages }) => { setViewerPageCount(numPages); setViewerPage(1); currentPageRef.current = 1; }}
+                onLoadError={() => setViewerError('Failed to render PDF preview.')}
+                className={styles.clubResourceViewerDoc}
               >
-                <Page
-                  pageNumber={viewerPage}
-                  width={760}
-                  renderAnnotationLayer={false}
-                  renderTextLayer={false}
-                />
+                <Page pageNumber={viewerPage} width={760} renderAnnotationLayer={false} renderTextLayer={false} />
               </Document>
             </div>
           </div>

@@ -1,9 +1,3 @@
-/* ─────────────────────────────────────────────────────────────
-   IndividualClubBase.module.css
-   All class names are prefixed: individualClub
-   ───────────────────────────────────────────────────────────── */
-
-/* ── shell ── */
 .individualClubShell {
   display: flex;
   height: 100vh;
@@ -20,7 +14,6 @@
   margin-left: 80px;
 }
 
-/* ── header ── */
 .individualClubHeader {
   height: 56px;
   flex-shrink: 0;
@@ -51,7 +44,6 @@
   display: flex; align-items: center; justify-content: flex-end; gap: 16px;
 }
 
-/* ── scrollable content ── */
 .individualClubContent {
   flex: 1;
   overflow-y: auto;
@@ -61,7 +53,6 @@
   gap: 1rem;
 }
 
-/* ── loading / error ── */
 .individualClubLoadingState {
   display: flex;
   flex-direction: column;
@@ -90,7 +81,6 @@
   font-size: 0.88rem;
 }
 
-/* ── hero banner ── */
 .individualClubHero {
   background: var(--brand-card-green);
   border: 1px solid var(--brand-light-green-border);
@@ -170,7 +160,6 @@
   min-width: 130px;
 }
 
-/* ── notices ── */
 .individualClubTrashNotice {
   padding: 0.85rem 1.1rem;
   background: rgba(251,191,36,0.08);
@@ -197,7 +186,6 @@
   color: #f87171;
 }
 
-/* ── tab bar ── */
 .individualClubTabs {
   display: flex;
   gap: 0.2rem;
@@ -223,7 +211,6 @@
   font-weight: 600;
 }
 
-/* ── stat strip ── */
 .individualClubStatStrip {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -260,7 +247,6 @@
   margin-top: 0.1rem;
 }
 
-/* ── body grid ── */
 .individualClubBodyGrid {
   display: grid;
   grid-template-columns: 1fr 340px;
@@ -272,7 +258,6 @@
 .individualClubLeftCol  { display: flex; flex-direction: column; gap: 1rem; }
 .individualClubRightCol { display: flex; flex-direction: column; gap: 1rem; }
 
-/* ── panels ── */
 .individualClubPanel {
   background: var(--brand-card-green);
   border: 1px solid var(--brand-light-green-border);
@@ -308,7 +293,6 @@
   line-height: 1.5;
 }
 
-/* ── upcoming list ── */
 .individualClubUpcomingList { display: flex; flex-direction: column; gap: 0.5rem; }
 .individualClubUpcomingRow {
   display: flex;
@@ -367,7 +351,6 @@
   margin-top: 0.15rem;
 }
 
-/* ── squad table ── */
 .individualClubSquadTableHead {
   display: grid;
   grid-template-columns: 32px 1fr 80px 50px 90px 60px;
@@ -432,9 +415,6 @@
 .individualClubFormCool { background: rgba(59,130,246,0.15); color: #93c5fd; }
 .individualClubFormSteady { background: rgba(156,163,175,0.12); color: #9ca3af; }
 
-/* ── calendar (panel inherits from .individualClubPanel) ── */
-
-/* ── quick actions ── */
 .individualClubQuickGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -460,7 +440,6 @@
 .individualClubQuickTitle { font-size: 0.82rem; font-weight: 600; color: var(--primary-text); }
 .individualClubQuickDesc { font-size: 0.73rem; color: var(--secondary-text); line-height: 1.4; }
 
-/* ── join request list ── */
 .individualClubBadgePill {
   font-size: 0.65rem;
   font-weight: 700;
@@ -503,7 +482,6 @@
   margin-top: 0.25rem;
 }
 
-/* ── workflow cards ── */
 .individualClubWorkflowList { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.25rem; }
 .individualClubWorkflowCard {
   background: var(--brand-lightest-green);
@@ -530,7 +508,6 @@
 }
 .individualClubDetailNote { font-size: 0.75rem; color: var(--secondary-text); }
 
-/* ── form fields ── */
 .individualClubFormGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -607,7 +584,6 @@
   font-size: 0.82rem; color: var(--secondary-text); cursor: pointer;
 }
 
-/* ── buttons ── */
 .individualClubPrimaryBtn {
   padding: 0.48rem 1.1rem;
   background: var(--hover-light-green);

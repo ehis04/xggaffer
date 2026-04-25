@@ -586,7 +586,7 @@ const MyClubsPage: React.FC = () => {
                     }
                   />
                 ))}
-                {/* Create new club tile */}
+
                 <button
                   className={styles.createTile}
                   onClick={() => navigate("/clubs/create")}
@@ -625,7 +625,6 @@ const MyClubsPage: React.FC = () => {
             )}
           </div>
 
-          {/* ── PENDING INVITES ── */}
           {pendingInvitations.length > 0 && (
             <div className={styles.panel}>
               <div className={styles.panelHead}>
