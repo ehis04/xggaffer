@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { clubsApi } from '../../../../services/api';
+import { playerdataApi } from '../../../../services/api/playerdataApi';
 import { PlayerCarousel } from '../../../../components/Dashboard/PlayerCarousel';
 import { StatsWidget } from '../../../../components/Dashboard/StatsWidget';
 import { SessionWidget } from '../../../../components/Dashboard/SessionWidget';
@@ -14,6 +15,7 @@ import type {
   ActivityEvent,
 } from '../../../../components/Dashboard/types/DashboardTypes';
 import type { ClubPlayer } from '../../../../types/clubPlayers';
+import type { PlayerDataMetric, PlayerSeasonSummary } from '../../../../types/playerdata';
 import type {
   ClubSeasonResult,
   ClubCalendarFeedItem,
@@ -26,6 +28,50 @@ import { InlineRetry } from '../../../../common/components/InlineRetry';
 interface Props {
   ctx: ClubContext;
 }
+
+type UnderstatRecordShape = {
+  wins: number;
+  draws: number;
+  losses: number;
+  goals_for: number;
+  goals_against: number;
+};
+
+const toInt = (value: unknown): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
+};
+
+const extractUnderstatRecord = (value: unknown): UnderstatRecordShape | null => {
+  if (!value || typeof value !== 'object') return null;
+
+  const data = value as Record<string, unknown>;
+  const candidate =
+    data.summary && typeof data.summary === 'object'
+      ? (data.summary as Record<string, unknown>)
+      : data;
+
+  const wins = toInt(candidate.wins);
+  const draws = toInt(candidate.draws);
+  const losses = toInt(candidate.losses);
+  const goals_for = toInt(candidate.goals_for);
+  const goals_against = toInt(candidate.goals_against);
+
+  const hasAnyCore =
+    'wins' in candidate ||
+    'draws' in candidate ||
+    'losses' in candidate ||
+    'goals_for' in candidate ||
+    'goals_against' in candidate;
+
+  if (!hasAnyCore) return null;
+
+  return { wins, draws, losses, goals_for, goals_against };
+};
 
 const mapPlayerToCardData = (p: ClubPlayer): PlayerCardData => ({
   id: p.id,
@@ -52,8 +98,21 @@ const deriveSquadStats = (players: ClubPlayer[]): SquadStats => {
   };
 };
 
-const deriveSeasonStats = (results: ClubSeasonResult[]): SeasonStats =>
-  results.reduce<SeasonStats>(
+const deriveSeasonStats = (results: ClubSeasonResult[]): SeasonStats => {
+  // If we have a single record with 0 id, it's likely Understat enrichment data
+  if (results.length === 1 && results[0].id === 0) {
+    const stat = results[0];
+    return {
+      wins: (stat as any).wins || 0,
+      draws: (stat as any).draws || 0,
+      losses: (stat as any).losses || 0,
+      goals_scored: stat.goals_for || 0,
+      goals_conceded: stat.goals_against || 0,
+    };
+  }
+
+  // Otherwise aggregate match results
+  return results.reduce<SeasonStats>(
     (acc, r) => {
       acc.goals_scored += r.goals_for;
       acc.goals_conceded += r.goals_against;
@@ -64,6 +123,7 @@ const deriveSeasonStats = (results: ClubSeasonResult[]): SeasonStats =>
     },
     { wins: 0, draws: 0, losses: 0, goals_scored: 0, goals_conceded: 0 }
   );
+};
 
 const mapCalendarToSessions = (feed: ClubCalendarFeedItem[]): SessionEvent[] => {
   const eventSessions: SessionEvent[] = feed
@@ -164,6 +224,23 @@ const buildActivityFeed = (
     .slice(0, 8);
 };
 
+const UNDERSTAT_PREFERRED_KEYS = new Set(['xg', 'npxg', 'xa']);
+
+const mergePlayerSummaries = (
+  understat: PlayerSeasonSummary | null,
+  sofascore: PlayerSeasonSummary | null,
+): PlayerSeasonSummary | null => {
+  if (!understat && !sofascore) return null;
+  const metricsMap = new Map<string, PlayerDataMetric>();
+  (sofascore?.metrics ?? []).forEach((m) => metricsMap.set(m.key, m));
+  (understat?.metrics ?? []).forEach((m) => {
+    if (UNDERSTAT_PREFERRED_KEYS.has(m.key) || !metricsMap.has(m.key)) {
+      metricsMap.set(m.key, m);
+    }
+  });
+  return { ...(understat ?? sofascore!), metrics: Array.from(metricsMap.values()) };
+};
+
 const DashboardTab = ({ ctx }: Props) => {
   const { clubId } = ctx;
 
@@ -172,6 +249,7 @@ const DashboardTab = ({ ctx }: Props) => {
   const [calendarFeed, setCalendarFeed] = useState<ClubCalendarFeedItem[]>([]);
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const [selectedStats, setSelectedStats] = useState<ClubPlayerManualStats | null>(null);
+  const [selectedExternalSummary, setSelectedExternalSummary] = useState<PlayerSeasonSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
@@ -180,13 +258,65 @@ const DashboardTab = ({ ctx }: Props) => {
     const load = async () => {
       setError(false);
       try {
-        const [playersData, resultsData, feedData] = await Promise.all([
-          clubsApi.listPlayers(clubId),
-          clubsApi.seasonResults.list(clubId),
-          clubsApi.listCalendarFeed(clubId, { limit: 50 }),
-        ]);
+        // Load all players (already unwrapped as array)
+        const playersData = await clubsApi.listPlayers(clubId);
         setPlayers(playersData);
-        setResults(resultsData);
+
+        // Try to get latest Understat data first, fallback to manual entries.
+        let seasonData: ClubSeasonResult[] = [];
+        try {
+          const envelope = await clubsApi.getUnderstatSeasonSummary(clubId);
+          const understatData =
+            extractUnderstatRecord(envelope.data) ||
+            extractUnderstatRecord(ctx.club.latest_understat_summary);
+
+          if (understatData) {
+            // Convert Understat enrichment to ClubSeasonResult format
+            seasonData = [{
+              id: 0,
+              club_id: clubId,
+              opponent_name: '',
+              outcome: '',
+              goals_for: understatData.goals_for,
+              goals_against: understatData.goals_against,
+              wins: understatData.wins,
+              draws: understatData.draws,
+              losses: understatData.losses,
+              match_date: new Date().toISOString(),
+              created_by: undefined,
+              created_at: new Date().toISOString(),
+            } as any];
+          }
+          if (seasonData.length === 0) {
+            seasonData = await clubsApi.seasonResults.list(clubId);
+          }
+        } catch {
+          // If the summary endpoint fails (permissions/shape/network), still
+          // use club-level understat fallback before dropping to manual entries.
+          const understatFallback = extractUnderstatRecord(ctx.club.latest_understat_summary);
+          if (understatFallback) {
+            seasonData = [{
+              id: 0,
+              club_id: clubId,
+              opponent_name: '',
+              outcome: '',
+              goals_for: understatFallback.goals_for,
+              goals_against: understatFallback.goals_against,
+              wins: understatFallback.wins,
+              draws: understatFallback.draws,
+              losses: understatFallback.losses,
+              match_date: new Date().toISOString(),
+              created_by: undefined,
+              created_at: new Date().toISOString(),
+            } as any];
+          } else {
+            seasonData = await clubsApi.seasonResults.list(clubId);
+          }
+        }
+        setResults(seasonData);
+
+        // Load calendar feed
+        const feedData = await clubsApi.listCalendarFeed(clubId, { limit: 50 });
         setCalendarFeed(feedData);
       } catch {
         setError(true);
@@ -195,23 +325,43 @@ const DashboardTab = ({ ctx }: Props) => {
       }
     };
     void load();
-  }, [clubId, retryKey]);
+  }, [clubId, retryKey, ctx.club.latest_understat_summary]);
 
   useEffect(() => {
     if (selectedPlayerId === null) {
       setSelectedStats(null);
+      setSelectedExternalSummary(null);
       return;
     }
+    let active = true;
     const load = async () => {
       try {
         const stats = await clubsApi.manualStats.list(clubId, selectedPlayerId);
-        setSelectedStats(stats[0] ?? null);
+        if (active) setSelectedStats(stats[0] ?? null);
       } catch {
-        setSelectedStats(null);
+        if (active) setSelectedStats(null);
       }
+
+      const p = players.find((pl) => pl.id === selectedPlayerId) ?? null;
+      const rawId = p?.canonical_player_id ?? p?.player_id ?? null;
+      const canonicalId = typeof rawId === 'number' && rawId > 0 ? rawId : null;
+      if (!canonicalId) {
+        if (active) setSelectedExternalSummary(null);
+        return;
+      }
+      const [uResult, ssResult] = await Promise.allSettled([
+        playerdataApi.getPlayerSeasonSummary(canonicalId, { season: '2025', provider: 'understat' }),
+        playerdataApi.getPlayerSeasonSummary(canonicalId, { season: '2025', provider: 'sofascore' }),
+      ]);
+      const merged = mergePlayerSummaries(
+        uResult.status === 'fulfilled' ? uResult.value : null,
+        ssResult.status === 'fulfilled' ? ssResult.value : null,
+      );
+      if (active) setSelectedExternalSummary(merged);
     };
     void load();
-  }, [selectedPlayerId, clubId]);
+    return () => { active = false; };
+  }, [selectedPlayerId, clubId, players]);
 
   const cardPlayers = players.map(mapPlayerToCardData);
   const squadStats = deriveSquadStats(players);
@@ -263,7 +413,7 @@ const DashboardTab = ({ ctx }: Props) => {
           <SessionWidget sessions={sessions} />
         </div>
         <div className={styles.gridAnalytics}>
-          <PlayerXgWidget player={selectedPlayer} manualStats={selectedStats} />
+          <PlayerXgWidget player={selectedPlayer} manualStats={selectedStats} externalSummary={selectedExternalSummary} />
         </div>
         <div className={styles.gridActivity}>
           <ActivityFeedWidget events={activity} />

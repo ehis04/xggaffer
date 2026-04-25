@@ -1,4 +1,5 @@
 import apiClient from './client';
+import type { ApiEnvelope } from '../../common/types/response';
 import type {
   Club,
   ClubInvitation,
@@ -160,7 +161,9 @@ export const clubsApi = {
     }
   ) =>
     apiClient.get<
-      ClubUnderstatSeasonSummaryResponse | ClubUnderstatSeasonSummaryEmptyResponse
+      ApiEnvelope<
+        ClubUnderstatSeasonSummaryResponse | ClubUnderstatSeasonSummaryEmptyResponse
+      >
     >(`/clubs/${clubId}/understat_season_summary/`, params),
 
   create: (payload: CreateClubPayload) =>

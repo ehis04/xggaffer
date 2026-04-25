@@ -92,11 +92,13 @@ const PLAYER_SUMMARY_BASE = `${PLAYERDATA_BASE}/players`;
 const CLUB_SUMMARY_BASE = `${PLAYERDATA_BASE}/clubs`;
 
 export const playerdataApi = {
-  getPlayerSeasonSummary: (playerId: number, filters?: PlayerDataFilters) =>
-    apiClient.get<PlayerSeasonSummary>(
+  getPlayerSeasonSummary: async (playerId: number, filters?: PlayerDataFilters): Promise<PlayerSeasonSummary | null> => {
+    const envelope = await apiClient.get<ApiEnvelope<PlayerSeasonSummary>>(
       `${PLAYER_SUMMARY_BASE}/${playerId}/season-summary/`,
       buildPlayerDataFilterParams(filters)
-    ),
+    );
+    return envelope.data;
+  },
 
   getPlayerOverview: (playerId: number, filters?: PlayerDataFilters) =>
     apiClient.get<ApiEnvelope<PlayerOverview>>(

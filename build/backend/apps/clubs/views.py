@@ -70,6 +70,7 @@ from .serializers import (
     ClubMembershipSerializer,
     ClubPlayerSerializer,
     ClubPlayerListSerializer,
+    ClubPlayerWithAvailabilitySerializer,
     ClubPlayerCreateSerializer,
     ClubPlayerUpdateSerializer,
     ClubPlayerLinkSerializer,
@@ -785,30 +786,30 @@ class ClubViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_200_OK,
             )
 
-            return Response(
-                build_clubs_envelope({
-                    'club_id': club.id,
-                    'provider': enrichment.provider,
-                    'season_label': enrichment.season_label,
-                    'competition_code': enrichment.competition_code,
-                    'competition_name': enrichment.competition_name,
-                    'matches_played': enrichment.matches_played,
-                    'wins': enrichment.wins,
-                    'draws': enrichment.draws,
-                    'losses': enrichment.losses,
-                    'goals_for': enrichment.goals_for,
-                    'goals_against': enrichment.goals_against,
-                    'xg': enrichment.xg,
-                    'xga': enrichment.xga,
-                    'npxg': enrichment.npxg,
-                    'ppda': enrichment.ppda,
-                    'last_synced_at': (
-                        enrichment.last_synced_at.isoformat()
-                        if enrichment.last_synced_at else None
-                    ),
-                }),
-                status=status.HTTP_200_OK,
-            )
+        return Response(
+            build_clubs_envelope({
+                'club_id': club.id,
+                'provider': enrichment.provider,
+                'season_label': enrichment.season_label,
+                'competition_code': enrichment.competition_code,
+                'competition_name': enrichment.competition_name,
+                'matches_played': enrichment.matches_played,
+                'wins': enrichment.wins,
+                'draws': enrichment.draws,
+                'losses': enrichment.losses,
+                'goals_for': enrichment.goals_for,
+                'goals_against': enrichment.goals_against,
+                'xg': enrichment.xg,
+                'xga': enrichment.xga,
+                'npxg': enrichment.npxg,
+                'ppda': enrichment.ppda,
+                'last_synced_at': (
+                    enrichment.last_synced_at.isoformat()
+                    if enrichment.last_synced_at else None
+                ),
+            }),
+            status=status.HTTP_200_OK,
+        )
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticatedOrBypass])
     def sync_squad(self, request, pk=None):
@@ -1337,7 +1338,7 @@ class ClubPlayerViewSet(viewsets.ModelViewSet):
         if self.action == 'relink':
             return ClubPlayerRelinkSerializer
         if self.action == 'list':
-            return ClubPlayerListSerializer
+            return ClubPlayerWithAvailabilitySerializer
         return ClubPlayerSerializer
 
     def get_permissions(self):
@@ -1351,7 +1352,7 @@ class ClubPlayerViewSet(viewsets.ModelViewSet):
             return (
                 ClubPlayer.objects.filter(club_id=club_pk, is_active=True)
                 .select_related('club', 'user', 'player')
-                .prefetch_related('player__external_identities')
+                .prefetch_related('player__external_identities', 'injuries')
             )
 
         if not self.request.user.is_authenticated:
@@ -1365,7 +1366,7 @@ class ClubPlayerViewSet(viewsets.ModelViewSet):
         return (
             ClubPlayer.objects.filter(club_id__in=user_club_ids, is_active=True)
             .select_related('club', 'user', 'player')
-            .prefetch_related('player__external_identities')
+            .prefetch_related('player__external_identities', 'injuries')
         )
 
     def perform_create(self, serializer):

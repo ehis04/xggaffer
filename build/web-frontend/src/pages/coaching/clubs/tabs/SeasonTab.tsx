@@ -92,9 +92,10 @@ const ProSeasonView = ({ clubId, clubName }: { clubId: number; clubName: string 
         setLoading(true);
         setError(null);
 
-        const understatRaw = await clubsApi.getUnderstatSeasonSummary(clubId);
-        const understat = 'wins' in understatRaw
-          ? understatRaw as ClubUnderstatSeasonSummaryResponse
+        const understatEnvelope = await clubsApi.getUnderstatSeasonSummary(clubId);
+        const understatRaw = understatEnvelope.data;
+        const understat = understatRaw && 'wins' in understatRaw
+          ? (understatRaw as ClubUnderstatSeasonSummaryResponse)
           : null;
 
         const competitionCode = understat?.competition_code ?? null;

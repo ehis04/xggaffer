@@ -334,7 +334,10 @@ class BasePlayerDataAPIView(APIView):
 class PlayerSeasonSummaryView(BasePlayerDataAPIView):
     def get(self, request, player_id: int):
         filters = _get_common_filters(request)
-        payload = self.get_player_summary_payload(player_id=player_id, filters=filters)
+        try:
+            payload = self.get_player_summary_payload(player_id=player_id, filters=filters)
+        except NotFound:
+            return Response(build_playerdata_envelope(None))
         serializer = PlayerSeasonEnrichmentSummarySerializer(payload)
         return Response(build_playerdata_envelope(serializer.data))
 

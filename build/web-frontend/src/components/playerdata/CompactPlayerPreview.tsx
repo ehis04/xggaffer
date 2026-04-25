@@ -114,27 +114,15 @@ const buildContextLine = (summary?: PlayerSeasonSummary | null): string | null =
   return bits.length > 0 ? bits.join(' · ') : null;
 };
 
-const findMetricValue = (summary: PlayerSeasonSummary, key: string): string | null => {
-  const metric = summary.metrics?.find((m) => m.key === key);
-  if (!metric) return null;
-  if (metric.formatted_value?.trim()) return metric.formatted_value.trim();
-  if (metric.value != null && Number.isFinite(metric.value)) return String(metric.value);
-  return null;
-};
 
 const buildMetricItems = (summary?: PlayerSeasonSummary | null) => {
-  if (!summary) {
-    return [];
-  }
-
-  return [
-    { label: 'Apps', value: findMetricValue(summary, 'matches_played') },
-    { label: 'Minutes', value: findMetricValue(summary, 'minutes_played') },
-    { label: 'Goals', value: findMetricValue(summary, 'goals') },
-    { label: 'Assists', value: findMetricValue(summary, 'assists') },
-    { label: 'xG', value: findMetricValue(summary, 'xg') },
-    { label: 'xA', value: findMetricValue(summary, 'xa') },
-  ].filter((item) => item.value !== null);
+  if (!summary?.metrics) return [];
+  return summary.metrics
+    .filter((m) => m.is_available !== false && m.value != null)
+    .map((m) => ({
+      label: m.label,
+      value: m.formatted_value?.trim() || String(m.value),
+    }));
 };
 
 const CompactPlayerPreview: React.FC<CompactPlayerPreviewProps> = ({

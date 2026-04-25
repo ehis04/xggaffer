@@ -53,9 +53,15 @@ export interface ClubUnderstatSummary {
   competition_code: string;
   competition_name: string;
   matches_played: number;
+  wins?: number;
+  draws?: number;
+  losses?: number;
+  goals_for?: number;
+  goals_against?: number;
   xg: string | null;
   xga: string | null;
   npxg: string | null;
+  ppda?: string | null;
   last_synced_at: string | null;
 }
 

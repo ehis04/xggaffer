@@ -107,9 +107,15 @@ class ClubUnderstatSummaryMixin(serializers.Serializer):
             "competition_code": enrichment.competition_code,
             "competition_name": enrichment.competition_name,
             "matches_played": enrichment.matches_played,
+            "wins": enrichment.wins,
+            "draws": enrichment.draws,
+            "losses": enrichment.losses,
+            "goals_for": enrichment.goals_for,
+            "goals_against": enrichment.goals_against,
             "xg": enrichment.xg,
             "xga": enrichment.xga,
             "npxg": enrichment.npxg,
+            "ppda": enrichment.ppda,
             "last_synced_at": (
                 enrichment.last_synced_at.isoformat()
                 if enrichment.last_synced_at else None
@@ -2020,6 +2026,7 @@ class ClubPlayerWithAvailabilitySerializer(
             'has_provider_identity',
             'provider_sources',
             'last_synced_at',
+            'created_at',
         ]
         read_only_fields = ['id', 'club', 'player', 'user']
 

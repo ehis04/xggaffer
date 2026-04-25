@@ -14,7 +14,7 @@ import type {
   RelinkClubPlayerPayload,
 } from '../../../../types/clubPlayers';
 import type { ClubPlayerInjury, ClubPlayerManualStats } from '../../../../types/club';
-import type { PlayerDataFilters, PlayerSeasonSummary } from '../../../../types/playerdata';
+import type { PlayerDataFilters, PlayerDataMetric, PlayerSeasonSummary } from '../../../../types/playerdata';
 import { statusConfig } from '../../../../components/Dashboard/functions/statusConfig';
 import styles from './css/PlayersTab.module.css';
 import { SectionSkeleton } from '../../../../common/components/SectionSkeleton';
@@ -108,6 +108,23 @@ const resolveCanonicalId = (p?: ClubPlayer | null): number | null => {
   return typeof v === 'number' && v > 0 ? v : null;
 };
 
+const UNDERSTAT_PREFERRED_KEYS = new Set(['xg', 'npxg', 'xa']);
+
+const mergePlayerSummaries = (
+  understat: PlayerSeasonSummary | null,
+  sofascore: PlayerSeasonSummary | null,
+): PlayerSeasonSummary | null => {
+  if (!understat && !sofascore) return null;
+  const metricsMap = new Map<string, PlayerDataMetric>();
+  (sofascore?.metrics ?? []).forEach((m) => metricsMap.set(m.key, m));
+  (understat?.metrics ?? []).forEach((m) => {
+    if (UNDERSTAT_PREFERRED_KEYS.has(m.key) || !metricsMap.has(m.key)) {
+      metricsMap.set(m.key, m);
+    }
+  });
+  return { ...(understat ?? sofascore!), metrics: Array.from(metricsMap.values()) };
+};
+
 const PlayersTab = ({ ctx }: Props) => {
   const { clubId, canManage } = ctx;
   const navigate = useNavigate();
@@ -183,8 +200,18 @@ const PlayersTab = ({ ctx }: Props) => {
     const load = async () => {
       setSummaryLoading(true); setSummaryErr(null);
       try {
-        const s = await playerdataApi.getPlayerSeasonSummary(canonicalId);
-        if (active) setSummary(s);
+        const [uResult, ssResult] = await Promise.allSettled([
+          playerdataApi.getPlayerSeasonSummary(canonicalId, { season: '2025', provider: 'understat' }),
+          playerdataApi.getPlayerSeasonSummary(canonicalId, { season: '2025', provider: 'sofascore' }),
+        ]);
+        const merged = mergePlayerSummaries(
+          uResult.status === 'fulfilled' ? uResult.value : null,
+          ssResult.status === 'fulfilled' ? ssResult.value : null,
+        );
+        if (active) {
+          setSummary(merged);
+          if (!merged) setSummaryErr('No 2025 data available for this player.');
+        }
       } catch (err) { if (active) { setSummary(null); setSummaryErr(normalizeError(err)); } }
       finally { if (active) setSummaryLoading(false); }
     };

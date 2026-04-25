@@ -1,10 +1,12 @@
 import type { ClubPlayer } from '../../types/clubPlayers';
 import type { ClubPlayerManualStats } from '../../types/club';
+import type { PlayerSeasonSummary } from '../../types/playerdata';
 import styles from './css/PlayerXgWidget.module.css';
 
 interface Props {
   player: ClubPlayer | null;
   manualStats: ClubPlayerManualStats | null;
+  externalSummary?: PlayerSeasonSummary | null;
 }
 
 type PositionGroup = 'gk' | 'defender' | 'midfielder' | 'attacker';
@@ -176,7 +178,37 @@ const formatValue = (
   return `${num.toFixed(def.decimals)}${def.suffix ?? ''}`;
 };
 
-export const PlayerXgWidget = ({ player, manualStats }: Props) => {
+const getExternalValue = (
+  metrics: PlayerSeasonSummary['metrics'],
+  key: string
+): number | null => {
+  if (!metrics) return null;
+  const m = metrics.find((metric) => metric.key === key);
+  return m?.value ?? null;
+};
+
+const overallGradeFromExternal = (
+  metrics: PlayerSeasonSummary['metrics'],
+  group: PositionGroup
+): GradeResult => {
+  const defs = STATS_BY_GROUP[group];
+  const graded = defs
+    .map((d) => {
+      const v = getExternalValue(metrics, d.key);
+      if (v === null) return null;
+      return gradeStatValue(d.key, v, group);
+    })
+    .filter((g): g is GradeResult => g !== null);
+
+  if (graded.length === 0) return { grade: 'C', ...GRADE_COLOURS['C'] };
+  const avgIdx = Math.round(
+    graded.reduce((sum, g) => sum + GRADE_SCALE.indexOf(g.grade), 0) / graded.length
+  );
+  const grade = GRADE_SCALE[Math.min(avgIdx, GRADE_SCALE.length - 1)];
+  return { grade, ...GRADE_COLOURS[grade] };
+};
+
+export const PlayerXgWidget = ({ player, manualStats, externalSummary }: Props) => {
   if (!player) {
     return (
       <div className={styles.empty}>
@@ -190,6 +222,35 @@ export const PlayerXgWidget = ({ player, manualStats }: Props) => {
   const statDefs = STATS_BY_GROUP[group];
 
   if (!manualStats) {
+    const extMetrics = externalSummary?.metrics;
+    const hasExternal = extMetrics && extMetrics.length > 0;
+
+    if (!hasExternal) {
+      return (
+        <div className={styles.widget}>
+          <div className={styles.header}>
+            <div className={styles.playerInfo}>
+              <span className={styles.playerName}>
+                {player.display_name || `${player.first_name} ${player.last_name}`.trim()}
+              </span>
+              <span className={styles.playerPos}>{player.primary_position || '—'}</span>
+            </div>
+            <div className={styles.overallBadge} style={{ color: '#888', background: 'rgba(255,255,255,0.05)' }}>
+              <span className={styles.overallGrade}>—</span>
+              <span className={styles.overallLbl}>Not updated</span>
+            </div>
+          </div>
+          <div className={styles.divider} />
+          <p className={styles.noStats}>
+            No stats recorded yet. Add them in the Players tab.
+          </p>
+        </div>
+      );
+    }
+
+    const overall = overallGradeFromExternal(extMetrics, group);
+    const ctx = externalSummary?.context;
+
     return (
       <div className={styles.widget}>
         <div className={styles.header}>
@@ -199,14 +260,59 @@ export const PlayerXgWidget = ({ player, manualStats }: Props) => {
             </span>
             <span className={styles.playerPos}>{player.primary_position || '—'}</span>
           </div>
-          <div className={styles.overallBadge} style={{ color: '#888', background: 'rgba(255,255,255,0.05)' }}>
-            <span className={styles.overallGrade}>—</span>
-            <span className={styles.overallLbl}>Not updated</span>
+          <div
+            className={styles.overallBadge}
+            style={{ color: overall.colour, background: overall.bg }}
+            title="Overall grade"
+          >
+            <span className={styles.overallGrade}>{overall.grade}</span>
+            <span className={styles.overallLbl}>Overall</span>
           </div>
         </div>
+
         <div className={styles.divider} />
-        <p className={styles.noStats}>
-          No stats recorded yet. Add them in the Players tab.
+
+        <div className={styles.statList}>
+          {statDefs.map((def) => {
+            const value = getExternalValue(extMetrics, def.key);
+            const hasValue = value !== null;
+            const gradeResult = hasValue ? gradeStatValue(def.key, value, group) : null;
+            const displayValue = hasValue ? `${value.toFixed(def.decimals)}${def.suffix ?? ''}` : '—';
+            const avg = LEAGUE_AVERAGES[group][def.key];
+
+            return (
+              <div key={def.key} className={styles.statRow}>
+                <span className={styles.statLabel}>{def.label}</span>
+                <div className={styles.statBar}>
+                  <div
+                    className={styles.statBarFill}
+                    style={{
+                      width: hasValue && avg
+                        ? `${Math.min((value / (avg * 2)) * 100, 100)}%`
+                        : '0%',
+                      background: gradeResult?.colour ?? 'rgba(255,255,255,0.1)',
+                    }}
+                  />
+                </div>
+                <span className={styles.statValue}>{displayValue}</span>
+                {gradeResult ? (
+                  <span
+                    className={styles.statGrade}
+                    style={{ color: gradeResult.colour, background: gradeResult.bg }}
+                  >
+                    {gradeResult.grade}
+                  </span>
+                ) : (
+                  <span className={styles.statGradeEmpty}>—</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className={styles.divider} />
+        <p className={styles.season}>
+          {ctx?.season ?? '—'} · understat + sofascore
         </p>
       </div>
     );
