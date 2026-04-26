@@ -1,3 +1,7 @@
+import type { OddsComparisonEngineData } from '../../../types/prediction';
+import type { PinnedOutput } from '../PinnedOutputsPanel';
+import ProbabilityBar from '../../../common/ProbabilityBar';
+import OddsComparisonCard from './OddsComparisonCard';
 import styles from './css/StructuredResponseBlock.module.css';
 
 interface StructuredResponseBlockProps {
@@ -6,6 +10,7 @@ interface StructuredResponseBlockProps {
   partial: boolean;
   error: string | null;
   onExampleClick?: (query: string) => void;
+  onPin?: (output: PinnedOutput) => void;
 }
 
 interface TopFactor {
@@ -32,44 +37,79 @@ interface Capability {
   example: string;
 }
 
-function ProbabilityBar({ engineData }: { engineData: Record<string, unknown> }) {
-  const probabilities = engineData.probabilities as
-    | { home: number; draw: number; away: number }
-    | undefined;
-  if (!probabilities) return null;
+interface ProbabilitySet {
+  home: number;
+  draw: number;
+  away: number;
+}
 
-  const home = Math.round(probabilities.home * 100);
-  const draw = Math.round(probabilities.draw * 100);
-  const away = Math.round(probabilities.away * 100);
-
+function isOddsComparisonEngineData(data: unknown): data is OddsComparisonEngineData {
+  if (typeof data !== 'object' || data === null) return false;
+  const candidate = data as Record<string, unknown>;
   return (
-    <div className={styles.probBar}>
-      <div className={styles.probSegmentHome} style={{ width: `${home}%` }}>
-        Home {home}%
-      </div>
-      <div className={styles.probSegmentDraw} style={{ width: `${draw}%` }}>
-        Draw {draw}%
-      </div>
-      <div className={styles.probSegmentAway} style={{ width: `${away}%` }}>
-        Away {away}%
-      </div>
-    </div>
+    typeof candidate.home_team === 'string' &&
+    typeof candidate.away_team === 'string' &&
+    typeof candidate.league === 'string' &&
+    typeof candidate.season === 'string' &&
+    typeof candidate.market === 'object' &&
+    candidate.market !== null &&
+    typeof candidate.comparison === 'object' &&
+    candidate.comparison !== null &&
+    Array.isArray(candidate.bookmakers) &&
+    typeof candidate.support === 'object' &&
+    candidate.support !== null
   );
 }
 
+function getProbabilities(data: Record<string, unknown>): ProbabilitySet | null {
+  const probabilities = data.probabilities as Partial<ProbabilitySet> | undefined;
+  if (
+    typeof probabilities?.home !== 'number' ||
+    typeof probabilities.draw !== 'number' ||
+    typeof probabilities.away !== 'number'
+  ) return null;
+  return { home: probabilities.home, draw: probabilities.draw, away: probabilities.away };
+}
+
 function getRiskClass(label?: string, score?: number): string {
-  const effective = label?.toLowerCase() ?? (score !== undefined ? (score > 0.6 ? 'high' : score > 0.3 ? 'medium' : 'low') : 'low');
+  const effective =
+    label?.toLowerCase() ??
+    (score !== undefined ? (score > 0.6 ? 'high' : score > 0.3 ? 'medium' : 'low') : 'low');
   if (effective === 'high') return styles.riskHigh;
   if (effective === 'medium') return styles.riskMedium;
   return styles.riskLow;
+}
+
+function PinButton({ onPin, queryType, engineData }: {
+  onPin: (output: PinnedOutput) => void;
+  queryType: string;
+  engineData: Record<string, unknown>;
+}) {
+  function handlePin() {
+    onPin({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      label: `${queryType} result`,
+      query_type: queryType,
+      data: engineData,
+      pinned_at: new Date().toISOString(),
+    });
+  }
+  return (
+    <button className={styles.pinBtn} onClick={handlePin} aria-label="Pin this response" title="Pin">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+      </svg>
+    </button>
+  );
 }
 
 export default function StructuredResponseBlock({
   queryType,
   engineData,
   partial,
-  error: _error,
+  error,
   onExampleClick,
+  onPin,
 }: StructuredResponseBlockProps) {
   if (partial && Object.keys(engineData).length === 0) {
     return (
@@ -83,10 +123,11 @@ export default function StructuredResponseBlock({
     case 'MATCH_PREDICTION': {
       const topFactors = engineData.top_factors as TopFactor[] | undefined;
       const metrics = engineData.metrics as { accuracy: number } | undefined;
-
+      const probabilities = getProbabilities(engineData);
       return (
         <div className={styles.panel}>
-          <ProbabilityBar engineData={engineData} />
+          {onPin && <PinButton onPin={onPin} queryType={queryType} engineData={engineData} />}
+          {probabilities && <ProbabilityBar probabilities={probabilities} />}
           {topFactors && topFactors.length > 0 && (
             <div className={styles.factorsList}>
               <p className={styles.sectionLabel}>Top factors</p>
@@ -109,24 +150,33 @@ export default function StructuredResponseBlock({
       );
     }
 
+    case 'ODDS_COMPARISON':
+      if (!isOddsComparisonEngineData(engineData)) {
+        return <div className={styles.partialNote}>Detailed analytics data is unavailable for this query.</div>;
+      }
+      return (
+        <div className={styles.panel}>
+          {onPin && <PinButton onPin={onPin} queryType={queryType} engineData={engineData} />}
+          <OddsComparisonCard engineData={engineData} partial={partial} error={error} />
+        </div>
+      );
+
     case 'GLOSSARY': {
       const definition = engineData.definition as string | undefined;
       const term = engineData.term as string | undefined;
       const allTerms = engineData.all_terms as string[] | undefined;
-
       if (allTerms) {
         return (
           <div className={styles.panel}>
+            {onPin && <PinButton onPin={onPin} queryType={queryType} engineData={engineData} />}
             <p className={styles.sectionLabel}>Available terms</p>
-            <ul className={styles.termList}>
-              {allTerms.map((t) => <li key={t}>{t}</li>)}
-            </ul>
+            <ul className={styles.termList}>{allTerms.map(t => <li key={t}>{t}</li>)}</ul>
           </div>
         );
       }
-
       return (
         <div className={styles.panel}>
+          {onPin && <PinButton onPin={onPin} queryType={queryType} engineData={engineData} />}
           {term && <h3 className={styles.glossaryTerm}>{term.toUpperCase()}</h3>}
           {definition && <p className={styles.glossaryDef}>{definition}</p>}
         </div>
@@ -138,9 +188,9 @@ export default function StructuredResponseBlock({
       const eloRating = engineData.elo_rating as number | undefined;
       const awayTeam = engineData.away_team as string | undefined;
       const awayElo = engineData.away_elo_rating as number | undefined;
-
       return (
         <div className={styles.panel}>
+          {onPin && <PinButton onPin={onPin} queryType={queryType} engineData={engineData} />}
           <div className={styles.eloRow}>
             {team && eloRating !== undefined && (
               <div className={styles.eloCard}>
@@ -162,24 +212,18 @@ export default function StructuredResponseBlock({
     case 'SEASON_SIMULATION': {
       const titleProbs = engineData.title_probabilities as Record<string, number> | undefined;
       const relegationProbs = engineData.relegation_probabilities as Record<string, number> | undefined;
-
       if (!titleProbs) return null;
-
-      const sorted = Object.entries(titleProbs)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 5);
-
+      const sorted = Object.entries(titleProbs).sort(([, a], [, b]) => b - a).slice(0, 5);
       return (
         <div className={styles.panel}>
+          {onPin && <PinButton onPin={onPin} queryType={queryType} engineData={engineData} />}
           <p className={styles.sectionLabel}>Title probabilities</p>
           {sorted.map(([team, prob]) => {
             const pct = Math.round(prob * 100);
             return (
               <div key={team} className={styles.simRow}>
                 <span className={styles.simTeam}>{team}</span>
-                <div className={styles.simBarWrap}>
-                  <div className={styles.simBar} style={{ width: `${pct}%` }} />
-                </div>
+                <div className={styles.simBarWrap}><div className={styles.simBar} style={{ width: `${pct}%` }} /></div>
                 <span className={styles.simPct}>{pct}%</span>
               </div>
             );
@@ -187,15 +231,12 @@ export default function StructuredResponseBlock({
           {relegationProbs && (
             <>
               <p className={`${styles.sectionLabel} ${styles.relegationLabel}`}>Relegation risk</p>
-              {Object.entries(relegationProbs)
-                .sort(([, a], [, b]) => b - a)
-                .slice(0, 3)
-                .map(([team, prob]) => (
-                  <div key={team} className={styles.simRow}>
-                    <span className={styles.simTeam}>{team}</span>
-                    <span className={styles.simPct}>{Math.round(prob * 100)}%</span>
-                  </div>
-                ))}
+              {Object.entries(relegationProbs).sort(([, a], [, b]) => b - a).slice(0, 3).map(([team, prob]) => (
+                <div key={team} className={styles.simRow}>
+                  <span className={styles.simTeam}>{team}</span>
+                  <span className={styles.simPct}>{Math.round(prob * 100)}%</span>
+                </div>
+              ))}
             </>
           )}
         </div>
@@ -204,13 +245,12 @@ export default function StructuredResponseBlock({
 
     case 'LINEUP_PREDICTION': {
       const predictedXi = engineData.predicted_xi as PredictedPlayer[] | undefined;
-
       if (!predictedXi || predictedXi.length === 0) {
         return <div className={styles.panel}><p className={styles.muted}>Lineup data unavailable.</p></div>;
       }
-
       return (
         <div className={styles.panel}>
+          {onPin && <PinButton onPin={onPin} queryType={queryType} engineData={engineData} />}
           <p className={styles.sectionLabel}>Predicted XI</p>
           {predictedXi.map((p, i) => (
             <div key={i} className={styles.lineupRow}>
@@ -231,9 +271,9 @@ export default function StructuredResponseBlock({
       const querySubType = engineData.query_type as string | undefined;
       const homeTeam = engineData.home_team as string | undefined;
       const awayTeam = engineData.away_team as string | undefined;
-
       return (
         <div className={styles.panel}>
+          {onPin && <PinButton onPin={onPin} queryType={queryType} engineData={engineData} />}
           {querySubType === 'comparison' && homeTeam && awayTeam ? (
             <div className={styles.tacticalCompare}>
               <span className={styles.tacticalTeam}>{homeTeam}</span>
@@ -241,15 +281,11 @@ export default function StructuredResponseBlock({
               <span className={styles.tacticalTeam}>{awayTeam}</span>
             </div>
           ) : null}
-          {clusterLabel && (
-            <span className={styles.clusterBadge}>{clusterLabel}</span>
-          )}
+          {clusterLabel && <span className={styles.clusterBadge}>{clusterLabel}</span>}
           {dominantZones && dominantZones.length > 0 && (
             <div className={styles.zonesWrap}>
               <p className={styles.sectionLabel}>Dominant zones</p>
-              <ol className={styles.zoneList}>
-                {dominantZones.map((z) => <li key={z}>Zone {z}</li>)}
-              </ol>
+              <ol className={styles.zoneList}>{dominantZones.map(z => <li key={z}>Zone {z}</li>)}</ol>
             </div>
           )}
         </div>
@@ -258,13 +294,12 @@ export default function StructuredResponseBlock({
 
     case 'AVAILABILITY_QUERY': {
       const players = engineData.players as Player[] | undefined;
-
       if (!players || players.length === 0) {
         return <div className={styles.panel}><p className={styles.muted}>No player data available.</p></div>;
       }
-
       return (
         <div className={styles.panel}>
+          {onPin && <PinButton onPin={onPin} queryType={queryType} engineData={engineData} />}
           <p className={styles.sectionLabel}>Availability risk</p>
           {players.map((p, i) => (
             <div key={i} className={styles.playerRow}>
@@ -283,21 +318,22 @@ export default function StructuredResponseBlock({
       const elo = engineData.elo as Record<string, unknown> | undefined;
       const availability = engineData.availability as Record<string, unknown> | undefined;
       const lineup = engineData.lineup as Record<string, unknown> | undefined;
-
+      const matchProbabilities = match ? getProbabilities(match) : null;
       return (
         <div className={styles.panel}>
+          {onPin && <PinButton onPin={onPin} queryType={queryType} engineData={engineData} />}
           <div className={styles.compositeGrid}>
             <div className={styles.compositeSection}>
               <p className={styles.sectionLabel}>Match prediction</p>
-              {match && Object.keys(match).length > 0
-                ? <ProbabilityBar engineData={match} />
-                : <p className={styles.muted}>Unavailable</p>}
+              {matchProbabilities ? <ProbabilityBar probabilities={matchProbabilities} /> : <p className={styles.muted}>Unavailable</p>}
             </div>
             <div className={styles.compositeSection}>
               <p className={styles.sectionLabel}>Elo ratings</p>
-              {elo && Object.keys(elo).length > 0
-                ? <StructuredResponseBlock queryType="ELO_QUERY" engineData={elo} partial={false} error={null} />
-                : <p className={styles.muted}>Unavailable</p>}
+              {elo && Object.keys(elo).length > 0 ? (
+                <StructuredResponseBlock queryType="ELO_QUERY" engineData={elo} partial={false} error={null} />
+              ) : (
+                <p className={styles.muted}>Unavailable</p>
+              )}
             </div>
           </div>
           <div className={styles.compositeSummary}>
@@ -322,11 +358,10 @@ export default function StructuredResponseBlock({
       const homeTeam = engineData.home_team as string | undefined;
       const awayTeam = engineData.away_team as string | undefined;
       const stats = engineData.stats as Record<string, Record<string, number>> | undefined;
-
       if (!stats) return null;
-
       return (
         <div className={styles.panel}>
+          {onPin && <PinButton onPin={onPin} queryType={queryType} engineData={engineData} />}
           <div className={styles.statHeader}>
             <span />
             <span className={styles.statTeamLabel}>{homeTeam}</span>
@@ -340,12 +375,8 @@ export default function StructuredResponseBlock({
             return (
               <div key={statName} className={styles.statRow}>
                 <span className={styles.statName}>{statName}</span>
-                <span className={homeWins ? styles.statValueBold : styles.statValue}>
-                  {homeVal?.toFixed(2) ?? '—'}
-                </span>
-                <span className={awayWins ? styles.statValueBold : styles.statValue}>
-                  {awayVal?.toFixed(2) ?? '—'}
-                </span>
+                <span className={homeWins ? styles.statValueBold : styles.statValue}>{homeVal?.toFixed(2) ?? '—'}</span>
+                <span className={awayWins ? styles.statValueBold : styles.statValue}>{awayVal?.toFixed(2) ?? '—'}</span>
               </div>
             );
           })}
@@ -355,17 +386,11 @@ export default function StructuredResponseBlock({
 
     case 'UNKNOWN': {
       const capabilities = engineData.capabilities as Record<string, Capability> | undefined;
-
       if (!capabilities) return null;
-
       return (
         <div className={styles.capabilitiesGrid}>
           {Object.entries(capabilities).map(([key, cap]) => (
-            <button
-              key={key}
-              className={styles.capabilityCard}
-              onClick={() => onExampleClick?.(cap.example)}
-            >
+            <button key={key} className={styles.capabilityCard} onClick={() => onExampleClick?.(cap.example)}>
               <span className={styles.capabilityDesc}>{cap.description}</span>
               <span className={styles.capabilityExample}>{cap.example}</span>
             </button>

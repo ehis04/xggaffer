@@ -24,6 +24,7 @@ export const SessionWidget = ({ sessions }: SessionWidgetProps) => {
           );
           return (
             <SessionWeek
+              key={date.toISOString()}
               i={i}
               isToday={isToday}
               date={date}
@@ -47,7 +48,7 @@ export const SessionWidget = ({ sessions }: SessionWidgetProps) => {
         {upcoming.map((session) => {
           const config = typeConfig[session.type];
 
-          return <SessionRow session={session} config={config} />;
+          return <SessionRow key={session.id} session={session} config={config} />;
         })}
       </div>
     </div>

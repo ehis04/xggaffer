@@ -1,4 +1,3 @@
-import { TrendingBox } from "../../components/BoxSections/TrendingBox";
 import { CreatePost } from "../../components/Forms/CreatePost";
 import { FeedTabs } from "../../components/Navigation/FeedTabs";
 import { SearchBar } from "../../components/Navigation/SearchBar";

@@ -14,16 +14,19 @@ import ChatInterface from '../../../components/predictions/chat/ChatInterface';
 import { Sidebar } from '../../../components/Navigation/SideBar';
 import { CoachingNavBar } from '../../../components/Navigation/CoachingNavBar';
 import { SocialUserButtons } from '../../../components/Social/SocialUserButtons';
-import styles from './TeamsheetDetailPage.module.css';
+import styles from './css/TeamsheetDetailPage.module.css';
 import { useAuth } from '../../../context/useAuth';
-
+import { AppError } from '../../../common/AppError';
+import { FullPageLoader } from '../../../common/components/FullPageLoader';
+import { StatusBlock } from '../../../common/components/StatusBlock';
+import { InlineRetry } from '../../../common/components/InlineRetry.tsx';
+import { ResourceNotFoundPage } from '../../status/ResourceNotFoundpage.tsx';
 
 interface PlayerAvailability {
   player_name: string;
   p_available?: number;
   status?: string;
 }
-
 
 const STATUS_TO_RISK_LABEL: Record<string, 'low' | 'medium' | 'high'> = {
   available:    'low',
@@ -53,21 +56,23 @@ const TeamsheetDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [teamsheet, setTeamsheet]     = useState<Teamsheet | null>(null);
-  const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState<string | null>(null);
+  const [teamsheet, setTeamsheet] = useState<Teamsheet | null>(null);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState<AppError | null>(null);
 
-  const [selectedPlayer, setSelectedPlayer]   = useState<TeamsheetPlayer | null>(null);
-  const [pendingChanges, setPendingChanges]   = useState<Map<number, PlayerPositionUpdate>>(new Map());
-  const [saving, setSaving]                  = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState<TeamsheetPlayer | null>(null);
+  const [pendingChanges, setPendingChanges] = useState<Map<number, PlayerPositionUpdate>>(new Map());
+  const [saving, setSaving]                = useState(false);
 
   const [availabilityData, setAvailabilityData]       = useState<PlayerAvailability[]>([]);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [availabilityError, setAvailabilityError]     = useState(false);
+  const [availabilityRetryKey, setAvailabilityRetryKey] = useState(0);
 
-  const [searchParams]    = useSearchParams();
-  const isTrashView       = searchParams.get('view') === 'trash';
-  const numericClubId     = clubId      ? Number(clubId)      : NaN;
-  const numericTeamsheetId = teamsheetId ? Number(teamsheetId) : NaN;
+  const [searchParams]     = useSearchParams();
+  const isTrashView        = searchParams.get('view') === 'trash';
+  const numericClubId      = clubId       ? Number(clubId)       : NaN;
+  const numericTeamsheetId = teamsheetId  ? Number(teamsheetId)  : NaN;
   const [actionLoading, setActionLoading] = useState(false);
 
   const canManageTrash =
@@ -85,7 +90,7 @@ const TeamsheetDetailPage: React.FC = () => {
       });
       setTeamsheet(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load teamsheet');
+      setError(err instanceof AppError ? err : new AppError(0, 'UNKNOWN', 'Failed to load teamsheet'));
     } finally {
       setLoading(false);
     }
@@ -99,11 +104,12 @@ const TeamsheetDetailPage: React.FC = () => {
     if (starters.length === 0) return;
 
     setAvailabilityLoading(true);
+    setAvailabilityError(false);
     Promise.all(
       starters.map(player =>
         chatQuery(`injury risk ${player.display_name}`)
-          .then(res => {
-            const players = res.structured_data?.engine_data?.players;
+          .then((response) => {
+            const players = response.data?.structured_data?.engine_data?.players;
             if (Array.isArray(players) && players.length > 0) {
               return players[0] as PlayerAvailability;
             }
@@ -115,11 +121,17 @@ const TeamsheetDetailPage: React.FC = () => {
       .then(results => {
         setAvailabilityData(results.filter((r): r is PlayerAvailability => r !== null));
       })
-      .finally(() => setAvailabilityLoading(false));
-  }, [teamsheet]);
+      .catch(() => {
+        setAvailabilityError(true);
+      })
+      .finally(() => {
+        setAvailabilityLoading(false);
+      });
+  }, [teamsheet, availabilityRetryKey]);
 
-  const handleBack = () =>
-    navigate(`/clubs/${clubId}/teamsheets${isTrashView ? '?view=trash' : ''}`);
+  const handleBack = () => {
+    navigate(`/clubs/${clubId}/?tab=schedule${isTrashView ? '&view=trash' : ''}`);
+  };
 
   const handlePlayerClick = (player: TeamsheetPlayer) =>
     setSelectedPlayer(prev => (prev?.id === player.id ? null : player));
@@ -151,7 +163,7 @@ const TeamsheetDetailPage: React.FC = () => {
       );
       setPendingChanges(new Map());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save changes');
+      setError(err instanceof AppError ? err : new AppError(0, 'UNKNOWN', 'Failed to save changes'));
     } finally {
       setSaving(false);
     }
@@ -170,7 +182,7 @@ const TeamsheetDetailPage: React.FC = () => {
       const dup = await teamsheetApi.duplicate(Number(clubId), Number(teamsheetId), newTitle);
       navigate(`/clubs/${clubId}/teamsheets/${dup.id}/edit`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to duplicate teamsheet');
+      setError(err instanceof AppError ? err : new AppError(0, 'UNKNOWN', 'Failed to duplicate teamsheet'));
     }
   };
 
@@ -181,9 +193,9 @@ const TeamsheetDetailPage: React.FC = () => {
       setActionLoading(true);
       setError(null);
       await teamsheetApi.trash(numericClubId, numericTeamsheetId);
-      navigate(`/clubs/${numericClubId}/teamsheets?view=trash`);
+      navigate(`/clubs/${numericClubId}/?tab=schedule&view=trash`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to move teamsheet to trash');
+      setError(err instanceof AppError ? err : new AppError(0, 'UNKNOWN', 'Failed to move teamsheet to trash'));
     } finally {
       setActionLoading(false);
     }
@@ -197,7 +209,7 @@ const TeamsheetDetailPage: React.FC = () => {
       await teamsheetApi.restore(numericClubId, numericTeamsheetId);
       navigate(`/clubs/${numericClubId}/teamsheets/${numericTeamsheetId}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to restore teamsheet');
+      setError(err instanceof AppError ? err : new AppError(0, 'UNKNOWN', 'Failed to restore teamsheet'));
     } finally {
       setActionLoading(false);
     }
@@ -210,52 +222,39 @@ const TeamsheetDetailPage: React.FC = () => {
       setActionLoading(true);
       setError(null);
       await teamsheetApi.permanentDelete(numericClubId, numericTeamsheetId);
-      navigate(`/clubs/${numericClubId}/teamsheets?view=trash`);
+      navigate(`/clubs/${numericClubId}/?tab=schedule&view=trash`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to permanently delete teamsheet');
+      setError(err instanceof AppError ? err : new AppError(0, 'UNKNOWN', 'Failed to permanently delete teamsheet'));
     } finally {
       setActionLoading(false);
     }
   };
 
   if (loading) {
+    return <FullPageLoader label="Loading teamsheet" />;
+  }
+
+  if (error?.code === 'NOT_FOUND' || !teamsheet) {
     return (
-      <div className={styles.teamsheetDetailsContainer}>
-        <div className={styles.teamsheetDetailsSidebarSection}>
-          <Sidebar />
-        </div>
-        <div className={styles.teamsheetDetailsMain}>
-          <div className={styles.teamsheetDetailsLoading}>Loading teamsheet…</div>
-        </div>
-      </div>
+      <ResourceNotFoundPage
+        backPath={`/clubs/${clubId}/`}
+        backLabel="Back to Club"
+      />
     );
   }
 
   if (error) {
     return (
       <div className={styles.teamsheetDetailsContainer}>
-        <div className={styles.teamsheetDetailsSidebarSection}>
-          <Sidebar />
-        </div>
-        <div className={styles.teamsheetDetailsMain}>
-          <div className={styles.teamsheetDetailsError}>
-            <p>{error}</p>
-            <button onClick={fetchTeamsheet}>Retry</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!teamsheet) {
-    return (
-      <div className={styles.teamsheetDetailsContainer}>
-        <div className={styles.teamsheetDetailsSidebarSection}>
-          <Sidebar />
-        </div>
-        <div className={styles.teamsheetDetailsMain}>
-          <div className={styles.teamsheetDetailsError}>Teamsheet not found</div>
-        </div>
+        <StatusBlock
+          variant="error"
+          message={error.detail}
+          actions={
+            <button type="button" onClick={fetchTeamsheet}>
+              Retry
+            </button>
+          }
+        />
       </div>
     );
   }
@@ -353,29 +352,35 @@ const TeamsheetDetailPage: React.FC = () => {
                   <h3 className={styles.teamsheetDetailsAvailabilityTitle}>
                     Availability
                   </h3>
-                  <ul className={styles.teamsheetDetailsAvailabilityList}>
-                    {starters.map(player => {
-                      const av = findAvailability(player.display_name, availabilityData);
-                      return (
-                        <li key={player.id} className={styles.teamsheetDetailsAvailabilityRow}>
-                          <span className={styles.teamsheetDetailsAvailabilityName}>
-                            {player.display_name}
-                          </span>
-                          <AvailabilityBadge
-                            riskLabel={
-                              av?.status
-                                ? (STATUS_TO_RISK_LABEL[av.status] ?? null)
-                                : null
-                            }
-                            riskScore={
-                              av?.p_available != null ? 1 - av.p_available : undefined
-                            }
-                            isLoading={availabilityLoading}
-                          />
-                        </li>
-                      );
-                    })}
-                  </ul>
+                  {availabilityError ? (
+                    <InlineRetry
+                      message="Failed to load availability"
+                      onRetry={() => setAvailabilityRetryKey(k => k + 1)}
+                      retrying={availabilityLoading}
+                    />
+                  ) : (
+                    <ul className={styles.teamsheetDetailsAvailabilityList}>
+                      {starters.map(player => {
+                        const av = findAvailability(player.display_name, availabilityData);
+                        return (
+                          <li key={player.id} className={styles.teamsheetDetailsAvailabilityRow}>
+                            <span className={styles.teamsheetDetailsAvailabilityName}>
+                              {player.display_name}
+                            </span>
+                            <AvailabilityBadge
+                              riskLabel={
+                                av?.status ? (STATUS_TO_RISK_LABEL[av.status] ?? null) : null
+                              }
+                              riskScore={
+                                av?.p_available != null ? 1 - av.p_available : undefined
+                              }
+                              isLoading={availabilityLoading}
+                            />
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
                 </div>
               )}
 

@@ -194,3 +194,20 @@
     right: 1.25rem;
   }
 }
+
+.chat-pu-panel-fullpage-link {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: auto;
+  margin-right: 0.75rem;
+  white-space: nowrap;
+}
+
+.chat-pu-panel-fullpage-link:hover {
+  text-decoration: underline;
+  color: rgba(255, 255, 255, 0.9);
+}

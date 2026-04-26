@@ -3,7 +3,18 @@ from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.core.cache import cache
+from common.cache_keys import (
+    make_cache_key,
+    CACHE_TTL_OVERVIEW,
+    CACHE_TTL_LEAGUES_META,
+    CACHE_TTL_EXPECTED_TABLE,
+    CACHE_TTL_COMPARE,
+)
+from .publication import get_active_snapshot_version
 
+from common.performance import RequestTimer
+from .envelope import build_livefootball_envelope
 from .serializers import LiveFootballOverviewSerializer
 from .services.overview import get_livefootball_homepage_payload
 from .services.exceptions import TeamMappingNotFoundError
@@ -337,55 +348,97 @@ class PlayerSearchView(LiveFootballProtectedAPIView):
         if normalized in {"0", "false", "no", "n"}:
             return False
         raise ValidationError({field_name: "Must be a boolean."})
+        
 class LiveFootballOverviewView(LiveFootballProtectedAPIView):
     def get(self, request):
-        payload = get_livefootball_homepage_payload()
-        serializer = LiveFootballOverviewSerializer(payload)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        with RequestTimer(endpoint="livefootball.overview", method=request.method, params=dict(request.query_params)) as timer:
+            cache_key = make_cache_key("livefootball", "overview")
+            cached = cache.get(cache_key)
+            if cached is not None:
+                timer.cache_status = "hit"
+                timer.status_code = 200
+                return Response(cached, status=status.HTTP_200_OK)
+
+            snapshot_version = get_active_snapshot_version()
+            payload = get_livefootball_homepage_payload()
+            serializer = LiveFootballOverviewSerializer(payload)
+            envelope = build_livefootball_envelope(serializer.data, data_version=snapshot_version)
+            cache.set(cache_key, envelope, timeout=CACHE_TTL_OVERVIEW)
+            response = Response(envelope, status=status.HTTP_200_OK)
+            timer.status_code = response.status_code
+            return response
+
 
 class LeaguesMetaView(LiveFootballProtectedAPIView):
     def get(self, request):
-        payload = get_leagues_meta_payload()
-        serializer = LeaguesMetaResponseSerializer(payload)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        with RequestTimer(endpoint="livefootball.leagues_meta", method=request.method, params=dict(request.query_params)) as timer:
+            cache_key = make_cache_key("livefootball", "leagues_meta")
+            cached = cache.get(cache_key)
+            if cached is not None:
+                timer.cache_status = "hit"
+                timer.status_code = 200
+                return Response(cached, status=status.HTTP_200_OK)
+
+            snapshot_version = get_active_snapshot_version()
+            payload = get_leagues_meta_payload()
+            serializer = LeaguesMetaResponseSerializer(payload)
+            envelope = build_livefootball_envelope(serializer.data, data_version=snapshot_version)
+            cache.set(cache_key, envelope, timeout=CACHE_TTL_LEAGUES_META)
+            response = Response(envelope, status=status.HTTP_200_OK)
+            timer.status_code = response.status_code
+            return response
 
 
 class LeagueExpectedTableView(LiveFootballProtectedAPIView):
     def get(self, request, competition_id):
-        season_label = request.query_params.get("season")
-        mode = request.query_params.get("mode")
-        projection_window = request.query_params.get("projection_window")
-        matchweek = self._parse_optional_int(
-            request.query_params.get("matchweek"),
-            "matchweek",
-        )
+        with RequestTimer(endpoint="livefootball.expected_table", method=request.method, params=dict(request.query_params)) as timer:
+            season_label = request.query_params.get("season")
+            mode = request.query_params.get("mode")
+            projection_window = request.query_params.get("projection_window")
+            matchweek = self._parse_optional_int(request.query_params.get("matchweek"), "matchweek")
 
-        try:
-            payload = get_league_expected_table_payload(
+            cache_key = make_cache_key(
+                "livefootball", "expected_table",
                 competition_id=competition_id,
-                season_label=season_label,
+                season=season_label,
                 mode=mode,
                 matchweek=matchweek,
                 projection_window=projection_window,
             )
-        except ObjectDoesNotExist:
-            return Response(
-                {"detail": "Competition not found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        except TeamMappingNotFoundError as exc:
-            return Response(
-                {"detail": str(exc)},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        except ValueError as exc:
-            return Response(
-                {"detail": str(exc)},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            cached = cache.get(cache_key)
+            if cached is not None:
+                timer.cache_status = "hit"
+                timer.status_code = 200
+                return Response(cached, status=status.HTTP_200_OK)
 
-        serializer = LeagueExpectedTableResponseSerializer(payload)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+            try:
+                payload = get_league_expected_table_payload(
+                    competition_id=competition_id,
+                    season_label=season_label,
+                    mode=mode,
+                    matchweek=matchweek,
+                    projection_window=projection_window,
+                )
+            except ObjectDoesNotExist:
+                response = Response({"detail": "Competition not found."}, status=status.HTTP_404_NOT_FOUND)
+                timer.status_code = response.status_code
+                return response
+            except TeamMappingNotFoundError as exc:
+                response = Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+                timer.status_code = response.status_code
+                return response
+            except ValueError as exc:
+                response = Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+                timer.status_code = response.status_code
+                return response
+
+            snapshot_version = get_active_snapshot_version()
+            serializer = LeagueExpectedTableResponseSerializer(payload)
+            envelope = build_livefootball_envelope(serializer.data, data_version=snapshot_version)
+            cache.set(cache_key, envelope, timeout=CACHE_TTL_EXPECTED_TABLE)
+            response = Response(envelope, status=status.HTTP_200_OK)
+            timer.status_code = response.status_code
+            return response
 
     def _parse_optional_int(self, value, field_name):
         if value in (None, ""):
@@ -394,9 +447,68 @@ class LeagueExpectedTableView(LiveFootballProtectedAPIView):
             return int(value)
         except (TypeError, ValueError):
             raise ValidationError({field_name: "Must be an integer."})
-        serializer = LeagueExpectedTableResponseSerializer(payload)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+class LeagueCompareView(LiveFootballProtectedAPIView):
+    def get(self, request, competition_id):
+        with RequestTimer(endpoint="livefootball.compare", method=request.method, params=dict(request.query_params)) as timer:
+            season_label = request.query_params.get("season")
+            mode = request.query_params.get("mode")
+            projection_window = request.query_params.get("projection_window")
+            matchweek = self._parse_optional_int(request.query_params.get("matchweek"), "matchweek")
+
+            cache_key = make_cache_key(
+                "livefootball", "compare",
+                competition_id=competition_id,
+                season=season_label,
+                mode=mode,
+                matchweek=matchweek,
+                projection_window=projection_window,
+            )
+            cached = cache.get(cache_key)
+            if cached is not None:
+                timer.cache_status = "hit"
+                timer.status_code = 200
+                return Response(cached, status=status.HTTP_200_OK)
+
+            try:
+                payload = get_league_compare_payload(
+                    competition_id=competition_id,
+                    season_label=season_label,
+                    mode=mode,
+                    matchweek=matchweek,
+                    projection_window=projection_window,
+                )
+            except ObjectDoesNotExist:
+                response = Response({"detail": "Competition not found."}, status=status.HTTP_404_NOT_FOUND)
+                timer.status_code = response.status_code
+                return response
+            except TeamMappingNotFoundError as exc:
+                response = Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+                timer.status_code = response.status_code
+                return response
+            except ValueError as exc:
+                response = Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+                timer.status_code = response.status_code
+                return response
+
+            snapshot_version = get_active_snapshot_version()
+            serializer = LeagueCompareResponseSerializer(payload)
+            envelope = build_livefootball_envelope(serializer.data, data_version=snapshot_version)
+            cache.set(cache_key, envelope, timeout=CACHE_TTL_COMPARE)
+            response = Response(envelope, status=status.HTTP_200_OK)
+            timer.status_code = response.status_code
+            return response
+
+    def _parse_optional_int(self, value, field_name):
+        if value in (None, ""):
+            return None
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            raise ValidationError({field_name: "Must be an integer."})
+            
+            
 class LeagueCompareView(LiveFootballProtectedAPIView):
     def get(self, request, competition_id):
         season_label = request.query_params.get("season")

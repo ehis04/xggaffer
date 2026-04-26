@@ -29,6 +29,7 @@ Intent-specific guidance:
 
 MAX_TOKENS = 400
 MODEL = "claude-haiku-4-5-20251001"
+SUPPORTED_IMAGE_MEDIA_TYPES = {"image/jpeg", "image/png"}
 
 
 class LLMNarrator:
@@ -48,7 +49,13 @@ class LLMNarrator:
                 )
         return self._api_key
 
-    def narrate(self, payload: dict, raw_query: str) -> tuple[str, bool]:
+    def narrate(
+        self,
+        payload: dict,
+        raw_query: str,
+        image_b64: str | None = None,
+        image_media_type: str | None = None,
+    ) -> tuple[str, bool]:
         api_key = self._get_api_key()
         if not api_key:
             return self._fallback_response(payload), True
@@ -60,11 +67,34 @@ class LLMNarrator:
                 f"User asked: {raw_query}\n\n"
                 f"Analytics data:\n{json.dumps(payload, indent=2)}"
             )
+
+            if image_b64 and image_media_type:
+                if image_media_type not in SUPPORTED_IMAGE_MEDIA_TYPES:
+                    _logger.warning(
+                        "Unsupported image media type %s — treating as text-only.",
+                        image_media_type,
+                    )
+                    content = user_message
+                else:
+                    content = [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": image_media_type,
+                                "data": image_b64,
+                            },
+                        },
+                        {"type": "text", "text": user_message},
+                    ]
+            else:
+                content = user_message
+
             message = client.messages.create(
                 model=MODEL,
                 max_tokens=MAX_TOKENS,
                 system=SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": user_message}],
+                messages=[{"role": "user", "content": content}],
             )
             prose = message.content[0].text.strip()
             return prose, False

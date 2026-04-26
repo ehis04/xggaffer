@@ -20,12 +20,12 @@ DEFAULT_LEAGUES: list[str] = ['EPL', 'La_Liga', 'Bundesliga', 'Serie_A', 'Ligue_
 
 DEFAULT_SEASONS: list[str] = [
     '2014', '2015', '2016', '2017', '2018', '2019',
-    '2020', '2021', '2022', '2023', '2024',
+    '2020', '2021', '2022', '2023', '2024', '2025',
 ]
 
-TEST_SEASONS: list[str] = ['2024']
+TEST_SEASONS: list[str] = ['2025']
 DEMO_LEAGUE = 'EPL'
-DEMO_SEASON = '2024'
+DEMO_SEASON = '2025'
 
 
 MODEL_VERSION = 'v2'

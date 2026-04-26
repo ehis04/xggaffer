@@ -1,0 +1,24 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.high {
+  background: var(--color-confidence-high-bg, #dcfce7);
+  color: var(--color-confidence-high-text, #166534);
+}
+
+.medium {
+  background: var(--color-confidence-medium-bg, #fef9c3);
+  color: var(--color-confidence-medium-text, #854d0e);
+}
+
+.low {
+  background: var(--color-confidence-low-bg, #fee2e2);
+  color: var(--color-confidence-low-text, #991b1b);
+}

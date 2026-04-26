@@ -66,9 +66,6 @@ export const CoursePage = () => {
       );
     }
   }, [flatItems]);
-
-  const initialId =
-    flatItems.find((i) => i.status === "active")?.id ?? flatItems[0]?.id ?? "";
   const [currentItemId, setCurrentItemId] = useState("");
 
   useEffect(() => {

@@ -1,7 +1,9 @@
-"""
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import *
+from .models import (
+    Site, Author, Topic, Article, UserProfile,
+    ArticleRating, UserFeedback, UserRecommendation, ReadingHistory,
+)
 
 
 @admin.register(Site)
@@ -41,7 +43,7 @@ class AuthorAdmin(admin.ModelAdmin):
 class TopicAdmin(admin.ModelAdmin):
     list_display = ['name', 'description']
     search_fields = ['name']
-    populated_fields = {'slug': ('name',)}
+    prepopulated_fields = {'slug': ('name',)}
 
 
 @admin.register(Article)
@@ -133,4 +135,3 @@ class ReadingHistoryAdmin(admin.ModelAdmin):
     def article_title(self, obj):
         return obj.article.title[:50]
     article_title.short_description = 'Article'
-"""

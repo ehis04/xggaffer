@@ -1,36 +1,72 @@
+import { useSearchParams } from 'react-router-dom';
 import "./css/CoachingNavBar.css";
 
-const TABS = [
-  { id: "tab1", label: "Dashboard", cls: "tab--1" },
-  { id: "tab2", label: "Players", cls: "tab--2" },
-  { id: "tab3", label: "Formations", cls: "tab--3" },
-  { id: "tab4", label: "Schedule", cls: "tab--4" },
-  { id: "tab5", label: "Season", cls: "tab--5" },
+export type ClubTab =
+  | 'dashboard'
+  | 'players'
+  | 'formations'
+  | 'schedule'
+  | 'season'
+  | 'members'
+  | 'tactics';
+
+const TABS: { value: ClubTab; label: string }[] = [
+  { value: 'dashboard',  label: 'Dashboard'  },
+  { value: 'players',    label: 'Players'    },
+  { value: 'formations', label: 'Formations' },
+  { value: 'schedule',   label: 'Schedule'   },
+  { value: 'season',     label: 'Season'     },
+  { value: 'members',    label: 'Members'    },
+  { value: 'tactics',    label: 'Tactics'    },
 ];
 
-export const CoachingNavBar = () => {
+const TAB_WIDTH = 110;
+
+interface CoachingNavBarProps {
+  activeTab?: ClubTab;
+  onTabChange?: (tab: ClubTab) => void;
+}
+
+export const CoachingNavBar = ({ activeTab, onTabChange }: CoachingNavBarProps) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const currentTab: ClubTab = (() => {
+    if (activeTab) return activeTab;
+    const param = searchParams.get('tab') as ClubTab | null;
+    return param && TABS.some((t) => t.value === param) ? param : 'dashboard';
+  })();
+
+  const activeIndex = TABS.findIndex((t) => t.value === currentTab);
+  const indicatorLeft = activeIndex * TAB_WIDTH + 2;
+
+  const handleTabClick = (tab: ClubTab) => {
+    if (onTabChange) {
+      onTabChange(tab);
+      return;
+    }
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set('tab', tab);
+      return next;
+    });
+  };
+
   return (
-    <div className="coaching-navbar">
+    <div className="coaching-navbar" style={{ '--tab-width': `${TAB_WIDTH}px` } as React.CSSProperties}>
       {TABS.map((tab) => (
-        <>
-          <input
-            key={`input-${tab.id}`}
-            type="radio"
-            name="tab"
-            id={tab.id}
-            className={`tab ${tab.cls}`}
-            defaultChecked={tab.id === "tab1"}
-          />
-          <label
-            key={`label-${tab.id}`}
-            className="coaching-navbar-lbl"
-            htmlFor={tab.id}
-          >
-            {tab.label}
-          </label>
-        </>
+        <button
+          key={tab.value}
+          type="button"
+          className={`coaching-navbar-lbl${currentTab === tab.value ? ' coaching-navbar-lbl--active' : ''}`}
+          onClick={() => handleTabClick(tab.value)}
+        >
+          {tab.label}
+        </button>
       ))}
-      <div className="indicator" />
+      <div
+        className="indicator"
+        style={{ left: `${indicatorLeft}px` }}
+      />
     </div>
   );
 };

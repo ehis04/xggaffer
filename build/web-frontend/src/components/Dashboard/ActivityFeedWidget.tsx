@@ -27,7 +27,13 @@ export const ActivityFeedWidget = ({ events }: ActivityFeedWidgetProps) => {
                 {recent.map((event, index) => {
                     const isLast = index === recent.length - 1
 
-                    return (<ActivityEventDetail event={event} isLast={isLast}/>)
+                                        return (
+                                            <ActivityEventDetail
+                                                key={event.id}
+                                                event={event}
+                                                isLast={isLast}
+                                            />
+                                        )
                 })}
             </div>
         </div>

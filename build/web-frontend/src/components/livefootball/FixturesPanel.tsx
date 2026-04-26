@@ -29,7 +29,7 @@ const COMPETITION_CODE_TO_LEAGUE: Record<string, string> = {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const parseSeasonYear = (label: string): string =>
-  label.match(/\d{4}/)?.[0] ?? '2024';
+  label.match(/\d{4}/)?.[0] ?? String(new Date().getFullYear());
 
 const formatKickoff = (value?: string | null): string => {
   if (!value) return 'TBC';

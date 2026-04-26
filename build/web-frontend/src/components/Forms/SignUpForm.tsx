@@ -1,5 +1,4 @@
 import './css/LoginForm.css';
-import googleIcon from '../../images/logos/google-svg.svg';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/useAuth';

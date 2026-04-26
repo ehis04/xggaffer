@@ -67,3 +67,8 @@ def get_classifier() -> IntentClassifier:
     if _CLASSIFIER_INSTANCE is None:
         _CLASSIFIER_INSTANCE = IntentClassifier()
     return _CLASSIFIER_INSTANCE
+
+
+def reset_classifier() -> None:
+    global _CLASSIFIER_INSTANCE
+    _CLASSIFIER_INSTANCE = None

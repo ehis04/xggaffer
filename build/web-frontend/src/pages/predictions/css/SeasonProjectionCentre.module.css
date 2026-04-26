@@ -1,0 +1,131 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.header {
+  padding: 1.5rem 2rem 0.75rem;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary, #0d9488);
+  margin: 0;
+}
+
+.leagueTabBar {
+  display: flex;
+  gap: 0.375rem;
+  padding: 0.75rem 2rem;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.leagueTab {
+  padding: 0.375rem 0.875rem;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: var(--color-surface, #ffffff);
+  color: var(--color-text, #1e293b);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.leagueTabActive {
+  background: var(--color-primary, #0d9488);
+  border-color: var(--color-primary, #0d9488);
+  color: #ffffff;
+}
+
+.leagueTab:not(.leagueTabActive):hover {
+  border-color: var(--color-primary, #0d9488);
+}
+
+.content {
+  padding: 1.25rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.contentHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.contentTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text, #1e293b);
+  margin: 0;
+}
+
+.viewToggleBar {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.viewToggleBtn {
+  padding: 0.375rem 1rem;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 0.375rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: var(--color-surface, #ffffff);
+  color: var(--color-text, #1e293b);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.viewToggleBtn:hover {
+  border-color: var(--color-primary, #0d9488);
+}
+
+.viewToggleBtnActive {
+  background: var(--color-primary, #0d9488);
+  border-color: var(--color-primary, #0d9488);
+  color: #ffffff;
+}
+
+.viewContainer {
+  min-height: 200px;
+}
+
+.seasonScopeNotice {
+  font-size: 0.75rem;
+  color: var(--color-muted, #94a3b8);
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .header,
+  .content {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .leagueTabBar {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .viewToggleBar {
+    width: 100%;
+  }
+
+  .viewToggleBtn {
+    flex: 1;
+    text-align: center;
+  }
+}

@@ -94,6 +94,10 @@ export const Post: React.FC<PostProps> = ({
   };
 
   const handlePostClick = () => {
+    if (onPostClick) {
+      onPostClick(post.id);
+    }
+
     if (post.type == "post") {
       navigate(`/social/post/${post.id}`);
     }

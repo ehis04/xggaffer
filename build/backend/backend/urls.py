@@ -11,6 +11,8 @@ urlpatterns = [
     # Django admin
     path('admin/', admin.site.urls),
 
+    path('internal/', include('apps.sync_pipeline.urls')),
+
     # Authentication and user management
     path('api/auth/', include('rest_framework.urls')),
     path('api/users/', include('apps.users.urls')),
@@ -28,6 +30,7 @@ urlpatterns = [
 
     # Community and learning modules
     path('api/community/', include('apps.community.urls')),
+    path('api/articles/', include('apps.articles.urls')),
     #path('api/laws/', include('apps.laws.urls')),
     #path('api/quizzes/', include('apps.quizzes.urls')),
     path('api/referee/', include('apps.referee.urls')),

@@ -7,6 +7,7 @@ try:
     from data_collection.core.enums import (
         SOURCE_UNDERSTAT,
         SOURCE_SOFASCORE,
+        SOURCE_WHOSCORED,
         DATASET_MATCHES,
         DATASET_PLAYERS,
         DATASET_TEAMS,
@@ -15,6 +16,7 @@ try:
 except ImportError:
     SOURCE_UNDERSTAT = "understat"
     SOURCE_SOFASCORE = "sofascore"
+    SOURCE_WHOSCORED = "whoscored"
     DATASET_MATCHES = "matches"
     DATASET_PLAYERS = "players"
     DATASET_TEAMS = "teams"
@@ -114,19 +116,39 @@ SOURCE_CAPABILITIES: dict[str, SourceCapability] = {
             "and player defensive/control metrics are useful."
         ),
     ),
-    "whoscored": SourceCapability(
-        name="whoscored",
+    SOURCE_WHOSCORED: SourceCapability(
+        name=SOURCE_WHOSCORED,
         display_name="WhoScored",
-        supported_datasets=(),
-        strengths=(),
+        supported_datasets=(
+            DATASET_MATCHES,
+            DATASET_PLAYERS,
+            DATASET_TEAMS,
+        ),
+        strengths=(
+            "match events",
+            "key passes",
+            "dribbles",
+            "touches",
+            "aerial duels",
+            "player ratings",
+            "defensive actions",
+            "attacking contributions",
+        ),
         id_quality="source-specific",
-        primary_stat_ownership_families=(),
+        primary_stat_ownership_families=(
+            "match-events-family",
+            "player-ratings-family",
+            "defensive-actions-family",
+        ),
         writes_raw_first=True,
         transforms_to_canonical_schema=True,
         cross_source_join_requires_reconciliation=True,
         source_ids_are_universal=False,
-        notes="Reserved future source placeholder.",
-        enabled=False,
+        notes=(
+            "Match events and detailed player ratings from WhoScored via soccerdata. "
+            "Supplements Understat xG and SofaScore broader stats."
+        ),
+        enabled=True,
     ),
     "fbref": SourceCapability(
         name="fbref",

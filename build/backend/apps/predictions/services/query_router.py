@@ -10,6 +10,7 @@ TWO_TEAM_INTENTS: frozenset[IntentClass] = frozenset({
     IntentClass.COMPOSITE_MATCH,
     IntentClass.STAT_COMPARISON,
     IntentClass.HEAD_TO_HEAD,
+    IntentClass.ODDS_COMPARISON,
 })
 
 SINGLE_TEAM_INTENTS: frozenset[IntentClass] = frozenset({

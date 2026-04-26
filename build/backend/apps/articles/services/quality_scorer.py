@@ -1,12 +1,13 @@
 from typing import Dict
 import re
+import math
 from textstat import flesch_reading_ease
 
 class QualityScorer:
 
     @staticmethod
     def calculate_readability_score(text: str) -> float:
-        if not text or len(text): < 100:
+        if not text or len(text) < 100:
             return 50.0
 
         try:
@@ -20,11 +21,8 @@ class QualityScorer:
     def calculate_engagement_score(article) -> float:
         view_weight = 0.3
         rating_weight = 0.3
-        like_weight = 0.3
         like_weight = 0.2
         share_weight = 0.2
-
-        import match
         view_score = min(100, math.log(article.view_count + 1) * 10)
 
         rating_score = (article.average_rating / 5.0) * 100 if article.total_ratings > 0 else 50
@@ -53,9 +51,9 @@ class QualityScorer:
         external_score = (article.external_rating / 5.0 * 100) if article.external_rating else None
 
         if external_score:
-            quality = (site_score * 0.3 + author_scpre * 0.3 + external_score * 0.4)
+            quality = (site_score * 0.3 + author_score * 0.3 + external_score * 0.4)
         else:
-            quality * (site_score * 0.5 + author_score * 0.5)
+            quality = (site_score * 0.5 + author_score * 0.5)
 
         return round(quality, 2)
 
@@ -63,7 +61,7 @@ class QualityScorer:
     def calculate_composite_quality_score(cls, article) -> float:
         readability = article.readability_score
         quality = article.quality_score
-        engagement article.engagement_score
+        engagement = article.engagement_score
 
         from django.utils import timezone
         from datetime import timedelta
@@ -86,8 +84,8 @@ class QualityScorer:
 
         article.quality_score = cls.calculate_quality_score(article)
         article.engagement_score = cls.calculate_engagement_score(article)
-        article.final_quality = cls.calculate_composite_quality_score(article)
+        composite = cls.calculate_composite_quality_score(article)
 
-        article.save(update_fields=['readability_score', 'quality_score', 'engagement_score', 'final_quality'])
+        article.save(update_fields=['readability_score', 'quality_score', 'engagement_score'])
 
         return article

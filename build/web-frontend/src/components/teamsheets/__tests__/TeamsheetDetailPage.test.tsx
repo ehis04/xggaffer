@@ -18,6 +18,10 @@ vi.mock('../../../services/api/teamsheetApi', () => ({
   },
 }));
 
+vi.mock('../../../context/useAuth', () => ({
+  useAuth: () => ({ user: { id: 1 } }),
+}));
+
 vi.mock('../../../components/teamsheets', () => ({
   Pitch: ({ players }: { players: { display_name: string }[] }) => (
     <div data-testid="pitch">
@@ -78,19 +82,21 @@ const makeTeamsheet = (overrides = {}) => ({
 });
 
 const makeChatResponse = (players: object[]) => ({
-  prose: 'Test prose',
-  structured_data: {
+  data: {
+    prose: 'Test prose',
+    structured_data: {
+      intent: 'AVAILABILITY_QUERY',
+      entities: { home_team: null, away_team: null, team: 'Arsenal', player_name: null, league: null, season: null },
+      engine_data: { players },
+      partial: false,
+      error: null,
+      timestamp: '2026-01-01T00:00:00Z',
+    },
     intent: 'AVAILABILITY_QUERY',
     entities: { home_team: null, away_team: null, team: 'Arsenal', player_name: null, league: null, season: null },
-    engine_data: { players },
-    partial: false,
-    error: null,
-    timestamp: '2026-01-01T00:00:00Z',
+    used_fallback: false,
+    query_type: 'AVAILABILITY_QUERY',
   },
-  intent: 'AVAILABILITY_QUERY',
-  entities: { home_team: null, away_team: null, team: 'Arsenal', player_name: null, league: null, season: null },
-  used_fallback: false,
-  query_type: 'AVAILABILITY_QUERY',
 });
 
 const renderPage = () =>
@@ -121,7 +127,7 @@ describe('TeamsheetDetailPage', () => {
   it('renders availability badge for matched player', async () => {
     vi.mocked(teamsheetApi.get).mockResolvedValue(makeTeamsheet() as any);
     vi.mocked(chatQuery).mockResolvedValue(
-      makeChatResponse([{ name: 'John Smith', risk_label: 'low' }]) as any
+      makeChatResponse([{ player_name: 'John Smith', status: 'available' }]) as any
     );
 
     renderPage();
@@ -134,7 +140,7 @@ describe('TeamsheetDetailPage', () => {
   it('renders no badge for unmatched player', async () => {
     vi.mocked(teamsheetApi.get).mockResolvedValue(makeTeamsheet() as any);
     vi.mocked(chatQuery).mockResolvedValue(
-      makeChatResponse([{ name: 'Unrelated Player', risk_label: 'high' }]) as any
+      makeChatResponse([{ player_name: 'Unrelated Player', status: 'injured' }]) as any
     );
 
     renderPage();
@@ -161,7 +167,7 @@ describe('TeamsheetDetailPage', () => {
   it('preserves existing teamsheet content after availability loads', async () => {
     vi.mocked(teamsheetApi.get).mockResolvedValue(makeTeamsheet() as any);
     vi.mocked(chatQuery).mockResolvedValue(
-      makeChatResponse([{ name: 'John Smith', risk_label: 'medium' }]) as any
+      makeChatResponse([{ player_name: 'John Smith', status: 'risk_flagged' }]) as any
     );
 
     renderPage();
@@ -173,7 +179,7 @@ describe('TeamsheetDetailPage', () => {
     });
 
     expect(chatQuery).toHaveBeenCalledTimes(1);
-    expect(chatQuery).toHaveBeenCalledWith(expect.stringContaining('Arsenal'));
+    expect(chatQuery).toHaveBeenCalledWith(expect.stringContaining('John Smith'));
   });
 
   it('calls chatQuery with team name from teamsheet.club_name', async () => {
@@ -183,7 +189,7 @@ describe('TeamsheetDetailPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(chatQuery).toHaveBeenCalledWith('injury risk Arsenal squad');
+      expect(chatQuery).toHaveBeenCalledWith('injury risk John Smith');
     });
   });
 });

@@ -92,11 +92,10 @@ export const DashboardCard = ({
       <div className="rdc-week" role="list">
         {weekDates.map((date, i) => {
           const isToday = isSameDay(date, today);
-          const studied = studiedDates.some((d) => isSameDay(d, date));
+          const studied = (studiedDates ?? []).some((d) => isSameDay(d, date));
           return (
             <StreakDay
               key={i}
-              date={date}
               label={dayLabels[i]}
               studied={studied}
               isToday={isToday}

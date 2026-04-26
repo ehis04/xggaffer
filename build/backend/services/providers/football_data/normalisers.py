@@ -1,3 +1,9 @@
+"""
+Normalisers for football-data payloads
+
+Converts raw football-data API responses into the internal dictionary structure used by the application
+"""
+
 from datetime import date, datetime
 from typing import Any
 
@@ -27,6 +33,7 @@ _POSITION_MAP = {
 }
 
 
+# Clean any value into a trimmed string
 def _clean_string(value: Any) -> str:
     if value is None:
         return ""
@@ -35,15 +42,18 @@ def _clean_string(value: Any) -> str:
     return value.strip()
 
 
+# Return a cleaned string or None if it is empty
 def _string_or_none(value: Any) -> str | None:
     cleaned = _clean_string(value)
     return cleaned or None
 
 
+# Convert a value into an external ID string
 def _external_id(value: Any) -> str:
     return _clean_string(value)
 
 
+# Parse a value into a date if possible
 def _parse_date(value: Any) -> date | None:
     cleaned = _clean_string(value)
     if not cleaned:
@@ -55,6 +65,7 @@ def _parse_date(value: Any) -> date | None:
         return None
 
 
+# Parse a value into a datetime if possible
 def _parse_datetime(value: Any) -> datetime | None:
     cleaned = _clean_string(value)
     if not cleaned:
@@ -68,6 +79,7 @@ def _parse_datetime(value: Any) -> datetime | None:
         return None
 
 
+# Parse a value into an integer if possible
 def _parse_int(value: Any) -> int | None:
     if value in (None, ""):
         return None
@@ -78,6 +90,7 @@ def _parse_int(value: Any) -> int | None:
         return None
 
 
+# Normalise a nationality value to a two-letter code
 def _normalize_nationality(value: Any) -> str:
     cleaned = _clean_string(value).upper()
     if len(cleaned) == 2:
@@ -85,6 +98,7 @@ def _normalize_nationality(value: Any) -> str:
     return ""
 
 
+# Map a raw position value to the internal position code
 def _normalize_position(value: Any) -> str:
     cleaned = _clean_string(value).lower()
     if not cleaned:
@@ -92,6 +106,7 @@ def _normalize_position(value: Any) -> str:
     return _POSITION_MAP.get(cleaned, "")
 
 
+# Split a name into first name, last name, and display name
 def _split_name(first_name: Any, last_name: Any, full_name: Any) -> tuple[str, str, str]:
     first = _clean_string(first_name)
     last = _clean_string(last_name)
@@ -116,6 +131,7 @@ def _split_name(first_name: Any, last_name: Any, full_name: Any) -> tuple[str, s
     return "", "", display
 
 
+# Build a competition context string from running competitions
 def _competition_context(payload: dict[str, Any]) -> str:
     running_competitions = payload.get("runningCompetitions") or []
     codes = []
@@ -128,6 +144,7 @@ def _competition_context(payload: dict[str, Any]) -> str:
     return ", ".join(codes)
 
 
+# Work out the season label from the payload
 def _season_label_from_payload(payload: dict[str, Any]) -> str:
     start_date = _parse_date(payload.get("startDate"))
     if start_date:
@@ -144,6 +161,7 @@ def _season_label_from_payload(payload: dict[str, Any]) -> str:
     return ""
 
 
+# Pick the best team name from the payload
 def _team_name_from_payload(payload: dict[str, Any]) -> str:
     return _clean_string(
         payload.get("shortName")
@@ -152,6 +170,7 @@ def _team_name_from_payload(payload: dict[str, Any]) -> str:
     )
 
 
+# Get the main standings block from the table payload
 def _extract_table_block(payload: dict[str, Any]) -> dict[str, Any]:
     standings = payload.get("standings") or []
 
@@ -165,6 +184,7 @@ def _extract_table_block(payload: dict[str, Any]) -> dict[str, Any]:
     return {}
 
 
+# Normalise a team payload into the internal team shape
 def normalize_team(payload: dict[str, Any]) -> dict[str, Any]:
     area = payload.get("area") or {}
 
@@ -189,6 +209,7 @@ def normalize_team(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+# Normalise a competition team payload with source context included
 def normalize_competition_team(payload: dict[str, Any]) -> dict[str, Any]:
     normalized = normalize_team(payload)
     normalized["metadata"] = {
@@ -198,6 +219,7 @@ def normalize_competition_team(payload: dict[str, Any]) -> dict[str, Any]:
     return normalized
 
 
+# Normalise a squad player payload into the internal player shape
 def normalize_squad_player(
     payload: dict[str, Any],
     external_team_id: Any = None,
@@ -242,6 +264,7 @@ def normalize_squad_player(
     }
 
 
+# Normalise a competition payload into the internal competition shape
 def normalize_competition(payload: dict[str, Any]) -> dict[str, Any]:
     area = payload.get("area") or {}
     current_season = payload.get("currentSeason") or {}
@@ -266,11 +289,13 @@ def normalize_competition(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+# Normalise a competitions payload into a list of competitions
 def normalize_competitions_payload(payload: dict[str, Any]) -> list[dict[str, Any]]:
     competitions = payload.get("competitions") or []
     return [normalize_competition(item) for item in competitions]
 
 
+# Normalise a team directory entry into the internal directory shape
 def normalize_team_directory_entry(
     payload: dict[str, Any],
     competition_external_id: Any = None,
@@ -298,6 +323,7 @@ def normalize_team_directory_entry(
     }
 
 
+# Normalise a competition teams payload into team directory entries
 def normalize_competition_teams_payload(
     payload: dict[str, Any],
     competition_external_id: Any = None,
@@ -321,6 +347,7 @@ def normalize_competition_teams_payload(
     ]
 
 
+# Normalise a player directory entry into the internal player directory shape
 def normalize_player_directory_entry(
     payload: dict[str, Any],
     team_external_id: Any = None,
@@ -356,6 +383,7 @@ def normalize_player_directory_entry(
     }
 
 
+# Normalise a team players payload into player directory entries
 def normalize_team_players_payload(
     players_payload: list[dict[str, Any]],
     team_external_id: Any = None,
@@ -369,6 +397,7 @@ def normalize_team_players_payload(
     ]
 
 
+# Normalise one competition table row into the internal table row shape
 def normalize_competition_table_row(payload: dict[str, Any]) -> dict[str, Any]:
     team = payload.get("team") or {}
 
@@ -391,6 +420,7 @@ def normalize_competition_table_row(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+# Normalise a competition table payload into the internal table shape
 def normalize_competition_table(
     payload: dict[str, Any],
     competition_external_id: Any = None,
@@ -421,6 +451,7 @@ def normalize_competition_table(
     }
 
 
+# Normalise one competition fixture into the internal fixture shape
 def normalize_competition_fixture(
     payload: dict[str, Any],
     competition_external_id: Any = None,
@@ -460,6 +491,7 @@ def normalize_competition_fixture(
     }
 
 
+# Normalise a competition matches payload into fixture entries
 def normalize_competition_matches_payload(
     payload: dict[str, Any],
     competition_external_id: Any = None,
@@ -484,6 +516,7 @@ def normalize_competition_matches_payload(
     ]
 
 
+# Normalise one top scorer entry into the internal scorer shape
 def normalize_competition_top_scorer(
     payload: dict[str, Any],
     competition_external_id: Any = None,
@@ -514,6 +547,7 @@ def normalize_competition_top_scorer(
     }
 
 
+# Normalise a scorers payload into top scorer entries
 def normalize_competition_scorers_payload(
     payload: dict[str, Any],
     competition_external_id: Any = None,

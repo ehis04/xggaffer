@@ -1,11 +1,17 @@
 import apiClient from './client';
 import type {
   ModelInfoResponse,
+  OddsComparisonRequest,
+  OddsComparisonResponse,
+  OddsFixtureListResponse,
+  OddsTeamsResponse,
   PredictionRequest,
   PredictionResponse,
   TeamsResponse,
   ChatResponse,
 } from '../../types/prediction';
+import type { ApiEnvelope } from '../../common/types/response';
+import { isEnvelope } from '../../common/types/response';
 
 const DEFAULT_PREDICTIONS_API_BASE = '/predictions';
 
@@ -89,20 +95,20 @@ const withPredictionsErrorHandling = async <T>(request: () => Promise<T>): Promi
 };
 
 export async function getTeams(
-  league = 'EPL',
-  season = '2024'
-): Promise<TeamsResponse> {
+  league: string,
+  season: string
+): Promise<ApiEnvelope<TeamsResponse>> {
   return withPredictionsErrorHandling(() =>
-    apiClient.get<TeamsResponse>(
+    apiClient.get<ApiEnvelope<TeamsResponse>>(
       buildPredictionsEndpoint('teams/'),
       { league, season }
     )
   );
 }
 
-export async function getModelInfo(): Promise<ModelInfoResponse> {
+export async function getModelInfo(): Promise<ApiEnvelope<ModelInfoResponse>> {
   return withPredictionsErrorHandling(() =>
-    apiClient.get<ModelInfoResponse>(
+    apiClient.get<ApiEnvelope<ModelInfoResponse>>(
       buildPredictionsEndpoint('model-info/')
     )
   );
@@ -111,24 +117,115 @@ export async function getModelInfo(): Promise<ModelInfoResponse> {
 export async function predictMatch(
   request: PredictionRequest
 ): Promise<PredictionResponse> {
-  return withPredictionsErrorHandling(() =>
-    apiClient.post<PredictionResponse>(
+  const raw = await withPredictionsErrorHandling(() =>
+    apiClient.post<ApiEnvelope<PredictionResponse> | PredictionResponse>(
       buildPredictionsEndpoint('predict/'),
       {
-        league: 'EPL',
-        season: '2024',
         top_factors: 5,
         ...request,
       }
     )
   );
+
+  if (isEnvelope<PredictionResponse>(raw)) {
+    const data = raw.data;
+    if (!data) {
+      throw new PredictionsApiError('No prediction data returned.', 500);
+    }
+    return data;
+  }
+
+  return raw as PredictionResponse;
 }
 
-export async function chatQuery(query: string): Promise<ChatResponse> {
+export async function getOddsComparison(
+  request: OddsComparisonRequest
+): Promise<OddsComparisonResponse> {
+  const raw = await withPredictionsErrorHandling(() =>
+    apiClient.post<ApiEnvelope<OddsComparisonResponse> | OddsComparisonResponse>(
+      buildPredictionsEndpoint('odds/compare/'),
+      {
+        home_team: request.home_team,
+        away_team: request.away_team,
+        league: request.league,
+        season: request.season,
+        bookmakers: request.bookmakers,
+        use_cached: request.use_cached,
+      }
+    )
+  );
+
+  if (isEnvelope<OddsComparisonResponse>(raw)) {
+    const data = raw.data;
+    if (!data) {
+      throw new PredictionsApiError('No odds comparison data returned.', 500);
+    }
+    return data;
+  }
+
+  return raw as OddsComparisonResponse;
+}
+
+export async function getOddsFixtures(
+  league: string,
+  view: 'past' | 'future',
+  teamA?: string,
+  teamB?: string,
+): Promise<ApiEnvelope<OddsFixtureListResponse>> {
+  const params: Record<string, string> = { league, view };
+  if (teamA) params.team_a = teamA;
+  if (teamB) params.team_b = teamB;
   return withPredictionsErrorHandling(() =>
-    apiClient.post<ChatResponse>(
+    apiClient.get<ApiEnvelope<OddsFixtureListResponse>>(
+      buildPredictionsEndpoint('odds/fixtures/'),
+      params
+    )
+  );
+}
+
+export async function getOddsTeams(league: string): Promise<ApiEnvelope<OddsTeamsResponse>> {
+  return withPredictionsErrorHandling(() =>
+    apiClient.get<ApiEnvelope<OddsTeamsResponse>>(
+      buildPredictionsEndpoint('odds/teams/'),
+      { league }
+    )
+  );
+}
+
+export interface OddsAccuracyResponse {
+  league: string;
+  season: string;
+  model_wins: number;
+  market_wins: number;
+  ties: number;
+  total_evaluated: number;
+  computed_at: string;
+}
+
+export async function getOddsAccuracy(
+  league: string,
+  season: string = '2025',
+): Promise<ApiEnvelope<OddsAccuracyResponse | null>> {
+  return withPredictionsErrorHandling(() =>
+    apiClient.get<ApiEnvelope<OddsAccuracyResponse | null>>(
+      buildPredictionsEndpoint('odds/accuracy/'),
+      { league, season }
+    )
+  );
+}
+
+export async function chatQuery(
+  query: string,
+  imageB64?: string,
+  imageMediaType?: string,
+): Promise<ApiEnvelope<ChatResponse>> {
+  return withPredictionsErrorHandling(() =>
+    apiClient.post<ApiEnvelope<ChatResponse>>(
       buildPredictionsEndpoint('chat/'),
-      { query }
+      {
+        query,
+        ...(imageB64 && { image_b64: imageB64, image_media_type: imageMediaType }),
+      }
     )
   );
 }

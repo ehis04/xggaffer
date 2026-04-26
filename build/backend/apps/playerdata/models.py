@@ -205,3 +205,17 @@ class PlayerSeasonEnrichment(models.Model):
     def __str__(self) -> str:
         competition = f" {self.competition_code}" if self.competition_code else ""
         return f"{self.player} | {self.provider} | {self.season_label}{competition}"
+
+class PlayerEnrichmentSnapshot(models.Model):
+    scope_key = models.CharField(max_length=128)
+    is_active = models.BooleanField(default=False)
+    published_at = models.DateTimeField()
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['scope_key', 'is_active']),
+        ]
+
+    def __str__(self):
+        active = 'active' if self.is_active else 'inactive'
+        return f'PlayerEnrichmentSnapshot({self.scope_key}, {active}, {self.published_at})'

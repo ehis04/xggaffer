@@ -20,6 +20,7 @@ resend
 # Background tasks
 celery
 redis
+django-redis
 
 # PDF processing
 pdf2image
@@ -36,8 +37,14 @@ whitenoise
 psycopg2-binary
 
 joblib
+feedparser
+textstat
 
 pandas
 playwright
 xgboost
 lifelines
+scikit-learn
+statsmodels
+beautifulsoup4
+soccerdata

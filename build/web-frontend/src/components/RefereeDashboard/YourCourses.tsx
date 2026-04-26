@@ -4,7 +4,7 @@ import { getRecentCourses } from "./functions/getRecentCourses";
 import type { YourCoursesProps } from "./types/RefereeDashboardTypes";
 
 export const YourCourses = ({ courses }: YourCoursesProps) => {
-  const recentCourses = getRecentCourses(courses);
+  const recentCourses = getRecentCourses(courses ?? []);
 
   return (
     <div className="yc-container">

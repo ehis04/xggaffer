@@ -232,7 +232,7 @@ describe('ClubResourcesSection', () => {
 
     await screen.findByText('Analysis Pack');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Open PDF' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Open inline' }));
 
     await screen.findByTestId('mock-pdf-document');
     await flushAsyncWork();
@@ -271,7 +271,7 @@ describe('ClubResourcesSection', () => {
 
     await screen.findByText('Analysis Pack');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Open PDF' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Open inline' }));
     await screen.findByTestId('mock-pdf-document');
     await flushAsyncWork();
 

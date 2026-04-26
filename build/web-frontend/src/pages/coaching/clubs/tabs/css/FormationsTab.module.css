@@ -1,0 +1,244 @@
+.tabContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Sub-view tabs (Active / Trash) — same pill style as CoachingNavBar but smaller */
+.subViewTabs {
+  display: flex;
+  gap: 4px;
+  background: var(--brand-lightest-green-border);
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 9px;
+  padding: 3px;
+}
+
+.subTab {
+  background: none;
+  border: none;
+  border-radius: 7px;
+  color: var(--secondary-text);
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 5px 16px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.subTab:hover { opacity: 0.85; }
+
+.subTabActive {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--primary-text);
+  opacity: 1;
+}
+
+.primaryBtn {
+  background: rgba(59, 130, 246, 0.85);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+}
+
+.primaryBtn:hover { background: rgba(59, 130, 246, 1); }
+
+.errorNotice {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  color: #fca5a5;
+}
+
+/* Sections */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sectionLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--secondary-text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--tertiary-text);
+  font-size: 0.75rem;
+}
+
+.emptyText {
+  font-size: 0.85rem;
+  color: var(--tertiary-text);
+  margin: 0;
+  padding: 8px 0;
+}
+
+.inlineLink {
+  background: none;
+  border: none;
+  color: #93c5fd;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+/* Card grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.card {
+  background: var(--brand-lightest-green-border);
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  transform: translateY(-1px);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.formationBadge {
+  background: rgba(59, 130, 246, 0.18);
+  color: #93c5fd;
+  border-radius: 5px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.templateBadge {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+  border-radius: 5px;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dateBadge {
+  font-size: 0.78rem;
+  color: var(--tertiary-text);
+}
+
+.cardTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--primary-text);
+  margin: 0;
+}
+
+.opponent {
+  font-size: 0.82rem;
+  color: var(--tertiary-text);
+  margin: 0;
+}
+
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Status classes — mirror getTeamsheetStatus keys */
+.gamePlayed  { font-size: 0.78rem; color: #4ade80; }
+.incomplete  { font-size: 0.78rem; color: #fbbf24; }
+.dateNotSet  { font-size: 0.78rem; color: var(--secondary-text); }
+.notPlayed   { font-size: 0.78rem; color: #f87171; }
+
+.trashNotice {
+  font-size: 0.78rem;
+  color: var(--tertiary-text);
+  margin: 0;
+}
+
+.cardActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.ghostBtn,
+.restoreBtn,
+.dangerBtn {
+  border: none;
+  border-radius: 7px;
+  padding: 5px 12px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 500;
+  transition: opacity 0.15s ease;
+}
+
+.ghostBtn {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--secondary-text);
+}
+
+.restoreBtn {
+  background: rgba(34, 197, 94, 0.15);
+  color: #bbf7d0;
+}
+
+.dangerBtn {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fecaca;
+}
+
+.ghostBtn:disabled,
+.restoreBtn:disabled,
+.dangerBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

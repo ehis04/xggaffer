@@ -1,3 +1,5 @@
+import { AppError } from "../../common/AppError";
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface RequestOptions extends RequestInit {
@@ -143,16 +145,7 @@ class ApiClient {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      const message =
-        extractApiErrorMessage(error) ||
-        `HTTP ${response.status}`;
-      const err = new Error(message) as Error & {
-        status?: number;
-        data?: unknown;
-      };
-      err.status = response.status;
-      err.data = error;
-      throw err;
+      throw AppError.fromResponse(response.status, error);
     }
 
     if (response.status === 204) {

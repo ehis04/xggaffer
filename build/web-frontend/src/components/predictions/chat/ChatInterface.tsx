@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 
 import { chatQuery } from '../../../services/api/predictionsApi';
 import type { ChatResponse } from '../../../types/prediction';
+import type { ApiEnvelope } from '../../../common/types/response';
+import type { FileAttachmentData } from '../FileAttachment';
+import type { PinnedOutput } from '../PinnedOutputsPanel';
+import { FreshnessBadge } from '../../../common/components/FreshnessBadge';
 import ChatInput from './ChatInput';
 import StructuredResponseBlock from './StructuredResponseBlock';
 import styles from './css/ChatInterface.module.css';
@@ -10,21 +14,37 @@ interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
-  response?: ChatResponse;
+  envelope?: ApiEnvelope<ChatResponse>;
 }
 
 const STARTER_QUERIES = [
-  'Who wins Arsenal vs Chelsea?',
+  'Compare Arsenal vs Chelsea with bookmaker odds',
   'What is xG?',
-  'Who wins the Premier League this season?',
+  'Show me the market view for Liverpool vs Man City',
   'What lineup will Arsenal use?',
 ] as const;
 
-export default function ChatInterface() {
+interface ChatInterfaceProps {
+  starterQueries?: readonly string[];
+  onMessagesChange?: (messages: Array<{ role: string; content: string }>) => void;
+  onPin?: (output: PinnedOutput) => void;
+  attachment?: FileAttachmentData | null;
+  onAttachmentUsed?: () => void;
+}
+
+export default function ChatInterface({
+  starterQueries,
+  onMessagesChange,
+  onPin,
+  attachment,
+  onAttachmentUsed,
+}: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [inputError, setInputError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+
+  const activeStarters = starterQueries ?? STARTER_QUERIES;
 
   useEffect(() => {
     if (listRef.current) {
@@ -33,25 +53,44 @@ export default function ChatInterface() {
   }, [messages.length, isLoading]);
 
   async function handleSubmit(query: string) {
+    let fullQuery = query;
+    let imageB64: string | undefined;
+    let imageMediaType: string | undefined;
+
+    if (attachment) {
+      if (attachment.type === 'image') {
+        imageB64 = attachment.content;
+        imageMediaType = attachment.media_type;
+      } else {
+        fullQuery = `${query}\n\n${attachment.context_text}`;
+      }
+      onAttachmentUsed?.();
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
       content: query,
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const next = [...messages, userMessage];
+    setMessages(next);
+    onMessagesChange?.(next.map(m => ({ role: m.role, content: m.content })));
     setIsLoading(true);
     setInputError(null);
 
     try {
-      const response = await chatQuery(query);
+      const envelope = await chatQuery(fullQuery, imageB64, imageMediaType);
+      const chatData = envelope.data;
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: response.prose,
-        response,
+        content: chatData?.prose ?? '',
+        envelope,
       };
-      setMessages((prev) => [...prev, assistantMessage]);
+      const withAssistant = [...next, assistantMessage];
+      setMessages(withAssistant);
+      onMessagesChange?.(withAssistant.map(m => ({ role: m.role, content: m.content })));
     } catch {
       setInputError('Something went wrong. Please try again.');
     } finally {
@@ -64,7 +103,7 @@ export default function ChatInterface() {
       <div className={styles.messageList} ref={listRef}>
         {messages.length === 0 && (
           <div className={styles.starterChips}>
-            {STARTER_QUERIES.map((q) => (
+            {activeStarters.map(q => (
               <button
                 key={q}
                 className={styles.chip}
@@ -77,28 +116,35 @@ export default function ChatInterface() {
           </div>
         )}
 
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={msg.role === 'user' ? styles.userMessage : styles.assistantMessage}
-          >
-            <p className={styles.messageText}>{msg.content}</p>
-            {msg.role === 'assistant' && msg.response && (
-              <>
-                {msg.response.used_fallback && (
-                  <span className={styles.fallbackBadge}>(AI narration unavailable)</span>
-                )}
-                <StructuredResponseBlock
-                  queryType={msg.response.query_type}
-                  engineData={msg.response.structured_data.engine_data}
-                  partial={msg.response.structured_data.partial}
-                  error={msg.response.structured_data.error}
-                  onExampleClick={handleSubmit}
-                />
-              </>
-            )}
-          </div>
-        ))}
+        {messages.map(msg => {
+          const chatData = msg.envelope?.data ?? null;
+          return (
+            <div
+              key={msg.id}
+              className={msg.role === 'user' ? styles.userMessage : styles.assistantMessage}
+            >
+              <p className={styles.messageText}>{msg.content}</p>
+              {msg.role === 'assistant' && msg.envelope && (
+                <>
+                  <FreshnessBadge freshness={msg.envelope.freshness} />
+                  {chatData?.used_fallback && (
+                    <span className={styles.fallbackBadge}>(AI narration unavailable)</span>
+                  )}
+                  {chatData && (
+                    <StructuredResponseBlock
+                      queryType={chatData.query_type}
+                      engineData={chatData.structured_data.engine_data}
+                      partial={chatData.structured_data.partial}
+                      error={chatData.structured_data.error}
+                      onExampleClick={handleSubmit}
+                      onPin={onPin}
+                    />
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
 
         {isLoading && (
           <div className={styles.loadingRow}>

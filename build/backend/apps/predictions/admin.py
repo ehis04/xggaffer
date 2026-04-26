@@ -4,8 +4,20 @@ from django.urls import reverse
 from django.db.models import Count, Avg
 from django.utils import timezone
 from datetime import timedelta
-from .models import ScrapedMatch, ScrapeLog, TeamStats, EloRating, CurrentEloRating
-from .tasks import scrape_specific_league
+from .models import (
+    ScrapedMatch,
+    ScrapeLog,
+    TeamStats,
+    EloRating,
+    CurrentEloRating,
+    Bookmaker,
+    FixtureOddsSnapshot,
+    BookmakerQuote,
+    HistoricalMarketBenchmark,
+    InferenceSnapshotRecord, 
+    ModelArtefactRecord
+)
+
 
 @admin.register(ScrapedMatch)
 class ScrapedMatchAdmin(admin.ModelAdmin):
@@ -81,19 +93,8 @@ class ScrapedMatchAdmin(admin.ModelAdmin):
         return '-'
     formatted_raw_data.short_description = 'Raw Data (JSON)'
     
-    actions = ['delete_selected', 'rescrape_matches']
+    actions = ['delete_selected']
     
-    def rescrape_matches(self, request, queryset):
-        for match in queryset:
-            scrape_specific_league.delay(match.league, match.season)
-        
-        self.message_user(
-            request,
-            f"Queued re-scraping for {queryset.count()} matches"
-        )
-    rescrape_matches.short_description = "Re-scrape selected matches"
-
-
 @admin.register(ScrapeLog)
 class ScrapeLogAdmin(admin.ModelAdmin):
     list_display = [
@@ -268,4 +269,88 @@ class CurrentEloRatingAdmin(admin.ModelAdmin):
     list_filter = ['league']
     search_fields = ['team']
     ordering = ['-elo']
- 
+
+@admin.register(Bookmaker)
+class BookmakerAdmin(admin.ModelAdmin):
+    list_display = ['name', 'slug', 'source', 'region', 'is_active', 'updated_at']
+    list_filter = ['source', 'region', 'is_active']
+    search_fields = ['name', 'slug']
+    ordering = ['name']
+
+
+@admin.register(FixtureOddsSnapshot)
+class FixtureOddsSnapshotAdmin(admin.ModelAdmin):
+    list_display = [
+        'fixture_label',
+        'league',
+        'season',
+        'bookmaker_source',
+        'market_type',
+        'fetched_at',
+        'is_consensus_snapshot',
+    ]
+    list_filter = [
+        'league',
+        'season',
+        'bookmaker_source',
+        'market_type',
+        'is_consensus_snapshot',
+        'fetched_at',
+    ]
+    search_fields = ['external_fixture_id', 'home_team', 'away_team']
+    ordering = ['-fetched_at']
+
+    def fixture_label(self, obj):
+        return obj.fixture_label()
+
+
+@admin.register(BookmakerQuote)
+class BookmakerQuoteAdmin(admin.ModelAdmin):
+    list_display = [
+        'bookmaker',
+        'fixture_label',
+        'home_odds',
+        'draw_odds',
+        'away_odds',
+        'last_seen_at',
+    ]
+    list_filter = ['bookmaker', 'snapshot__league', 'snapshot__season', 'last_seen_at']
+    search_fields = [
+        'bookmaker__name',
+        'snapshot__home_team',
+        'snapshot__away_team',
+        'snapshot__external_fixture_id',
+    ]
+    list_select_related = ('bookmaker', 'snapshot')
+    ordering = ['bookmaker__name']
+
+    def fixture_label(self, obj):
+        return obj.snapshot.fixture_label()
+
+
+@admin.register(HistoricalMarketBenchmark)
+class HistoricalMarketBenchmarkAdmin(admin.ModelAdmin):
+    list_display = [
+        'league',
+        'season',
+        'sample_size',
+        'model_accuracy',
+        'market_favourite_accuracy',
+        'evaluation_scope',
+        'source_label',
+        'generated_at',
+    ]
+    list_filter = ['league', 'season', 'evaluation_scope', 'source_label']
+    search_fields = ['league', 'season', 'source_label']
+    ordering = ['-generated_at']
+
+@admin.register(ModelArtefactRecord)
+class ModelArtefactRecordAdmin(admin.ModelAdmin):
+    list_display = ['algorithm', 'path', 'trained_at', 'promoted_at', 'is_active']
+    list_filter = ['algorithm', 'is_active']
+
+
+@admin.register(InferenceSnapshotRecord)
+class InferenceSnapshotRecordAdmin(admin.ModelAdmin):
+    list_display = ['algorithm', 'feature_set_version', 'snapshot_published_at', 'is_active']
+    list_filter = ['algorithm', 'is_active']

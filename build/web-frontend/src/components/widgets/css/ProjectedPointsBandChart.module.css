@@ -1,0 +1,102 @@
+.chart {
+  width: 100%;
+  padding: 0.5rem 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.teamNameFull {
+  width: 130px;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-text, #1e293b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+}
+
+.teamNameShort {
+  display: none;
+  width: 80px;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-text, #1e293b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+}
+
+.track {
+  flex: 1;
+  height: 10px;
+  background: var(--color-border, #e2e8f0);
+  border-radius: 999px;
+  position: relative;
+}
+
+.band {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: var(--color-primary-light, #ccfbf1);
+  border-radius: 999px;
+  min-width: 2px;
+}
+
+.median {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background: var(--color-primary, #0d9488);
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+}
+
+.ptLabel {
+  width: 32px;
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  color: var(--color-muted, #94a3b8);
+  text-align: left;
+}
+
+.axisRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.axisLabel {
+  font-size: 0.72rem;
+  color: var(--color-muted, #94a3b8);
+  width: 32px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.axisTrack {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border, #e2e8f0);
+}
+
+@media (max-width: 768px) {
+  .teamNameFull {
+    display: none;
+  }
+
+  .teamNameShort {
+    display: block;
+  }
+}

@@ -1,10 +1,17 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import ChatInterface from "./ChatInterface";
 import "./css/ChatPopUp.css";
+
+const PREDICTION_PAGE_ROUTE = "/coaching/predictions";
 
 export default function ChatPopUp() {
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const onPredictionPage = location.pathname === PREDICTION_PAGE_ROUTE;
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -13,6 +20,8 @@ export default function ChatPopUp() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen]);
+
+  if (onPredictionPage) return null;
 
   return (
     <>
@@ -36,9 +45,16 @@ export default function ChatPopUp() {
             <span className="chat-pu-panel-dot" />
             <span>xgGaffer</span>
             <span className="chat-pu-panel-sub">
-              Ask anything about football anlytics
+              Ask anything about football analytics
             </span>
           </div>
+          <button
+            className="chat-pu-panel-fullpage-link"
+            onClick={() => { setIsOpen(false); navigate(PREDICTION_PAGE_ROUTE); }}
+            aria-label="Open full prediction page"
+          >
+            Full page →
+          </button>
           <button
             className="chat-pu-panel-close"
             onClick={() => setIsOpen(false)}

@@ -112,7 +112,7 @@ export const EditProfile = ({
 
         <div className="epm-body">
           <div className="epm-avatar-section">
-            <ProfileButton username={userData?.username} size="large"/>
+            <ProfileButton username={userData?.username ?? ''} size="large"/>
             <div className="epm-avatar-info">
               <div className="epm-avatar-name">
                 {userData?.display_name || userData?.username}

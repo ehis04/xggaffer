@@ -16,6 +16,9 @@ from .models import (
     ClubJoinRequest,
     ClubMembership,
     ClubPlayer,
+    ClubPlayerInjury,
+    ClubPlayerManualStats,
+    ClubSeasonResult,
     ClubEvent,
     Fixture,
     ClubResource,
@@ -104,9 +107,15 @@ class ClubUnderstatSummaryMixin(serializers.Serializer):
             "competition_code": enrichment.competition_code,
             "competition_name": enrichment.competition_name,
             "matches_played": enrichment.matches_played,
+            "wins": enrichment.wins,
+            "draws": enrichment.draws,
+            "losses": enrichment.losses,
+            "goals_for": enrichment.goals_for,
+            "goals_against": enrichment.goals_against,
             "xg": enrichment.xg,
             "xga": enrichment.xga,
             "npxg": enrichment.npxg,
+            "ppda": enrichment.ppda,
             "last_synced_at": (
                 enrichment.last_synced_at.isoformat()
                 if enrichment.last_synced_at else None
@@ -1873,3 +1882,162 @@ class TrashListItemSerializer(serializers.Serializer):
     trash_expires_at = serializers.DateTimeField(allow_null=True)
     updated_at = serializers.DateTimeField(allow_null=True)
     route_path = serializers.CharField()
+
+
+class ClubPlayerInjurySerializer(serializers.ModelSerializer):
+    injury_type_display = serializers.CharField(source='get_injury_type_display', read_only=True)
+    severity_display = serializers.CharField(source='get_severity_display', read_only=True)
+    availability_status_display = serializers.CharField(source='get_availability_status_display', read_only=True)
+    recorded_by_email = serializers.CharField(source='recorded_by.email', read_only=True)
+
+    class Meta:
+        model = ClubPlayerInjury
+        fields = [
+            'id',
+            'club_player',
+            'injury_type',
+            'injury_type_display',
+            'severity',
+            'severity_display',
+            'availability_status',
+            'availability_status_display',
+            'injured_at',
+            'estimated_return',
+            'notes',
+            'is_current',
+            'recorded_by',
+            'recorded_by_email',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'club_player', 'recorded_by', 'created_at', 'updated_at']
+
+    def validate(self, attrs):
+        availability_status = attrs.get('availability_status', ClubPlayerInjury.AvailabilityStatus.INJURED)
+        if availability_status == ClubPlayerInjury.AvailabilityStatus.AVAILABLE:
+            raise serializers.ValidationError(
+                {'availability_status': 'Use the resolve endpoint to mark a player available.'}
+            )
+        return attrs
+
+
+class ClubPlayerManualStatsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClubPlayerManualStats
+        fields = [
+            'id',
+            'club_player',
+            'season',
+            'appearances',
+            'minutes_played',
+            'goals',
+            'assists',
+            'xg',
+            'npxg',
+            'xa',
+            'shots',
+            'shots_on_target',
+            'key_passes',
+            'dribbles_completed',
+            'progressive_passes',
+            'progressive_carries',
+            'tackles',
+            'interceptions',
+            'aerials_won',
+            'clearances',
+            'blocks',
+            'saves',
+            'save_percentage',
+            'clean_sheets',
+            'goals_conceded',
+            'last_updated',
+            'created_at',
+        ]
+        read_only_fields = ['id', 'club_player', 'last_updated', 'created_at']
+
+
+class ClubSeasonResultSerializer(serializers.ModelSerializer):
+    outcome = serializers.CharField(read_only=True)
+    venue_display = serializers.CharField(source='get_venue_display', read_only=True)
+    created_by_email = serializers.CharField(source='created_by.email', read_only=True)
+
+    class Meta:
+        model = ClubSeasonResult
+        fields = [
+            'id',
+            'club',
+            'opponent_name',
+            'venue',
+            'venue_display',
+            'competition',
+            'match_date',
+            'goals_for',
+            'goals_against',
+            'outcome',
+            'fixture',
+            'notes',
+            'created_by',
+            'created_by_email',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'club', 'outcome', 'created_by', 'created_at', 'updated_at']
+
+
+class ClubPlayerWithAvailabilitySerializer(
+    ClubPlayerIdentityReadMixin,
+    ClubPlayerCanonicalLinkStateMixin,
+    ClubPlayerProviderStatusMixin,
+    serializers.ModelSerializer,
+):
+    is_claimed = serializers.BooleanField(read_only=True)
+    club_name = serializers.CharField(source='club.name', read_only=True)
+    availability_status = serializers.SerializerMethodField()
+    current_injury = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ClubPlayer
+        fields = [
+            'id',
+            'club',
+            'club_name',
+            'player',
+            'user',
+            'first_name',
+            'last_name',
+            'display_name',
+            'squad_number',
+            'primary_position',
+            'secondary_positions',
+            'preferred_foot',
+            'date_of_birth',
+            'height_cm',
+            'photo',
+            'is_public',
+            'is_active',
+            'is_claimed',
+            'availability_status',
+            'current_injury',
+            'is_linked_to_player',
+            'canonical_player_id',
+            'canonical_display_name',
+            'canonical_primary_position',
+            'player_id',
+            'has_provider_identity',
+            'provider_sources',
+            'last_synced_at',
+            'created_at',
+        ]
+        read_only_fields = ['id', 'club', 'player', 'user']
+
+    def get_availability_status(self, obj):
+        injury = obj.injuries.filter(is_current=True).first()
+        if injury:
+            return injury.availability_status
+        return ClubPlayerInjury.AvailabilityStatus.AVAILABLE
+
+    def get_current_injury(self, obj):
+        injury = obj.injuries.filter(is_current=True).select_related('recorded_by').first()
+        if injury:
+            return ClubPlayerInjurySerializer(injury).data
+        return None

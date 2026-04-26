@@ -1,11 +1,10 @@
-"""
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 from datetime import timedelta
 
-#User = get_user_model()
+User = get_user_model()
 
 class Site(models.Model):
     name = models.CharField(max_length=100, blank=False)
@@ -187,7 +186,7 @@ class UserFeedback(models.Model):
         ('site', 'Site'),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='feedbacks')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article_feedbacks')
     feedback_type = models.CharField(max_length=10, choices=FEEDBACK_TYPES)
     target_type = models.CharField(max_length=20, choices=TARGET_TYPES)
 
@@ -198,9 +197,10 @@ class UserFeedback(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        unique_together = ('user', 'target_type', 'article', 'author', 'site')
         indexes = [
             models.Index(fields=['user', 'target_type']),
-            models.Index(fields=['article'])
+            models.Index(fields=['article']),
         ]
 
     def __str__(self):
@@ -218,7 +218,7 @@ class UserRecommendation(models.Model):
     is_viewed = models.BooleanField(default=False)
     viewed_at = models.DateTimeField(null=True, blank=True)
     is_clicked = models.BooleanField(default=False)
-    clivked_at = models.DateTimeField(null=True, blank=True)
+    clicked_at = models.DateTimeField(null=True, blank=True)
 
     batch_date = models.DateField(auto_now_add=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -232,7 +232,7 @@ class UserRecommendation(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.user.email} - {self.article[:50]} ({self.score:.2f})"
+        return f"{self.user.email} - {self.article.title[:50]} ({self.score:.2f})"
 
 class ReadingHistory(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reading_histories')
@@ -256,8 +256,10 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='article_profile')
 
     preferred_topics = models.ManyToManyField(Topic, related_name='interested_users', blank=True)
-    preferred_authors = models.ManyToManyField(Author, related_name='followers', blank=True)
-    preferred_sites = models.ManyToManyField(Site, related_name='followers', blank=True)
+    preferred_authors = models.ManyToManyField(Author, related_name='article_followers', blank=True)
+    preferred_sites = models.ManyToManyField(Site, related_name='article_followers', blank=True)
+    disliked_authors = models.ManyToManyField(Author, blank=True, related_name='article_disliked_by')
+    disliked_sites = models.ManyToManyField(Site, blank=True, related_name='article_disliked_by')
 
     min_read_time = models.IntegerField(default=0, help_text="Minimum read time in minutes")
     max_read_time = models.IntegerField(default=0, help_text="Maximum read time in minutes")
@@ -276,4 +278,3 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"Profile of {self.user.email}"
-"""

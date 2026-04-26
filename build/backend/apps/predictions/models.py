@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.utils import timezone
 
 class ScrapedMatch(models.Model):
     external_id = models.CharField(max_length=50, unique=True)
@@ -276,3 +276,188 @@ class SimulationResult(models.Model):
 
     def __str__(self):
         return f"Simulation {self.league} {self.season} @ {self.freeze_date}"
+
+class Bookmaker(models.Model):
+    class Source(models.TextChoices):
+        THE_ODDS_API = 'the_odds_api', 'The Odds API'
+        FDCOUK = 'fdcouk', 'Football-Data.co.uk'
+        MANUAL = 'manual', 'Manual'
+
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True)
+    source = models.CharField(
+        max_length=20,
+        choices=Source.choices,
+        default=Source.THE_ODDS_API,
+    )
+    region = models.CharField(max_length=50, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        indexes = [
+            models.Index(fields=['source']),
+            models.Index(fields=['is_active']),
+        ]
+
+    def __str__(self):
+        return self.name
+
+
+class FixtureOddsSnapshot(models.Model):
+    class MarketType(models.TextChoices):
+        MATCH_RESULT = '1x2', '1X2'
+
+    bookmaker_source = models.CharField(max_length=50)
+    external_fixture_id = models.CharField(max_length=100)
+    league = models.CharField(max_length=50)
+    season = models.CharField(max_length=10)
+    home_team = models.CharField(max_length=100)
+    away_team = models.CharField(max_length=100)
+    commence_time = models.DateTimeField()
+    fetched_at = models.DateTimeField(default=timezone.now)
+    market_type = models.CharField(
+        max_length=20,
+        choices=MarketType.choices,
+        default=MarketType.MATCH_RESULT,
+    )
+    is_consensus_snapshot = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-fetched_at']
+        indexes = [
+            models.Index(fields=['external_fixture_id']),
+            models.Index(fields=['league', 'season']),
+            models.Index(fields=['fetched_at']),
+            models.Index(fields=['bookmaker_source', 'market_type']),
+        ]
+
+    def fixture_label(self):
+        return f"{self.home_team} vs {self.away_team} ({self.league} {self.season})"
+
+    def __str__(self):
+        return self.fixture_label()
+
+
+class BookmakerQuote(models.Model):
+    snapshot = models.ForeignKey(
+        FixtureOddsSnapshot,
+        on_delete=models.CASCADE,
+        related_name='quotes',
+    )
+    bookmaker = models.ForeignKey(
+        Bookmaker,
+        on_delete=models.CASCADE,
+        related_name='quotes',
+        db_index=False,
+    )
+    home_odds = models.FloatField()
+    draw_odds = models.FloatField()
+    away_odds = models.FloatField()
+    implied_home = models.FloatField()
+    implied_draw = models.FloatField()
+    implied_away = models.FloatField()
+    devig_home = models.FloatField()
+    devig_draw = models.FloatField()
+    devig_away = models.FloatField()
+    last_seen_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['bookmaker__name']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['snapshot', 'bookmaker'],
+                name='unique_bookmaker_quote_per_snapshot',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['bookmaker']),
+            models.Index(fields=['last_seen_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.bookmaker.name} - {self.snapshot.fixture_label()}"
+
+
+class HistoricalMarketBenchmark(models.Model):
+    league = models.CharField(max_length=50)
+    season = models.CharField(max_length=10)
+    sample_size = models.PositiveIntegerField()
+    model_accuracy = models.FloatField()
+    market_favourite_accuracy = models.FloatField(null=True, blank=True)
+    model_brier_score = models.FloatField(null=True, blank=True)
+    market_brier_score = models.FloatField(null=True, blank=True)
+    evaluation_scope = models.CharField(max_length=50)
+    source_label = models.CharField(max_length=100)
+    generated_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['league', 'season']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['league', 'season', 'evaluation_scope', 'source_label'],
+                name='unique_historical_market_benchmark_scope',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['league']),
+            models.Index(fields=['season']),
+        ]
+
+    def __str__(self):
+        return f"{self.league} {self.season} {self.source_label}"
+
+class ModelArtefactRecord(models.Model):
+    algorithm = models.CharField(max_length=64)
+    path = models.CharField(max_length=512)
+    trained_at = models.DateTimeField()
+    promoted_at = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=False)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['algorithm', 'is_active']),
+        ]
+
+    def __str__(self):
+        active = 'ACTIVE' if self.is_active else 'inactive'
+        return f'ModelArtefactRecord({self.algorithm}, {active}, {self.path})'
+
+
+class InferenceSnapshotRecord(models.Model):
+    algorithm = models.CharField(max_length=64)
+    feature_set_version = models.CharField(max_length=64)
+    snapshot_published_at = models.DateTimeField()
+    is_active = models.BooleanField(default=False)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['algorithm', 'is_active']),
+        ]
+
+    def __str__(self):
+        active = 'ACTIVE' if self.is_active else 'inactive'
+        return f'InferenceSnapshotRecord({self.algorithm}, {active}, {self.snapshot_published_at})'
+
+
+class OddsAccuracyStats(models.Model):
+    league = models.CharField(max_length=32)
+    season = models.CharField(max_length=8)
+    model_wins = models.IntegerField(default=0)
+    market_wins = models.IntegerField(default=0)
+    ties = models.IntegerField(default=0)
+    total_evaluated = models.IntegerField(default=0)
+    computed_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('league', 'season')
+        indexes = [models.Index(fields=['league', 'season'])]
+
+    def __str__(self):
+        return f'OddsAccuracyStats({self.league} {self.season}: model={self.model_wins} market={self.market_wins})'

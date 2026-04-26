@@ -28,6 +28,7 @@ import type {
     SavedLeagueScenarioDetail,
     SavedLeagueScenarioListResponse,
 } from '../../types/livefootball';
+import type { ApiEnvelope } from '../../common/types/response';
 
 type ApiParamValue = string | number | boolean | undefined | null;
 type ApiParamRecord = Record<string, ApiParamValue>;
@@ -203,21 +204,21 @@ export const liveFootballApi = {
             `${LIVEFOOTBALL_BASE}/players/search/`,
             buildPlayerSearchParams(params)
         ),
+        
+getLeaguesMeta: () =>
+    apiClient.get<ApiEnvelope<LeaguesMetaResponse>>(`${LIVEFOOTBALL_BASE}/leagues/meta/`),
 
-    getLeaguesMeta: () =>
-        apiClient.get<LeaguesMetaResponse>(`${LIVEFOOTBALL_BASE}/leagues/meta/`),
+getLeagueExpectedTable: (competitionId: number, params?: LeagueProjectionParams) =>
+    apiClient.get<ApiEnvelope<LeagueExpectedTableResponse>>(
+        `${LIVEFOOTBALL_BASE}/leagues/${competitionId}/expected-table/`,
+        buildLeagueProjectionParams(params)
+    ),
 
-    getLeagueExpectedTable: (competitionId: number, params?: LeagueProjectionParams) =>
-        apiClient.get<LeagueExpectedTableResponse>(
-            `${LIVEFOOTBALL_BASE}/leagues/${competitionId}/expected-table/`,
-            buildLeagueProjectionParams(params)
-        ),
-
-    getLeagueComparison: (competitionId: number, params?: LeagueProjectionParams) =>
-        apiClient.get<LeagueCompareResponse>(
-            `${LIVEFOOTBALL_BASE}/leagues/${competitionId}/compare/`,
-            buildLeagueProjectionParams(params)
-        ),
+getLeagueComparison: (competitionId: number, params?: LeagueProjectionParams) =>
+    apiClient.get<ApiEnvelope<LeagueCompareResponse>>(
+        `${LIVEFOOTBALL_BASE}/leagues/${competitionId}/compare/`,
+        buildLeagueProjectionParams(params)
+    ),
 
     runLeagueScenario: (
         competitionId: number,
@@ -268,8 +269,8 @@ export const liveFootballApi = {
         ),
 };
 
-export const getLiveFootballOverview = async (): Promise<LiveFootballOverview> => {
-    return apiClient.get<LiveFootballOverview>('/livefootball/overview/');
+export const getLiveFootballOverview = async (): Promise<ApiEnvelope<LiveFootballOverview>> => {
+    return apiClient.get<ApiEnvelope<LiveFootballOverview>>('/livefootball/overview/');
 };
 
 export {

@@ -11,8 +11,6 @@ interface ProfileTopBarProps {
 export const ProfileTopBar = ({
   displayName,
   postCount,
-  isOwnProfile = false,
-  onShare,
 }: ProfileTopBarProps) => {
   const navigate = useNavigate();
 

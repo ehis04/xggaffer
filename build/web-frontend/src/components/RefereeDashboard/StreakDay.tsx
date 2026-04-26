@@ -1,12 +1,10 @@
 import "./css/DashboardCard.css";
 
 export function StreakDay({
-  date,
   label,
   studied,
   isToday,
 }: {
-  date: Date;
   label: string;
   studied: boolean;
   isToday: boolean;

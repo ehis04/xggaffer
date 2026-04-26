@@ -1,4 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '../../../common/query/queryKeys';
+import { STALE_TIME_STANDARD } from '../../../common/query/queryClient';
+import { buildLeagueProjectionParams } from '../../../services/api/livefootballApi';
 import { Link, useSearchParams } from 'react-router-dom';
 import CommentaryPanel from '../../../components/livefootball/leagues/CommentaryPanel';
 import ComparisonMetrics from '../../../components/livefootball/leagues/ComparisonMetrics';
@@ -8,9 +12,7 @@ import MatchweekSelector from '../../../components/livefootball/leagues/Matchwee
 import SeasonSelector from '../../../components/livefootball/leagues/SeasonSelector';
 import liveFootballApi from '../../../services/api/livefootballApi';
 import type {
-  LeagueCompareResponse,
   LeagueMetaItem,
-  LeaguesMetaResponse,
 } from '../../../types/livefootball';
 import styles from '../../../components/livefootball/leagues/css/LeagueComparePage.module.css';
 
@@ -28,83 +30,15 @@ const MODE_ORDER: ProjectionMode[] = ['current_expected', 'pre_season', 'as_of_m
 const ENABLE_MATCHWEEK_UI = false;
 type UnavailableMode = LeagueMetaItem['unavailable_modes'][number];
 
-const normalizeError = (error: unknown): string => {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  if (typeof error === 'string') {
-    return error;
-  }
-
-  if (error && typeof error === 'object') {
-    const values = Object.values(error as Record<string, unknown>).flatMap((value) => {
-      if (Array.isArray(value)) {
-        return value.map(String);
-      }
-
-      if (value === null || value === undefined) {
-        return [];
-      }
-
-      return [String(value)];
-    });
-
-    if (values.length > 0) {
-      return values.join(' ');
-    }
-  }
-
-  return 'Something went wrong.';
-};
-
 const LeagueComparePage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [meta, setMeta] = useState<LeaguesMetaResponse | null>(null);
-  const [metaLoading, setMetaLoading] = useState(true);
-  const [metaError, setMetaError] = useState<string | null>(null);
-
-  const [comparison, setComparison] = useState<LeagueCompareResponse | null>(null);
-  const [comparisonLoading, setComparisonLoading] = useState(false);
-  const [comparisonError, setComparisonError] = useState<string | null>(null);
-  const comparisonCacheRef = useRef<Map<string, LeagueCompareResponse>>(new Map());
-
-  useEffect(() => {
-    let isActive = true;
-
-    const loadMeta = async (): Promise<void> => {
-      try {
-        setMetaLoading(true);
-        setMetaError(null);
-
-        const payload = await liveFootballApi.getLeaguesMeta();
-
-        if (!isActive) {
-          return;
-        }
-
-        setMeta(payload);
-      } catch (error) {
-        if (!isActive) {
-          return;
-        }
-
-        setMeta(null);
-        setMetaError(normalizeError(error));
-      } finally {
-        if (isActive) {
-          setMetaLoading(false);
-        }
-      }
-    };
-
-    void loadMeta();
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
+  const { data: metaEnvelope, isPending: metaLoading, isError: metaErrored } = useQuery({
+    queryKey: queryKeys.livefootball.leaguesMeta(),
+    queryFn: () => liveFootballApi.getLeaguesMeta(),
+    staleTime: STALE_TIME_STANDARD,
+  });
+  const meta = metaEnvelope?.data ?? null;
 
   const leagues = meta?.leagues ?? [];
 
@@ -252,77 +186,6 @@ const LeagueComparePage: React.FC = () => {
     setSearchParams(nextParams, { replace: true });
   }, [searchParams, selectedLeague, selectedSeason, selectedMode, selectedMatchweek, selectedProjectionWindow, isCurrentSeasonSelected, setSearchParams]);
 
-  useEffect(() => {
-    if (!selectedLeague || !selectedSeason || !selectedMode) {
-      setComparison(null);
-      setComparisonError(null);
-      setComparisonLoading(false);
-      return;
-    }
-
-    const cacheKey = [
-      String(selectedLeague.id),
-      selectedSeason,
-      selectedMode,
-      ENABLE_MATCHWEEK_UI && selectedMode === 'as_of_matchweek' ? String(selectedMatchweek ?? 'none') : 'none',
-      selectedMode === 'pre_season' && isCurrentSeasonSelected ? selectedProjectionWindow : 'none',
-    ].join(':');
-
-    const cached = comparisonCacheRef.current.get(cacheKey);
-    if (cached) {
-      setComparison(cached);
-      setComparisonError(null);
-      setComparisonLoading(false);
-      return;
-    }
-
-    let isActive = true;
-
-    const loadComparison = async (): Promise<void> => {
-      try {
-        setComparisonLoading(true);
-        setComparisonError(null);
-
-        const payload = await liveFootballApi.getLeagueComparison(selectedLeague.id, {
-          season: selectedSeason,
-          mode: selectedMode,
-          matchweek:
-            ENABLE_MATCHWEEK_UI && selectedMode === 'as_of_matchweek'
-              ? (selectedMatchweek ?? undefined)
-              : undefined,
-          projection_window:
-            selectedMode === 'pre_season' && isCurrentSeasonSelected
-              ? selectedProjectionWindow
-              : undefined,
-        });
-
-        if (!isActive) {
-          return;
-        }
-
-        comparisonCacheRef.current.set(cacheKey, payload);
-        setComparison(payload);
-      } catch (error) {
-        if (!isActive) {
-          return;
-        }
-
-        setComparison(null);
-        setComparisonError(normalizeError(error));
-      } finally {
-        if (isActive) {
-          setComparisonLoading(false);
-        }
-      }
-    };
-
-    void loadComparison();
-
-    return () => {
-      isActive = false;
-    };
-  }, [selectedLeague, selectedSeason, selectedMode, selectedMatchweek, selectedProjectionWindow, isCurrentSeasonSelected]);
-
   const handleLeagueChange = (competitionId: number): void => {
     const nextLeague = leagues.find((league: LeagueMetaItem) => league.id === competitionId);
     const nextSeason = nextLeague?.available_seasons[0] ?? '';
@@ -383,7 +246,6 @@ const LeagueComparePage: React.FC = () => {
   const handleSeasonChange = (season: string): void => {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set('season', season);
-
     setSearchParams(nextParams);
   };
 
@@ -420,13 +282,36 @@ const LeagueComparePage: React.FC = () => {
 
   const filtersReady = Boolean(selectedLeague && selectedSeason && selectedMode);
 
+  const comparisonParams = useMemo(() => ({
+    season: selectedSeason ?? undefined,
+    mode: selectedMode ?? undefined,
+    matchweek:
+      ENABLE_MATCHWEEK_UI && selectedMode === 'as_of_matchweek'
+        ? (selectedMatchweek ?? undefined)
+        : undefined,
+    projection_window:
+      selectedMode === 'pre_season' && isCurrentSeasonSelected
+        ? selectedProjectionWindow
+        : undefined,
+  }), [selectedSeason, selectedMode, selectedMatchweek, selectedProjectionWindow, isCurrentSeasonSelected]);
+
+  const builtParams = buildLeagueProjectionParams(comparisonParams);
+
+  const { data: comparisonEnvelope, isPending: comparisonLoading, isError: comparisonErrored } = useQuery({
+    queryKey: queryKeys.livefootball.compare(selectedLeague?.id ?? 0, builtParams ?? {}),
+    queryFn: () => liveFootballApi.getLeagueComparison(selectedLeague!.id, comparisonParams),
+    enabled: Boolean(selectedLeague && selectedSeason && selectedMode),
+    staleTime: STALE_TIME_STANDARD,
+  });
+  const comparison = comparisonEnvelope?.data ?? null;
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
         <div className={styles.titleBlock}>
           <h1 className={styles.title}>League comparison</h1>
           <p className={styles.subtitle}>
-            Compare actual standings against the model’s expected table and inspect the key deltas.
+            Compare actual standings against the model's expected table and inspect the key deltas.
           </p>
         </div>
 
@@ -538,14 +423,14 @@ const LeagueComparePage: React.FC = () => {
         </section>
       ) : null}
 
-      {!metaLoading && metaError ? (
+      {!metaLoading && metaErrored ? (
         <section className={styles.stateCard}>
           <h2 className={styles.stateTitle}>Comparison unavailable</h2>
-          <p className={styles.stateText}>{metaError}</p>
+          <p className={styles.stateText}>Failed to load league metadata.</p>
         </section>
       ) : null}
 
-      {!metaLoading && !metaError && !filtersReady ? (
+      {!metaLoading && !metaErrored && !filtersReady ? (
         <section className={styles.stateCard}>
           <h2 className={styles.stateTitle}>No comparison options available</h2>
           <p className={styles.stateText}>
@@ -554,7 +439,7 @@ const LeagueComparePage: React.FC = () => {
         </section>
       ) : null}
 
-      {!metaLoading && !metaError && filtersReady ? (
+      {!metaLoading && !metaErrored && filtersReady ? (
         <>
           {comparisonLoading ? (
             <section className={styles.stateCard}>
@@ -563,14 +448,14 @@ const LeagueComparePage: React.FC = () => {
             </section>
           ) : null}
 
-          {!comparisonLoading && comparisonError ? (
+          {!comparisonLoading && comparisonErrored ? (
             <section className={styles.stateCard}>
               <h2 className={styles.stateTitle}>Could not load comparison</h2>
-              <p className={styles.stateText}>{comparisonError}</p>
+              <p className={styles.stateText}>Could not load comparison data.</p>
             </section>
           ) : null}
 
-          {!comparisonLoading && !comparisonError && comparison ? (
+          {!comparisonLoading && !comparisonErrored && comparison ? (
             <>
               <ComparisonTable
                 actualRows={comparison.actual_table}

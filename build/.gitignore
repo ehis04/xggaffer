@@ -93,12 +93,34 @@ cookies.txt
 
 # Celery
 celerybeat-schedule
+backend/celerybeat-schedule
+
+# Hidden/lock files
+.*
+!.gitignore
+!.vscode
+
+# Backend generated folders
+backend/downloaded_files/
+logs/
 
 # Test coverage
 htmlcov/
 .mypy_cache/
 .dmypy.json
+
+# Local development artifacts
+extra_or_junk/
+file_structure.txt
 dmypy.json
+logs/
+
+# Backend artifacts
+backend/*.log
+backend/celerybeat-schedule
+backend/cookies.txt
+backend/viewer-cookies.txt
+backend/*.deb
 
 # Local database backups
 *.bak
@@ -132,3 +154,6 @@ data/
 *.joblib
 *.pkl
 *.csv
+# Include predictions ML data package
+!backend/apps/predictions/ml/data/
+!backend/apps/predictions/ml/data/**

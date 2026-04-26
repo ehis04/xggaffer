@@ -65,7 +65,9 @@
   letter-spacing: 0.8px;
 }
 
-.lfb-header-mid { /* balances grid */ }
+.lfb-header-mid {
+  /* balances grid */
+}
 
 .lfb-header-right {
   display: flex;
@@ -114,7 +116,11 @@
 
 .lfb-section-surface-error {
   border-color: rgba(248, 113, 113, 0.35);
-  background: color-mix(in srgb, rgba(248,113,113,0.06) 100%, var(--brand-lightest-green-border));
+  background: color-mix(
+    in srgb,
+    rgba(248, 113, 113, 0.06) 100%,
+    var(--brand-lightest-green-border)
+  );
 }
 
 .lfb-section-heading-group {
@@ -124,7 +130,7 @@
 }
 
 .lfb-section-title {
-  font-family: 'Syne', sans-serif;
+  font-family: "Syne", sans-serif;
   font-size: 18px;
   font-weight: 800;
   color: var(--primary-text);
@@ -149,7 +155,7 @@
 
 /* Shared compact section title (h3-level) */
 .lfb-compact-title {
-  font-family: 'Syne', sans-serif;
+  font-family: "Syne", sans-serif;
   font-size: 14px;
   font-weight: 700;
   color: var(--primary-text);
@@ -174,11 +180,13 @@
   padding: 9px 18px;
   font-size: 13px;
   font-weight: 700;
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
   color: #0a1a10;
   text-decoration: none;
   cursor: pointer;
-  transition: opacity 0.15s, transform 0.12s;
+  transition:
+    opacity 0.15s,
+    transform 0.12s;
   white-space: nowrap;
 }
 
@@ -206,7 +214,9 @@
   transition: opacity 0.15s;
 }
 
-.lfb-compact-action-link:hover { opacity: 0.75; }
+.lfb-compact-action-link:hover {
+  opacity: 0.75;
+}
 
 /* ── Inline pill / tag ───────────────────────────────────────────────────── */
 .lfb-inline-pill {
@@ -264,7 +274,7 @@
 }
 
 .lfb-hero-title {
-  font-family: 'Syne', sans-serif;
+  font-family: "Syne", sans-serif;
   font-size: 32px;
   font-weight: 800;
   color: var(--primary-text);
@@ -329,7 +339,7 @@
 }
 
 .lfb-match-league-name {
-  font-family: 'Syne', sans-serif;
+  font-family: "Syne", sans-serif;
   font-size: 15px;
   font-weight: 800;
   color: var(--primary-text);
@@ -362,12 +372,18 @@
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 
 .lfb-carousel-btn:hover:not(:disabled) {
   border-color: var(--hover-lightest-green);
-  background: color-mix(in srgb, var(--hover-lightest-green) 10%, var(--brand-lightest-green-border));
+  background: color-mix(
+    in srgb,
+    var(--hover-lightest-green) 10%,
+    var(--brand-lightest-green-border)
+  );
 }
 
 .lfb-carousel-btn:disabled {
@@ -414,8 +430,13 @@
 }
 
 @keyframes lfb-live-pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.55; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -453,7 +474,11 @@
 }
 
 .lfb-snapshot-row:hover {
-  border-color: color-mix(in srgb, var(--hover-lightest-green) 30%, transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--hover-lightest-green) 30%,
+    transparent
+  );
 }
 
 .lfb-snapshot-position {
@@ -484,7 +509,7 @@
 }
 
 .lfb-snapshot-points {
-  font-family: 'Syne', sans-serif;
+  font-family: "Syne", sans-serif;
   font-size: 15px;
   font-weight: 800;
   color: var(--hover-lightest-green);
@@ -512,7 +537,7 @@
 }
 
 .lfb-streak-column-title {
-  font-family: 'Syne', sans-serif;
+  font-family: "Syne", sans-serif;
   font-size: 11px;
   font-weight: 700;
   color: var(--hover-lightest-green);
@@ -539,7 +564,11 @@
 }
 
 .lfb-streak-card:hover {
-  border-color: color-mix(in srgb, var(--hover-lightest-green) 35%, transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--hover-lightest-green) 35%,
+    transparent
+  );
 }
 
 .lfb-streak-top-row {
@@ -586,7 +615,7 @@
 }
 
 .lfb-streak-value {
-  font-family: 'Syne', sans-serif;
+  font-family: "Syne", sans-serif;
   font-size: 28px;
   font-weight: 800;
   color: var(--hover-lightest-green);
@@ -630,7 +659,11 @@
 }
 
 .lfb-info-card:hover {
-  border-color: color-mix(in srgb, var(--hover-lightest-green) 35%, transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--hover-lightest-green) 35%,
+    transparent
+  );
 }
 
 .lfb-card-fill {
@@ -677,9 +710,18 @@
   font-weight: 800;
 }
 
-.lfb-form-pill-win  { background: color-mix(in srgb, var(--hover-lightest-green) 20%, transparent); color: var(--hover-lightest-green); }
-.lfb-form-pill-draw { background: rgba(255,255,255,0.07); color: var(--tertiary-text); }
-.lfb-form-pill-loss { background: rgba(248,113,113,0.15); color: #f87171; }
+.lfb-form-pill-win {
+  background: color-mix(in srgb, var(--hover-lightest-green) 20%, transparent);
+  color: var(--hover-lightest-green);
+}
+.lfb-form-pill-draw {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--tertiary-text);
+}
+.lfb-form-pill-loss {
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+}
 
 /* ══════════════════════════════════════════════════════════════════════════
    MATCH CARDS  (LeagueMatchesSection)
@@ -703,7 +745,11 @@
 }
 
 .lfb-match-card:hover {
-  border-color: color-mix(in srgb, var(--hover-lightest-green) 30%, transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--hover-lightest-green) 30%,
+    transparent
+  );
 }
 
 .lfb-match-top-row {
@@ -776,7 +822,7 @@
 }
 
 .lfb-match-score {
-  font-family: 'Syne', sans-serif;
+  font-family: "Syne", sans-serif;
   font-size: 15px;
   font-weight: 800;
   color: var(--primary-text);
@@ -805,7 +851,9 @@
   transition: opacity 0.15s;
 }
 
-.lfb-match-league-action:hover { opacity: 0.75; }
+.lfb-match-league-action:hover {
+  opacity: 0.75;
+}
 
 /* ══════════════════════════════════════════════════════════════════════════
    COMPARE  (FirstVsLastLeagueSection — ComparisonCard)
@@ -827,13 +875,25 @@
 }
 
 .lfb-compare-card-leader {
-  background: color-mix(in srgb, var(--hover-lightest-green) 6%, var(--brand-light-green));
-  border-color: color-mix(in srgb, var(--hover-lightest-green) 30%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--hover-lightest-green) 6%,
+    var(--brand-light-green)
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--hover-lightest-green) 30%,
+    transparent
+  );
 }
 
 .lfb-compare-card-bottom {
-  background: color-mix(in srgb, rgba(248,113,113,0.06) 100%, var(--brand-light-green));
-  border-color: rgba(248,113,113,0.25);
+  background: color-mix(
+    in srgb,
+    rgba(248, 113, 113, 0.06) 100%,
+    var(--brand-light-green)
+  );
+  border-color: rgba(248, 113, 113, 0.25);
 }
 
 .lfb-compare-header {
@@ -858,7 +918,7 @@
 }
 
 .lfb-compare-team-name {
-  font-family: 'Syne', sans-serif;
+  font-family: "Syne", sans-serif;
   font-size: 15px;
   font-weight: 800;
   color: var(--primary-text);
@@ -866,7 +926,7 @@
 }
 
 .lfb-compare-position-badge {
-  font-family: 'Syne', sans-serif;
+  font-family: "Syne", sans-serif;
   font-size: 18px;
   font-weight: 800;
   color: var(--tertiary-text);
@@ -892,7 +952,7 @@
 }
 
 .lfb-compare-stat-value {
-  font-family: 'Syne', sans-serif;
+  font-family: "Syne", sans-serif;
   font-size: 20px;
   font-weight: 800;
   color: var(--primary-text);
@@ -932,7 +992,9 @@
   transition: opacity 0.15s;
 }
 
-.lfb-compare-action-link:hover { opacity: 0.75; }
+.lfb-compare-action-link:hover {
+  opacity: 0.75;
+}
 
 /* ── Spotlight section ───────────────────────────────────────────────────── */
 .lfb-spotlight-section {
@@ -959,7 +1021,11 @@
 }
 
 .lfb-spotlight-card:hover {
-  border-color: color-mix(in srgb, var(--hover-lightest-green) 30%, transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--hover-lightest-green) 30%,
+    transparent
+  );
 }
 
 .lfb-spotlight-player-name {

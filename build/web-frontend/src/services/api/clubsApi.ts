@@ -1,4 +1,5 @@
 import apiClient from './client';
+import type { ApiEnvelope } from '../../common/types/response';
 import type {
   Club,
   ClubInvitation,
@@ -40,6 +41,14 @@ import type {
   CommitClubImportJobPayload,
   TrashListParams,
   TrashListItem,
+  ClubPlayerInjury,
+  CreateClubPlayerInjuryPayload,
+  ClubPlayerManualStats,
+  CreateOrUpdateClubPlayerManualStatsPayload,
+  ClubSeasonResult,
+  CreateClubSeasonResultPayload,
+  UpdateClubSeasonResultPayload,
+  ClubSeasonRecord,
 } from '../../types/club';
 import type {
   ClubPlayer,
@@ -152,7 +161,9 @@ export const clubsApi = {
     }
   ) =>
     apiClient.get<
-      ClubUnderstatSeasonSummaryResponse | ClubUnderstatSeasonSummaryEmptyResponse
+      ApiEnvelope<
+        ClubUnderstatSeasonSummaryResponse | ClubUnderstatSeasonSummaryEmptyResponse
+      >
     >(`/clubs/${clubId}/understat_season_summary/`, params),
 
   create: (payload: CreateClubPayload) =>
@@ -481,6 +492,110 @@ export const clubsApi = {
       `/clubs/${clubId}/import-jobs/${importJobId}/commit/`,
       payload
     ),
+
+  injuries: {
+    list: async (clubId: number, playerId: number): Promise<ClubPlayerInjury[]> => {
+      const response = await apiClient.get<ClubPlayerInjury[]>(
+        `/clubs/${clubId}/players/${playerId}/injuries/`
+      );
+      return response;
+    },
+
+    create: async (
+      clubId: number,
+      playerId: number,
+      payload: CreateClubPlayerInjuryPayload
+    ): Promise<ClubPlayerInjury> => {
+      return apiClient.post<ClubPlayerInjury>(
+        `/clubs/${clubId}/players/${playerId}/injuries/`,
+        payload
+      );
+    },
+
+    resolve: async (
+      clubId: number,
+      playerId: number,
+      injuryId: number
+    ): Promise<{ status: string }> => {
+      return apiClient.post(
+        `/clubs/${clubId}/players/${playerId}/injuries/${injuryId}/resolve/`,
+        {}
+      );
+    },
+  },
+
+  manualStats: {
+    list: async (
+      clubId: number,
+      playerId: number
+    ): Promise<ClubPlayerManualStats[]> => {
+      const response = await apiClient.get<ClubPlayerManualStats[]>(
+        `/clubs/${clubId}/players/${playerId}/stats/`
+      );
+      return response;
+    },
+
+    upsert: async (
+      clubId: number,
+      playerId: number,
+      payload: CreateOrUpdateClubPlayerManualStatsPayload
+    ): Promise<ClubPlayerManualStats> => {
+      return apiClient.post<ClubPlayerManualStats>(
+        `/clubs/${clubId}/players/${playerId}/stats/`,
+        payload
+      );
+    },
+  },
+
+  seasonResults: {
+    list: async (clubId: number): Promise<ClubSeasonResult[]> => {
+      const response = await apiClient.get<ClubSeasonResult[]>(
+        `/clubs/${clubId}/season-results/`
+      );
+      return response;
+    },
+
+    create: async (
+      clubId: number,
+      payload: CreateClubSeasonResultPayload
+    ): Promise<ClubSeasonResult> => {
+      return apiClient.post<ClubSeasonResult>(
+        `/clubs/${clubId}/season-results/`,
+        payload
+      );
+    },
+
+    update: async (
+      clubId: number,
+      resultId: number,
+      payload: UpdateClubSeasonResultPayload
+    ): Promise<ClubSeasonResult> => {
+      return apiClient.patch<ClubSeasonResult>(
+        `/clubs/${clubId}/season-results/${resultId}/`,
+        payload
+      );
+    },
+
+    delete: async (clubId: number, resultId: number): Promise<void> => {
+      return apiClient.delete(`/clubs/${clubId}/season-results/${resultId}/`);
+    },
+
+    deriveRecord: (results: ClubSeasonResult[]): ClubSeasonRecord => {
+      return results.reduce<ClubSeasonRecord>(
+        (acc, r) => {
+          acc.played += 1;
+          acc.goals_for += r.goals_for;
+          acc.goals_against += r.goals_against;
+          if (r.outcome === 'W') acc.wins += 1;
+          else if (r.outcome === 'D') acc.draws += 1;
+          else acc.losses += 1;
+          return acc;
+        },
+        { wins: 0, draws: 0, losses: 0, goals_for: 0, goals_against: 0, played: 0 }
+      );
+    },
+  },
+
 };
 
 

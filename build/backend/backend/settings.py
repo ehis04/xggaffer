@@ -40,6 +40,7 @@ ALLOWED_HOSTS = [
 AUTH_USER_MODEL = "users.User"
 
 ANTHROPIC_API_KEY = config("ANTHROPIC_API_KEY", default="")
+THE_ODDS_API_KEY = config("THE_ODDS_API_KEY", default="")
 
 # Development/testing override used when internal permission checks need to be bypassed.
 BYPASS_PERMISSIONS = config("BYPASS_PERMISSIONS", default=False, cast=bool)
@@ -106,6 +107,7 @@ INSTALLED_APPS = [
     "apps.tactics",
     "apps.playerdata",
     "apps.livefootball",
+    "apps.sync_pipeline.apps.SyncPipelineConfig",
     "apps.referee",
     "apps.referee.progressTracking",
     "apps.referee.learningTools",
@@ -161,6 +163,21 @@ DATABASES = {
     }
 }
 
+# ---------------------------------------------------------------------------
+# Cache
+# ---------------------------------------------------------------------------
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://localhost:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+    }
+}
+
+ENABLE_PERFORMANCE_LOGGING = True
 
 # ---------------------------------------------------------------------------
 # Password validation
@@ -254,6 +271,7 @@ REST_FRAMEWORK = {
     # Use cookie-backed JWT authentication across the API.
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "apps.users.authentication.CookieJWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -361,30 +379,185 @@ CELERY_TIMEZONE = "UTC"
 
 # Scheduled background jobs for scraping and housekeeping.
 CELERY_BEAT_SCHEDULE = {
-    "scrape-all-leagues-daily": {
-        "task": "apps.predictions.tasks.scrape_all_leagues",
-        "schedule": crontab(hour=2, minute=0),
-        "options": {
-            "expires": 3600,
-        },
-    },
-    "scrape-premier-league-matchday": {
-        "task": "apps.predictions.tasks.scrape_specific_league",
-        "schedule": crontab(hour="*/3", day_of_week="sat,sun"),
-        "args": ("EPL", "2024"),
-        "options": {
-            "expires": 1800,
-        },
-    },
     "purge-expired-trash-daily": {
         "task": "apps.clubs.tasks.purge_expired_trash",
         "schedule": crontab(hour=3, minute=15),
-        "options": {
-            "expires": 3600,
-        },
+        "options": {"expires": 3600},
+    },
+    "refresh-football-data-metadata": {
+        "task": "apps.sync_pipeline.tasks.refresh_football_data_metadata_task",
+        "schedule": crontab(hour=1, minute=0),
+        "options": {"expires": 3600, "queue": "queue_football_data"},
+    },
+    "refresh-football-data-fixtures": {
+        "task": "apps.sync_pipeline.tasks.refresh_football_data_fixtures_task",
+        "schedule": crontab(minute="*/15"),
+        "options": {"expires": 840, "queue": "queue_football_data"},
+    },
+    "refresh-football-data-scorers-squads": {
+        "task": "apps.sync_pipeline.tasks.refresh_football_data_scorers_squads_task",
+        "schedule": crontab(minute=0, hour="*/6"),
+        "options": {"expires": 3600, "queue": "queue_football_data"},
+    },
+    "refresh-understat-cycle": {
+        "task": "apps.sync_pipeline.tasks.refresh_understat_cycle_task",
+        "schedule": crontab(minute=30, hour="*/6"),
+        "options": {"expires": 3600, "queue": "queue_understat"},
+    },
+    "refresh-sofascore-cycle": {
+        "task": "apps.sync_pipeline.tasks.refresh_sofascore_cycle_task",
+        "schedule": crontab(minute=0, hour="*/3"),
+        "options": {"expires": 3600, "queue": "queue_sofascore"},
+    },
+    "refresh-whoscored-cycle": {
+        # Once daily at 04:00 UTC — WhoScored stats don't change intra-day and
+        # the browser-based scraper is expensive; daily is sufficient.
+        "task": "apps.sync_pipeline.tasks.refresh_whoscored_cycle_task",
+        "schedule": crontab(minute=0, hour=4),
+        "options": {"expires": 7200, "queue": "queue_whoscored"},
+    },
+    "refresh-native-stats-cycle": {
+        "task": "apps.sync_pipeline.tasks.refresh_native_stats_cycle_task",
+        "schedule": crontab(minute=0, hour="*/2"),
+        "options": {"expires": 3600, "queue": "queue_native_stats"},
+    },
+    "refresh-pro-club-squads": {
+        "task": "apps.clubs.tasks.refresh_pro_club_squads_task",
+        "schedule": crontab(minute=0, hour="*/6"),
+        "options": {"expires": 3600, "queue": "queue_football_data"},
+    },
+    "refresh-odds-snapshots": {
+        "task": "apps.sync_pipeline.tasks.refresh_odds_snapshots_task",
+        "schedule": crontab(minute=0, hour="*/6"),
+        "options": {"expires": 3600, "queue": "queue_publication"},
+    },
+    "rebuild-livefootball-publication": {
+        "task": "apps.livefootball.tasks.rebuild_livefootball_publication",
+        "schedule": crontab(minute="*/30"),
+        "options": {"expires": 1800, "queue": "queue_publication"},
+    },
+    "rebuild-playerdata-publication": {
+        # Heartbeat: runs 45 min after the understat cycle (:30) giving it time to complete.
+        # Also fires independently so the surface stays fresh if the trigger chain breaks.
+        "task": "apps.playerdata.tasks.rebuild_playerdata_publication_task",
+        "schedule": crontab(minute=45, hour="*/6"),
+        "options": {"expires": 3600, "queue": "queue_publication"},
+    },
+    "rebuild-clubs-publication": {
+        # Heartbeat: runs 15 min after pro-club-squads (:00) to capture fresh squad data.
+        "task": "apps.clubs.tasks.rebuild_club_publication_task",
+        "schedule": crontab(minute=15, hour="*/6"),
+        "options": {"expires": 3600, "queue": "queue_publication"},
+    },
+    "rebuild-predictions-publication": {
+        # Heartbeat independent of the understat trigger chain.
+        "task": "apps.predictions.tasks.rebuild_predictions_publication_task",
+        "schedule": crontab(minute=0, hour="*/6"),
+        "options": {"expires": 3600, "queue": "queue_publication"},
+    },
+    "refresh-transfermarkt-dobs": {
+        # Weekly: every Monday at 02:00. DOBs don't change; this is a low-priority backfill.
+        "task": "apps.sync_pipeline.tasks.refresh_transfermarkt_cycle_task",
+        "schedule": crontab(minute=0, hour=2, day_of_week=1),
+        "options": {"expires": 7200, "queue": "queue_transfermarkt"},
+    },
+    "aggregate-sync-health": {
+        "task": "apps.sync_pipeline.tasks.aggregate_sync_health_task",
+        "schedule": crontab(minute="*/30"),
+        "options": {"expires": 1800},
+    },
+    "compute-odds-accuracy": {
+        # Runs 30 min after the fixture sync window (*/15) to ensure results are up to date
+        "task": "apps.predictions.tasks.compute_odds_accuracy_task",
+        "schedule": crontab(minute=30, hour="*/6"),
+        "options": {"expires": 3600, "queue": "queue_publication"},
+    },
+    "update-community-interest-profiles": {
+        "task": "apps.community.tasks.update_user_interest_profiles_task",
+        "schedule": crontab(minute=0, hour="*/1"),
+        "options": {"expires": 3300, "queue": "queue_publication"},
+    },
+    "ingest-rss-feeds": {
+        # Pull fresh articles from RSS feeds every hour.
+        "task": "apps.articles.tasks.ingest_rss_feeds_task",
+        "schedule": crontab(minute=0, hour="*/1"),
+        "options": {"expires": 3300},
+    },
+    "generate-article-recommendations": {
+        # Rebuild per-user article recommendations once per day at 05:00 UTC.
+        "task": "apps.articles.tasks.generate_recommendations_task",
+        "schedule": crontab(minute=0, hour=5),
+        "options": {"expires": 7200},
     },
 }
 
+# ---------------------------------------------------------------------------
+# Data pipeline provider policy
+# ---------------------------------------------------------------------------
+
+PROVIDER_QUEUES = {
+    'football_data': 'queue_football_data',
+    'understat':     'queue_understat',
+    'sofascore':     'queue_sofascore',
+    'whoscored':     'queue_whoscored',
+    'transfermarkt': 'queue_transfermarkt',
+    'native_stats':  'queue_native_stats',
+    'publication':   'queue_publication',
+}
+
+FOOTBALL_DATA_DAILY_REQUEST_LIMIT = config(
+    'FOOTBALL_DATA_DAILY_REQUEST_LIMIT', default=100, cast=int
+)
+
+SOFASCORE_SESSION_TOKEN = config('SOFASCORE_SESSION_TOKEN', default=None)
+
+PIPELINE_DEGRADED_THRESHOLD = config(
+    'PIPELINE_DEGRADED_THRESHOLD', default=3, cast=int
+)
+
+FRESHNESS_SLA_SECONDS = {
+    'livefootball': 1800,
+    'predictions':  21600,
+    'playerdata':   21600,
+    'clubs':        21600,
+}
+
+THE_ODDS_API_KEY = config('THE_ODDS_API_KEY', default='')
+ODDS_API_ENABLED = config('ODDS_API_ENABLED', default=False, cast=bool)
+ODDS_API_DAILY_REQUEST_LIMIT = config('ODDS_API_DAILY_REQUEST_LIMIT', default=15, cast=int)
+ODDS_SNAPSHOT_LOOKAHEAD_HOURS = config(
+    'ODDS_SNAPSHOT_LOOKAHEAD_HOURS',
+    default=72,
+    cast=int,
+)
+ODDS_SNAPSHOT_MAX_FIXTURES_PER_RUN = config(
+    'ODDS_SNAPSHOT_MAX_FIXTURES_PER_RUN',
+    default=10,
+    cast=int,
+)
+ODDS_SNAPSHOT_BOOKMAKERS = config(
+    'ODDS_SNAPSHOT_BOOKMAKERS',
+    default='bet365,paddypower',
+)
+ODDS_SNAPSHOT_SPORT_KEYS = config(
+    'ODDS_SNAPSHOT_SPORT_KEYS',
+    default='',
+)
+
+USE_PUBLISHED_LIVEFOOTBALL_SNAPSHOT = config(
+    'USE_PUBLISHED_LIVEFOOTBALL_SNAPSHOT', default=False, cast=bool
+)
+USE_PUBLISHED_PREDICTIONS_SNAPSHOT = config(
+    'USE_PUBLISHED_PREDICTIONS_SNAPSHOT', default=False, cast=bool
+)
+
+USE_PUBLISHED_PLAYERDATA = config(
+    'USE_PUBLISHED_PLAYERDATA', default=False, cast=bool
+)
+
+USE_PUBLISHED_CLUBS = config('USE_PUBLISHED_CLUBS', default=False, cast=bool)
+
+LOG_LEVEL_PIPELINE = config('LOG_LEVEL_PIPELINE', default='WARNING')
 
 # ---------------------------------------------------------------------------
 # Default primary key field type

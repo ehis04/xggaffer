@@ -4,6 +4,7 @@ import html
 import json
 import logging
 import re
+import time
 from typing import Any
 
 import requests
@@ -351,6 +352,7 @@ class UnderstatClient:
                     **kwargs,
                 )
                 self._raise_for_status(response)
+                time.sleep(2)
                 return response
             except (Timeout, RequestException, UnderstatRequestError) as exc:
                 last_error = exc

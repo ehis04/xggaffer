@@ -1,8 +1,6 @@
 import numpy as np
-import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.preprocessing import MinMaxScaler
 from django.db.models import Q, Avg, Count
 from django.utils import timezone
 from datetime import timedelta
@@ -58,7 +56,7 @@ class RecommendationEngine:
         
         candidates = Article.objects.filter(
             is_active=True,
-            published_date__gte=cutoff_date,
+            publication_date__gte=cutoff_date,
             quality_score__gte=self.user_profile.preferred_quality_threshold,
             read_time_minutes__gte=self.user_profile.min_read_time,
             read_time_minutes__lte=self.user_profile.max_read_time,
@@ -161,7 +159,7 @@ class RecommendationEngine:
         return popularity
     
     def _calculate_recency_score(self, article: Article) -> float:
-        age_days = (timezone.now() - article.published_date).days
+        age_days = (timezone.now() - article.publication_date).days
         
         if age_days <= 1:
             return 1.0

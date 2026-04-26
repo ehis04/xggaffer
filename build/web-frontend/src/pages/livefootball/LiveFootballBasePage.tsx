@@ -1,19 +1,12 @@
-/**
- * LiveFootballBasePage.tsx
- *
- * Live football homepage — aggregated overview of all tracked competitions.
- * Fetches from the getLiveFootballOverview endpoint and renders a series
- * of specialised section components.
- *
- * Layout: <Sidebar /> + page column (header bar + scrollable content)
- * CSS: LiveFootballBasePage.module.css  (prefix: lfb-)
- */
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Sidebar } from '../../components/Navigation/SideBar';
 import { SocialUserButtons } from '../../components/Social/SocialUserButtons';
 import { getLiveFootballOverview } from '../../services/api/livefootballApi';
-import type { LiveFootballOverview } from '../../types/livefootball';
+import { FreshnessBadge } from '../../common/components/FreshnessBadge';
+import { queryKeys } from '../../common/query/queryKeys';
+import { STALE_TIME_SHORT } from '../../common/query/queryClient';
+import { usePageTiming } from '../../common/hooks/usePageTiming';
 
 import LiveFootballHeroHeader from '../../components/livefootball/home/LiveFootballHeroHeader';
 import RotatingLeaguePreviewCard from '../../components/livefootball/home/RotatingLeaguePreviewCard';
@@ -28,32 +21,19 @@ import styles from './css/LiveFootballBasePage.module.css';
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 const LiveFootballBasePage: React.FC = () => {
-  const [overview, setOverview]         = useState<LiveFootballOverview | null>(null);
-  const [isLoading, setIsLoading]       = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { markDataReceived } = usePageTiming('LiveFootballBasePage');
+
+  const { data: envelope, isPending, isError } = useQuery({
+    queryKey: queryKeys.livefootball.overview(),
+    queryFn: getLiveFootballOverview,
+    staleTime: STALE_TIME_SHORT,
+  });
 
   useEffect(() => {
-    let isMounted = true;
+    if (envelope) markDataReceived();
+  }, [envelope]);
 
-    const loadOverview = async (): Promise<void> => {
-      setIsLoading(true);
-      setErrorMessage(null);
-
-      try {
-        const payload = await getLiveFootballOverview();
-        if (isMounted) setOverview(payload);
-      } catch (error) {
-        console.error('Failed to load live football overview', error);
-        if (isMounted)
-          setErrorMessage('Could not load the Live Football homepage right now.');
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
-    void loadOverview();
-    return () => { isMounted = false; };
-  }, []);
+  const overview = envelope?.data ?? null;
 
   return (
     <div className={styles['lfb-root']}>
@@ -78,23 +58,35 @@ const LiveFootballBasePage: React.FC = () => {
         <main className={styles['lfb-content']}>
           <LiveFootballHeroHeader generatedAt={overview?.generated_at ?? null} />
 
-          {isLoading && (
+          {isPending && (
             <OverviewDataState
               title="Loading Live Football overview"
               description="Pulling the homepage data from the aggregated overview endpoint."
             />
           )}
 
-          {!isLoading && errorMessage && (
+          {!isPending && isError && (
             <OverviewDataState
               title="Live Football overview unavailable"
-              description={errorMessage}
+              description="Could not load the Live Football homepage right now."
               variant="error"
             />
           )}
 
-          {!isLoading && !errorMessage && overview && (
+          {!isPending && !isError && envelope && !overview && (
+            <OverviewDataState
+              title="Live Football overview unavailable"
+              description="Data is temporarily unavailable. Please try again shortly."
+              variant="error"
+            />
+          )}
+
+          {!isPending && !isError && overview && (
             <>
+              <div style={{ padding: '0 1rem 0.5rem' }}>
+                <FreshnessBadge freshness={envelope?.freshness} />
+              </div>
+
               <RotatingLeaguePreviewCard cards={overview.league_snapshot} />
 
               <AllTimeStreaksPreview data={overview.all_time_streaks} />

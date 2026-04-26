@@ -53,9 +53,15 @@ export interface ClubUnderstatSummary {
   competition_code: string;
   competition_name: string;
   matches_played: number;
+  wins?: number;
+  draws?: number;
+  losses?: number;
+  goals_for?: number;
+  goals_against?: number;
   xg: string | null;
   xga: string | null;
   npxg: string | null;
+  ppda?: string | null;
   last_synced_at: string | null;
 }
 
@@ -522,4 +528,126 @@ export interface CreateClubImportJobPayload {
 
 export interface CommitClubImportJobPayload {
   confirm: true;
+}
+
+export type PlayerAvailabilityStatus = 'AV' | 'IN' | 'DO' | 'SU';
+
+export type InjuryType =
+  | 'muscle'
+  | 'ligament'
+  | 'bone'
+  | 'tendon'
+  | 'cartilage'
+  | 'head'
+  | 'illness'
+  | 'suspension'
+  | 'other';
+
+export type InjurySeverity = 'minor' | 'moderate' | 'severe';
+
+export interface ClubPlayerInjury {
+  id: number;
+  club_player: number;
+  injury_type: InjuryType;
+  injury_type_display: string;
+  severity: InjurySeverity;
+  severity_display: string;
+  availability_status: PlayerAvailabilityStatus;
+  availability_status_display: string;
+  injured_at: string;
+  estimated_return: string | null;
+  notes: string;
+  is_current: boolean;
+  recorded_by: number | null;
+  recorded_by_email: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateClubPlayerInjuryPayload {
+  injury_type: InjuryType;
+  severity: InjurySeverity;
+  availability_status: Exclude<PlayerAvailabilityStatus, 'AV'>;
+  injured_at: string;
+  estimated_return?: string | null;
+  notes?: string;
+}
+
+export interface ClubPlayerManualStats {
+  id: number;
+  club_player: number;
+  season: string;
+  appearances: number | null;
+  minutes_played: number | null;
+  goals: number | null;
+  assists: number | null;
+  xg: string | null;
+  npxg: string | null;
+  xa: string | null;
+  shots: number | null;
+  shots_on_target: number | null;
+  key_passes: number | null;
+  dribbles_completed: number | null;
+  progressive_passes: number | null;
+  progressive_carries: number | null;
+  tackles: number | null;
+  interceptions: number | null;
+  aerials_won: number | null;
+  clearances: number | null;
+  blocks: number | null;
+  saves: number | null;
+  save_percentage: string | null;
+  clean_sheets: number | null;
+  goals_conceded: number | null;
+  last_updated: string;
+  created_at: string;
+}
+
+export type CreateOrUpdateClubPlayerManualStatsPayload = Partial<
+  Omit<ClubPlayerManualStats, 'id' | 'club_player' | 'last_updated' | 'created_at'>
+> & { season: string };
+
+export type SeasonResultVenue = 'home' | 'away' | 'neutral';
+
+export type MatchOutcome = 'W' | 'D' | 'L';
+
+export interface ClubSeasonResult {
+  id: number;
+  club: number;
+  opponent_name: string;
+  venue: SeasonResultVenue;
+  venue_display: string;
+  competition: string;
+  match_date: string;
+  goals_for: number;
+  goals_against: number;
+  outcome: MatchOutcome;
+  fixture: number | null;
+  notes: string;
+  created_by: number | null;
+  created_by_email: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateClubSeasonResultPayload {
+  opponent_name: string;
+  venue: SeasonResultVenue;
+  competition?: string;
+  match_date: string;
+  goals_for: number;
+  goals_against: number;
+  fixture?: number | null;
+  notes?: string;
+}
+
+export type UpdateClubSeasonResultPayload = Partial<CreateClubSeasonResultPayload>;
+
+export interface ClubSeasonRecord {
+  wins: number;
+  draws: number;
+  losses: number;
+  goals_for: number;
+  goals_against: number;
+  played: number;
 }

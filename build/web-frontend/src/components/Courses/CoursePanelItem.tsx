@@ -1,9 +1,18 @@
 import "./css/CoursePanel.css";
+import type { CourseItem } from "./types/CourseTypes";
 
-export const CoursePanelItem = ({ item, isActive, isLocked, onNavigate, isDone, isLast }) => {
+interface CoursePanelItemProps {
+  item: CourseItem;
+  isActive: boolean;
+  isLocked: boolean;
+  onNavigate: (id: string) => void;
+  isDone: boolean;
+  isLast: boolean;
+}
+
+export const CoursePanelItem = ({ item, isActive, isLocked, onNavigate, isDone, isLast }: CoursePanelItemProps) => {
   return (
     <button
-      key={item.id}
       className={`cpi ${isActive ? "active" : ""} ${isLocked ? "locked" : ""}`}
       onClick={() => !isLocked && onNavigate(item.id)}
       disabled={isLocked}

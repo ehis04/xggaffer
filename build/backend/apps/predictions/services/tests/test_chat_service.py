@@ -9,7 +9,7 @@ from rest_framework.test import APIClient
 from apps.predictions.services.chat_service import FALLBACK_RESPONSE, HANDLER_MAP
 from apps.predictions.services.intent_types import IntentClass
 from apps.predictions.services.narrator import LLMNarrator
-
+from apps.predictions.services.base_handler import QueryPayload
 
 @pytest.fixture
 def client():
@@ -82,6 +82,56 @@ class TestHandleChatQuery:
     def test_handler_map_covers_all_intents(self):
         for intent in IntentClass:
             assert intent in HANDLER_MAP, f"Missing handler for {intent}"
+
+    def test_odds_query_dispatches_through_handler_map(self):
+        from apps.predictions.services.chat_service import handle_chat_query
+
+        with patch(
+            "apps.predictions.services.odds_handler.OddsHandler.handle",
+            return_value=QueryPayload(
+                intent=IntentClass.ODDS_COMPARISON,
+                engine_data={
+                    "home_team": "Arsenal",
+                    "away_team": "Chelsea",
+                    "market": {"favourite": "home"},
+                    "support": {
+                        "warning": "Use market comparisons responsibly.",
+                        "resources": [
+                            {
+                                "label": "Ireland safer gambling support",
+                                "region": "Ireland",
+                                "support_type": "support",
+                            }
+                        ],
+                    },
+                },
+                partial=False,
+                error=None,
+            ),
+        ), patch.object(LLMNarrator, "narrate", return_value=("odds prose", False)):
+            result = handle_chat_query("compare Arsenal vs Chelsea with bookmaker odds")
+
+        assert result["intent"] == "ODDS_COMPARISON"
+        assert result["query_type"] == "ODDS_COMPARISON"
+        assert "engine_data" in result["structured_data"]
+        assert result["structured_data"]["engine_data"]["support"]["resources"]
+        assert "benchmark" in result["structured_data"]["engine_data"]
+        assert result["structured_data"]["engine_data"]["support"]["warning"]
+
+    def test_odds_handler_failure_still_returns_safe_payload(self):
+        from apps.predictions.services.chat_service import handle_chat_query
+
+        with patch(
+            "apps.predictions.services.odds_handler.OddsHandler.handle",
+            side_effect=Exception("odds handler down"),
+        ), patch.object(LLMNarrator, "narrate", return_value=("fallback prose", True)):
+            result = handle_chat_query("compare Arsenal vs Chelsea with bookmaker odds")
+
+        assert result["intent"] == "ODDS_COMPARISON"
+        assert result["query_type"] == "ODDS_COMPARISON"
+        assert result["used_fallback"] is True
+        assert result["structured_data"]["partial"] is True
+        assert result["structured_data"]["error"] == "odds handler down"
 
 
 class TestNarrator:

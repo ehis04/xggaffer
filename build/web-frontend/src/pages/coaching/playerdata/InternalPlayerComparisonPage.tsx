@@ -12,7 +12,7 @@ import type {
 } from "../../../types/playerdata";
 import styles from "./css/InternalPlayerComparisonPage.module.css";
 
-const SEASON = "2024";
+const SEASON = '2025';
 const PROVIDER = "understat";
 
 const ComparisonMetricGroup: React.FC<{
@@ -231,14 +231,8 @@ const InternalPlayerComparisonPage: React.FC = () => {
 
   useEffect(() => {
     if (!playerAIdFromUrl) return;
-    void playerdataApi
-      .getPlayerOverview(playerAIdFromUrl, {
-        season: SEASON,
-        provider: PROVIDER,
-      })
-      .then((r) =>
-        setPreloadedAName(r.player.display_name || r.player.full_name || null),
-      )
+    void playerdataApi.getPlayerOverview(playerAIdFromUrl, { season: SEASON, provider: PROVIDER })
+      .then((r) => setPreloadedAName(r.data?.player?.display_name || r.data?.player?.full_name || null))
       .catch(() => {});
   }, [playerAIdFromUrl]);
 
@@ -249,26 +243,16 @@ const InternalPlayerComparisonPage: React.FC = () => {
     }
     let active = true;
     setLoadingA(true);
-    void playerdataApi
-      .listEnrichedPlayers({
-        club_id: clubA?.id,
-        search: searchA.trim() || undefined,
-        season: SEASON,
-        provider: PROVIDER,
-        limit: 60,
-      })
-      .then((r) => {
-        if (active) setPlayersA(r.results);
-      })
-      .catch(() => {
-        if (active) setPlayersA([]);
-      })
-      .finally(() => {
-        if (active) setLoadingA(false);
-      });
-    return () => {
-      active = false;
-    };
+    void playerdataApi.listEnrichedPlayers({
+      club_id: clubA?.id,
+      search: searchA.trim() || undefined,
+      season: SEASON,
+      provider: PROVIDER,
+      limit: 60,
+    }).then((r) => { if (active) setPlayersA(r.data?.results ?? []); })
+      .catch(() => { if (active) setPlayersA([]); })
+      .finally(() => { if (active) setLoadingA(false); });
+    return () => { active = false; };
   }, [clubA, searchA]);
 
   useEffect(() => {
@@ -278,26 +262,16 @@ const InternalPlayerComparisonPage: React.FC = () => {
     }
     let active = true;
     setLoadingB(true);
-    void playerdataApi
-      .listEnrichedPlayers({
-        club_id: clubB?.id,
-        search: searchB.trim() || undefined,
-        season: SEASON,
-        provider: PROVIDER,
-        limit: 60,
-      })
-      .then((r) => {
-        if (active) setPlayersB(r.results);
-      })
-      .catch(() => {
-        if (active) setPlayersB([]);
-      })
-      .finally(() => {
-        if (active) setLoadingB(false);
-      });
-    return () => {
-      active = false;
-    };
+    void playerdataApi.listEnrichedPlayers({
+      club_id: clubB?.id,
+      search: searchB.trim() || undefined,
+      season: SEASON,
+      provider: PROVIDER,
+      limit: 60,
+    }).then((r) => { if (active) setPlayersB(r.data?.results ?? []); })
+      .catch(() => { if (active) setPlayersB([]); })
+      .finally(() => { if (active) setLoadingB(false); });
+    return () => { active = false; };
   }, [clubB, searchB]);
 
   const idA = selectedA?.player?.id ?? playerAIdFromUrl ?? null;
@@ -312,16 +286,12 @@ const InternalPlayerComparisonPage: React.FC = () => {
     let active = true;
     setComparisonLoading(true);
     setComparisonError(null);
-    void playerdataApi
-      .getPlayerOverviewComparison({
-        player_a_id: idA,
-        player_b_id: idB,
-        season: SEASON,
-        provider: PROVIDER,
-      })
-      .then((r) => {
-        if (active) setComparison(r);
-      })
+    void playerdataApi.getPlayerOverviewComparison({
+      player_a_id: idA,
+      player_b_id: idB,
+      season: SEASON,
+      provider: PROVIDER,
+    }).then((r) => { if (active) setComparison(r.data ?? null); })
       .catch((err) => {
         if (active) {
           setComparison(null);
@@ -398,7 +368,7 @@ const InternalPlayerComparisonPage: React.FC = () => {
           <section className={styles["icp-hero"]}>
             <h1 className={styles["icp-title"]}>Player Comparison</h1>
             <p className={styles["icp-subtitle"]}>
-              Select two players to compare their 2024/25 season stats side by
+              Select two players to compare their {SEASON}/{String(Number(SEASON) + 1).slice(2)} season stats side by
               side.
             </p>
           </section>

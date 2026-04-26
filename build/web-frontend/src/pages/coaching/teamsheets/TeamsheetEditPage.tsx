@@ -25,7 +25,6 @@ const formatMatchDate = (dateStr: string | null) => {
   });
 };
 
-
 const TeamsheetEditPage: React.FC = () => {
   const { clubId, teamsheetId } = useParams<{ clubId: string; teamsheetId: string }>();
   const navigate = useNavigate();

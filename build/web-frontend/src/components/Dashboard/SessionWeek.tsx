@@ -1,8 +1,16 @@
 import { typeConfig } from "./functions/typeConfig";
 import './css/SessionWidget.css';
 import { dayLabels } from "./functions/dayLabels";
+import type { SessionEvent } from "./types/DashboardTypes";
 
-export const SessionWeek = ({ i, isToday, date, dayEvents }) => {
+interface SessionWeekProps {
+  i: number;
+  isToday: boolean;
+  date: Date;
+  dayEvents: SessionEvent[];
+}
+
+export const SessionWeek = ({ i, isToday, date, dayEvents }: SessionWeekProps) => {
   return (
     <div
       key={i}

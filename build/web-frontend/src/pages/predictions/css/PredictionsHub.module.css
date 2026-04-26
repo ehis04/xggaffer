@@ -1,0 +1,113 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.header {
+  padding: 1.5rem 2rem 1rem;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary, #0d9488);
+  margin: 0 0 0.25rem;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: var(--color-muted, #94a3b8);
+  margin: 0;
+}
+
+.filterBar {
+  padding: 0.75rem 2rem;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  flex-shrink: 0;
+}
+
+.leagueTabs {
+  display: flex;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
+.leagueTab {
+  padding: 0.375rem 0.875rem;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: var(--color-surface, #ffffff);
+  color: var(--color-text, #1e293b);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.leagueTabActive {
+  background: var(--color-primary, #0d9488);
+  border-color: var(--color-primary, #0d9488);
+  color: #ffffff;
+}
+
+.leagueTab:not(.leagueTabActive):hover {
+  border-color: var(--color-primary, #0d9488);
+}
+
+.fixtureGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+  padding: 1.25rem 2rem;
+}
+
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+  padding: 1.25rem 2rem;
+}
+
+.skeletonCard {
+  height: 9rem;
+  border-radius: 0.5rem;
+  background: var(--color-border, #e2e8f0);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.upsetSection {
+  padding: 0 2rem 2rem;
+}
+
+.upsetTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text, #1e293b);
+  margin: 0 0 0.25rem;
+}
+
+.upsetSubtitle {
+  font-size: 0.8rem;
+  color: var(--color-muted, #94a3b8);
+  margin: 0 0 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .header, .filterBar, .fixtureGrid, .skeletonGrid, .upsetSection {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .fixtureGrid, .skeletonGrid {
+    grid-template-columns: 1fr;
+  }
+}
