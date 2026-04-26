@@ -18,8 +18,6 @@ import OverviewDataState from '../../components/livefootball/home/OverviewDataSt
 
 import styles from './css/LiveFootballBasePage.module.css';
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 const LiveFootballBasePage: React.FC = () => {
   const { markDataReceived } = usePageTiming('LiveFootballBasePage');
 
@@ -37,15 +35,13 @@ const LiveFootballBasePage: React.FC = () => {
 
   return (
     <div className={styles['lfb-root']}>
-      {/* ── Sidebar ── */}
       <div className={styles['lfb-sidebar-section']}>
         <Sidebar />
       </div>
 
-      {/* ── Main column ── */}
       <div className={styles['lfb-main']}>
 
-        {/* Header bar */}
+
         <header className={styles['lfb-header']}>
           <div className={styles['lfb-header-left']}>Live Football</div>
           <div className={styles['lfb-header-mid']} />
@@ -54,7 +50,6 @@ const LiveFootballBasePage: React.FC = () => {
           </div>
         </header>
 
-        {/* Scrollable content */}
         <main className={styles['lfb-content']}>
           <LiveFootballHeroHeader generatedAt={overview?.generated_at ?? null} />
 

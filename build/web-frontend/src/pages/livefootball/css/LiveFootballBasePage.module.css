@@ -1,24 +1,3 @@
-/* ─── LiveFootballBasePage.module.css ───────────────────────────────────────
-   Shared stylesheet for the live-football homepage components.
-   ALL classes prefixed `lfb-` to avoid any project-wide collisions.
-
-   Imported by:
-     LiveFootballBasePage     → shell / header
-     LiveFootballHeroHeader   → lfb-hero-*
-     OverviewDataState        → lfb-section-*
-     RotatingLeaguePreviewCard→ lfb-carousel-*, lfb-snapshot-*
-     AllTimeStreaksPreview     → lfb-streak-*
-     TrendSection             → lfb-trend-*, lfb-info-card-*, lfb-form-*
-     LeagueMatchesSection     → lfb-match-*
-     FirstVsLastLeagueSection → lfb-compare-*, lfb-spotlight-*
-
-   Design tokens from global.css — never redefined here.
-────────────────────────────────────────────────────────────────────────── */
-
-/* ══════════════════════════════════════════════════════════════════════════
-   SHELL  (LiveFootballBasePage)
-══════════════════════════════════════════════════════════════════════════ */
-
 .lfb-root {
   display: flex;
   height: 100vh;
@@ -43,7 +22,6 @@
   margin-left: 80px;
 }
 
-/* ── Header bar ──────────────────────────────────────────────────────────── */
 .lfb-header {
   height: 56px;
   flex-shrink: 0;
@@ -66,7 +44,6 @@
 }
 
 .lfb-header-mid {
-  /* balances grid */
 }
 
 .lfb-header-right {
@@ -76,7 +53,6 @@
   gap: 16px;
 }
 
-/* ── Scrollable content ──────────────────────────────────────────────────── */
 .lfb-content {
   flex: 1;
   overflow-y: auto;
@@ -86,18 +62,12 @@
   gap: 0;
 }
 
-/* ══════════════════════════════════════════════════════════════════════════
-   SHARED ATOMS  (used by multiple components)
-══════════════════════════════════════════════════════════════════════════ */
-
-/* Dimmed meta / timestamp text */
 .lfb-meta-text {
   font-size: 12px;
   color: var(--tertiary-text);
   line-height: 1.4;
 }
 
-/* Generic empty-state text block */
 .lfb-empty-state {
   font-size: 13px;
   color: var(--tertiary-text);
@@ -105,7 +75,6 @@
   text-align: center;
 }
 
-/* Section surface (card shell used by OverviewDataState etc.) */
 .lfb-section-surface {
   background: var(--brand-lightest-green-border);
   border: 1px solid var(--brand-lightest-green-border);
@@ -145,7 +114,6 @@
   line-height: 1.5;
 }
 
-/* Row with two items pushed to opposite ends */
 .lfb-row-split {
   display: flex;
   align-items: center;
@@ -153,7 +121,6 @@
   gap: 12px;
 }
 
-/* Shared compact section title (h3-level) */
 .lfb-compact-title {
   font-family: "Syne", sans-serif;
   font-size: 14px;
@@ -163,14 +130,12 @@
   letter-spacing: -0.2px;
 }
 
-/* Generic body text */
 .lfb-body-text {
   font-size: 13px;
   color: var(--secondary-text);
   line-height: 1.55;
 }
 
-/* ── Action buttons ──────────────────────────────────────────────────────── */
 .lfb-action-btn {
   display: inline-flex;
   align-items: center;
@@ -205,7 +170,6 @@
   background: color-mix(in srgb, var(--hover-lightest-green) 12%, transparent);
 }
 
-/* Compact inline text link */
 .lfb-compact-action-link {
   font-size: 12px;
   font-weight: 600;
@@ -218,7 +182,6 @@
   opacity: 0.75;
 }
 
-/* ── Inline pill / tag ───────────────────────────────────────────────────── */
 .lfb-inline-pill {
   display: inline-flex;
   align-items: center;
@@ -232,7 +195,6 @@
   padding: 3px 8px;
 }
 
-/* Metric pill — e.g. "Goals: 14" */
 .lfb-metric-pill {
   display: inline-flex;
   align-items: center;
@@ -246,7 +208,6 @@
   margin-top: 4px;
 }
 
-/* ── Text-clamp helpers ───────────────────────────────────────────────────── */
 .lfb-meta-clamp-one {
   overflow: hidden;
   display: -webkit-box;
@@ -260,10 +221,6 @@
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
 }
-
-/* ══════════════════════════════════════════════════════════════════════════
-   HERO HEADER  (LiveFootballHeroHeader)
-══════════════════════════════════════════════════════════════════════════ */
 
 .lfb-hero-surface {
   padding: 40px 28px 32px;
@@ -303,11 +260,6 @@
   border-top: 0.5px solid var(--brand-lightest-green-border);
 }
 
-/* ══════════════════════════════════════════════════════════════════════════
-   CAROUSEL SHARED  (RotatingLeaguePreviewCard, LeagueMatchesSection,
-                      FirstVsLastLeagueSection)
-══════════════════════════════════════════════════════════════════════════ */
-
 .lfb-carousel-shell {
   width: 100%;
 }
@@ -324,7 +276,6 @@
   gap: 16px;
 }
 
-/* League title + carousel controls on one row */
 .lfb-match-league-summary {
   display: flex;
   align-items: center;
@@ -351,7 +302,6 @@
   color: var(--tertiary-text);
 }
 
-/* Prev / next buttons + index counter */
 .lfb-carousel-controls {
   display: flex;
   align-items: center;
@@ -439,10 +389,6 @@
   }
 }
 
-/* ══════════════════════════════════════════════════════════════════════════
-   SNAPSHOT  (RotatingLeaguePreviewCard — top/bottom 3 table preview)
-══════════════════════════════════════════════════════════════════════════ */
-
 .lfb-snapshot-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -514,10 +460,6 @@
   font-weight: 800;
   color: var(--hover-lightest-green);
 }
-
-/* ══════════════════════════════════════════════════════════════════════════
-   STREAK  (AllTimeStreaksPreview)
-══════════════════════════════════════════════════════════════════════════ */
 
 .lfb-streak-columns {
   display: grid;
@@ -636,17 +578,12 @@
   line-height: 1.5;
 }
 
-/* ══════════════════════════════════════════════════════════════════════════
-   TREND  (TrendSection)
-══════════════════════════════════════════════════════════════════════════ */
-
 .lfb-trend-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 10px;
 }
 
-/* Info card (shared article shell) */
 .lfb-info-card {
   background: var(--brand-light-green);
   border: 1px solid var(--brand-lightest-green-border);
@@ -667,7 +604,6 @@
 }
 
 .lfb-card-fill {
-  /* stretch to fill grid cell — no extra styles needed */
 }
 
 .lfb-card-header-stack {
@@ -686,7 +622,6 @@
   border-top: 1px solid var(--brand-lightest-green-border);
 }
 
-/* ── Form pills ──────────────────────────────────────────────────────────── */
 .lfb-form-pill-row {
   display: flex;
   align-items: center;
@@ -722,10 +657,6 @@
   background: rgba(248, 113, 113, 0.15);
   color: #f87171;
 }
-
-/* ══════════════════════════════════════════════════════════════════════════
-   MATCH CARDS  (LeagueMatchesSection)
-══════════════════════════════════════════════════════════════════════════ */
 
 .lfb-match-list {
   display: flex;
@@ -854,10 +785,6 @@
 .lfb-match-league-action:hover {
   opacity: 0.75;
 }
-
-/* ══════════════════════════════════════════════════════════════════════════
-   COMPARE  (FirstVsLastLeagueSection — ComparisonCard)
-══════════════════════════════════════════════════════════════════════════ */
 
 .lfb-compare-grid {
   display: grid;
@@ -996,7 +923,6 @@
   opacity: 0.75;
 }
 
-/* ── Spotlight section ───────────────────────────────────────────────────── */
 .lfb-spotlight-section {
   display: flex;
   flex-direction: column;
