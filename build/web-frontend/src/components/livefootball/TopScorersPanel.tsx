@@ -1,38 +1,39 @@
+/**
+ * TopScorersPanel.tsx
+ *
+ * Ranked list of top goal scorers for a given competition season.
+ * Optionally shows a penalty-goals column.
+ *
+ * CSS: TopScorersPanel.module.css  (prefix: lftsp-)
+ */
+
 import React from 'react';
 import type { CompetitionTopScorersResponse } from '../../types/livefootball';
+import styles from './css/TopScorersPanel.module.css';
 
-const getPlayerLabel = (item: CompetitionTopScorersResponse['items'][number]): string => {
-  const canonicalDisplayName = item.canonical_player?.display_name?.trim();
-  if (canonicalDisplayName) {
-    return canonicalDisplayName;
-  }
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-  const canonicalFirst = item.canonical_player?.first_name?.trim() ?? '';
-  const canonicalLast = item.canonical_player?.last_name?.trim() ?? '';
-  const canonicalJoined = `${canonicalFirst} ${canonicalLast}`.trim();
+type ScorerItem = CompetitionTopScorersResponse['items'][number];
 
-  if (canonicalJoined) {
-    return canonicalJoined;
-  }
+const getPlayerLabel = (item: ScorerItem): string => {
+  const canonicalDisplay = item.canonical_player?.display_name?.trim();
+  if (canonicalDisplay) return canonicalDisplay;
 
-  const rawName = item.player_name?.trim();
-  return rawName || 'Unknown player';
+  const first = item.canonical_player?.first_name?.trim() ?? '';
+  const last  = item.canonical_player?.last_name?.trim()  ?? '';
+  const joined = `${first} ${last}`.trim();
+  if (joined) return joined;
+
+  return item.player_name?.trim() || 'Unknown player';
 };
 
-const getTeamLabel = (item: CompetitionTopScorersResponse['items'][number]): string => {
-  const shortName = item.team?.short_name?.trim();
-  if (shortName) {
-    return shortName;
-  }
+const getTeamLabel = (item: ScorerItem): string =>
+  item.team?.short_name?.trim() ||
+  item.team?.tla?.trim() ||
+  item.team?.name?.trim() ||
+  'Unknown team';
 
-  const tla = item.team?.tla?.trim();
-  if (tla) {
-    return tla;
-  }
-
-  const name = item.team?.name?.trim();
-  return name || 'Unknown team';
-};
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface TopScorersPanelProps {
   scorers: CompetitionTopScorersResponse | null;
@@ -45,6 +46,8 @@ export interface TopScorersPanelProps {
   showPenalties?: boolean;
 }
 
+// ─── Component ────────────────────────────────────────────────────────────────
+
 const TopScorersPanel: React.FC<TopScorersPanelProps> = ({
   scorers,
   isLoading = false,
@@ -55,29 +58,30 @@ const TopScorersPanel: React.FC<TopScorersPanelProps> = ({
   maxItems,
   showPenalties = true,
 }) => {
+  // ── State variants ──
   if (isLoading) {
     return (
-      <section className={className}>
-        <h2>{title}</h2>
-        <div>Loading scorers…</div>
+      <section className={`${styles['lftsp-root']} ${className ?? ''}`}>
+        <h2 className={styles['lftsp-title']}>{title}</h2>
+        <div className={styles['lftsp-state']}>Loading scorers…</div>
       </section>
     );
   }
 
   if (error) {
     return (
-      <section className={className}>
-        <h2>{title}</h2>
-        <div role="alert">{error}</div>
+      <section className={`${styles['lftsp-root']} ${className ?? ''}`}>
+        <h2 className={styles['lftsp-title']}>{title}</h2>
+        <div className={styles['lftsp-state-error']} role="alert">{error}</div>
       </section>
     );
   }
 
   if (!scorers || scorers.items.length === 0) {
     return (
-      <section className={className}>
-        <h2>{title}</h2>
-        <div>{emptyMessage}</div>
+      <section className={`${styles['lftsp-root']} ${className ?? ''}`}>
+        <h2 className={styles['lftsp-title']}>{title}</h2>
+        <div className={styles['lftsp-state']}>{emptyMessage}</div>
       </section>
     );
   }
@@ -88,54 +92,66 @@ const TopScorersPanel: React.FC<TopScorersPanelProps> = ({
       : scorers.items;
 
   return (
-    <section className={className}>
-      <div style={{ marginBottom: '1rem' }}>
-        <h2>{title}</h2>
-        <p>
+    <section className={`${styles['lftsp-root']} ${className ?? ''}`}>
+      {/* Panel header */}
+      <div className={styles['lftsp-panel-header']}>
+        <h2 className={styles['lftsp-title']}>{title}</h2>
+        <p className={styles['lftsp-competition-meta']}>
           {scorers.competition.name}
           {scorers.competition.area_name ? ` · ${scorers.competition.area_name}` : ''}
           {scorers.season_label ? ` · ${scorers.season_label}` : ''}
         </p>
       </div>
 
-      <div style={{ overflowX: 'auto' }}>
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">Player</th>
-              <th scope="col">Team</th>
-              <th scope="col">Goals</th>
-              {showPenalties ? <th scope="col">Pens</th> : null}
-            </tr>
-          </thead>
+      {/* Scorer rows */}
+      <div className={styles['lftsp-list']}>
+        {items.map((item, idx) => {
+          const playerLabel = getPlayerLabel(item);
+          const teamLabel   = getTeamLabel(item);
+          const isRawDifferent =
+            item.player_name?.trim() && item.player_name.trim() !== playerLabel;
+          const rankKey = `${item.rank}-${item.external_player_id ?? item.canonical_player?.id ?? item.player_name}`;
 
-          <tbody>
-            {items.map((item) => (
-              <tr
-                key={`${item.rank}-${item.external_player_id || item.canonical_player?.id || item.player_name}`}
-              >
-                <td>{item.rank}</td>
-                <td>
-                  <div>
-                    <strong>{getPlayerLabel(item)}</strong>
-                  </div>
-                  {item.player_name?.trim() &&
-                  item.player_name.trim() !== getPlayerLabel(item) ? (
-                    <div>
-                      <small>{item.player_name}</small>
-                    </div>
-                  ) : null}
-                </td>
-                <td>{getTeamLabel(item)}</td>
-                <td>
-                  <strong>{item.goals}</strong>
-                </td>
-                {showPenalties ? <td>{item.penalties ?? '—'}</td> : null}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+          return (
+            <div
+              key={rankKey}
+              className={`${styles['lftsp-row']} ${idx === 0 ? styles['lftsp-row--first'] : ''}`}
+            >
+              {/* Rank badge */}
+              <span className={`${styles['lftsp-rank']} ${idx === 0 ? styles['lftsp-rank--first'] : ''}`}>
+                {item.rank}
+              </span>
+
+              {/* Player info */}
+              <div className={styles['lftsp-player-info']}>
+                <span className={styles['lftsp-player-name']}>{playerLabel}</span>
+                {isRawDifferent && (
+                  <span className={styles['lftsp-player-raw']}>{item.player_name}</span>
+                )}
+              </div>
+
+              {/* Team */}
+              <span className={styles['lftsp-team']}>{teamLabel}</span>
+
+              {/* Goals */}
+              <span className={styles['lftsp-goals']}>{item.goals}</span>
+
+              {/* Penalties */}
+              {showPenalties && (
+                <span className={styles['lftsp-pens']}>{item.penalties ?? '—'}</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Column labels footer */}
+      <div className={styles['lftsp-col-labels']}>
+        <span />
+        <span>Player</span>
+        <span>Club</span>
+        <span>G</span>
+        {showPenalties && <span>Pen</span>}
       </div>
     </section>
   );

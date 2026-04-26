@@ -14,7 +14,6 @@ export const getFollowStatus = async (
     setFollowStatus({
       is_following: data.is_following,
       followed_by: data.followed_by,
-      follow_request_pending: data.follow_request_pending,
     });
   } catch (error) {
     console.error("Couldn't get follow status:", error);
