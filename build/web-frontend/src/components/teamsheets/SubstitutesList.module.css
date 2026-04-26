@@ -1,79 +1,86 @@
-.container {
-  background: #1a1a2e;
+.substitutesListContainer {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: 12px;
-  padding: 1rem;
+  padding: 14px 16px;
 }
 
-.title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin: 0 0 1rem 0;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+.substitutesListTitle {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.40);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 12px 0;
 }
 
-.empty {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.875rem;
+.substitutesListEmpty {
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.35);
+  margin: 0;
   text-align: center;
-  padding: 1rem;
+  padding: 12px 0;
 }
 
-.list {
+.substitutesListList {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 6px;
 }
 
-.player {
+.substitutesListPlayer {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem;
+  gap: 10px;
+  padding: 8px 10px;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.2s;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid transparent;
+  transition: background 0.16s, border-color 0.16s;
 }
 
-.player:hover {
-  background: rgba(255, 255, 255, 0.05);
+.substitutesListPlayer:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.09);
 }
 
-.player.selected {
-  background: rgba(255, 255, 255, 0.1);
-  outline: 2px solid #3b82f6;
+.substitutesListSelected {
+  background: rgba(34,197,94,0.08) !important;
+  border-color: rgba(34,197,94,0.22) !important;
 }
 
-.number {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+.substitutesListNumber {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #0a1a0e;
   flex-shrink: 0;
 }
 
-.info {
+.substitutesListInfo {
   display: flex;
   flex-direction: column;
+  gap: 1px;
   min-width: 0;
 }
 
-.name {
-  color: white;
-  font-size: 0.875rem;
+.substitutesListName {
+  font-size: 0.82rem;
   font-weight: 500;
+  color: rgba(255,255,255,0.82);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.position {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.75rem;
+.substitutesListPosition {
+  font-size: 0.70rem;
+  color: rgba(255,255,255,0.38);
+  font-weight: 500;
 }

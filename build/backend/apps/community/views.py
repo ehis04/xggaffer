@@ -537,5 +537,18 @@ class NotificationsListView(ListAPIView):
         return qs
 
 
+class NotificationMarkReadView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, notification_id):
+        notification = get_object_or_404(
+            Notification, id=notification_id, user=request.user
+        )
+        if not notification.is_read:
+            notification.is_read = True
+            notification.save(update_fields=["is_read"])
+        return Response({"id": notification.id, "is_read": notification.is_read})
+
+
 # TODO search for posts with potentially various filters
 # TODO search by text, author, hashtags

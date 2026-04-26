@@ -1,160 +1,182 @@
-.panel {
-  background: #1a1a2e;
+/* PlayerDetailPanel.module.css */
+
+.playerDetailPanelRoot {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: 12px;
   overflow: hidden;
 }
 
-.header {
+.playerDetailPanelHeader {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 
-.title {
+.playerDetailPanelTitle {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.40);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: white;
 }
 
-.closeButton {
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-  transition: color 0.2s;
-}
-
-.closeButton:hover {
-  color: white;
-}
-
-.content {
-  padding: 1rem;
-}
-
-.playerInfo {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.photo {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.photoPlaceholder {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
+.playerDetailPanelCloseButton {
+  width: 22px;
+  height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 1.5rem;
-  font-weight: 700;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.55);
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  transition: background 0.16s;
 }
+.playerDetailPanelCloseButton:hover { background: rgba(255,255,255,0.12); }
 
-.details {
+.playerDetailPanelContent {
+  padding: 14px;
   display: flex;
   flex-direction: column;
+  gap: 12px;
 }
 
-.name {
-  color: white;
-  font-size: 1.125rem;
+/* ── Player identity ── */
+.playerDetailPanelPlayerInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.playerDetailPanelPhoto {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.playerDetailPanelPhotoPlaceholder {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0a1a0e;
+  flex-shrink: 0;
+}
+
+.playerDetailPanelDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.playerDetailPanelName {
+  font-size: 0.9rem;
   font-weight: 600;
+  color: rgba(255,255,255,0.90);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.number {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.875rem;
+.playerDetailPanelNumber {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.40);
 }
 
-.stats {
+/* ── Stats grid ── */
+.playerDetailPanelStats {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  gap: 8px;
 }
 
-.statItem {
+.playerDetailPanelStatItem {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-}
-
-.statLabel {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
-  letter-spacing: 0.05em;
-}
-
-.statValue {
-  font-size: 0.875rem;
-  color: white;
-  font-weight: 500;
-}
-
-.position {
-  padding: 0.75rem;
-  background: rgba(255, 255, 255, 0.05);
+  gap: 2px;
+  padding: 8px 10px;
   border-radius: 8px;
-  margin-bottom: 1rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
 }
 
-.posLabel {
-  display: block;
-  font-size: 0.7rem;
+.playerDetailPanelStatLabel {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.35);
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
-  margin-bottom: 0.5rem;
+  letter-spacing: 0.04em;
 }
 
-.coords {
+.playerDetailPanelStatValue {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.78);
+}
+
+/* ── Coords ── */
+.playerDetailPanelPosition {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
   display: flex;
-  gap: 1rem;
-  color: white;
-  font-size: 0.875rem;
-  font-family: monospace;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.actions {
+.playerDetailPanelPosLabel {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.playerDetailPanelCoords {
   display: flex;
-  gap: 0.5rem;
+  gap: 12px;
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.60);
 }
 
-.actionButton {
+/* ── Action buttons ── */
+.playerDetailPanelActions {
+  display: flex;
+  gap: 8px;
+}
+
+.playerDetailPanelActionButton {
   flex: 1;
-  padding: 0.625rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border-radius: 6px;
-  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.78);
+  font-size: 0.78rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.16s;
 }
+.playerDetailPanelActionButton:hover { background: rgba(255,255,255,0.12); }
 
-.actionButton:hover {
-  background: rgba(255, 255, 255, 0.2);
+.playerDetailPanelDanger {
+  background: rgba(239,68,68,0.08);
+  border-color: rgba(239,68,68,0.18);
+  color: #f87171;
 }
-
-.actionButton.danger {
-  border-color: rgba(239, 68, 68, 0.5);
-  color: #ef4444;
-}
-
-.actionButton.danger:hover {
-  background: rgba(239, 68, 68, 0.2);
-}
+.playerDetailPanelDanger:hover { background: rgba(239,68,68,0.15); }

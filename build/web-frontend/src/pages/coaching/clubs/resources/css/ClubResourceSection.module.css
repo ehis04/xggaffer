@@ -1,733 +1,911 @@
-.section {
+.clubResourceSection {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
-.sectionHeader {
+.clubResourceSectionHead {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
+  justify-content: space-between;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.title {
-  margin: 0;
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #f8fafc;
-}
-
-.subtitle {
-  margin: 0.45rem 0 0;
-  color: #94a3b8;
-  line-height: 1.5;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
-  gap: 1.25rem;
-}
-
-.card {
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.88));
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  border-radius: 18px;
-  padding: 1.25rem;
-  box-shadow: 0 18px 45px rgba(2, 6, 23, 0.22);
-}
-
-.cardTitle {
-  margin: 0;
-  color: #f8fafc;
-  font-size: 1.05rem;
-  font-weight: 700;
-}
-
-.cardSubtitle {
-  margin: 0.45rem 0 0;
-  color: #94a3b8;
-  line-height: 1.5;
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-}
-
-.label {
-  color: #cbd5e1;
+.clubResourceSectionTitle {
   font-size: 0.92rem;
   font-weight: 600;
-}
-
-.input,
-.textarea,
-.select,
-.fileInput {
-  width: 100%;
-  background: rgba(15, 23, 42, 0.72);
-  color: #f8fafc;
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: 12px;
-  padding: 0.8rem 0.95rem;
-  font: inherit;
-}
-
-.input:focus,
-.textarea:focus,
-.select:focus,
-.fileInput:focus {
-  outline: none;
-  border-color: rgba(59, 130, 246, 0.8);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16);
-}
-
-.textarea {
-  resize: vertical;
-}
-
-.helperText {
+  color: var(--primary-text);
   margin: 0;
-  color: #94a3b8;
+}
+
+.clubResourceSectionSub {
+  font-size: 0.8rem;
+  color: var(--secondary-text);
+  margin: 0.25rem 0 0;
+  line-height: 1.5;
+}
+
+.clubResourceError {
+  padding: 0.7rem 0.9rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
   font-size: 0.82rem;
+  color: #f87171;
+  line-height: 1.5;
+}
+
+.clubResourceNotice {
+  padding: 0.7rem 0.9rem;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.18);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: var(--hover-light-green);
+  line-height: 1.5;
+}
+
+.clubResourceEmpty {
+  font-size: 0.82rem;
+  color: var(--secondary-text);
+  padding: 1rem 0;
+}
+
+.clubResourceMutedText {
+  font-size: 0.75rem;
+  color: var(--tertiary-text);
   line-height: 1.45;
 }
 
-.actionRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: center;
-}
-
-.primaryButton,
-.secondaryButton,
-.commitButton,
-.closeButton {
-  border: 0;
-  border-radius: 12px;
-  padding: 0.78rem 1rem;
-  font: inherit;
+.clubResourceUploadTrigger {
+  padding: 0.42rem 0.9rem;
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border-med);
+  border-radius: 8px;
+  color: var(--hover-light-green);
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+  transition: all 0.12s ease;
+  flex-shrink: 0;
+}
+.clubResourceUploadTrigger:hover {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
 }
 
-.primaryButton:hover,
-.secondaryButton:hover,
-.commitButton:hover,
-.closeButton:hover {
-  transform: translateY(-1px);
-}
-
-.primaryButton:disabled,
-.secondaryButton:disabled,
-.commitButton:disabled,
-.closeButton:disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
-  transform: none;
-}
-
-.primaryButton {
-  background: #2563eb;
-  color: #fff;
-}
-
-.secondaryButton {
-  background: rgba(30, 41, 59, 0.95);
-  color: #e2e8f0;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-}
-
-.commitButton {
-  background: #16a34a;
-  color: #fff;
-}
-
-.closeButton {
-  background: rgba(30, 41, 59, 0.95);
-  color: #e2e8f0;
-}
-
-.message,
-.error {
-  border-radius: 14px;
-  padding: 0.9rem 1rem;
-  font-weight: 500;
-}
-
-.message {
-  background: rgba(37, 99, 235, 0.14);
-  color: #bfdbfe;
-  border: 1px solid rgba(59, 130, 246, 0.22);
-}
-
-.error {
-  background: rgba(127, 29, 29, 0.28);
-  color: #fecaca;
-  border: 1px solid rgba(248, 113, 113, 0.28);
-}
-
-.loading,
-.emptyState,
-.mutedText {
-  color: #94a3b8;
-}
-
-.resourceList {
+.clubResourceUploadPanel {
+  background: var(--brand-card-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.resourceCard {
-  background: rgba(15, 23, 42, 0.55);
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  border-radius: 16px;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.95rem;
-}
-
-.resourceHeader {
-  display: flex;
-  justify-content: space-between;
   gap: 0.75rem;
-  align-items: flex-start;
 }
 
-.resourceTitleGroup {
-  min-width: 0;
-}
-
-.resourceTitle {
+.clubResourcePanelTitle {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--primary-text);
   margin: 0;
-  color: #f8fafc;
-  font-size: 1rem;
+}
+
+.clubResourcePanelSub {
+  font-size: 0.78rem;
+  color: var(--secondary-text);
+  margin: 0.2rem 0 0;
+  line-height: 1.5;
+}
+
+.clubResourceForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.clubResourceFormGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+@media (max-width: 600px) {
+  .clubResourceFormGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.clubResourceFormField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+}
+
+.clubResourceLabel {
+  font-size: 0.62rem;
   font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--tertiary-text);
+  text-transform: uppercase;
 }
 
-.resourceSubtitle {
-  margin: 0.35rem 0 0;
-  color: #94a3b8;
-  word-break: break-word;
+.clubResourceInput {
+  padding: 0.5rem 0.75rem;
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 7px;
+  color: var(--primary-text);
+  font-size: 0.84rem;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: border-color 0.12s ease;
+}
+.clubResourceInput:focus {
+  border-color: var(--hover-light-green);
+}
+.clubResourceInput::placeholder {
+  color: var(--tertiary-text);
 }
 
-.resourceDescription {
+.clubResourceSelect {
+  padding: 0.5rem 0.75rem;
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 7px;
+  color: var(--primary-text);
+  font-size: 0.84rem;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  padding-right: 1.8rem;
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+}
+.clubResourceSelect:focus {
+  border-color: var(--hover-light-green);
+}
+.clubResourceSelect option {
+  background: var(--brand-card-green);
+}
+
+.clubResourceTextarea {
+  padding: 0.5rem 0.75rem;
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 7px;
+  color: var(--primary-text);
+  font-size: 0.84rem;
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.12s ease;
+}
+.clubResourceTextarea:focus {
+  border-color: var(--hover-light-green);
+}
+.clubResourceTextarea::placeholder {
+  color: var(--tertiary-text);
+}
+
+.clubResourceFileInput {
+  font-size: 0.82rem;
+  color: var(--secondary-text);
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 7px;
+  padding: 0.45rem 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+.clubResourceFileInput::file-selector-button {
+  background: var(--brand-light-green-border);
+  border: none;
+  border-radius: 5px;
+  color: var(--primary-text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  margin-right: 0.6rem;
+  cursor: pointer;
+}
+
+.clubResourceHelperText {
+  font-size: 0.73rem;
+  color: var(--tertiary-text);
   margin: 0;
-  color: #cbd5e1;
-  line-height: 1.55;
+  line-height: 1.45;
 }
 
-.statusPill,
-.previewBadge {
-  display: inline-flex;
+.clubResourceActionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.clubResourceLibrary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.clubResourceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.85rem;
+}
+
+.clubResourceCard {
+  background: var(--brand-card-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+.clubResourceCard:hover {
+  border-color: var(--brand-light-green-border-med);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.clubResourceCardTop {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.clubResourceCardIcon {
+  width: 36px;
+  height: 36px;
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 9px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
-  padding: 0.35rem 0.65rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  white-space: nowrap;
-  background: rgba(30, 41, 59, 0.95);
-  color: #e2e8f0;
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  flex-shrink: 0;
 }
 
-.metadataRow {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.metadataItem {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+.clubResourceCardInfo {
+  flex: 1;
   min-width: 0;
 }
 
-.metadataLabel {
-  color: #94a3b8;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.clubResourceCardName {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.metadataValue {
-  color: #e2e8f0;
-  font-weight: 600;
+.clubResourceCardFile {
+  font-size: 0.72rem;
+  color: var(--tertiary-text);
+  margin-top: 0.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.clubResourceKindPill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.22);
+  border-radius: 4px;
+  color: var(--hover-light-green);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.clubResourceCardDesc {
+  font-size: 0.78rem;
+  color: var(--secondary-text);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.clubResourceMeta {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+@media (max-width: 600px) {
+  .clubResourceMeta {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.clubResourceMetaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.clubResourceMetaLabel {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--tertiary-text);
+  text-transform: uppercase;
+}
+
+.clubResourceMetaValue {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--secondary-text);
   word-break: break-word;
 }
 
-.engagementPanel {
-  background: rgba(15, 23, 42, 0.58);
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  border-radius: 14px;
-  padding: 1rem;
+.clubResourceStatusComplete {
+  color: var(--hover-light-green);
+}
+.clubResourceStatusOpened {
+  color: #fbbf24;
+}
+
+.clubResourceCardActions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+
+.clubResourceEngagementPanel {
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 9px;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.clubResourceEngagementSummary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--secondary-text);
+}
+
+.clubResourceTableWrap {
+  overflow-x: auto;
+}
+
+.clubResourceTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 520px;
+  font-size: 0.78rem;
+}
+.clubResourceTable th,
+.clubResourceTable td {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--brand-light-green-border);
+}
+.clubResourceTable th {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tertiary-text);
+}
+.clubResourceTable td {
+  color: var(--secondary-text);
+}
+
+.clubResourceImportSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--brand-light-green-border);
+  margin-top: 0.25rem;
+}
+
+.clubResourceImportBuilder {
+  background: var(--brand-card-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.clubResourceImportGrid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 0.85rem;
+  align-items: start;
+}
+@media (max-width: 800px) {
+  .clubResourceImportGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.clubResourceImportHistory {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.clubResourceImportHistoryHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.clubResourceImportJobList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.clubResourceImportJobCard {
+  background: var(--brand-card-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 9px;
+  padding: 0.7rem 0.85rem;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  transition: border-color 0.12s ease;
+  width: 100%;
+}
+.clubResourceImportJobCard:hover {
+  border-color: var(--brand-light-green-border-med);
+}
+.clubResourceImportJobCardActive {
+  border-color: var(--hover-light-green);
+  background: rgba(34, 197, 94, 0.05);
+}
+
+.clubResourceImportJobRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.clubResourceImportJobTitle {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--primary-text);
+}
+
+.clubResourceImportJobMeta {
+  font-size: 0.72rem;
+  color: var(--tertiary-text);
+  margin-top: 0.1rem;
+  line-height: 1.4;
+}
+
+.clubResourceImportDetail {
+  min-width: 0;
+}
+
+.clubResourceImportDetailCard {
+  background: var(--brand-card-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
 }
 
-.engagementSummary {
+.clubResourceImportDetailHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.clubResourceStatusPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--secondary-text);
+  border: 1px solid var(--brand-light-green-border);
+}
+
+.clubResourceStatus_preview_ready {
+  background: rgba(37, 99, 235, 0.14);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.22);
+}
+.clubResourceStatus_completed {
+  background: rgba(34, 197, 94, 0.14);
+  color: #4ade80;
+  border-color: rgba(34, 197, 94, 0.22);
+}
+.clubResourceStatus_failed {
+  background: rgba(239, 68, 68, 0.14);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.22);
+}
+.clubResourceStatus_invalid {
+  background: rgba(239, 68, 68, 0.14);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.22);
+}
+.clubResourceStatus_unmatched {
+  background: rgba(239, 68, 68, 0.14);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.22);
+}
+.clubResourceStatus_ambiguous {
+  background: rgba(239, 68, 68, 0.14);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.22);
+}
+.clubResourceStatus_matched {
+  background: rgba(34, 197, 94, 0.14);
+  color: #4ade80;
+  border-color: rgba(34, 197, 94, 0.22);
+}
+.clubResourceStatus_processing {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fde68a;
+  border-color: rgba(251, 191, 36, 0.22);
+}
+.clubResourceStatus_validating {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fde68a;
+  border-color: rgba(251, 191, 36, 0.22);
+}
+.clubResourceStatus_confirmed {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fde68a;
+  border-color: rgba(251, 191, 36, 0.22);
+}
+.clubResourceStatus_uploaded {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fde68a;
+  border-color: rgba(251, 191, 36, 0.22);
+}
+
+.clubResourceCountRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  color: #cbd5e1;
-  font-weight: 600;
+  gap: 0.5rem;
 }
 
-.engagementTableWrapper {
-  overflow-x: auto;
-}
-
-.engagementTable {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 720px;
-}
-
-.engagementTable th,
-.engagementTable td {
-  text-align: left;
-  padding: 0.7rem 0.75rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-}
-
-.engagementTable th {
-  color: #94a3b8;
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.engagementTable td {
-  color: #e2e8f0;
-}
-
-.importSection {
-  margin-top: 0.25rem;
-}
-
-.importBuilder {
+.clubResourceCountCard {
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 70px;
 }
 
-.importGrid {
-  display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
-  gap: 1rem;
-  margin-top: 1.25rem;
+.clubResourceCountLabel {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--tertiary-text);
+  text-transform: uppercase;
 }
 
-.importHistory,
-.importDetail {
-  min-width: 0;
-}
-
-.importHistoryHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-}
-
-.importHistoryTitle,
-.subsectionTitle,
-.selectedJobTitle {
-  margin: 0;
-  color: #f8fafc;
+.clubResourceCountValue {
   font-size: 1rem;
   font-weight: 700;
+  color: var(--primary-text);
 }
 
-.importJobList {
+.clubResourceCommitBar {
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.importJobCard {
-  width: 100%;
-  background: rgba(15, 23, 42, 0.55);
-  color: inherit;
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  border-radius: 14px;
-  padding: 0.95rem;
-  text-align: left;
-  cursor: pointer;
-}
-
-.importJobCardSelected {
-  border-color: rgba(59, 130, 246, 0.6);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.14);
-}
-
-.importJobHeader,
-.selectedJobHeader,
-.previewRowHeader {
-  display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: rgba(34, 197, 94, 0.07);
+  border: 1px solid rgba(34, 197, 94, 0.18);
+  border-radius: 9px;
+  padding: 0.8rem 1rem;
 }
 
-.importJobTitle {
-  color: #f8fafc;
+.clubResourceCommitText {
+  font-size: 0.8rem;
+  color: var(--secondary-text);
+  line-height: 1.5;
+}
+
+.clubResourceCommitBtn {
+  padding: 0.45rem 1rem;
+  background: var(--hover-light-green);
+  border: none;
+  border-radius: 7px;
+  color: #0a1a0c;
+  font-size: 0.82rem;
   font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter 0.12s ease;
+  flex-shrink: 0;
+}
+.clubResourceCommitBtn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.clubResourceCommitBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
-.importJobMeta,
-.selectedJobSubtitle,
-.previewRowMeta {
-  margin-top: 0.25rem;
-  color: #94a3b8;
-  font-size: 0.86rem;
-  line-height: 1.45;
-}
-
-.selectedJobCard {
-  background: rgba(15, 23, 42, 0.55);
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  border-radius: 16px;
-  padding: 1rem;
+.clubResourcePreviewSection,
+.clubResourceReportSection {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.65rem;
 }
 
-.previewCounts,
-.reportGrid {
+.clubResourcePreviewRowCard {
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 9px;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.clubResourcePreviewRowHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.clubResourcePreviewCols {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
 }
+@media (max-width: 600px) {
+  .clubResourcePreviewCols {
+    grid-template-columns: 1fr;
+  }
+}
 
-.countCard {
-  background: rgba(2, 6, 23, 0.38);
-  border: 1px solid rgba(148, 163, 184, 0.1);
-  border-radius: 14px;
-  padding: 0.85rem;
+.clubResourcePreviewColTitle {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--secondary-text);
+  margin-bottom: 0.45rem;
+}
+
+.clubResourceKVList {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
 }
 
-.countLabel {
-  color: #94a3b8;
+.clubResourceKVItem {
+  background: var(--brand-card-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.clubResourceKVKey {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--tertiary-text);
+  text-transform: uppercase;
+}
+
+.clubResourceKVVal {
   font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.countValue {
-  color: #f8fafc;
-  font-size: 1.05rem;
-  font-weight: 700;
-}
-
-.commitBar {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: center;
-  background: rgba(22, 163, 74, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.2);
-  border-radius: 14px;
-  padding: 0.95rem 1rem;
-}
-
-.commitText {
-  color: #dcfce7;
-  line-height: 1.5;
-}
-
-.previewSection,
-.reportPanel {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-}
-
-.previewRowList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-}
-
-.previewRowCard {
-  background: rgba(2, 6, 23, 0.38);
-  border: 1px solid rgba(148, 163, 184, 0.1);
-  border-radius: 14px;
-  padding: 0.95rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-}
-
-.previewRowTitle {
-  color: #f8fafc;
-  font-weight: 700;
-}
-
-.previewColumns {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.9rem;
-}
-
-.previewColumn {
-  min-width: 0;
-}
-
-.previewColumnTitle,
-.warningTitle,
-.errorTitle {
-  margin: 0 0 0.55rem;
-  color: #e2e8f0;
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.keyValueList,
-.changesList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-}
-
-.keyValueItem,
-.changeItem {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  background: rgba(15, 23, 42, 0.45);
-  border: 1px solid rgba(148, 163, 184, 0.08);
-  border-radius: 12px;
-  padding: 0.65rem 0.75rem;
-}
-
-.keyValueKey,
-.changeKey {
-  color: #94a3b8;
-  font-size: 0.76rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.keyValueValue,
-.changeValues {
-  color: #e2e8f0;
-  font-weight: 600;
+  font-weight: 500;
+  color: var(--primary-text);
   word-break: break-word;
 }
 
-.changeValues {
+.clubResourceChangeValues {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   flex-wrap: wrap;
+  font-size: 0.78rem;
+  color: var(--primary-text);
 }
 
-.changeArrow {
+.clubResourceChangeArrow {
   color: #60a5fa;
   font-weight: 700;
 }
 
-.warningPanel,
-.errorPanel {
-  border-radius: 14px;
-  padding: 0.85rem 0.95rem;
-}
-
-.warningPanel {
-  background: rgba(120, 53, 15, 0.18);
+.clubResourceWarningPanel {
+  background: rgba(120, 53, 15, 0.15);
   border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: 8px;
+  padding: 0.7rem 0.85rem;
 }
 
-.errorPanel {
-  background: rgba(127, 29, 29, 0.22);
-  border: 1px solid rgba(248, 113, 113, 0.22);
+.clubResourceErrorPanel {
+  background: rgba(127, 29, 29, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  padding: 0.7rem 0.85rem;
 }
 
-.warningList,
-.errorList {
+.clubResourceWarningTitle {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--primary-text);
+  margin-bottom: 0.4rem;
+}
+
+.clubResourceWarningList {
   margin: 0;
   padding-left: 1.1rem;
-  color: #f8fafc;
-  line-height: 1.5;
+  color: var(--secondary-text);
+  font-size: 0.78rem;
+  line-height: 1.55;
 }
 
-.errorDetail {
-  margin-top: 0.25rem;
-  font-size: 0.82rem;
+.clubResourceErrorDetail {
+  font-size: 0.73rem;
   color: #fca5a5;
+  margin-top: 0.2rem;
 }
 
-.viewerOverlay {
+.clubResourceViewerOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(2, 6, 23, 0.78);
+  background: rgba(2, 6, 23, 0.82);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1.25rem;
-  z-index: 60;
+  z-index: 200;
 }
 
-.viewerCard {
-  width: min(960px, 100%);
-  max-height: 92vh;
+.clubResourceViewerCard {
+  width: min(980px, 100%);
+  max-height: 94vh;
   overflow: auto;
-  background: #0f172a;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  border-radius: 18px;
-  padding: 1rem;
-  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.42);
+  background: var(--brand-card-green);
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
+  gap: 0.85rem;
 }
 
-.viewerHeader {
+.clubResourceViewerHead {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  align-items: flex-start;
+  flex-wrap: wrap;
 }
 
-.viewerTitle {
+.clubResourceViewerTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--primary-text);
   margin: 0;
-  color: #f8fafc;
-  font-size: 1.05rem;
-  font-weight: 700;
 }
 
-.viewerSubtitle {
-  margin: 0.35rem 0 0;
-  color: #94a3b8;
+.clubResourceViewerSub {
+  font-size: 0.75rem;
+  color: var(--secondary-text);
+  margin: 0.2rem 0 0;
   word-break: break-word;
 }
 
-.viewerControls {
-  margin-top: 1rem;
+.clubResourceViewerHeadActions {
   display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.clubResourceViewerControls {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  align-items: center;
 }
 
-.pageIndicator {
-  color: #e2e8f0;
+.clubResourceViewerPageIndicator {
+  font-size: 0.84rem;
   font-weight: 600;
+  color: var(--primary-text);
 }
 
-.viewerBody {
-  margin-top: 1rem;
+.clubResourceViewerBody {
+  flex: 1;
+  min-height: 0;
   display: flex;
   justify-content: center;
   overflow: auto;
-  flex: 1;
-  min-height: 0;
 }
 
-.document {
+.clubResourceViewerDoc {
   display: flex;
   justify-content: center;
 }
 
-.status_preview_ready {
-  background: rgba(37, 99, 235, 0.18);
-  color: #bfdbfe;
-  border-color: rgba(59, 130, 246, 0.26);
+.clubResourcePrimaryBtn {
+  padding: 0.42rem 0.95rem;
+  background: var(--hover-light-green);
+  border: none;
+  border-radius: 7px;
+  color: #0a1a0c;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter 0.12s ease;
+}
+.clubResourcePrimaryBtn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.clubResourcePrimaryBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
-.status_completed {
-  background: rgba(22, 163, 74, 0.18);
-  color: #dcfce7;
-  border-color: rgba(34, 197, 94, 0.26);
+.clubResourceGhostBtn {
+  padding: 0.42rem 0.85rem;
+  background: var(--brand-lightest-green);
+  border: 1px solid var(--brand-light-green-border-med);
+  border-radius: 7px;
+  color: var(--secondary-text);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.12s ease;
 }
-
-.status_failed,
-.status_invalid,
-.status_unmatched,
-.status_ambiguous {
-  background: rgba(127, 29, 29, 0.22);
-  color: #fecaca;
-  border-color: rgba(248, 113, 113, 0.26);
+.clubResourceGhostBtn:hover:not(:disabled) {
+  color: var(--primary-text);
+  background: var(--brand-light-green-border);
 }
-
-.status_matched {
-  background: rgba(22, 163, 74, 0.18);
-  color: #dcfce7;
-  border-color: rgba(34, 197, 94, 0.26);
-}
-
-.status_processing,
-.status_validating,
-.status_confirmed,
-.status_uploaded {
-  background: rgba(120, 53, 15, 0.18);
-  color: #fde68a;
-  border-color: rgba(251, 191, 36, 0.26);
-}
-
-@media (max-width: 1100px) {
-
-  .grid,
-  .importGrid,
-  .previewColumns,
-  .previewCounts,
-  .reportGrid,
-  .metadataRow {
-    grid-template-columns: 1fr;
-  }
-
-  .viewerBody {
-    justify-content: flex-start;
-  }
-}
-
-@media (max-width: 640px) {
-
-  .sectionHeader,
-  .resourceHeader,
-  .importJobHeader,
-  .selectedJobHeader,
-  .previewRowHeader,
-  .viewerHeader,
-  .viewerControls,
-  .commitBar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .card,
-  .viewerCard {
-    padding: 1rem;
-  }
-
-  .primaryButton,
-  .secondaryButton,
-  .commitButton,
-  .closeButton {
-    width: 100%;
-  }
+.clubResourceGhostBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }

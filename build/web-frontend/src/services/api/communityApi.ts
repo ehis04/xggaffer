@@ -69,6 +69,23 @@ export interface PaginatedResponse<T> {
   suggestion?: string;
 }
 
+export interface NotificationItem {
+  id: number;
+  notification_type: 'FR' | 'FA' | 'NF' | 'M' | 'L' | 'C' | 'RY' | 'R';
+  is_read: boolean;
+  created_at: string;
+  triggered_by: Author;
+  target_kind: 'post' | 'comment' | 'followrequest' | null;
+  post_id: number | null;
+  comment_id: number | null;
+}
+
+export interface NotificationsParams {
+  page?: number;
+  pageSize?: number;
+  unread_only?: boolean;
+}
+
 export interface ExploreParams {
   page?: number;
   page_size?: number;
@@ -141,6 +158,21 @@ export const communityApi = {
 
   getTrendingHashtags: (limit = 10) =>
     apiClient.get<Hashtag[]>('/community/hashtags/trending/', { limit: String(limit) }),
+
+  getNotifications: (params: NotificationsParams = {}) =>
+    apiClient.get<PaginatedResponse<NotificationItem>>('/community/notifications/', {
+      ...(params.page ? { page: params.page } : {}),
+      ...(params.pageSize ? { "page-size": params.pageSize } : {}),
+      ...(typeof params.unread_only === 'boolean'
+        ? { unread_only: params.unread_only }
+        : {}),
+    }),
+
+  markNotificationAsRead: (notificationId: number) =>
+    apiClient.patch<{ id: number; is_read: boolean }>(
+      `/community/notifications/${notificationId}/mark-read/`,
+      {}
+    ),
 };
 
 export default communityApi;
