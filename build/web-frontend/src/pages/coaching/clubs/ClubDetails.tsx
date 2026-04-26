@@ -214,7 +214,6 @@ export const ClubDetailsPage = () => {
   const [selectedClubPlayerByRequest, setSelectedClubPlayerByRequest] = useState<Record<number, string>>({});
   const [reviewNoteByRequest, setReviewNoteByRequest] = useState<Record<number, string>>({});
   const [revokeNoteByInvitation, setRevokeNoteByInvitation] = useState<Record<number, string>>({});
-  const [activeTab, setActiveTab] = useState<'overview' | 'players' | 'sessions' | 'settings'>('overview');
 
   const reloadClubWorkflowData = async (clubRecord: Club) => {
     const myRequestsPromise = clubsApi.listMyJoinRequests();
@@ -553,18 +552,6 @@ export const ClubDetailsPage = () => {
           {workflowMessage && <div className={styles.individualClubNotice}>{workflowMessage}</div>}
           {scheduleError && <div className={styles.individualClubError}>{scheduleError}</div>}
 
-          <div className={styles.individualClubTabs}>
-            {(['overview', 'players', 'sessions', 'settings'] as const).map((tab) => (
-              <button
-                key={tab}
-                className={`${styles.individualClubTab} ${activeTab === tab ? styles.individualClubTabActive : ''}`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
-          </div>
-
           <div className={styles.individualClubStatStrip}>
             <div className={styles.individualClubStatCard}>
               <div className={styles.individualClubStatLabel}>FORM (LAST 5)</div>
@@ -848,25 +835,6 @@ export const ClubDetailsPage = () => {
 
               <div className={styles.individualClubPanel}>
                 <ClubCalendar calendarItems={calendarFeed} />
-              </div>
-
-              <div className={styles.individualClubPanel}>
-                <div className={styles.individualClubPanelHead}>
-                  <h2 className={styles.individualClubPanelTitle}>Quick actions</h2>
-                </div>
-                <div className={styles.individualClubQuickGrid}>
-                  {QUICK_ACTIONS.map((qa) => (
-                    <button
-                      key={qa.key}
-                      className={styles.individualClubQuickCard}
-                      onClick={() => navigate(qa.path(club.id))}
-                    >
-                      <div className={styles.individualClubQuickIcon}>{qa.icon}</div>
-                      <div className={styles.individualClubQuickTitle}>{qa.title}</div>
-                      <div className={styles.individualClubQuickDesc}>{qa.desc}</div>
-                    </button>
-                  ))}
-                </div>
               </div>
 
               {reviewAccess && !club.is_trashed && (
