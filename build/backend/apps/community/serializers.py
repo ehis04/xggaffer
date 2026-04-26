@@ -128,7 +128,6 @@ class NotificationListSerializer(serializers.ModelSerializer):
     target_kind = serializers.SerializerMethodField()
     post_id = serializers.SerializerMethodField()
     comment_id = serializers.SerializerMethodField()
-    follow_request_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Notification
@@ -141,7 +140,6 @@ class NotificationListSerializer(serializers.ModelSerializer):
             "target_kind",
             "post_id",
             "comment_id",
-            "follow_request_id",
         ]
 
     def get_target_kind(self, obj):
@@ -165,8 +163,3 @@ class NotificationListSerializer(serializers.ModelSerializer):
             return target.id
         return None
 
-    # def get_follow_request_id(self, obj):
-    #     target = obj.content_object
-    #     if isinstance(target, FollowRequest):
-    #         return target.id
-    #     return None

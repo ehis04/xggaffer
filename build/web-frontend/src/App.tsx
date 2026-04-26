@@ -65,6 +65,7 @@ import ArticleDetailPage from "./pages/articles/ArticleDetailPage";
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './common/query/queryClient';
+import { ClubDetailsPage } from "./pages/coaching/clubs/ClubDetails";
 
 function App() {
   return (
@@ -131,6 +132,7 @@ function App() {
                 <Route path="/clubs/:clubId/teamsheets/new" element={<TeamsheetCreatePage />} />
                 <Route path="/clubs/:clubId/teamsheets/:teamsheetId/edit" element={<TeamsheetEditPage />} />
                 <Route path="/clubs/:clubId/" element={<IndividualClubBase />} />
+                <Route path="/clubs/:clubId/details" element={<ClubDetailsPage />} />
                 <Route path="/clubs/:clubId/players" element={<ClubPlayersPage />} />
                 <Route path="/clubs/:clubId/tactics-boards" element={<TacticsBoardListPage />} />
                 <Route path="/clubs/:clubId/tactics-boards/:boardId" element={<TacticsBoardEditorPage />} />
