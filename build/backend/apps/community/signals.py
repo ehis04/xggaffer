@@ -62,8 +62,12 @@ def _bump_like_count(target, delta: int):
 def _send_like_notification(target, initiator):
     if not target:
         return
-    
-    Notification.objects.create(triggered_by=initiator, user=initiator, notification_type=NotificationType.LIKE, content_object=target)
+
+    target_author = getattr(target, "author", None)
+    if not target_author or target_author.id == initiator.id:
+        return
+
+    Notification.objects.create(triggered_by=initiator, user=target_author, notification_type=NotificationType.LIKE, content_object=target)
 
 @receiver(post_save, sender=Like)
 def like_created(sender, instance: Like, created: bool, **kwargs):

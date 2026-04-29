@@ -140,6 +140,9 @@ export const communityApi = {
   deletePost: (postId: number) =>
     apiClient.delete<void>(`/community/my-post/${postId}/`),
 
+  deleteComment: (commentId: number) =>
+    apiClient.delete<void>(`/community/my-comment/${commentId}/`),
+
   likePost: (postId: number) =>
     apiClient.post<{ liked: boolean; no_of_likes: number }>(
       `/community/posts/${postId}/like/`

@@ -15,7 +15,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import ValidationError
 from .models import Post, Visibility, ModerationStatus, PostView, Comment, Like, ContentType, Notification
 from apps.users.models import User, UserProfile, Follow
-from rest_framework.generics import CreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import CreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView, RetrieveDestroyAPIView
 from django.shortcuts import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from django.utils.dateparse import parse_date
@@ -83,6 +83,20 @@ class UserPostView(RetrieveUpdateDestroyAPIView):
     def perform_update(self, serializer):
         serializer.save(author=self.request.user)
     
+    @transaction.atomic
+    def perform_destroy(self, instance):
+        instance.delete()
+
+class UserCommentView(RetrieveDestroyAPIView):
+    serializer_class = CommentListSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = "id"
+    lookup_url_kwarg = "comment_id"
+    queryset = Comment.objects.none()
+
+    def get_queryset(self):
+        return Comment.objects.select_related("author").filter(author=self.request.user)
+
     @transaction.atomic
     def perform_destroy(self, instance):
         instance.delete()
