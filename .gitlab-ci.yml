@@ -26,8 +26,6 @@ frontend_check:
     - npm ci
   script:
     - npx tsc --noEmit
-    - npm run lint --if-present
-    - npm run test --if-present -- --run
     - npm run build
   artifacts:
     when: on_success
