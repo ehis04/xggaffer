@@ -96,7 +96,11 @@
 }
 
 /* Player list */
-.playerList { display: flex; flex-direction: column; gap: 2px; }
+.playerList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 
 .playerRow {
   display: flex;
@@ -109,8 +113,12 @@
   transition: background 0.15s ease;
 }
 
-.playerRow:hover { background: rgba(255, 255, 255, 0.04); }
-.playerRowSelected { background: rgba(255, 255, 255, 0.07); }
+.playerRow:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.playerRowSelected {
+  background: rgba(255, 255, 255, 0.07);
+}
 
 .playerRowLeft {
   display: flex;
@@ -172,14 +180,34 @@
   margin-top: 4px;
 }
 
-.metaItem { display: flex; flex-direction: column; gap: 2px; }
-.metaLabel { font-size: 10px; color: var(--tertiary-text); text-transform: uppercase; letter-spacing: 0.04em; }
-.metaValue { font-size: 0.85rem; color: var(--primary-text); }
+.metaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.metaLabel {
+  font-size: 10px;
+  color: var(--tertiary-text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.metaValue {
+  font-size: 0.85rem;
+  color: var(--primary-text);
+}
 
-.secondaryPos { font-size: 0.78rem; color: var(--tertiary-text); margin: 6px 0 0; }
+.secondaryPos {
+  font-size: 0.78rem;
+  color: var(--tertiary-text);
+  margin: 6px 0 0;
+}
 
 /* Injury log */
-.injuryList { display: flex; flex-direction: column; gap: 8px; }
+.injuryList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
 .injuryRow {
   display: flex;
@@ -190,10 +218,22 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.injuryRow:last-child { border-bottom: none; }
+.injuryRow:last-child {
+  border-bottom: none;
+}
 
-.injuryType { display: block; font-size: 0.85rem; font-weight: 500; color: var(--primary-text); }
-.injuryMeta { display: block; font-size: 0.78rem; color: var(--tertiary-text); margin-top: 2px; }
+.injuryType {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--primary-text);
+}
+.injuryMeta {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--tertiary-text);
+  margin-top: 2px;
+}
 
 /* Buttons */
 .primaryBtn {
@@ -209,8 +249,13 @@
   white-space: nowrap;
 }
 
-.primaryBtn:hover:not(:disabled) { background: rgba(59, 130, 246, 1); }
-.primaryBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.primaryBtn:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 1);
+}
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 .secondaryBtn {
   background: rgba(255, 255, 255, 0.06);
@@ -225,8 +270,13 @@
   white-space: nowrap;
 }
 
-.secondaryBtn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); }
-.secondaryBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.secondaryBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+.secondaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 .ghostBtn {
   background: none;
@@ -236,18 +286,40 @@
   padding: 4px 8px;
   cursor: pointer;
   border-radius: 6px;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
   white-space: nowrap;
 }
 
-.ghostBtn:hover { color: var(--primary-text); background: rgba(255, 255, 255, 0.05); }
-.ghostBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.ghostBtn:hover {
+  color: var(--primary-text);
+  background: rgba(255, 255, 255, 0.05);
+}
+.ghostBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 /* Form */
-.form { display: flex; flex-direction: column; gap: 12px; }
-.formRow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 10px;
+}
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
 
-.formGroup { display: flex; flex-direction: column; gap: 5px; }
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 10px;
+}
 
 .label {
   font-size: 11px;
@@ -270,8 +342,14 @@
   transition: border-color 0.15s ease;
 }
 
+option {
+  color: black;
+}
+
 .input:focus,
-.select:focus { border-color: rgba(255, 255, 255, 0.25); }
+.select:focus {
+  border-color: rgba(255, 255, 255, 0.25);
+}
 
 .checkboxGroup {
   display: flex;
@@ -289,6 +367,13 @@
   cursor: pointer;
 }
 
-.formActions { display: flex; gap: 10px; }
+.formActions {
+  display: flex;
+  gap: 10px;
+}
 
-.emptyText { font-size: 0.85rem; color: var(--tertiary-text); margin: 0; }
+.emptyText {
+  font-size: 0.85rem;
+  color: var(--tertiary-text);
+  margin: 0;
+}
