@@ -1,0 +1,66 @@
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "Development"'
+    - when: never
+
+stages:
+  - frontend
+  - backend
+
+variables:
+  PYTHONUNBUFFERED: "1"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  NODE_ENV: "test"
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - .cache/pip/
+    - build/web-frontend/node_modules/
+
+frontend_check:
+  stage: frontend
+  image: node:20
+  before_script:
+    - cd build/web-frontend
+    - npm ci
+  script:
+    - npx tsc --noEmit
+    - npm run lint --if-present
+    - npm run test --if-present -- --run
+    - npm run build
+  artifacts:
+    when: on_success
+    expire_in: 1 week
+    paths:
+      - build/web-frontend/dist/
+
+backend_check:
+  stage: backend
+  image: python:3.11
+  services:
+    - name: postgres:16
+      alias: postgres
+    - name: redis:7
+      alias: redis
+  variables:
+    POSTGRES_DB: app_test
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_HOST_AUTH_METHOD: trust
+
+    DATABASE_URL: "postgres://postgres:postgres@postgres:5432/app_test"
+    REDIS_URL: "redis://redis:6379/0"
+    SECRET_KEY: "ci-development-test-secret-key"
+    DEBUG: "False"
+    ALLOWED_HOSTS: "localhost,127.0.0.1"
+
+    CLUB_RESOURCES_USE_CLOUDINARY: "False"
+  before_script:
+    - cd build/backend
+    - python -m pip install --upgrade pip
+    - pip install -r requirements.txt
+  script:
+    - python manage.py check
+    - python manage.py migrate --noinput
+    - python manage.py test
