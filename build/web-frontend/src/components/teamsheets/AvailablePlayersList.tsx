@@ -25,93 +25,91 @@ const AvailablePlayersList: React.FC<AvailablePlayersListProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredPlayers = players.filter(player => {
-    if (selectedIds.includes(player.id)) return false;
-    
+  const filtered = players.filter(p => {
+    if (selectedIds.includes(p.id)) return false;
     if (searchTerm) {
-      const search = searchTerm.toLowerCase();
-      const matchesName = player.full_name.toLowerCase().includes(search) ||
-        (player.display_name?.toLowerCase().includes(search));
-      if (!matchesName) return false;
+      const s = searchTerm.toLowerCase();
+      return (
+        p.full_name.toLowerCase().includes(s) ||
+        (p.display_name?.toLowerCase().includes(s) ?? false)
+      );
     }
-    
     return true;
   });
 
-  const clubPlayers = filteredPlayers.filter(p => p.source_type === 'club_member');
-  const publicPlayers = filteredPlayers.filter(p => p.source_type === 'public');
+  const clubPlayers   = filtered.filter(p => p.source_type === 'club_member');
+  const publicPlayers = filtered.filter(p => p.source_type === 'public');
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h3 className={styles.title}>Available Players</h3>
+    <div className={styles.AvailablePlayersListContainer}>
+      <div className={styles.AvailablePlayersListHeader}>
+        <h3 className={styles.AvailablePlayersListTitle}>Available Players</h3>
       </div>
 
-      <div className={styles.filters}>
+      <div className={styles.AvailablePlayersListFilters}>
         <input
           type="text"
-          placeholder="Search players..."
-          className={styles.searchInput}
+          placeholder="Search players…"
+          className={styles.AvailablePlayersListSearch}
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={e => setSearchTerm(e.target.value)}
         />
-
         {positions.length > 0 && onPositionFilterChange && (
           <select
-            className={styles.positionSelect}
-            value={positionFilter || ''}
-            onChange={(e) => onPositionFilterChange(e.target.value)}
+            className={styles.AvailablePlayersListSelect}
+            value={positionFilter ?? ''}
+            onChange={e => onPositionFilterChange(e.target.value)}
           >
-            <option value="">All Positions</option>
+            <option value="" className={styles.AvailablePlayersListOption}>All Positions</option>
             {positions.map(pos => (
-              <option key={pos.value} value={pos.value}>{pos.label}</option>
+              <option key={pos.value} value={pos.value} className={styles.AvailablePlayersListOption}>{pos.label}</option>
             ))}
           </select>
         )}
       </div>
 
       {loading ? (
-        <div className={styles.loading}>Loading players...</div>
+        <div className={styles.AvailablePlayersListLoading}>Loading players…</div>
       ) : (
-        <div className={styles.playersList}>
+        <div className={styles.AvailablePlayersListScroll}>
           <button
             type="button"
-            className={styles.defaultButton}
+            className={styles.AvailablePlayersListDefaultBtn}
             onClick={onUseDefault}
           >
-            <span className={styles.defaultIcon}>+</span>
+            <span className={styles.AvailablePlayersListDefaultIcon}>+</span>
             <span>Use Default Player</span>
           </button>
 
           {clubPlayers.length > 0 && (
-            <div className={styles.section}>
-              <h4 className={styles.sectionTitle}>Club Members</h4>
-              {clubPlayers.map(player => (
-                <PlayerRow
-                  key={player.id}
-                  player={player}
-                  onSelect={() => onSelect(player)}
+            <div className={styles.AvailablePlayersListSection}>
+              <h4 className={styles.AvailablePlayersListSectionTitle}>Club Members</h4>
+              {clubPlayers.map(p => (
+                <AvailablePlayersListPlayerRow
+                  key={p.id}
+                  player={p}
+                  onSelect={() => onSelect(p)}
                 />
               ))}
             </div>
           )}
 
           {publicPlayers.length > 0 && (
-            <div className={styles.section}>
-              <h4 className={styles.sectionTitle}>Public Players</h4>
-              {publicPlayers.map(player => (
-                <PlayerRow
-                  key={player.id}
-                  player={player}
-                  onSelect={() => onSelect(player)}
+            <div className={styles.AvailablePlayersListSection}>
+              <h4 className={styles.AvailablePlayersListSectionTitle}>Public Players</h4>
+              {publicPlayers.map(p => (
+                <AvailablePlayersListPlayerRow
+                  key={p.id}
+                  player={p}
+                  onSelect={() => onSelect(p)}
                 />
               ))}
             </div>
           )}
 
           {clubPlayers.length === 0 && publicPlayers.length === 0 && (
-            <div className={styles.empty}>
-              No available players found. Use the default player option.
+            <div className={styles.AvailablePlayersListEmpty}>
+              No players found. Use the default player option above.
             </div>
           )}
         </div>
@@ -120,41 +118,48 @@ const AvailablePlayersList: React.FC<AvailablePlayersListProps> = ({
   );
 };
 
-interface PlayerRowProps {
+interface AvailablePlayersListPlayerRowProps {
   player: AvailablePlayer;
   onSelect: () => void;
 }
 
-const PlayerRow: React.FC<PlayerRowProps> = ({ player, onSelect }) => {
-  return (
-    <button
-      type="button"
-      className={styles.playerRow}
-      onClick={onSelect}
-    >
-      <div className={styles.playerAvatar}>
-        {player.photo ? (
-          <img src={player.photo} alt="" className={styles.playerPhoto} />
-        ) : (
-          <span className={styles.avatarInitial}>
-            {player.first_name?.[0] || player.display_name?.[0] || '?'}
-          </span>
-        )}
-      </div>
-      <div className={styles.playerInfo}>
-        <span className={styles.playerName}>
-          {player.display_name || player.full_name}
+const AvailablePlayersListPlayerRow: React.FC<AvailablePlayersListPlayerRowProps> = ({
+  player,
+  onSelect,
+}) => (
+  <button
+    type="button"
+    className={styles.AvailablePlayersListRow}
+    onClick={onSelect}
+  >
+    <div className={styles.AvailablePlayersListAvatar}>
+      {player.photo ? (
+        <img
+          src={player.photo}
+          alt=""
+          className={styles.AvailablePlayersListPhoto}
+        />
+      ) : (
+        <span>
+          {player.first_name?.[0] ?? player.display_name?.[0] ?? '?'}
         </span>
-        <span className={styles.playerMeta}>
-          {player.primary_position}
-          {player.squad_number && ` • #${player.squad_number}`}
-        </span>
-      </div>
-      {player.source_type === 'public' && (
-        <span className={styles.publicBadge}>Public</span>
       )}
-    </button>
-  );
-};
+    </div>
+
+    <div className={styles.AvailablePlayersListInfo}>
+      <span className={styles.AvailablePlayersListName}>
+        {player.display_name ?? player.full_name}
+      </span>
+      <span className={styles.AvailablePlayersListMeta}>
+        {player.primary_position}
+        {player.squad_number ? ` · #${player.squad_number}` : ''}
+      </span>
+    </div>
+
+    {player.source_type === 'public' && (
+      <span className={styles.AvailablePlayersListPublicBadge}>Public</span>
+    )}
+  </button>
+);
 
 export default AvailablePlayersList;

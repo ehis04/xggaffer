@@ -1,116 +1,116 @@
-.container {
+.PlayerSlotSelectorContainer {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 16px;
 }
 
-.section {
-  background: #1a1a2e;
-  border-radius: 12px;
-  padding: 1rem;
+.PlayerSlotSelectorSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.sectionTitle {
-  font-size: 0.875rem;
+.PlayerSlotSelectorSectionTitle {
+  font-size: 0.65rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0 0 1rem 0;
+  color: rgba(255, 255, 255, 0.32);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin: 0;
 }
 
-.slotGrid {
+.PlayerSlotSelectorGrid {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 4px;
 }
 
-.slotCard {
+.PlayerSlotSelectorCard {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 2px solid transparent;
+  gap: 9px;
+  padding: 8px 10px;
   border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.15s, border-color 0.15s;
   position: relative;
 }
-
-.slotCard:hover {
+.PlayerSlotSelectorCard:hover {
   background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
-.slotCard.selected {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: #3b82f6;
+.PlayerSlotSelectorSelected {
+  background: rgba(34, 197, 94, 0.08) !important;
+  border-color: rgba(34, 197, 94, 0.28) !important;
 }
 
-.slotCard.empty {
+.PlayerSlotSelectorEmpty {
   border-style: dashed;
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.PlayerSlotSelectorEmpty:hover {
+  border-color: rgba(34, 197, 94, 0.25);
+  background: rgba(34, 197, 94, 0.04);
 }
 
-.positionBadge {
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.7rem;
+.PlayerSlotSelectorPosBadge {
+  padding: 0.15rem 0.42rem;
+  border-radius: 5px;
+  font-size: 0.62rem;
   font-weight: 700;
-  color: white;
-  min-width: 40px;
+  color: #0a1a0e;
+  flex-shrink: 0;
+  min-width: 30px;
   text-align: center;
 }
 
-.slotContent {
+.PlayerSlotSelectorContent {
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 1px;
   min-width: 0;
 }
 
-.emptyText {
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 0.875rem;
+.PlayerSlotSelectorEmptyText {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.28);
   font-style: italic;
 }
 
-.playerNumber {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.75rem;
+.PlayerSlotSelectorPlayerNum {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.35);
 }
 
-.playerName {
-  color: white;
-  font-size: 0.875rem;
+.PlayerSlotSelectorPlayerName {
+  font-size: 0.80rem;
   font-weight: 500;
+  color: rgba(255, 255, 255, 0.82);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.removeButton {
-  position: absolute;
-  top: 0.25rem;
-  right: 0.25rem;
+.PlayerSlotSelectorRemoveBtn {
   width: 20px;
   height: 20px;
+  border-radius: 5px;
+  background: rgba(239, 68, 68, 0.10);
+  border: 1px solid rgba(239, 68, 68, 0.18);
+  color: #f87171;
+  font-size: 0.85rem;
+  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(239, 68, 68, 0.2);
-  border: none;
-  border-radius: 50%;
-  color: #ef4444;
-  font-size: 1rem;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s;
+  flex-shrink: 0;
+  transition: background 0.14s;
 }
-
-.slotCard:hover .removeButton {
-  opacity: 1;
-}
-
-.removeButton:hover {
-  background: rgba(239, 68, 68, 0.4);
+.PlayerSlotSelectorRemoveBtn:hover {
+  background: rgba(239, 68, 68, 0.20);
 }
