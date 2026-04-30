@@ -13,6 +13,7 @@ from .models import (
     PerformanceScore,
 )
 
+# Returns the user's most recently accessed active course
 def get_active_course(user_profile: UserProfile) -> UserCourseProgress | None:
     return (
         UserCourseProgress.objects
@@ -22,7 +23,7 @@ def get_active_course(user_profile: UserProfile) -> UserCourseProgress | None:
         .first()
     )
 
-
+# Returns progress rows for all laws, creating unsaved placeholder progress objects where no database row exists yet
 def get_all_courses(user_profile: UserProfile) -> list[UserCourseProgress]:
     laws = Law.objects.all()
 
@@ -50,16 +51,17 @@ def get_all_courses(user_profile: UserProfile) -> list[UserCourseProgress]:
 
     return result
 
-
+# Gets or creates the user's study streak record
 def get_streak(user_profile: UserProfile) -> StudyStreak:
     streak, _ = StudyStreak.objects.get_or_create(user_profile=user_profile)
     return streak
 
-
+# Gets or creates the user's performance score record
 def get_performance(user_profile: UserProfile) -> PerformanceScore:
     perf, _ = PerformanceScore.objects.get_or_create(user_profile=user_profile)
     return perf
 
+# Returns the ids of completed course items for a user within a specific law
 def get_completed_item_ids(user_profile: UserProfile, law: Law) -> set[int]:
     return set(
         UserItemProgress.objects.filter(
@@ -69,7 +71,7 @@ def get_completed_item_ids(user_profile: UserProfile, law: Law) -> set[int]:
         ).values_list('item_id', flat=True)
     )
 
-
+# Returns the next incomplete item id for a user within a specific law
 def get_active_item_id(user_profile: UserProfile, law: Law) -> int | None:
     completed_ids = get_completed_item_ids(user_profile, law)
 
@@ -80,6 +82,7 @@ def get_active_item_id(user_profile: UserProfile, law: Law) -> int | None:
 
     return None
 
+# Marks a course item as completed and refreshes course progress, streaks, and performance scores
 @transaction.atomic
 def mark_item_complete(user_profile: UserProfile, item_id: int) -> UserItemProgress:
     item = CourseItem.objects.select_related('section__law').get(pk=item_id)
@@ -101,7 +104,7 @@ def mark_item_complete(user_profile: UserProfile, item_id: int) -> UserItemProgr
 
     return progress
 
-
+# Saves a user's scenario answer and completes the item only when the selected answer is correct
 @transaction.atomic
 def submit_scenario(
     user_profile: UserProfile,
@@ -134,6 +137,7 @@ def submit_scenario(
     return progress
 
 
+# Saves a user's drill answers and marks the drill item as completed
 @transaction.atomic
 def submit_drill(
     user_profile: UserProfile,
@@ -163,7 +167,7 @@ def submit_drill(
 
     return progress
 
-
+# Recalculates a user's progress totals and status for one law
 def _refresh_course_progress(
     user_profile: UserProfile,
     law: Law,
@@ -196,7 +200,7 @@ def _refresh_course_progress(
 
     cp.save()
 
-
+# Updates the user's study streak based on the dates they have studied
 def _update_streak(user_profile: UserProfile) -> None:
     streak, _ = StudyStreak.objects.get_or_create(user_profile=user_profile)
     today     = date.today()
@@ -219,7 +223,7 @@ def _update_streak(user_profile: UserProfile) -> None:
     streak.last_updated   = today
     streak.save()
 
-
+# Recalculates the user's percentage scores for each course type and their overall performance score
 def _recompute_performance(user_profile: UserProfile) -> None:
     perf, _ = PerformanceScore.objects.get_or_create(user_profile=user_profile)
 

@@ -4,7 +4,7 @@ from django.contrib.postgres.fields import ArrayField
 from apps.users.models import UserProfile
 from apps.referee.Laws.models import Law, CourseItem
 
-
+# Stores a user's overall progress through a specific course
 class UserCourseProgress(models.Model):
     STATUS_LOCKED    = 'locked'
     STATUS_ACTIVE    = 'active'
@@ -40,7 +40,8 @@ class UserCourseProgress(models.Model):
 
     class Meta:
         unique_together = ('user_profile', 'law')
-
+        
+    # Calculates the percentage of clauses completed in this law course
     @property
     def progress_percentage(self) -> int:
         if self.total_clauses == 0:
@@ -53,7 +54,7 @@ class UserCourseProgress(models.Model):
             f"Law {self.law.law_number} ({self.status})"
         )
 
-
+# Stores a user's progress for one individual course item
 class UserItemProgress(models.Model):
     user_profile = models.ForeignKey(
         UserProfile,
@@ -81,7 +82,7 @@ class UserItemProgress(models.Model):
         state = 'done' if self.completed else 'pending'
         return f"{self.user_profile.user.username} — {self.item.title} ({state})"
 
-
+# Tracks the user's consecutive study activity and the dates they studied
 class StudyStreak(models.Model):
     user_profile   = models.OneToOneField(
         UserProfile,
@@ -95,7 +96,7 @@ class StudyStreak(models.Model):
     def __str__(self):
         return f"{self.user_profile.user.username} — streak {self.current_streak}"
 
-
+# Stores the user's overall referee learning performance scores across different activity types
 class PerformanceScore(models.Model):
     user_profile   = models.OneToOneField(
         UserProfile,

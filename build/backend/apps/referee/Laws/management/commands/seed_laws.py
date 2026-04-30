@@ -5,7 +5,6 @@ import time
 from decouple import config
 
 import pdfplumber
-from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
@@ -14,8 +13,14 @@ from django.db import transaction
 
 from apps.referee.Laws.models import Law, CourseSection, CourseItem
 
+"""
+Seeds referee course content from the Laws of the Game PDF using Gemini-generated structured JSON 
+
+"""
+
 GEMINI_API_KEY=config("GEMINI_API_KEY")
 
+# Maps each official FIFA law number to its title
 LAW_TITLES = {
     1:  'The Field of Play',
     2:  'The Ball',
@@ -36,13 +41,17 @@ LAW_TITLES = {
     17: 'The Corner Kick',
 }
 
+# Delay between Gemini calls to reduce rate limit issues
 GEMINI_DELAY_SECONDS = 5
 
+# Tells Gemini how many logical sections to create for each law
 CLAUSES_PER_SECTION_TARGET = 3
 
+# Django management command that extracts laws from a PDF, sends them to Gemini, and saves structured course content
 class Command(BaseCommand):
     help = 'Seeds the database with FIFA Laws of the Game from a PDF using Gemini AI.'
 
+    # Defines command-line arguments for selecting the PDF, filtering laws, testing extraction, and overwriting existing rows
     def add_arguments(self, parser):
         parser.add_argument(
             '--pdf',
@@ -67,6 +76,7 @@ class Command(BaseCommand):
             help='Delete existing DB rows for a law before re-seeding it.',
         )
 
+    # Runs the full seeding process from PDF extraction through Gemini generation and database saving
     def handle(self, *args, **options):
         pdf_path  = options['pdf']
         law_filter = options['law']
@@ -146,6 +156,7 @@ class Command(BaseCommand):
                 f'Failed: {fail_count} laws'
             )
 
+# Extracts raw text for each Law 1-17 section from the supplied PDF file
 def extract_law_texts(pdf_path: str) -> dict[int, str]:
     full_text = ''
     with pdfplumber.open(pdf_path) as pdf:
@@ -178,7 +189,7 @@ def extract_law_texts(pdf_path: str) -> dict[int, str]:
 
     return law_texts
 
-
+# Prompt template that instructs Gemini to convert raw law text into structured course JSON
 GEMINI_PROMPT_TEMPLATE = """
 You are a football referee education expert. You will be given the raw text of
 FIFA Law {law_number} ({law_title}) extracted from a PDF.
@@ -246,7 +257,7 @@ Raw law text:
 {raw_text}
 """
 
-
+# Sends one law's raw text to Gemini and parses the returned JSON structure
 def call_gemini(client, law_number: int, law_title: str, raw_text: str) -> dict:
     prompt = GEMINI_PROMPT_TEMPLATE.format(
         law_number=law_number,
@@ -286,6 +297,7 @@ def call_gemini(client, law_number: int, law_title: str, raw_text: str) -> dict:
                 continue
             raise
 
+# Saves one generated law, its course sections, and all related course items in a single database transaction
 @transaction.atomic
 def save_law(
     law_number: int,
@@ -324,7 +336,7 @@ def save_law(
             f' Saved: {len(sections_data)} sections, {total_items} items.'
     )
 
-
+# Saves a single course item and maps its JSON fields based on whether it is a clause, scenario, or drill
 def _save_item(
     section: CourseSection,
     item_type: str,
