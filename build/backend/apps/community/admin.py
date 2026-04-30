@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Post, Comment, Like, HashTag, PostTag, Mention, Notification, Block, UserInterestProfile, UserAuthorInterest, UserHashtagInterest
+from .models import Post, Comment, Like, HashTag, PostTag, Mention, Notification, Block, UserInterestProfile, UserAuthorInterest, UserHashtagInterest, BannedWord, PostReport
 
 admin.site.register(Post)
 admin.site.register(Comment)
@@ -12,3 +12,5 @@ admin.site.register(Block)
 admin.site.register(UserInterestProfile)
 admin.site.register(UserAuthorInterest)
 admin.site.register(UserHashtagInterest)
+admin.site.register(BannedWord)
+admin.site.register(PostReport)

@@ -6,7 +6,7 @@ from apps.users.models import User
 class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
-        fields = ['id', 'author', 'text_body', 'visibility', 'attachments_count', 'created_at', 'no_of_likes', 'no_of_comments']
+        fields = ['id', 'author', 'text_body', 'visibility', 'attachments_count', 'created_at', 'no_of_likes', 'no_of_comments', 'moderation_status']
         read_only_fields = ['id', 'author', 'moderation_status', 'no_of_likes', 'attachments_count', 'created_at', 'no_of_comments']
 
 # seializes comment data for creating and returning comments
@@ -98,7 +98,7 @@ class ExplorePostSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Post
-        fields = ['id', 'author', 'text_body', 'created_at', 'no_of_likes', 'no_of_comments', 'visibility', 'post_tags', 'recent_comments', 'is_liked', 'hashtags', 'time_since_posted', 'type', 'ranked_score', 'popularity', 'recency_scaled']
+        fields = ['id', 'author', 'text_body', 'created_at', 'no_of_likes', 'no_of_comments', 'visibility', 'moderation_status', 'post_tags', 'recent_comments', 'is_liked', 'hashtags', 'time_since_posted', 'type', 'ranked_score', 'popularity', 'recency_scaled']
         read_only_fields = ['id', 'author', 'created_at', 'no_of_likes', 'no_of_comments', 'attachments_count', 'type']
     
     # identifies the feed item as a post

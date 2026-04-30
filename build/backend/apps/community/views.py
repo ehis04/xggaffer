@@ -14,6 +14,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import ValidationError
 from .models import Post, Visibility, ModerationStatus, PostView, Comment, Like, ContentType, Notification
+from .moderation import body_requires_review
 from apps.users.models import User, UserProfile, Follow
 from rest_framework.generics import CreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView, RetrieveDestroyAPIView
 from django.shortcuts import get_object_or_404
@@ -29,7 +30,12 @@ class CreateNewPostView(CreateAPIView):
     serializer_class = PostSerializer
     
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        moderation_status = (
+            ModerationStatus.UNDER_REVIEW
+            if body_requires_review(serializer.validated_data.get("text_body", ""))
+            else ModerationStatus.OK
+        )
+        serializer.save(author=self.request.user, moderation_status=moderation_status)
 
 # Get single posts
 class GetPostView(RetrieveAPIView):
@@ -81,7 +87,11 @@ class UserPostView(RetrieveUpdateDestroyAPIView):
         
     @transaction.atomic
     def perform_update(self, serializer):
-        serializer.save(author=self.request.user)
+        extra_fields = {"author": self.request.user}
+        text_body = serializer.validated_data.get("text_body")
+        if text_body is not None and body_requires_review(text_body):
+            extra_fields["moderation_status"] = ModerationStatus.UNDER_REVIEW
+        serializer.save(**extra_fields)
     
     @transaction.atomic
     def perform_destroy(self, instance):
@@ -402,6 +412,45 @@ class MarkPostViewedView(APIView):
             
         except Post.DoesNotExist:
             return Response({'detail': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+
+# Creates a unique report from the current user and moves a post to review after two reports
+class ReportPostView(APIView):
+    permission_classes = [IsAuthenticated]
+    review_threshold = 2
+
+    @transaction.atomic
+    def post(self, request, post_id):
+        post = get_object_or_404(Post.objects.select_for_update(), id=post_id)
+        if post.author_id == request.user.id:
+            return Response(
+                {"detail": "You cannot report your own post."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        reason = str(request.data.get("reason", "") or "").strip()
+        report, created = post.reports.get_or_create(
+            reporter=request.user,
+            defaults={"reason": reason[:1000]},
+        )
+        if not created and reason and not report.reason:
+            report.reason = reason[:1000]
+            report.save(update_fields=["reason"])
+
+        report_count = post.reports.count()
+        if report_count >= self.review_threshold and post.moderation_status == ModerationStatus.OK:
+            post.moderation_status = ModerationStatus.UNDER_REVIEW
+            post.save(update_fields=["moderation_status"])
+
+        return Response(
+            {
+                "detail": "Post reported.",
+                "created": created,
+                "report_count": report_count,
+                "moderation_status": post.moderation_status,
+            },
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
 
 # Marks multiple posts as viewed by the authenticated user
 class BulkMarkPostViewedView(APIView):
