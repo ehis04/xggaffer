@@ -3,10 +3,19 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from django.test import TestCase
+from django.test import TestCase, override_settings
+
+
+TEST_CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "test-cache",
+    }
+}
 
 
 def build_overview_payload() -> dict:
@@ -295,8 +304,10 @@ def build_overview_payload() -> dict:
     }
 
 
+@override_settings(CACHES=TEST_CACHES)
 class LiveFootballOverviewViewTests(TestCase):
     def setUp(self) -> None:
+        cache.clear()
         self.client = APIClient()
         self.url = reverse("livefootball-overview")
         self.user = get_user_model().objects.create_user(
@@ -314,13 +325,14 @@ class LiveFootballOverviewViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            sorted(response.data.keys()),
+            sorted(response.data["data"].keys()),
             sorted(build_overview_payload().keys()),
         )
         self.assertEqual(
-            response.data["league_order"],
+            response.data["data"]["league_order"],
             ["PL", "LL", "BL1", "SA", "FL1", "RPL"],
         )
+        self.assertIn("freshness", response.data)
         mock_payload.assert_called_once()
 
     @patch("apps.livefootball.views.get_livefootball_homepage_payload")
@@ -345,10 +357,10 @@ class LiveFootballOverviewViewTests(TestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["top_performing_teams"]["items"], [])
-        self.assertEqual(response.data["latest_hat_tricks"]["items"], [])
-        self.assertEqual(response.data["strikers_with_a_lull"]["items"], [])
-        self.assertEqual(response.data["all_time_streaks"]["all_time"], [])
+        self.assertEqual(response.data["data"]["top_performing_teams"]["items"], [])
+        self.assertEqual(response.data["data"]["latest_hat_tricks"]["items"], [])
+        self.assertEqual(response.data["data"]["strikers_with_a_lull"]["items"], [])
+        self.assertEqual(response.data["data"]["all_time_streaks"]["all_time"], [])
 
     def test_unauthenticated_request_is_rejected(self) -> None:
         response = self.client.get(self.url)

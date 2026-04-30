@@ -30,10 +30,20 @@
 
 .rowTop4 {
   border-left: 3px solid var(--color-blue, #3b82f6);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.rowTop4 .td {
+  color: #1e293b;
 }
 
 .rowRelegation {
   border-left: 3px solid var(--color-red, #ef4444);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.rowRelegation .td {
+  color: #1e293b;
 }
 
 .teamName {

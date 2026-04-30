@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 
 from apps.predictions.ml.models.lineup.config import DATA_DIR, MODELS_DIR, RANDOM_SEED
@@ -124,9 +125,21 @@ TEAM_MATCH_CLUSTERS_PATH = PROCESSED_DIR / "team_match_clusters.csv"
 MIN_PASSES_FOR_DIRECTIONAL = 5
 MIN_MATCHES_FOR_TEAM_SEASON = 5
 
+def _current_whoscored_season() -> str:
+    now = datetime.now(timezone.utc)
+    start_year = now.year if now.month >= 7 else now.year - 1
+    season_str = str(start_year)
+    if len(season_str) == 4 and season_str.isdigit():
+        return f"{season_str}-{str(int(season_str) + 1)[-2:]}"
+    return season_str
+
+
 WHOSCORED_LEAGUE_SEASONS = [
-    {"league": "ENG-Premier League", "season": "2023-24", "competition_name": "Premier League"},
-    {"league": "ESP-La Liga", "season": "2023-24", "competition_name": "La Liga"},
+    {"league": "ENG-Premier League", "season": _current_whoscored_season(), "competition_name": "Premier League"},
+    {"league": "ESP-La Liga", "season": _current_whoscored_season(), "competition_name": "La Liga"},
+    {"league": "GER-Bundesliga", "season": _current_whoscored_season(), "competition_name": "Bundesliga"},
+    {"league": "ITA-Serie A", "season": _current_whoscored_season(), "competition_name": "Serie A"},
+    {"league": "FRA-Ligue 1", "season": _current_whoscored_season(), "competition_name": "Ligue 1"},
 ]
 
 WHOSCORED_PITCH_LENGTH = 100.0

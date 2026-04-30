@@ -2,12 +2,13 @@ from django.db import models
 from apps.users.models import UserProfile
 
 # Create your models here.
+# Referee experience levels options
 class RefereeExperienceLevel(models.TextChoices):
     BEGINNER = 'B', 'Beginner'
     INTERMEDIATE = 'I', 'Intermediate'
     EXPERIENCED = 'E', 'Experienced'
     PROFESSIONAL = 'P', 'Professional'
-
+# Referee certification levels
 class RefereeCertificationLevel(models.TextChoices):
     NONE = 'NON', 'No Certification'
     ENTRY = 'EL', 'Entry Level'
@@ -15,18 +16,21 @@ class RefereeCertificationLevel(models.TextChoices):
     NATIONAL = 'NAT', 'National'
     FIFA = 'FIFA', 'FIFA Listed'
 
+# Referee position choices
 class RefereePositions(models.TextChoices):
     REFEREE = "R", "Referee"
     ASSISTANT = "A", "Assistant"
     FOURTH = "F", "Fourth"
     VAR = "V", "Var"
-    
+
+# Preferred learning times
 class LearningTime(models.TextChoices):
     MORNING = "M", "Morning"
     AFTERNOON = "A", "Afternoon"
     EVENING = "E", "Evening"
     NIGHT = "N", "Night"
 
+# Stores referee-specific profile information linked to a user's main profile
 class RefereeProfile(models.Model):
     user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='referee_profile')
     experience_level = models.CharField(max_length=3, choices=RefereeExperienceLevel.choices, default=RefereeExperienceLevel.BEGINNER)

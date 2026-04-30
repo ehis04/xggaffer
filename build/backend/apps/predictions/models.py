@@ -453,6 +453,10 @@ class OddsAccuracyStats(models.Model):
     market_wins = models.IntegerField(default=0)
     ties = models.IntegerField(default=0)
     total_evaluated = models.IntegerField(default=0)
+    market_correct_count = models.IntegerField(default=0)
+    market_brier_score = models.FloatField(null=True, blank=True)
+    market_log_loss = models.FloatField(null=True, blank=True)
+    market_confidence = models.FloatField(null=True, blank=True)
     computed_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -461,3 +465,31 @@ class OddsAccuracyStats(models.Model):
 
     def __str__(self):
         return f'OddsAccuracyStats({self.league} {self.season}: model={self.model_wins} market={self.market_wins})'
+
+
+class PredictionRecord(models.Model):
+    fixture_id = models.IntegerField(null=True, blank=True)
+    home_team = models.CharField(max_length=100)
+    away_team = models.CharField(max_length=100)
+    league_code = models.CharField(max_length=20)
+    predicted_at = models.DateTimeField(auto_now_add=True)
+    predicted_home_prob = models.FloatField()
+    predicted_draw_prob = models.FloatField()
+    predicted_away_prob = models.FloatField()
+    predicted_outcome = models.CharField(max_length=1)
+    confidence_band = models.CharField(max_length=10)
+    engine_version = models.CharField(max_length=50)
+    actual_result = models.CharField(max_length=1, null=True, blank=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    correct = models.BooleanField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-predicted_at"]
+        indexes = [
+            models.Index(fields=["home_team", "away_team", "predicted_at"]),
+            models.Index(fields=["league_code", "predicted_at"]),
+            models.Index(fields=["correct", "confidence_band"]),
+        ]
+
+    def __str__(self):
+        return f"{self.home_team} vs {self.away_team} ({self.predicted_at.date()})"

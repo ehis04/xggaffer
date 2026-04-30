@@ -381,6 +381,52 @@ class TestOddsHandler:
             ],
         }
 
+
+class TestTacticalHandler:
+    def test_model_load_failure_returns_profile_fallback(self):
+        from apps.predictions.services.tactical_handler import TacticalHandler
+
+        q = _make_query(
+            intent=IntentClass.TACTICAL_QUERY,
+            home_team=None,
+            away_team=None,
+            team="Real Madrid",
+            season="2025",
+            raw_query="What tactical style does Real Madrid use?",
+        )
+
+        fallback_payload = {
+            "query_type": "single",
+            "team": "Real Madrid",
+            "requested_season": "2025",
+            "profile_season": "2023-24",
+            "season_name": "2023-24",
+            "competition_name": "La Liga",
+            "n_matches_in_profile": 38,
+            "cluster_label": "elite_final_third_possession",
+            "style_label": "elite_final_third_possession",
+            "overall_completion_rate": 0.88,
+            "overall_forward_ratio": 0.60,
+            "overall_pass_length": 18.7,
+            "dominant_zones": [15, 10, 12, 19, 11],
+        }
+
+        with patch(
+            "apps.predictions.ml.models.tactical.predict.TacticalAnalyser",
+            side_effect=ModuleNotFoundError("No module named 'xgboost'"),
+        ), patch(
+            "apps.predictions.services.tactical_handler._fallback_single_profile",
+            return_value=fallback_payload,
+        ):
+            result = TacticalHandler().handle(q)
+
+        assert result.intent == IntentClass.TACTICAL_QUERY
+        assert result.partial is False
+        assert result.error is None
+        assert result.engine_data["cluster_label"] == "elite_final_third_possession"
+        assert result.engine_data["fallback_policy"]
+        assert result.engine_data["source_coverage"]["intent"] == IntentClass.TACTICAL_QUERY.value
+
     def test_live_unavailable_falls_back_to_stored_snapshot(self):
         from apps.predictions.services.odds.exceptions import OddsDataUnavailableError
         from apps.predictions.services.odds_handler import OddsHandler
@@ -430,3 +476,75 @@ class TestOddsHandler:
         assert result.engine_data["is_historical"] is True
         assert result.engine_data["odds_fetched_at"] == "2026-04-18T10:10:00Z"
         assert "support" in result.engine_data
+
+    def _mock_prediction_payload(self) -> dict:
+        return {
+            "home_team": "Arsenal",
+            "away_team": "Chelsea",
+            "league": "EPL",
+            "season": "2024",
+            "prediction": "Home",
+            "probabilities": {
+                "home": 0.51,
+                "draw": 0.26,
+                "away": 0.23,
+            },
+            "top_factors": [],
+            "metrics": {
+                "accuracy": 0.555,
+                "brier_score": None,
+            },
+            "model_type": "logistic_regression",
+            "version": "v1",
+            "contract_version": "1.0",
+        }
+
+    def _mock_odds_payload(self) -> dict:
+        return {
+            "source": "the_odds_api",
+            "fixtures": [
+                {
+                    "home_team": "Arsenal",
+                    "away_team": "Chelsea",
+                    "commence_time": "2026-04-20T15:00:00Z",
+                    "bookmaker_quotes": [
+                        {
+                            "bookmaker_name": "Book A",
+                            "home_odds": 2.10,
+                            "draw_odds": 3.40,
+                            "away_odds": 3.60,
+                            "implied_home": 0.4762,
+                            "implied_draw": 0.2941,
+                            "implied_away": 0.2778,
+                            "devig_home": 0.4550,
+                            "devig_draw": 0.2810,
+                            "devig_away": 0.2640,
+                            "overround": 1.0481,
+                            "last_seen_at": "2026-04-18T10:00:00Z",
+                        },
+                        {
+                            "bookmaker_name": "Book B",
+                            "home_odds": 2.20,
+                            "draw_odds": 3.30,
+                            "away_odds": 3.50,
+                            "implied_home": 0.4545,
+                            "implied_draw": 0.3030,
+                            "implied_away": 0.2857,
+                            "devig_home": 0.4340,
+                            "devig_draw": 0.2890,
+                            "devig_away": 0.2770,
+                            "overround": 1.0432,
+                            "last_seen_at": "2026-04-18T10:05:00Z",
+                        },
+                    ],
+                    "consensus": {
+                        "quote_count": 2,
+                        "consensus_home_probability": 0.4445,
+                        "consensus_draw_probability": 0.2850,
+                        "consensus_away_probability": 0.2705,
+                        "market_favourite": "home",
+                        "latest_last_seen_at": "2026-04-18T10:05:00Z",
+                    },
+                }
+            ],
+        }

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getOddsAccuracy, getOddsFixtures, getOddsTeams, predictMatch } from '../../services/api/predictionsApi';
@@ -9,21 +10,26 @@ import type {
   PredictionResponse,
 } from '../../types/prediction';
 import { FreshnessBadge } from '../../common/components/FreshnessBadge';
+import {
+  formatSeasonDisplay,
+  getCurrentFootballSeason,
+  PREDICTION_LEAGUE_OPTIONS,
+} from '../../utils/footballSeason';
 import styles from './css/OddsComparisonPage.module.css';
 
-const LEAGUE_OPTIONS = [
-  { value: 'EPL', label: 'Premier League' },
-  { value: 'La_Liga', label: 'La Liga' },
-  { value: 'Bundesliga', label: 'Bundesliga' },
-  { value: 'Serie_A', label: 'Serie A' },
-  { value: 'Ligue_1', label: 'Ligue 1' },
-];
+
+const LEAGUE_OPTIONS = PREDICTION_LEAGUE_OPTIONS;
 
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
 
 const OUTCOME_LABEL: Record<string, string> = { H: 'Home win', D: 'Draw', A: 'Away win' };
 const OUTCOME_TO_PROB: Record<string, 'home' | 'draw' | 'away'> = { H: 'home', D: 'draw', A: 'away' };
 const ODDS_REFRESH_MESSAGE = 'Odds data not yet available — check back after 06:00 UTC';
+const PREDICTION_PREFETCH_CONCURRENCY = 6;
+
+function fixturePredictionKey(fixture: OddsFixtureItem, league: string): string {
+  return `${league}::${fixture.season}::${fixture.home_team}::${fixture.away_team}::${new Date(fixture.commence_time).toISOString().slice(0, 10)}`;
+}
 
 function fmt(n: number) {
   return (n * 100).toFixed(1) + '%';
@@ -50,7 +56,7 @@ function AccuracyChart({ stats }: { stats: OddsAccuracyResponse }) {
   return (
     <div className={styles.chartSection}>
       <div className={styles.chartHeader}>
-        <span className={styles.chartTitle}>Season accuracy breakdown — {season}/26</span>
+        <span className={styles.chartTitle}>Season accuracy breakdown — {formatSeasonDisplay(season)}</span>
         <span className={styles.chartSubtitle}>{total_evaluated} games evaluated</span>
       </div>
       <div className={styles.chartBars}>
@@ -94,36 +100,30 @@ function AccuracyChart({ stats }: { stats: OddsAccuracyResponse }) {
 function FixtureRow({
   fixture,
   league,
-  view,
+  seasonFallback,
   showResultColumn,
-  autoLoad,
+  prefetchedPrediction,
 }: {
   fixture: OddsFixtureItem;
   league: string;
-  view: 'past' | 'future';
+  seasonFallback: string;
   showResultColumn: boolean;
-  autoLoad: boolean;
+  prefetchedPrediction: PredictionResponse | null;
 }) {
-  const [pred, setPred] = useState<PredictionResponse | null>(null);
+  const [pred, setPred] = useState<PredictionResponse | null>(prefetchedPrediction);
   const [predLoading, setPredLoading] = useState(false);
   const [predErr, setPredErr] = useState(false);
 
   useEffect(() => {
-    if (!autoLoad || view !== 'past' || !fixture.result) return;
-    let cancelled = false;
-    setPredLoading(true);
-    setPredErr(false);
-    predictMatch({
-      home_team: fixture.home_team,
-      away_team: fixture.away_team,
-      league,
-      season: '2025',
-    })
-      .then((res) => { if (!cancelled) setPred(res); })
-      .catch(() => { if (!cancelled) setPredErr(true); })
-      .finally(() => { if (!cancelled) setPredLoading(false); });
-    return () => { cancelled = true; };
-  }, [fixture.home_team, fixture.away_team, fixture.result, league, view, autoLoad]);
+    if (prefetchedPrediction) {
+      setPred(prefetchedPrediction);
+      setPredErr(false);
+    } else {
+      setPred(null);
+      setPredErr(false);
+      setPredLoading(false);
+    }
+  }, [prefetchedPrediction, fixture.home_team, fixture.away_team, fixture.commence_time, league]);
 
   const load = useCallback(async () => {
     if (pred || predLoading) return;
@@ -134,7 +134,7 @@ function FixtureRow({
         home_team: fixture.home_team,
         away_team: fixture.away_team,
         league,
-        season: '2025',
+        season: fixture.season || seasonFallback,
       });
       setPred(res);
     } catch {
@@ -142,7 +142,7 @@ function FixtureRow({
     } finally {
       setPredLoading(false);
     }
-  }, [fixture.home_team, fixture.away_team, league, pred, predLoading]);
+  }, [fixture.home_team, fixture.away_team, fixture.season, league, pred, predLoading, seasonFallback]);
 
   const dateStr = new Date(fixture.commence_time).toLocaleDateString(undefined, {
     day: 'numeric', month: 'short', year: 'numeric',
@@ -219,6 +219,15 @@ function FixtureRow({
         )}
       </td>
 
+      <td className={styles.td}>
+        <Link
+          className={styles.analysisLink}
+          to={`/match/lookup?home=${encodeURIComponent(fixture.home_team)}&away=${encodeURIComponent(fixture.away_team)}&league=${encodeURIComponent(league)}&season=${encodeURIComponent(fixture.season || seasonFallback)}&date=${encodeURIComponent(new Date(fixture.commence_time).toISOString().slice(0, 10))}`}
+        >
+          View analysis →
+        </Link>
+      </td>
+
       {showResultColumn && (
         <td className={styles.td}>
           {!fixture.result ? (
@@ -250,12 +259,14 @@ function FixtureRow({
 }
 
 export default function OddsComparisonPage() {
-  const [league, setLeague] = useState('EPL');
+  const currentSeason = getCurrentFootballSeason();
+  const [league, setLeague] = useState(LEAGUE_OPTIONS[0].value);
   const [view, setView] = useState<'past' | 'future'>('future');
   const [teamA, setTeamA] = useState('');
   const [teamB, setTeamB] = useState('');
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
+  const [prefetchedPredictions, setPrefetchedPredictions] = useState<Record<string, PredictionResponse>>({});
 
   useEffect(() => { setPage(1); }, [league, view, teamA, teamB, pageSize]);
 
@@ -275,8 +286,8 @@ export default function OddsComparisonPage() {
   });
 
   const { data: accuracyEnvelope } = useQuery({
-    queryKey: queryKeys.predictions.odds.accuracy(league),
-    queryFn: () => getOddsAccuracy(league),
+    queryKey: queryKeys.predictions.odds.accuracy(league, currentSeason),
+    queryFn: () => getOddsAccuracy(league, currentSeason),
     staleTime: STALE_TIME_STANDARD,
     enabled: Boolean(league),
   });
@@ -285,9 +296,70 @@ export default function OddsComparisonPage() {
   const freshness = fixturesEnvelope?.freshness ?? null;
   const fixturesData = fixturesEnvelope?.data ?? null;
   const fixtures = fixturesData?.fixtures ?? [];
+  const fixturesSeason = fixturesData?.season || currentSeason;
+  const seasonLabel = formatSeasonDisplay(fixturesSeason);
   const dataNull = !fixturesLoading && !fixturesErrored && fixturesEnvelope !== undefined && fixturesEnvelope.data === null;
 
   const showResultColumn = view === 'past';
+
+  useEffect(() => {
+    setPrefetchedPredictions({});
+
+    if (view !== 'past' || fixtures.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const toFetch = fixtures.filter((fixture) => fixture.result);
+    const total = toFetch.length;
+    if (total === 0) {
+      return;
+    }
+
+    const run = async () => {
+      let cursor = 0;
+      const workerCount = Math.min(PREDICTION_PREFETCH_CONCURRENCY, total);
+
+      const workers = Array.from({ length: workerCount }, async () => {
+        while (true) {
+          if (cancelled) return;
+          const idx = cursor;
+          cursor += 1;
+          if (idx >= total) return;
+
+          const fixture = toFetch[idx];
+          try {
+            const prediction = await predictMatch({
+              home_team: fixture.home_team,
+              away_team: fixture.away_team,
+              league,
+              season: fixture.season || fixturesSeason,
+            });
+
+            if (cancelled) return;
+            const key = fixturePredictionKey(fixture, league);
+            setPrefetchedPredictions((prev) => ({
+              ...prev,
+              [key]: prediction,
+            }));
+          } catch {
+            // Keep preloading the remainder even when one fixture fails.
+          }
+        }
+      });
+
+      await Promise.all(workers);
+    };
+
+    run().catch(() => {
+      if (cancelled) return;
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fixtures, fixturesSeason, league, view]);
 
   const totalPages = Math.max(1, Math.ceil(fixtures.length / pageSize));
   const safePage = Math.min(page, totalPages);
@@ -296,12 +368,14 @@ export default function OddsComparisonPage() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Odds &amp; Market Comparison — 2025/26</h1>
+        <h1 className={styles.title}>Odds &amp; Market Comparison — {seasonLabel}</h1>
         <p className={styles.subtitle}>
           Browse bookmaker odds and model predictions for{' '}
           {view === 'past' ? 'completed' : 'upcoming'} fixtures.
         </p>
+        <FreshnessBadge freshness={fixturesEnvelope?.freshness} />
       </header>
+
 
       <div className={styles.controls}>
         <label className={styles.controlField}>
@@ -361,7 +435,9 @@ export default function OddsComparisonPage() {
 
       {accuracyStats && (
         <div className={styles.accuracyBox}>
-          <span className={styles.accuracyBoxLabel}>2025/26 accuracy</span>
+          <span className={styles.accuracyBoxLabel}>
+            {formatSeasonDisplay(accuracyStats.season || fixturesSeason)} accuracy
+          </span>
           <span className={styles.accuracyBoxStat}>
             <span className={styles.accuracyBoxValue}>{accuracyStats.model_wins}</span>
             <span className={styles.accuracyBoxName}>Model wins</span>
@@ -411,6 +487,7 @@ export default function OddsComparisonPage() {
             <table className={styles.table}>
               <thead>
                 <tr>
+                 
                   <th className={styles.th}>
                     Fixture
                     {freshness && <FreshnessBadge freshness={freshness} />}
@@ -419,23 +496,28 @@ export default function OddsComparisonPage() {
                   <th className={`${styles.th} ${styles.oddsHeader}`}>Consensus odds (H / D / A)</th>
                   {showResultColumn && <th className={styles.th}>Result</th>}
                   <th className={styles.th}>Model prediction</th>
+                  <th className={styles.th}>Analysis</th>
                   {showResultColumn && <th className={styles.th}>Accuracy</th>}
                 </tr>
               </thead>
               <tbody>
-                {paginatedFixtures.map((f, i) => (
+                {paginatedFixtures.map((f) => (
                   <FixtureRow
-                    key={(safePage - 1) * pageSize + i}
+                    key={fixturePredictionKey(f, league)}
                     fixture={f}
                     league={league}
-                    view={view}
+                    seasonFallback={fixturesSeason}
                     showResultColumn={showResultColumn}
-                    autoLoad={showResultColumn && teamA !== '' && teamB !== ''}
+                    prefetchedPrediction={prefetchedPredictions[fixturePredictionKey(f, league)] ?? null}
                   />
                 ))}
               </tbody>
             </table>
           </div>
+
+          {accuracyStats && view === 'past' && (
+            <AccuracyChart stats={accuracyStats} />
+          )}
 
           <div className={styles.pagination}>
             <button
@@ -457,10 +539,6 @@ export default function OddsComparisonPage() {
               Next →
             </button>
           </div>
-
-          {accuracyStats && view === 'past' && (
-            <AccuracyChart stats={accuracyStats} />
-          )}
         </>
       )}
     </div>

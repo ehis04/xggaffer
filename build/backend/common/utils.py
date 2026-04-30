@@ -8,6 +8,8 @@ dependencies.
 
 from __future__ import annotations
 
+import re
+import unicodedata
 from datetime import datetime
 from decimal import Decimal
 
@@ -73,6 +75,32 @@ def latest_of(*datetimes):
 # Football season utilities
 # ---------------------------------------------------------------------------
 
+def upsert_record(model_class, lookup_kwargs, field_values):
+    """Generic ORM upsert. Returns (instance, created, updated).
+
+    Looks up a record by lookup_kwargs. If missing, creates it with both
+    lookup_kwargs and field_values set. If found, diffs field_values against
+    current values and saves only changed fields.
+    """
+    instance = model_class.objects.filter(**lookup_kwargs).first()
+
+    if not instance:
+        instance = model_class(**lookup_kwargs)
+        for k, v in field_values.items():
+            setattr(instance, k, v)
+        instance.save()
+        return instance, True, False
+
+    changed = [k for k, v in field_values.items() if getattr(instance, k) != v]
+    for k in changed:
+        setattr(instance, k, field_values[k])
+    if changed:
+        instance.save(update_fields=changed)
+        return instance, False, True
+
+    return instance, False, False
+
+
 def current_football_season() -> str:
     """Return the starting year of the current football season as a string.
 
@@ -86,3 +114,16 @@ def current_football_season() -> str:
     """
     now = utcnow()
     return str(now.year if now.month >= 8 else now.year - 1)
+
+
+def normalise_lookup_name(value: str | None) -> str:
+    """Normalise free-text names for deterministic matching.
+
+    Uses Unicode decomposition + accent removal, case folding, punctuation
+    stripping, and whitespace collapsing.
+    """
+    text = unicodedata.normalize("NFKD", (value or ""))
+    text = "".join(ch for ch in text if not unicodedata.combining(ch))
+    text = text.casefold()
+    text = re.sub(r"[^a-z0-9\s]", " ", text)
+    return " ".join(text.split())

@@ -2,13 +2,27 @@ from __future__ import annotations
 
 from rest_framework.request import Request
 
+from apps.predictions.ml.models.match_outcome.config import DEMO_SEASON
 from apps.predictions.utils.widget_freshness import get_engine_widget_freshness
 from apps.predictions.views.widget_base import WidgetBaseView
 
 SCORELINE_MATRIX_MAX_GOALS = 5
 OVER_UNDER_THRESHOLD = 2.5
 DEFAULT_LEAGUE = "EPL"
-DEFAULT_SEASON = "2024"
+DEFAULT_SEASON = DEMO_SEASON
+
+
+def get_score_feature_service():
+    from apps.predictions.ml.models.scoreline.score_feature_service import (
+        get_score_feature_service as _real,
+    )
+    return _real()
+
+
+class ScorePredictor:
+    def __new__(cls, *args, **kwargs):
+        from apps.predictions.ml.models.scoreline.predict import ScorePredictor as _real
+        return _real(*args, **kwargs)
 
 
 def _top_3_scorelines(matrix: list[list[float]]) -> list[dict]:
@@ -54,11 +68,6 @@ class ScorelineWidgetView(WidgetBaseView):
         if not home_team or not away_team:
             from rest_framework.exceptions import ValidationError
             raise ValidationError("home_team and away_team are required.")
-
-        from apps.predictions.ml.models.scoreline.predict import ScorePredictor
-        from apps.predictions.ml.models.scoreline.score_feature_service import (
-            get_score_feature_service,
-        )
 
         service = get_score_feature_service()
         features_df = service.build_prediction_features(

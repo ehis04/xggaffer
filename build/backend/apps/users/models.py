@@ -7,25 +7,26 @@ from datetime import timedelta
 import secrets
 from .managers import UserManager
 
+# gender choices
 class Gender(models.TextChoices):
     FEMALE = 'F', 'Female'
     MALE = 'M', 'Male'
     OTHER = 'O', 'Other'
     NOT_SPECIFIED = 'NS', 'Not Specified'
 
-
+# visibility preferences for profiles
 class Visibility(models.TextChoices):
     PUBLIC = 'PB', 'Public'
     PRIVATE = 'PR', 'Private'
 
-
+# platform role choices a user can have
 class Role(models.TextChoices):
     COACH = 'C', 'Coach'
     PLAYER = 'P', 'Player'
     REFEREE = 'R', 'Referee'
     FAN = 'F', 'Fan'
 
-
+# custom user model that uses email as the login field and stores authentication-related token data
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=150, blank=True, null=True, unique=True)
@@ -35,7 +36,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
-    email_verified = models.BooleanField(default=True) # change back to false
+    email_verified = models.BooleanField(default=False)
     verification_token = models.CharField(max_length=100, blank=True, null=True)
     token_created_at = models.DateTimeField(blank=True, null=True)
     password_reset_token = models.CharField(max_length=100, blank=True, null=True)
@@ -56,41 +57,41 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     def __str__(self):
         return self.email
-
+    # creates a secure email verification token and stores the time it was generated
     def generate_verification_token(self):
         self.verification_token = secrets.token_urlsafe(32)
         self.token_created_at = timezone.now()
         self.save()
         return self.verification_token
-
+    #checks whether the email verification token exists and is still within the 24 hour expiry time
     def is_token_valid(self):
         if not self.verification_token or not self.token_created_at:
             return False
         expiry_time = self.token_created_at + timedelta(hours=24)
         return timezone.now() < expiry_time
-
+    # marks the user's email address as verified
     def verify_email(self):
         self.email_verified = True
         self.save()
-
+    # creates a secure password reset token and stores the time it was generated
     def generate_password_reset_token(self):
         self.password_reset_token = secrets.token_urlsafe(32)
         self.password_reset_token_created_at = timezone.now()
         self.save()
         return self.password_reset_token
-
+    # checks whether the password reset token exists and is still within the 1 hour expiry time
     def is_password_reset_token_valid(self):
         if not self.password_reset_token or not self.password_reset_token_created_at:
             return False
         expiry_time = self.password_reset_token_created_at + timedelta(hours=1)
         return timezone.now() < expiry_time
-
+    # removes the password reset token after it has been used or is no longer valid
     def clear_password_reset_token(self):
         self.password_reset_token = None
         self.password_reset_token_created_at = None
         self.save()
 
-
+#  stores profile information for a users account
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     display_name = models.CharField(max_length=150, blank=True)
@@ -137,7 +138,7 @@ class UserProfile(models.Model):
         full_name = f"{self.user.first_name} {self.user.last_name}".strip()
         return full_name or self.user.username or self.user.email
 
-
+# links a user profile to one of the roles
 class UserRole(models.Model):
     user_profile = models.ForeignKey(
         UserProfile,
@@ -147,6 +148,8 @@ class UserRole(models.Model):
     role = models.CharField(max_length=10, choices=Role.choices)
     created_at = models.DateTimeField(auto_now_add=True)
     
+    # prevents duplicate roles for the same profile and adds an index for role lookup checks
+
     class Meta:
         verbose_name = 'User Role'
         verbose_name_plural = 'User Roles'
@@ -164,6 +167,7 @@ class UserRole(models.Model):
         identifier = self.user_profile.user.username or self.user_profile.user.email
         return f"{identifier} - {self.get_role_display()}"
 
+# stores a follower relationship between two user profiles and maintains follower count totals
 
 class Follow(models.Model):
     follower = models.ForeignKey(
@@ -177,7 +181,7 @@ class Follow(models.Model):
         related_name='followers'
     )
     created_at = models.DateTimeField(auto_now_add=True)
-
+     # allows one follow relationship per pair, prevents self-following, and orders newest follows first
     class Meta:
         verbose_name = 'Follow'
         verbose_name_plural = 'Follows'
@@ -187,7 +191,7 @@ class Follow(models.Model):
                 name='unique_follow_relationship'
             ),
             models.CheckConstraint(
-                condition=~Q(follower=F('following')),
+                check=~Q(follower=F('following')),
                 name='prevent_self_follow'
             )
         ]
@@ -206,6 +210,7 @@ class Follow(models.Model):
         if self.follower == self.following:
             raise ValidationError("You can't follow yourself.")
     
+    # saves the follow relationship and increments follower and following counters when the row is first created
     def save(self, *args, **kwargs):
         is_new = self._state.adding
         self.full_clean()
@@ -218,7 +223,7 @@ class Follow(models.Model):
             UserProfile.objects.filter(pk=self.following_id).update(
                 followers_count=F('followers_count') + 1
             )
-    
+    # deletes the follow relationship and decrements follower and following counters
     def delete(self, *args, **kwargs):
         follower_id = self.follower_id
         following_id = self.following_id

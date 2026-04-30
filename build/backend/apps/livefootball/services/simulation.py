@@ -468,23 +468,87 @@ def _latest_played_match_date(target_season_matches_df: pd.DataFrame) -> pd.Time
     return target_season_matches_df.loc[played_mask, "date"].max()
 
 
+def _per_team_cutoff_date(
+    target_season_matches_df: pd.DataFrame,
+    per_team_played_counts: dict[str, int],
+) -> pd.Timestamp:
+    """Return the latest date that covers the required per-team game counts.
+
+    For each team, find the date of its N-th played game in the historical
+    data (N = per_team_played_counts[team]).  Return the maximum of those
+    dates so that every team with sufficient data has its required games
+    included when the caller filters by date <= cutoff.
+
+    If a team has fewer than N games available, its last available game date
+    is used instead so we fall back to whatever Understat has rather than
+    dropping the team entirely.
+    """
+    sort_cols = (
+        ["date", "match_id"]
+        if "match_id" in target_season_matches_df.columns
+        else ["date"]
+    )
+    played_df = target_season_matches_df[
+        target_season_matches_df["home_goals"].notna()
+        & target_season_matches_df["away_goals"].notna()
+    ].sort_values(sort_cols)
+
+    team_game_dates: dict[str, list[pd.Timestamp]] = {}
+    for _, row in played_df.iterrows():
+        home, away = str(row["home_team"]), str(row["away_team"])
+        team_game_dates.setdefault(home, []).append(row["date"])
+        team_game_dates.setdefault(away, []).append(row["date"])
+
+    cutoff_dates: list[pd.Timestamp] = []
+    for team, limit in per_team_played_counts.items():
+        dates = team_game_dates.get(team, [])
+        if not dates:
+            continue
+        # Use the N-th game date; fall back to the last available if fewer than N games.
+        idx = min(limit, len(dates)) - 1
+        cutoff_dates.append(dates[idx])
+
+    if not cutoff_dates:
+        return played_df["date"].max() if not played_df.empty else pd.Timestamp.now(tz=None).normalize()
+
+    return max(cutoff_dates)
+
+
 def _prepare_pre_season_to_date_data(
     context: SimulationContext,
     all_matches_df: pd.DataFrame,
     target_season_matches_df: pd.DataFrame,
+    per_team_played_counts: dict[str, int] | None = None,
 ) -> PreparedSimulationData:
     season_start = target_season_matches_df["date"].min()
-    latest_played_date = _latest_played_match_date(target_season_matches_df)
-    if latest_played_date is None:
-        raise ValueError(
-            f"No played matches are available yet for {context.league} {context.season}."
-        )
 
-    fixtures_to_date_df = target_season_matches_df[
-        (target_season_matches_df["date"] <= latest_played_date)
-        & target_season_matches_df["home_goals"].notna()
-        & target_season_matches_df["away_goals"].notna()
-    ].copy()
+    if per_team_played_counts:
+        latest_played_date = _per_team_cutoff_date(
+            target_season_matches_df,
+            per_team_played_counts,
+        )
+        fixtures_to_date_df = target_season_matches_df[
+            (target_season_matches_df["date"] <= latest_played_date)
+            & target_season_matches_df["home_goals"].notna()
+            & target_season_matches_df["away_goals"].notna()
+        ].copy()
+        if fixtures_to_date_df.empty:
+            raise ValueError(
+                f"No played fixtures found up to {latest_played_date.date()} for "
+                f"{context.league} {context.season}. Verify that team names in "
+                "the actual table bridge to valid simulation team identifiers."
+            )
+    else:
+        latest_played_date = _latest_played_match_date(target_season_matches_df)
+        if latest_played_date is None:
+            raise ValueError(
+                f"No played matches are available yet for {context.league} {context.season}."
+            )
+        fixtures_to_date_df = target_season_matches_df[
+            (target_season_matches_df["date"] <= latest_played_date)
+            & target_season_matches_df["home_goals"].notna()
+            & target_season_matches_df["away_goals"].notna()
+        ].copy()
 
     historical_matches_df = all_matches_df[all_matches_df["date"] < season_start].copy()
     target_teams = _extract_target_teams(target_season_matches_df)
@@ -643,6 +707,7 @@ def _prepare_as_of_matchweek_data(
 
 def _prepare_simulation_data(
     context: SimulationContext,
+    per_team_played_counts: dict[str, int] | None = None,
 ) -> PreparedSimulationData:
     all_matches_df = _load_simulation_match_history(context.league)
     target_season_matches_df = _get_target_season_matches(
@@ -657,6 +722,7 @@ def _prepare_simulation_data(
                 context,
                 all_matches_df,
                 target_season_matches_df,
+                per_team_played_counts=per_team_played_counts,
             )
 
         return _prepare_pre_season_data(
@@ -783,13 +849,30 @@ def _shape_expected_table(aggregated_df: pd.DataFrame) -> list[dict[str, Any]]:
             }
         )
 
+    # Sort by football tiebreaker rules: points, then goal difference, then goals for
+    def _team_sort_name(team_value: Any) -> str:
+        if isinstance(team_value, str):
+            return team_value.lower()
+
+        team_name = getattr(team_value, "name", None)
+        if isinstance(team_name, str):
+            return team_name.lower()
+
+        return str(team_value).lower()
+
     rows.sort(
         key=lambda item: (
-            -item["predicted_points"],
-            item["predicted_position"],
-            item["team"],
+            -item["predicted_points"],  # Points (descending)
+            -(item["simulated_goals_for"] - item["simulated_goals_against"]),  # Goal difference (descending)
+            -item["simulated_goals_for"],  # Goals for (descending)
+            _team_sort_name(item["team"]),  # Team name (alphabetical)
         )
     )
+
+    # Re-assign positions based on sorted order
+    for idx, row in enumerate(rows, start=1):
+        row["predicted_position"] = idx
+
     return rows
 
 
@@ -816,6 +899,7 @@ def simulate_league_season(
     simulation_count: int = DEFAULT_SIMULATION_COUNT,
     matchweek: int | None = None,
     projection_window: str | None = None,
+    per_team_played_counts: dict[str, int] | None = None,
 ) -> dict[str, Any]:
     context = _build_context(
         league=league,
@@ -825,12 +909,17 @@ def simulate_league_season(
         matchweek=matchweek,
         projection_window=projection_window,
     )
-    cache_key = _build_simulation_cache_key(context)
-    cached_payload = cache.get(cache_key)
-    if cached_payload is not None:
-        return cached_payload
 
-    prepared = _prepare_simulation_data(context)
+    # Skip cache when per-team counts are provided — the result is caller-specific
+    # and should not pollute the shared cache used by the generic endpoint.
+    use_cache = per_team_played_counts is None
+    if use_cache:
+        cache_key = _build_simulation_cache_key(context)
+        cached_payload = cache.get(cache_key)
+        if cached_payload is not None:
+            return cached_payload
+
+    prepared = _prepare_simulation_data(context, per_team_played_counts=per_team_played_counts)
     expected_table = _run_simulation(prepared)
 
     payload = {
@@ -851,7 +940,8 @@ def simulate_league_season(
             "projection_window": prepared.context.projection_window,
         },
     }
-    cache.set(cache_key, payload, timeout=SIMULATION_CACHE_TTL_SECONDS)
+    if use_cache:
+        cache.set(cache_key, payload, timeout=SIMULATION_CACHE_TTL_SECONDS)
     return payload
 
 def simulate_league_scenario(

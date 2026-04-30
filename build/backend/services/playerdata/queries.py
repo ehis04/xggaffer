@@ -715,16 +715,7 @@ def list_enriched_players(
         min_xa=min_xa,
     )
 
-    # Keep only the best record per player (most matches played) to avoid
-    # showing duplicate players when multiple providers cover the same player+season.
-    best_ids = (
-        filtered_qs
-        .order_by("player_id", "-matches_played", "-last_synced_at", "-updated_at")
-        .distinct("player_id")
-        .values_list("id", flat=True)
-    )
-
-    queryset = _player_queryset().filter(id__in=best_ids).order_by(
+    queryset = filtered_qs.order_by(
         *resolve_ordering(
             allowed_fields=PLAYER_ORDERING_FIELDS,
             order_by=resolved_order_by,

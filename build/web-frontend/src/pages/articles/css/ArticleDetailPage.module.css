@@ -72,8 +72,7 @@
 }
 
 .heroLowRes {
-    width: 100%;
-    max-width: 760px;
+    width: min(100%, var(--hero-max-width, 560px));
     max-height: 520px;
     align-self: center;
     object-fit: contain;

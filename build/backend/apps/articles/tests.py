@@ -1,3 +1,9 @@
+"""
+Tests article serializer text cleanup behaviour
+
+Covers summary fallback logic, duplicate content removal, HTML cleanup, paragraph formatting, and source noise filtering
+"""
+
 from django.test import TestCase
 from django.utils import timezone
 
@@ -5,11 +11,15 @@ from .models import Article, Site, Topic
 from .serializers import ArticleDetailSerializer, ArticleListSerializer
 
 
+# Tests article list and detail serializer text cleanup behaviour
 class ArticleSerializerTextCleanupTests(TestCase):
+
+	# Set up shared site and topic records for serializer tests
 	def setUp(self):
 		self.site = Site.objects.create(name='Test Site', domain='https://example.com')
 		self.topic = Topic.objects.create(name='Test Topic', slug='test-topic')
 
+	# Create an article with sensible defaults for serializer tests
 	def _make_article(self, **kwargs) -> Article:
 		defaults = {
 			'title': 'Test Article',
@@ -28,6 +38,7 @@ class ArticleSerializerTextCleanupTests(TestCase):
 		article.topics.add(self.topic)
 		return article
 
+	# Confirms duplicate detail content is hidden when it matches the summary
 	def test_detail_serializer_omits_duplicate_content_matching_summary(self):
 		article = self._make_article(
 			summary='Same text appears once.',
@@ -39,6 +50,7 @@ class ArticleSerializerTextCleanupTests(TestCase):
 		self.assertEqual(data['summary'], 'Same text appears once.')
 		self.assertEqual(data['content'], '')
 
+	# Confirms HTML cleanup and repeated paragraph removal in article detail output
 	def test_detail_serializer_cleans_html_and_removes_repeated_paragraphs(self):
 		article = self._make_article(
 			summary='Lead paragraph',
@@ -50,6 +62,7 @@ class ArticleSerializerTextCleanupTests(TestCase):
 		self.assertEqual(data['summary'], 'Lead paragraph')
 		self.assertEqual(data['content'], 'Second paragraph')
 
+	# Confirms list serializer summaries can fall back to cleaned content
 	def test_list_serializer_uses_clean_content_for_summary_fallback(self):
 		article = self._make_article(
 			summary='',
@@ -60,6 +73,7 @@ class ArticleSerializerTextCleanupTests(TestCase):
 
 		self.assertEqual(data['summary'], 'Line one\n\nLine two')
 
+	# Confirms noisy source text is stripped while useful article content remains
 	def test_detail_serializer_strips_source_noise_and_formats_paragraphs(self):
 		noisy = (
 			'⚽ Premier League updates from the 5.30pm BST kick-off'

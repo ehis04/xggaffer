@@ -10,7 +10,6 @@ import {
 } from '../../../components/teamsheets';
 import { chatQuery } from '../../../services/api/predictionsApi';
 import AvailabilityBadge from '../../../components/predictions/AvailabilityBadge';
-import ChatInterface from '../../../components/predictions/chat/ChatInterface';
 import { Sidebar } from '../../../components/Navigation/SideBar';
 import { CoachingNavBar } from '../../../components/Navigation/CoachingNavBar';
 import { SocialUserButtons } from '../../../components/Social/SocialUserButtons';

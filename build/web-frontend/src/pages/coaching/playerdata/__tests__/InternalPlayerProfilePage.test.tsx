@@ -3,6 +3,14 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import InternalPlayerProfilePage from '../InternalPlayerProfilePage';
 
+vi.mock('../../../../components/Navigation/SideBar', () => ({
+  Sidebar: () => <nav aria-label="Sidebar" />,
+}));
+
+vi.mock('../../../../components/Social/SocialUserButtons', () => ({
+  SocialUserButtons: () => <div data-testid="social-user-buttons" />,
+}));
+
 const { getPlayerOverviewMock, listEnrichedPlayersMock, browseClubsMock } = vi.hoisted(() => ({
   getPlayerOverviewMock: vi.fn<(...args: any[]) => Promise<any>>(),
   listEnrichedPlayersMock: vi.fn<(...args: any[]) => Promise<any>>(),

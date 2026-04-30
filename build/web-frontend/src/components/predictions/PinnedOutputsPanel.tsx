@@ -8,6 +8,8 @@ export interface PinnedOutput {
   query_type: string;
   data: unknown;
   pinned_at: string;
+  question?: string;
+  prose?: string;
 }
 
 const MAX_PINNED_OUTPUTS = 4;
@@ -45,6 +47,12 @@ export default function PinnedOutputsPanel({ pins, onDismiss }: PinnedOutputsPan
               ×
             </button>
           </div>
+          {pin.question && (
+            <p className={styles.pinQuestion}>{pin.question}</p>
+          )}
+          {pin.prose && (
+            <p className={styles.pinProse}>{pin.prose}</p>
+          )}
           <StructuredResponseBlock
             queryType={pin.query_type}
             engineData={pin.data as Record<string, unknown>}

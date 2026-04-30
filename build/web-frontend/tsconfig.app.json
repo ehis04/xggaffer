@@ -29,7 +29,9 @@
     "noUncheckedSideEffectImports": true
   },
   "include": [
-    "src"
+    "src",
+    "../extra_or_junk/reffing",
+    "../extra_or_junk/ClubPlayersPage.tsx"
   ],
   "exclude": [
     "src/**/*.test.ts",

@@ -60,9 +60,11 @@ export function ClubCalendar({ calendarItems, className }: ClubCalendarProps) {
   }, [viewYear, viewMonth]);
 
   const getEventsForDay = (day: number): ClubCalendarFeedItem[] => {
-    const targetStr = new Date(viewYear, viewMonth, day).toISOString().split('T')[0];
+    // Use local date string to avoid UTC conversion issues
+    const targetDate = new Date(viewYear, viewMonth, day);
+    const targetStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`;
     return calendarItems.filter(
-      (item) => new Date(item.sort_datetime).toISOString().split('T')[0] === targetStr
+      (item) => item.sort_datetime.split('T')[0] === targetStr
     );
   };
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from math import log
 from datetime import timezone
 
 from django.core.management.base import BaseCommand
@@ -15,6 +16,20 @@ from apps.predictions.views_core import (
     _lf_to_snapshot,
     _snap_to_canonical,
 )
+
+_OUTCOME_INDEX = {'H': 0, 'D': 1, 'A': 2}
+
+
+def _market_brier(h: float, d: float, a: float, outcome: str) -> float:
+    probs = [h, d, a]
+    actuals = [0.0, 0.0, 0.0]
+    actuals[_OUTCOME_INDEX[outcome]] = 1.0
+    return sum((p - y) ** 2 for p, y in zip(probs, actuals)) / 3.0
+
+
+def _market_log_loss(h: float, d: float, a: float, outcome: str) -> float:
+    p = [h, d, a][_OUTCOME_INDEX[outcome]]
+    return -log(max(p, 1e-15))
 
 ALL_LEAGUES = list(_LEAGUE_COMPETITION_CODE.keys())
 
@@ -51,6 +66,10 @@ class Command(BaseCommand):
                     'market_wins': result['market_wins'],
                     'ties': result['ties'],
                     'total_evaluated': result['total_evaluated'],
+                    'market_correct_count': result['market_correct_count'],
+                    'market_brier_score': result['market_brier_score'],
+                    'market_log_loss': result['market_log_loss'],
+                    'market_confidence': result['market_confidence'],
                 },
             )
             self.stdout.write(
@@ -97,7 +116,12 @@ class Command(BaseCommand):
         )
 
         model_wins = market_wins = ties = total = skipped = 0
+        market_correct = 0
         seen: set[tuple[str, str]] = set()
+
+        market_brier_sum = 0.0
+        market_log_loss_sum = 0.0
+        market_confidence_sum = 0.0
 
         for snap in past_snapshots:
             key = (_snap_to_canonical(snap.home_team), _snap_to_canonical(snap.away_team))
@@ -129,10 +153,13 @@ class Command(BaseCommand):
                 for q in quotes
             ]
             consensus = odds_service.get_consensus_market_view(quote_rows)
+            h_p = consensus.get('consensus_home_probability')
+            d_p = consensus.get('consensus_draw_probability')
+            a_p = consensus.get('consensus_away_probability')
             outcome_key = 'home' if outcome == 'H' else 'away' if outcome == 'A' else 'draw'
-            market_prob_key = f'consensus_{outcome_key}_probability'
-            market_prob = consensus.get(market_prob_key)
-            if market_prob is None:
+            market_prob = consensus.get(f'consensus_{outcome_key}_probability')
+
+            if None in (h_p, d_p, a_p, market_prob):
                 skipped += 1
                 continue
 
@@ -156,10 +183,26 @@ class Command(BaseCommand):
             else:
                 ties += 1
 
+            market_top = max(('H', h_p), ('D', d_p), ('A', a_p), key=lambda x: x[1])[0]
+            if market_top == outcome:
+                market_correct += 1
+
+            market_brier_sum += _market_brier(h_p, d_p, a_p, outcome)
+            market_log_loss_sum += _market_log_loss(h_p, d_p, a_p, outcome)
+            market_confidence_sum += max(h_p, d_p, a_p)
+
+        market_brier_score = market_brier_sum / total if total else None
+        market_log_loss = market_log_loss_sum / total if total else None
+        market_confidence = market_confidence_sum / total if total else None
+
         return {
             'model_wins': model_wins,
             'market_wins': market_wins,
             'ties': ties,
             'total_evaluated': total,
             'skipped': skipped,
+            'market_correct_count': market_correct,
+            'market_brier_score': market_brier_score,
+            'market_log_loss': market_log_loss,
+            'market_confidence': market_confidence,
         }

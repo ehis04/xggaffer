@@ -106,6 +106,66 @@ def _filter_to_team_schema(row: dict[str, Any]) -> dict[str, Any]:
     return {column: row.get(column) for column in TEAM_ALL_COLUMNS if column in row}
 
 
+def _is_fixture_schedule(raw_df: pd.DataFrame) -> bool:
+    required = {"home_team", "away_team"}
+    return required.issubset(set(raw_df.columns))
+
+
+def _aggregate_fixture_schedule(raw_df: pd.DataFrame, league: str, season: str) -> pd.DataFrame:
+    if raw_df.empty:
+        return pd.DataFrame(columns=["team", "league", "season", "team_id", "matches_played", "wins", "draws", "losses", "goals_for", "goals_against"])
+
+    fixtures = raw_df.copy()
+    home_score = pd.to_numeric(fixtures.get("home_score"), errors="coerce")
+    away_score = pd.to_numeric(fixtures.get("away_score"), errors="coerce")
+    played_mask = home_score.notna() & away_score.notna()
+    fixtures = fixtures[played_mask].copy()
+
+    if fixtures.empty:
+        return pd.DataFrame(columns=["team", "league", "season", "team_id", "matches_played", "wins", "draws", "losses", "goals_for", "goals_against"])
+
+    fixtures["home_score"] = pd.to_numeric(fixtures["home_score"], errors="coerce").fillna(0).astype(int)
+    fixtures["away_score"] = pd.to_numeric(fixtures["away_score"], errors="coerce").fillna(0).astype(int)
+
+    home = pd.DataFrame(
+        {
+            "team": fixtures["home_team"],
+            "team_id": fixtures.get("home_team_id"),
+            "league": fixtures.get("league", league),
+            "season": fixtures.get("season", season),
+            "goals_for": fixtures["home_score"],
+            "goals_against": fixtures["away_score"],
+            "wins": (fixtures["home_score"] > fixtures["away_score"]).astype(int),
+            "draws": (fixtures["home_score"] == fixtures["away_score"]).astype(int),
+            "losses": (fixtures["home_score"] < fixtures["away_score"]).astype(int),
+            "matches_played": 1,
+        }
+    )
+    away = pd.DataFrame(
+        {
+            "team": fixtures["away_team"],
+            "team_id": fixtures.get("away_team_id"),
+            "league": fixtures.get("league", league),
+            "season": fixtures.get("season", season),
+            "goals_for": fixtures["away_score"],
+            "goals_against": fixtures["home_score"],
+            "wins": (fixtures["away_score"] > fixtures["home_score"]).astype(int),
+            "draws": (fixtures["away_score"] == fixtures["home_score"]).astype(int),
+            "losses": (fixtures["away_score"] < fixtures["home_score"]).astype(int),
+            "matches_played": 1,
+        }
+    )
+
+    combined = pd.concat([home, away], ignore_index=True)
+    grouped = (
+        combined.groupby(["team", "league", "season", "team_id"], dropna=False, as_index=False)[
+            ["matches_played", "wins", "draws", "losses", "goals_for", "goals_against"]
+        ]
+        .sum()
+    )
+    return grouped
+
+
 def transform_whoscored_teams(raw_df: pd.DataFrame, league: str, season: str) -> pd.DataFrame:
     empty_cols = [col for col in TEAM_ALL_COLUMNS if col in {"source", "source_team_id", "season", "league", "team"}]
 
@@ -117,6 +177,11 @@ def transform_whoscored_teams(raw_df: pd.DataFrame, league: str, season: str) ->
 
     if raw_df.empty:
         return pd.DataFrame(columns=empty_cols)
+
+    if _is_fixture_schedule(raw_df):
+        raw_df = _aggregate_fixture_schedule(raw_df, league, season)
+        if raw_df.empty:
+            return pd.DataFrame(columns=empty_cols)
 
     rows: list[dict[str, Any]] = []
 

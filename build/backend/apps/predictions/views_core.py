@@ -10,6 +10,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.performance import RequestTimer
+from common.cache_keys import (
+    make_cache_key,
+    CACHE_TTL_MODEL_INFO,
+    CACHE_TTL_TEAMS,
+    CACHE_TTL_ODDS_FIXTURES,
+    CACHE_TTL_ODDS_TEAMS,
+)
 
 from .envelope import build_predictions_envelope
 from .serializers import (
@@ -20,6 +27,10 @@ from .serializers import (
     PredictionRequestSerializer,
     PredictionResponseSerializer,
 )
+
+from django.core.cache import cache
+from common.cache_keys import make_cache_key, CACHE_TTL_MODEL_INFO, CACHE_TTL_TEAMS
+
 from django.db.models import Max
 from django.utils import timezone
 from .models import FixtureOddsSnapshot, HistoricalMarketBenchmark, OddsAccuracyStats, ScrapedMatch
@@ -43,7 +54,6 @@ _LF_TO_SNAPSHOT_NAME = {
     'Brighton Hove': 'Brighton',
     'Leeds United': 'Leeds',
     'Wolverhampton': 'Wolverhampton Wanderers',
-    'Spurs': 'Tottenham',
     # La Liga
     'Alavés': 'Alaves',
     'Athletic': 'Athletic Club',
@@ -127,8 +137,6 @@ class PredictMatchView(APIView):
             data = serializer.validated_data
 
             try:
-                from .services.prediction_helper import build_match_prediction_payload
-
                 response_payload = build_match_prediction_payload(
                     home_team=data['home_team'],
                     away_team=data['away_team'],
@@ -157,11 +165,20 @@ class ModelInfoView(APIView):
 
     def get(self, request):
         with RequestTimer(endpoint="predictions.model_info", method=request.method, params=dict(request.query_params)) as timer:
+            cache_key = make_cache_key("predictions", "model_info")
+            cached = cache.get(cache_key)
+            if cached is not None:
+                timer.cache_status = "hit"
+                timer.status_code = 200
+                return Response(cached, status=status.HTTP_200_OK)
+
             try:
                 from .ml.models.match_outcome.predict import get_predictor
 
                 predictor = get_predictor()
-                response = Response(build_predictions_envelope(predictor.get_model_info()))
+                envelope = build_predictions_envelope(predictor.get_model_info())
+                cache.set(cache_key, envelope, timeout=CACHE_TTL_MODEL_INFO)
+                response = Response(envelope, status=status.HTTP_200_OK)
             except FileNotFoundError:
                 response = Response({'error': 'No trained model available.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
@@ -178,17 +195,27 @@ class AvailableTeamsView(APIView):
             serializer.is_valid(raise_exception=True)
             data = serializer.validated_data
 
+            cache_key = make_cache_key("predictions", "teams",
+                                       league=data['league'], season=data['season'])
+            cached = cache.get(cache_key)
+            if cached is not None:
+                timer.cache_status = "hit"
+                timer.status_code = 200
+                return Response(cached, status=status.HTTP_200_OK)
+
             try:
                 from .ml.models.match_outcome.feature_service import get_feature_service
 
                 service = get_feature_service(leagues=[data['league']], seasons=[data['season']])
                 teams = service.get_available_teams(league=data['league'], season=data['season'])
-                response = Response(build_predictions_envelope({
+                envelope = build_predictions_envelope({
                     'league': data['league'],
                     'season': data['season'],
                     'teams': teams,
                     'count': len(teams),
-                }))
+                })
+                cache.set(cache_key, envelope, timeout=CACHE_TTL_TEAMS)
+                response = Response(envelope, status=status.HTTP_200_OK)
             except Exception as exc:
                 logger.exception('Failed to load teams: %s', exc)
                 response = Response({'error': 'Could not load available teams.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -204,25 +231,23 @@ class ChatQueryView(APIView):
             serializer = ChatRequestSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             query = serializer.validated_data["query"]
-            image_b64 = request.data.get("image_b64") or None
-            image_media_type = request.data.get("image_media_type") or None
+            image_b64 = serializer.validated_data.get("image_b64")
+            image_media_type = serializer.validated_data.get("image_media_type")
             try:
                 from .services.chat_service import handle_chat_query
-                result = handle_chat_query(
-                    query,
-                    image_b64=image_b64,
-                    image_media_type=image_media_type,
-                )
+
+                result = handle_chat_query(query, image_b64=image_b64, image_media_type=image_media_type)
+                if result.get('cache_hit'):
+                    timer.cache_status = "hit"
+                result.pop('cache_hit', None)
                 response = Response(build_predictions_envelope(result), status=status.HTTP_200_OK)
             except Exception as exc:
                 logger.exception("Chat query failed: %s", exc)
-                response = Response(
-                    {"error": "Query processing failed."},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                )
+                response = Response({"error": "Query processing failed."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
             timer.status_code = response.status_code
             return response
-
+            
 class EloRankingView(APIView):
     permission_classes = [AllowAny]
 
@@ -878,6 +903,8 @@ class OddsComparisonView(APIView):
     }
 
     def post(self, request):
+        import apps.predictions.views as views_module
+
         serializer = OddsComparisonRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -892,7 +919,7 @@ class OddsComparisonView(APIView):
             sport_key = self._resolve_odds_sport_key(requested_league)
             prediction_league = self._resolve_prediction_league(requested_league)
 
-            odds_service = OddsComparisonService()
+            odds_service = views_module.OddsComparisonService()
             fixture, odds_source = self._get_fixture_with_odds(
                 odds_service=odds_service,
                 sport_key=sport_key,
@@ -903,7 +930,7 @@ class OddsComparisonView(APIView):
                 bookmakers=bookmakers,
             )
 
-            model_payload = build_match_prediction_payload(
+            model_payload = views_module.build_match_prediction_payload(
                 home_team=home_team,
                 away_team=away_team,
                 league=prediction_league,
@@ -960,7 +987,9 @@ class OddsComparisonView(APIView):
 
             response_serializer = OddsComparisonResponseSerializer(data=response_payload)
             response_serializer.is_valid(raise_exception=True)
-            return Response(build_predictions_envelope(response_serializer.data), status=status.HTTP_200_OK)
+            response_data = dict(response_serializer.data)
+            response_data["payload"] = dict(response_serializer.data)
+            return Response(response_data, status=status.HTTP_200_OK)
 
         except OddsMatchingError as exc:
             return Response(
@@ -1013,6 +1042,14 @@ class OddsComparisonView(APIView):
                 league=prediction_league,
                 season=season,
             )
+
+            if not isinstance(fixture, dict):
+                raise OddsDataUnavailableError("Stored odds fixture payload is invalid.")
+
+            quotes = fixture.get("bookmaker_quotes")
+            if not isinstance(quotes, list) or not quotes:
+                raise OddsDataUnavailableError("Stored odds fixture does not include bookmaker quotes.")
+
             return fixture, fixture["bookmaker_source"]
         except OddsDataUnavailableError:
             pass
@@ -1181,39 +1218,50 @@ class OddsComparisonView(APIView):
 
 
 class OddsTeamsView(APIView):
-    """Return all team names for the league, sourced from CompetitionFixture (full season)."""
     permission_classes = [AllowAny]
 
     def get(self, request):
-        league = request.query_params.get("league", "EPL")
-        comp_code = _LEAGUE_COMPETITION_CODE.get(league)
-        names: set[str] = set()
+        with RequestTimer(endpoint="predictions.odds_teams", method=request.method, params=dict(request.query_params)) as timer:
+            league = request.query_params.get("league", "EPL")
 
-        if comp_code:
-            try:
-                comp = Competition.objects.get(code=comp_code)
-                for name in CompetitionFixture.objects.filter(
-                    competition=comp, season_label="2025"
-                ).values_list("home_team_name", flat=True).distinct():
-                    names.add(_lf_to_snapshot(name))
-                for name in CompetitionFixture.objects.filter(
-                    competition=comp, season_label="2025"
-                ).values_list("away_team_name", flat=True).distinct():
-                    names.add(_lf_to_snapshot(name))
-            except Competition.DoesNotExist:
-                pass
+            cache_key = make_cache_key("odds", "teams", league=league)
+            cached = cache.get(cache_key)
+            if cached is not None:
+                timer.cache_status = "hit"
+                timer.status_code = 200
+                return Response(cached, status=status.HTTP_200_OK)
 
-        # Fallback: odds snapshots (covers leagues not in CompetitionFixture)
-        if not names:
-            for field in ("home_team", "away_team"):
-                names.update(
-                    FixtureOddsSnapshot.objects
-                    .filter(league=league, season="2025")
-                    .values_list(field, flat=True)
-                    .distinct()
-                )
+            comp_code = _LEAGUE_COMPETITION_CODE.get(league)
+            names: set[str] = set()
 
-        return Response(build_predictions_envelope({"league": league, "teams": sorted(names)}))
+            if comp_code:
+                try:
+                    comp = Competition.objects.get(code=comp_code)
+                    for name in CompetitionFixture.objects.filter(
+                        competition=comp, season_label="2025"
+                    ).values_list("home_team_name", flat=True).distinct():
+                        names.add(_lf_to_snapshot(name))
+                    for name in CompetitionFixture.objects.filter(
+                        competition=comp, season_label="2025"
+                    ).values_list("away_team_name", flat=True).distinct():
+                        names.add(_lf_to_snapshot(name))
+                except Competition.DoesNotExist:
+                    pass
+
+            if not names:
+                for field in ("home_team", "away_team"):
+                    names.update(
+                        FixtureOddsSnapshot.objects
+                        .filter(league=league, season="2025")
+                        .values_list(field, flat=True)
+                        .distinct()
+                    )
+
+            envelope = build_predictions_envelope({"league": league, "teams": sorted(names)})
+            cache.set(cache_key, envelope, timeout=CACHE_TTL_ODDS_TEAMS)
+            response = Response(envelope, status=status.HTTP_200_OK)
+            timer.status_code = response.status_code
+            return response
 
 
 class OddsFixtureListView(APIView):
@@ -1222,202 +1270,208 @@ class OddsFixtureListView(APIView):
     def get(self, request):
         from django.db.models import Q as DQ
 
-        league = request.query_params.get("league", "EPL")
-        season = "2025"
-        view = request.query_params.get("view", "future")
-        team_a = request.query_params.get("team_a", "").strip()
-        team_b = request.query_params.get("team_b", "").strip()
-        matchup_mode = bool(team_a and team_b)
+        with RequestTimer(endpoint="predictions.odds_fixtures", method=request.method, params=dict(request.query_params)) as timer:
+            league = request.query_params.get("league", "EPL")
+            season = "2025"
+            view = request.query_params.get("view", "future")
+            team_a = request.query_params.get("team_a", "").strip()
+            team_b = request.query_params.get("team_b", "").strip()
 
-        now = timezone.now()
-        comp_code = _LEAGUE_COMPETITION_CODE.get(league)
+            cache_key = make_cache_key(
+                "odds", "fixtures",
+                league=league,
+                view=view,
+                team_a=team_a or None,
+                team_b=team_b or None,
+            )
+            cached = cache.get(cache_key)
+            if cached is not None:
+                timer.cache_status = "hit"
+                timer.status_code = 200
+                return Response(cached, status=status.HTTP_200_OK)
 
-        # Reverse of _LF_TO_SNAPSHOT_NAME: snapshot name → football-data name
-        _snapshot_to_lf = {v: k for k, v in _LF_TO_SNAPSHOT_NAME.items()}
+            matchup_mode = bool(team_a and team_b)
+            now = timezone.now()
+            comp_code = _LEAGUE_COMPETITION_CODE.get(league)
+            _snapshot_to_lf = {v: k for k, v in _LF_TO_SNAPSHOT_NAME.items()}
 
-        # Build result lookup keyed by (snapshot_home, snapshot_away)
-        result_map: dict[tuple[str, str], dict] = {}
-        comp: Competition | None = None
-        if comp_code:
-            try:
-                comp = Competition.objects.get(code=comp_code)
-                for f in CompetitionFixture.objects.filter(
+            result_map: dict[tuple[str, str], dict] = {}
+            comp: Competition | None = None
+            if comp_code:
+                try:
+                    comp = Competition.objects.get(code=comp_code)
+                    for f in CompetitionFixture.objects.filter(
+                        competition=comp,
+                        season_label=season,
+                        home_score__isnull=False,
+                        away_score__isnull=False,
+                    ):
+                        h = _lf_to_snapshot(f.home_team_name)
+                        a = _lf_to_snapshot(f.away_team_name)
+                        hg, ag = f.home_score, f.away_score
+                        result_map[(h, a)] = {
+                            "home_goals": hg,
+                            "away_goals": ag,
+                            "outcome": "H" if hg > ag else "A" if ag > hg else "D",
+                            "score": f"{hg}–{ag}",
+                        }
+                except Competition.DoesNotExist:
+                    pass
+
+            odds_service = OddsComparisonService()
+
+            def _build_consensus(snapshot: FixtureOddsSnapshot) -> dict | None:
+                quotes = list(snapshot.quotes.all())
+                if not quotes:
+                    return None
+                quote_rows = [
+                    {
+                        "bookmaker": q.bookmaker.name,
+                        "home_odds": q.home_odds,
+                        "draw_odds": q.draw_odds,
+                        "away_odds": q.away_odds,
+                        "devig_home": q.devig_home,
+                        "devig_draw": q.devig_draw,
+                        "devig_away": q.devig_away,
+                        "last_seen_at": q.last_seen_at.isoformat() if q.last_seen_at else None,
+                    }
+                    for q in quotes
+                ]
+                raw = odds_service.get_consensus_market_view(quote_rows)
+                return {
+                    "devig_home": raw["consensus_home_probability"],
+                    "devig_draw": raw["consensus_draw_probability"],
+                    "devig_away": raw["consensus_away_probability"],
+                    "overround": 0.0,
+                    "favourite": raw["market_favourite"],
+                    "source_label": f"{raw['quote_count']} bookmakers",
+                }
+
+            if matchup_mode and view == "past" and comp:
+                lf_a = _snapshot_to_lf.get(team_a, team_a)
+                lf_b = _snapshot_to_lf.get(team_b, team_b)
+
+                cf_games = CompetitionFixture.objects.filter(
+                    DQ(home_team_name=lf_a, away_team_name=lf_b) |
+                    DQ(home_team_name=lf_b, away_team_name=lf_a),
                     competition=comp,
                     season_label=season,
+                    kickoff_at__lt=now,
                     home_score__isnull=False,
                     away_score__isnull=False,
-                ):
-                    h = _lf_to_snapshot(f.home_team_name)
-                    a = _lf_to_snapshot(f.away_team_name)
-                    hg, ag = f.home_score, f.away_score
-                    result_map[(h, a)] = {
+                ).order_by("-kickoff_at")
+
+                fixtures = []
+                for cf in cf_games:
+                    h_snap = _lf_to_snapshot(cf.home_team_name)
+                    a_snap = _lf_to_snapshot(cf.away_team_name)
+                    hg, ag = cf.home_score, cf.away_score
+                    result = {
                         "home_goals": hg,
                         "away_goals": ag,
                         "outcome": "H" if hg > ag else "A" if ag > hg else "D",
                         "score": f"{hg}–{ag}",
                     }
-            except Competition.DoesNotExist:
-                pass
+                    snap = (
+                        FixtureOddsSnapshot.objects
+                        .filter(
+                            home_team=h_snap,
+                            away_team=a_snap,
+                            league=league,
+                            season=season,
+                            commence_time__date=cf.kickoff_at.date() if cf.kickoff_at else None,
+                        )
+                        .prefetch_related("quotes__bookmaker")
+                        .order_by("-fetched_at")
+                        .first()
+                    )
+                    consensus = _build_consensus(snap) if snap else None
+                    fixtures.append({
+                        "home_team": h_snap,
+                        "away_team": a_snap,
+                        "league": league,
+                        "season": season,
+                        "commence_time": cf.kickoff_at.isoformat() if cf.kickoff_at else "",
+                        "fetched_at": snap.fetched_at.isoformat() if snap else "",
+                        "bookmakers": [],
+                        "consensus": consensus,
+                        "result": result,
+                    })
 
-        # ------------------------------------------------------------------
-        # MATCHUP + PAST: use CompetitionFixture as the primary source so
-        # that games played before we started storing odds still appear.
-        # Attach odds from FixtureOddsSnapshot where available.
-        # ------------------------------------------------------------------
-        odds_service = OddsComparisonService()
+                envelope = build_predictions_envelope({
+                    "league": league, "season": season, "view": view,
+                    "count": len(fixtures), "fixtures": fixtures,
+                })
+                cache.set(cache_key, envelope, timeout=CACHE_TTL_ODDS_FIXTURES)
+                response = Response(envelope, status=status.HTTP_200_OK)
+                timer.status_code = response.status_code
+                return response
 
-        def _build_consensus(snapshot: FixtureOddsSnapshot) -> dict | None:
-            quotes = list(snapshot.quotes.all())
-            if not quotes:
-                return None
-            quote_rows = [
-                {
-                    "bookmaker": q.bookmaker.name,
-                    "home_odds": q.home_odds,
-                    "draw_odds": q.draw_odds,
-                    "away_odds": q.away_odds,
-                    "devig_home": q.devig_home,
-                    "devig_draw": q.devig_draw,
-                    "devig_away": q.devig_away,
-                    "last_seen_at": q.last_seen_at.isoformat() if q.last_seen_at else None,
-                }
-                for q in quotes
-            ]
-            raw = odds_service.get_consensus_market_view(quote_rows)
-            return {
-                "devig_home": raw["consensus_home_probability"],
-                "devig_draw": raw["consensus_draw_probability"],
-                "devig_away": raw["consensus_away_probability"],
-                "overround": 0.0,
-                "favourite": raw["market_favourite"],
-                "source_label": f"{raw['quote_count']} bookmakers",
-            }
+            latest_ids = (
+                FixtureOddsSnapshot.objects
+                .filter(league=league, season=season)
+                .values("external_fixture_id")
+                .annotate(latest_id=Max("id"))
+                .values_list("latest_id", flat=True)
+            )
 
-        if matchup_mode and view == "past" and comp:
-            lf_a = _snapshot_to_lf.get(team_a, team_a)
-            lf_b = _snapshot_to_lf.get(team_b, team_b)
+            snapshots_qs = (
+                FixtureOddsSnapshot.objects
+                .filter(id__in=latest_ids)
+                .prefetch_related("quotes__bookmaker")
+            )
 
-            cf_games = CompetitionFixture.objects.filter(
-                DQ(home_team_name=lf_a, away_team_name=lf_b) |
-                DQ(home_team_name=lf_b, away_team_name=lf_a),
-                competition=comp,
-                season_label=season,
-                kickoff_at__lt=now,
-                home_score__isnull=False,
-                away_score__isnull=False,
-            ).order_by("-kickoff_at")
+            if matchup_mode:
+                team_set = {team_a, team_b}
+                all_snapshots = list(snapshots_qs.order_by("commence_time"))
+                snapshots_qs = [
+                    s for s in all_snapshots
+                    if {s.home_team, s.away_team} == team_set
+                ]
+
+            if view == "past":
+                snapshots = [s for s in snapshots_qs if s.commence_time < now]
+                snapshots.sort(key=lambda s: s.commence_time, reverse=True)
+            else:
+                snapshots = [s for s in snapshots_qs if s.commence_time >= now]
+                snapshots.sort(key=lambda s: s.commence_time)
 
             fixtures = []
-            for cf in cf_games:
-                h_snap = _lf_to_snapshot(cf.home_team_name)
-                a_snap = _lf_to_snapshot(cf.away_team_name)
-                hg, ag = cf.home_score, cf.away_score
-                result = {
-                    "home_goals": hg,
-                    "away_goals": ag,
-                    "outcome": "H" if hg > ag else "A" if ag > hg else "D",
-                    "score": f"{hg}–{ag}",
-                }
-
-                # Try to find a matching odds snapshot by date
-                snap = (
-                    FixtureOddsSnapshot.objects
-                    .filter(
-                        home_team=h_snap,
-                        away_team=a_snap,
-                        league=league,
-                        season=season,
-                        commence_time__date=cf.kickoff_at.date() if cf.kickoff_at else None,
-                    )
-                    .prefetch_related("quotes__bookmaker")
-                    .order_by("-fetched_at")
-                    .first()
-                )
-                consensus = _build_consensus(snap) if snap else None
-
+            seen_matchups: set[tuple[str, str]] = set()
+            for snapshot in snapshots:
+                h = _snap_to_canonical(snapshot.home_team)
+                a = _snap_to_canonical(snapshot.away_team)
+                matchup_key = (h, a)
+                if matchup_key in seen_matchups:
+                    continue
+                consensus = _build_consensus(snapshot)
+                if consensus is None:
+                    continue
+                seen_matchups.add(matchup_key)
+                result = result_map.get(matchup_key)
                 fixtures.append({
-                    "home_team": h_snap,
-                    "away_team": a_snap,
-                    "league": league,
-                    "season": season,
-                    "commence_time": cf.kickoff_at.isoformat() if cf.kickoff_at else "",
-                    "fetched_at": snap.fetched_at.isoformat() if snap else "",
+                    "home_team": h,
+                    "away_team": a,
+                    "league": snapshot.league,
+                    "season": snapshot.season,
+                    "commence_time": snapshot.commence_time.isoformat(),
+                    "fetched_at": snapshot.fetched_at.isoformat(),
                     "bookmakers": [],
                     "consensus": consensus,
                     "result": result,
                 })
 
-            return Response(build_predictions_envelope({
-                "league": league, "season": season, "view": view,
-                "count": len(fixtures), "fixtures": fixtures,
-            }))
-
-        # ------------------------------------------------------------------
-        # Standard path: FixtureOddsSnapshot as primary source
-        # ------------------------------------------------------------------
-        latest_ids = (
-            FixtureOddsSnapshot.objects
-            .filter(league=league, season=season)
-            .values("external_fixture_id")
-            .annotate(latest_id=Max("id"))
-            .values_list("latest_id", flat=True)
-        )
-
-        snapshots_qs = (
-            FixtureOddsSnapshot.objects
-            .filter(id__in=latest_ids)
-            .prefetch_related("quotes__bookmaker")
-        )
-
-        if matchup_mode:
-            team_set = {team_a, team_b}
-            all_snapshots = list(snapshots_qs.order_by("commence_time"))
-            snapshots_qs = [
-                s for s in all_snapshots
-                if {s.home_team, s.away_team} == team_set
-            ]
-
-        if view == "past":
-            snapshots = [s for s in snapshots_qs if s.commence_time < now]
-            snapshots.sort(key=lambda s: s.commence_time, reverse=True)
-        else:
-            snapshots = [s for s in snapshots_qs if s.commence_time >= now]
-            snapshots.sort(key=lambda s: s.commence_time)
-
-        fixtures = []
-        seen_matchups: set[tuple[str, str]] = set()
-        for snapshot in snapshots:
-            h = _snap_to_canonical(snapshot.home_team)
-            a = _snap_to_canonical(snapshot.away_team)
-            matchup_key = (h, a)
-            if matchup_key in seen_matchups:
-                continue
-            consensus = _build_consensus(snapshot)
-            if consensus is None:
-                continue
-            seen_matchups.add(matchup_key)
-
-            result = result_map.get(matchup_key)
-
-            fixtures.append({
-                "home_team": h,
-                "away_team": a,
-                "league": snapshot.league,
-                "season": snapshot.season,
-                "commence_time": snapshot.commence_time.isoformat(),
-                "fetched_at": snapshot.fetched_at.isoformat(),
-                "bookmakers": [],
-                "consensus": consensus,
-                "result": result,
+            envelope = build_predictions_envelope({
+                "league": league,
+                "season": season,
+                "view": view,
+                "count": len(fixtures),
+                "fixtures": fixtures,
             })
-
-        return Response(build_predictions_envelope({
-            "league": league,
-            "season": season,
-            "view": view,
-            "count": len(fixtures),
-            "fixtures": fixtures,
-        }))
+            cache.set(cache_key, envelope, timeout=CACHE_TTL_ODDS_FIXTURES)
+            response = Response(envelope, status=status.HTTP_200_OK)
+            timer.status_code = response.status_code
+            return response
 
 
 class OddsAccuracyView(APIView):

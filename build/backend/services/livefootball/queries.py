@@ -351,7 +351,12 @@ def _competition_fixtures_queryset(
         queryset = queryset.filter(season_label=resolved_season_label)
 
     if status:
-        queryset = queryset.filter(status=status)
+        # Support comma-separated status values (e.g., "SCHEDULED,TIMED")
+        status_list = [s.strip().upper() for s in status.split(',') if s.strip()]
+        if len(status_list) == 1:
+            queryset = queryset.filter(status=status_list[0])
+        elif len(status_list) > 1:
+            queryset = queryset.filter(status__in=status_list)
 
     if matchday is not None and matchday != "":
         queryset = queryset.filter(matchday=matchday)

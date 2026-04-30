@@ -145,7 +145,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='competitiontopscorer',
-            constraint=models.UniqueConstraint(condition=models.Q(('external_player_id', ''), _negated=True), fields=('competition', 'season_label', 'external_player_id'), name='lf_scorer_comp_player_uq'),
+            constraint=models.UniqueConstraint(fields=('competition', 'season_label', 'external_player_id'), name='lf_scorer_comp_player_uq'),
         ),
         migrations.AddIndex(
             model_name='competitiontablerow',
@@ -161,7 +161,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='competitiontablerow',
-            constraint=models.UniqueConstraint(condition=models.Q(('external_team_id', ''), _negated=True), fields=('snapshot', 'external_team_id'), name='lf_table_row_snapshot_team_uq'),
+            constraint=models.UniqueConstraint(fields=('snapshot', 'external_team_id'), name='lf_table_row_snapshot_team_uq'),
         ),
         migrations.AddIndex(
             model_name='competitionfixture',

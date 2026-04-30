@@ -27,7 +27,6 @@ _LF_TO_SNAPSHOT_NAME = {
     'Brighton Hove': 'Brighton',
     'Leeds United': 'Leeds',
     'Wolverhampton': 'Wolverhampton Wanderers',
-    'Spurs': 'Tottenham',
     'Athletic': 'Athletic Club',
     'Bayern': 'Bayern Munich',
     'Angers SCO': 'Angers',

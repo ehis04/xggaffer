@@ -2,28 +2,29 @@
   margin-top: 0.5rem;
   padding: 0.75rem;
   border-radius: 0.5rem;
-  background: var(--color-surface-raised, #f1f5f9);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 0.875rem;
 }
 
 .partialNote {
   margin-top: 0.5rem;
   font-size: 0.75rem;
-  color: var(--color-muted, #94a3b8);
+  color: rgba(255, 255, 255, 0.45);
   font-style: italic;
 }
 
 .sectionLabel {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-muted, #94a3b8);
+  color: rgba(255, 255, 255, 0.5);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0.5rem 0 0.25rem;
 }
 
 .muted {
-  color: var(--color-muted, #94a3b8);
+  color: rgba(255, 255, 255, 0.45);
   font-style: italic;
   font-size: 0.8rem;
 }
@@ -38,7 +39,7 @@
 }
 
 .probSegmentHome {
-  background: var(--color-primary, #0d9488);
+  background: #059669;
   color: #fff;
   display: flex;
   align-items: center;
@@ -50,7 +51,7 @@
 }
 
 .probSegmentDraw {
-  background: var(--color-muted, #94a3b8);
+  background: rgba(255, 255, 255, 0.25);
   color: #fff;
   display: flex;
   align-items: center;
@@ -62,7 +63,7 @@
 }
 
 .probSegmentAway {
-  background: var(--color-accent, #f59e0b);
+  background: #d97706;
   color: #fff;
   display: flex;
   align-items: center;
@@ -83,24 +84,24 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.2rem 0;
-  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   gap: 0.5rem;
 }
 
 .factorDesc {
-  color: var(--color-text, #1e293b);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 0.8rem;
 }
 
 .contribPos {
-  color: #16a34a;
+  color: #4ade80;
   font-weight: 600;
   font-size: 0.8rem;
   white-space: nowrap;
 }
 
 .contribNeg {
-  color: var(--color-error, #ef4444);
+  color: #fca5a5;
   font-weight: 600;
   font-size: 0.8rem;
   white-space: nowrap;
@@ -111,7 +112,7 @@
   margin-top: 0.5rem;
   padding: 0.2rem 0.5rem;
   border-radius: 0.25rem;
-  background: var(--color-primary, #0d9488);
+  background: rgba(255, 255, 255, 0.18);
   color: #fff;
   font-size: 0.7rem;
   font-weight: 600;
@@ -121,19 +122,19 @@
 .glossaryTerm {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--color-primary, #0d9488);
+  color: #ffffff;
   margin: 0 0 0.4rem;
 }
 
 .glossaryDef {
-  color: var(--color-text, #1e293b);
+  color: rgba(255, 255, 255, 0.85);
   line-height: 1.5;
   margin: 0;
 }
 
 .termList {
   padding-left: 1.25rem;
-  color: var(--color-text, #1e293b);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 /* Elo */
@@ -152,13 +153,13 @@
 
 .eloTeam {
   font-size: 0.8rem;
-  color: var(--color-muted, #94a3b8);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .eloRating {
   font-size: 1.75rem;
   font-weight: 700;
-  color: var(--color-primary, #0d9488);
+  color: #ffffff;
 }
 
 /* Simulation */
@@ -172,35 +173,35 @@
 .simTeam {
   width: 9rem;
   font-size: 0.8rem;
-  color: var(--color-text, #1e293b);
+  color: rgba(255, 255, 255, 0.85);
   flex-shrink: 0;
 }
 
 .simBarWrap {
   flex: 1;
   height: 0.5rem;
-  background: var(--color-border, #e2e8f0);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 0.25rem;
   overflow: hidden;
 }
 
 .simBar {
   height: 100%;
-  background: var(--color-primary, #0d9488);
+  background: rgba(255, 255, 255, 0.55);
   border-radius: 0.25rem;
 }
 
 .simPct {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--color-text, #1e293b);
+  color: #ffffff;
   width: 2.5rem;
   text-align: right;
 }
 
 .relegationLabel {
   margin-top: 0.75rem;
-  color: var(--color-error, #ef4444);
+  color: #fca5a5;
 }
 
 /* Lineup */
@@ -209,26 +210,26 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.2rem 0;
-  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .lineupPos {
   width: 3rem;
   font-size: 0.7rem;
   font-weight: 600;
-  color: var(--color-muted, #94a3b8);
+  color: rgba(255, 255, 255, 0.5);
   text-transform: uppercase;
 }
 
 .lineupName {
   flex: 1;
   font-size: 0.85rem;
-  color: var(--color-text, #1e293b);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .lineupProb {
   font-size: 0.8rem;
-  color: var(--color-primary, #0d9488);
+  color: #ffffff;
   font-weight: 600;
 }
 
@@ -242,19 +243,19 @@
 
 .tacticalTeam {
   font-weight: 600;
-  color: var(--color-text, #1e293b);
+  color: #ffffff;
 }
 
 .vs {
   font-size: 0.75rem;
-  color: var(--color-muted, #94a3b8);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .clusterBadge {
   display: inline-block;
   padding: 0.25rem 0.75rem;
   border-radius: 1rem;
-  background: var(--color-primary, #0d9488);
+  background: rgba(255, 255, 255, 0.16);
   color: #fff;
   font-size: 0.8rem;
   font-weight: 600;
@@ -265,9 +266,85 @@
   margin-top: 0.25rem;
 }
 
+.zonePitch {
+  position: relative;
+  margin-top: 0.25rem;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-rows: repeat(4, minmax(2rem, auto));
+  gap: 0.2rem;
+  padding: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  background: linear-gradient(180deg, rgba(16, 91, 48, 0.45), rgba(12, 72, 39, 0.45));
+}
+
+.pitchHalfLine {
+  position: absolute;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+}
+
+.pitchCentreCircle {
+  position: absolute;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.pitchBoxLeft,
+.pitchBoxRight {
+  position: absolute;
+  width: 16%;
+  height: 45%;
+  top: 27.5%;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  pointer-events: none;
+}
+
+.pitchBoxLeft {
+  left: 0.5rem;
+  border-left: none;
+}
+
+.pitchBoxRight {
+  right: 0.5rem;
+  border-right: none;
+}
+
+.zoneCell {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.22rem;
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.zoneCellActive {
+  background: rgba(74, 222, 128, 0.22);
+  border-color: rgba(74, 222, 128, 0.55);
+  color: #dcfce7;
+}
+
 .zoneList {
   padding-left: 1.25rem;
-  color: var(--color-text, #1e293b);
+  color: rgba(255, 255, 255, 0.82);
   font-size: 0.85rem;
 }
 
@@ -277,12 +354,12 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.25rem 0;
-  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .playerName {
   font-size: 0.85rem;
-  color: var(--color-text, #1e293b);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .riskBadge {
@@ -322,7 +399,7 @@
 }
 
 .compositeSummary {
-  border-top: 1px solid var(--color-border, #e2e8f0);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding-top: 0.5rem;
 }
 
@@ -332,14 +409,14 @@
   grid-template-columns: 1fr 1fr 1fr;
   gap: 0.5rem;
   padding-bottom: 0.25rem;
-  border-bottom: 2px solid var(--color-border, #e2e8f0);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.08);
   margin-bottom: 0.25rem;
 }
 
 .statTeamLabel {
   font-weight: 600;
   font-size: 0.8rem;
-  color: var(--color-text, #1e293b);
+  color: #ffffff;
   text-align: center;
 }
 
@@ -348,24 +425,24 @@
   grid-template-columns: 1fr 1fr 1fr;
   gap: 0.5rem;
   padding: 0.2rem 0;
-  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .statName {
   font-size: 0.8rem;
-  color: var(--color-muted, #94a3b8);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .statValue {
   font-size: 0.8rem;
-  color: var(--color-text, #1e293b);
+  color: rgba(255, 255, 255, 0.85);
   text-align: center;
 }
 
 .statValueBold {
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--color-primary, #0d9488);
+  color: #ffffff;
   text-align: center;
 }
 
@@ -383,27 +460,27 @@
   gap: 0.4rem;
   padding: 0.75rem;
   border-radius: 0.5rem;
-  border: 1px solid var(--color-border, #e2e8f0);
-  background: var(--color-surface, #ffffff);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
   cursor: pointer;
   text-align: left;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .capabilityCard:hover {
-  border-color: var(--color-primary, #0d9488);
-  box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.15);
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12);
 }
 
 .capabilityDesc {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--color-text, #1e293b);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .capabilityExample {
   font-size: 0.75rem;
-  color: var(--color-primary, #0d9488);
+  color: rgba(255, 255, 255, 0.6);
   font-style: italic;
 }
 
@@ -414,7 +491,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--color-muted, #94a3b8);
+  color: rgba(255, 255, 255, 0.45);
   padding: 0.2rem;
   border-radius: 0.25rem;
   display: flex;

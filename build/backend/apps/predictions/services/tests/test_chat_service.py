@@ -160,6 +160,52 @@ class TestNarrator:
         assert "Prediction" in result
         assert "%" in result
 
+    def test_fallback_omits_source_coverage(self):
+        with override_settings(ANTHROPIC_API_KEY=""):
+            narrator = LLMNarrator()
+
+        payload = {
+            "intent": "FORM_ANALYSIS",
+            "entities": {"team": "Arsenal", "home_team": "Arsenal"},
+            "engine_data": {
+                "recent_form": "WWDWL",
+                "wins": 20,
+                "draws": 6,
+                "losses": 4,
+                "avg_xg": 1.9,
+                "source_coverage": {
+                    "used_sources": ["sofascore", "understat"],
+                    "missing_sources": ["whoscored"],
+                },
+            },
+            "partial": False,
+            "error": None,
+        }
+
+        result = narrator._fallback_response(payload)
+        assert "Data sources used" not in result
+        assert "Missing for this query" not in result
+
+    def test_fallback_tactical_mentions_profile_season_when_different(self):
+        with override_settings(ANTHROPIC_API_KEY=""):
+            narrator = LLMNarrator()
+
+        payload = {
+            "intent": "TACTICAL_QUERY",
+            "entities": {"team": "Real Madrid", "home_team": "Real Madrid"},
+            "engine_data": {
+                "cluster_label": "High Press 4-3-3",
+                "requested_season": "2025",
+                "profile_season": "2023/2024",
+            },
+            "partial": False,
+            "error": None,
+        }
+
+        result = narrator._fallback_response(payload)
+        assert "Requested season was 2025" in result
+        assert "2023/2024" in result
+
 
 @pytest.mark.django_db
 class TestChatView:

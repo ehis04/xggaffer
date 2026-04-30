@@ -14,7 +14,8 @@ import liveFootballApi from '../../../services/api/livefootballApi';
 import type {
   LeagueMetaItem,
 } from '../../../types/livefootball';
-import styles from './css/LeagueComparePage.module.css';
+import styles from './css/LeaguePredictPage.module.css';
+import { FreshnessBadge } from '../../../common/components/FreshnessBadge';
 
 type ProjectionMode = 'current_expected' | 'pre_season' | 'as_of_matchweek';
 
@@ -275,7 +276,8 @@ const LeaguePredictPage: React.FC = () => {
             Explore expected league outcomes, probabilities, and deterministic commentary for a selected league and season.
           </p>
         </div>
-
+        <FreshnessBadge freshness={predictionEnvelope?.freshness} />
+        
         <div className={styles.actions}>
           <Link
             to={

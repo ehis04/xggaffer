@@ -3,7 +3,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import pandas as pd
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, override_settings
 
 from apps.livefootball.services.simulation import (
     DEFAULT_SIMULATION_COUNT,
@@ -12,6 +12,14 @@ from apps.livefootball.services.simulation import (
     simulate_league_scenario,
     simulate_league_season,
 )
+
+
+TEST_CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "test-cache",
+    }
+}
 
 
 def _dynamic_lambdas(prepared):
@@ -107,6 +115,7 @@ def _sample_matches() -> pd.DataFrame:
     return frame
 
 
+@override_settings(CACHES=TEST_CACHES)
 class SimulationServiceTests(SimpleTestCase):
     @patch(
         "apps.livefootball.services.simulation._predict_score_lambdas",

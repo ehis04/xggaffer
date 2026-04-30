@@ -74,6 +74,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='teamsheetplayer',
-            constraint=models.UniqueConstraint(condition=models.Q(('club_player__isnull', False)), fields=('teamsheet', 'club_player'), name='unique_club_player_per_teamsheet'),
+            constraint=models.UniqueConstraint(fields=('teamsheet', 'club_player'), name='unique_club_player_per_teamsheet'),
         ),
     ]

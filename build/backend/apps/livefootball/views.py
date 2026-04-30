@@ -1,9 +1,13 @@
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.core.cache import cache
+from common.request_parsing import (
+    parse_bool_or_default,
+    parse_optional_int,
+    parse_positive_int_or_default,
+)
 from common.cache_keys import (
     make_cache_key,
     CACHE_TTL_OVERVIEW,
@@ -65,6 +69,15 @@ from rest_framework.permissions import IsAuthenticated
 class LiveFootballProtectedAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def _parse_optional_int(self, value, field_name):
+        return parse_optional_int(value, field_name=field_name)
+
+    def _parse_limit(self, value, default, field_name):
+        return parse_positive_int_or_default(value, default=default, field_name=field_name)
+
+    def _parse_bool(self, value, default, field_name):
+        return parse_bool_or_default(value, default=default, field_name=field_name)
+
 class CompetitionListView(LiveFootballProtectedAPIView):
     def get(self, request):
         provider = request.query_params.get("provider")
@@ -118,14 +131,6 @@ class CompetitionFixturesView(LiveFootballProtectedAPIView):
         serializer = CompetitionFixturesResponseSerializer(payload)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def _parse_optional_int(self, value, field_name):
-        if value in (None, ""):
-            return None
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            raise ValidationError({field_name: "Must be an integer."})
-
 
 class CompetitionPreviousNextFixturesView(LiveFootballProtectedAPIView):
     def get(self, request, competition_id):
@@ -157,17 +162,6 @@ class CompetitionPreviousNextFixturesView(LiveFootballProtectedAPIView):
         serializer = CompetitionPreviousNextFixturesResponseSerializer(payload)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def _parse_limit(self, value, default, field_name):
-        if value in (None, ""):
-            return default
-        try:
-            parsed = int(value)
-        except (TypeError, ValueError):
-            raise ValidationError({field_name: "Must be an integer."})
-        if parsed <= 0:
-            raise ValidationError({field_name: "Must be greater than 0."})
-        return parsed
-
 
 class CompetitionScorersView(LiveFootballProtectedAPIView):
     def get(self, request, competition_id):
@@ -188,14 +182,6 @@ class CompetitionScorersView(LiveFootballProtectedAPIView):
 
         serializer = CompetitionScorersResponseSerializer(payload)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def _parse_optional_int(self, value, field_name):
-        if value in (None, ""):
-            return None
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            raise ValidationError({field_name: "Must be an integer."})
 
 
 class CompetitionTeamsView(LiveFootballProtectedAPIView):
@@ -239,16 +225,6 @@ class TeamPlayersView(LiveFootballProtectedAPIView):
         serializer = TeamPlayersResponseSerializer(payload)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def _parse_bool(self, value, default, field_name):
-        if value in (None, ""):
-            return default
-        normalized = str(value).strip().lower()
-        if normalized in {"1", "true", "yes", "y"}:
-            return True
-        if normalized in {"0", "false", "no", "n"}:
-            return False
-        raise ValidationError({field_name: "Must be a boolean."})
-
 
 class CompetitionPlayersView(LiveFootballProtectedAPIView):
     def get(self, request, competition_id):
@@ -273,16 +249,6 @@ class CompetitionPlayersView(LiveFootballProtectedAPIView):
 
         serializer = CompetitionPlayersResponseSerializer(payload)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def _parse_bool(self, value, default, field_name):
-        if value in (None, ""):
-            return default
-        normalized = str(value).strip().lower()
-        if normalized in {"1", "true", "yes", "y"}:
-            return True
-        if normalized in {"0", "false", "no", "n"}:
-            return False
-        raise ValidationError({field_name: "Must be a boolean."})
 
 
 class PlayerSearchView(LiveFootballProtectedAPIView):
@@ -319,35 +285,6 @@ class PlayerSearchView(LiveFootballProtectedAPIView):
 
         serializer = PlayerSearchResponseSerializer(payload)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def _parse_optional_int(self, value, field_name):
-        if value in (None, ""):
-            return None
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            raise ValidationError({field_name: "Must be an integer."})
-
-    def _parse_limit(self, value, default, field_name):
-        if value in (None, ""):
-            return default
-        try:
-            parsed = int(value)
-        except (TypeError, ValueError):
-            raise ValidationError({field_name: "Must be an integer."})
-        if parsed <= 0:
-            raise ValidationError({field_name: "Must be greater than 0."})
-        return parsed
-
-    def _parse_bool(self, value, default, field_name):
-        if value in (None, ""):
-            return default
-        normalized = str(value).strip().lower()
-        if normalized in {"1", "true", "yes", "y"}:
-            return True
-        if normalized in {"0", "false", "no", "n"}:
-            return False
-        raise ValidationError({field_name: "Must be a boolean."})
         
 class LiveFootballOverviewView(LiveFootballProtectedAPIView):
     def get(self, request):
@@ -359,9 +296,9 @@ class LiveFootballOverviewView(LiveFootballProtectedAPIView):
                 timer.status_code = 200
                 return Response(cached, status=status.HTTP_200_OK)
 
-            snapshot_version = get_active_snapshot_version()
             payload = get_livefootball_homepage_payload()
             serializer = LiveFootballOverviewSerializer(payload)
+            snapshot_version = get_active_snapshot_version()
             envelope = build_livefootball_envelope(serializer.data, data_version=snapshot_version)
             cache.set(cache_key, envelope, timeout=CACHE_TTL_OVERVIEW)
             response = Response(envelope, status=status.HTTP_200_OK)
@@ -379,9 +316,9 @@ class LeaguesMetaView(LiveFootballProtectedAPIView):
                 timer.status_code = 200
                 return Response(cached, status=status.HTTP_200_OK)
 
-            snapshot_version = get_active_snapshot_version()
             payload = get_leagues_meta_payload()
             serializer = LeaguesMetaResponseSerializer(payload)
+            snapshot_version = get_active_snapshot_version()
             envelope = build_livefootball_envelope(serializer.data, data_version=snapshot_version)
             cache.set(cache_key, envelope, timeout=CACHE_TTL_LEAGUES_META)
             response = Response(envelope, status=status.HTTP_200_OK)
@@ -432,21 +369,13 @@ class LeagueExpectedTableView(LiveFootballProtectedAPIView):
                 timer.status_code = response.status_code
                 return response
 
-            snapshot_version = get_active_snapshot_version()
             serializer = LeagueExpectedTableResponseSerializer(payload)
+            snapshot_version = get_active_snapshot_version()
             envelope = build_livefootball_envelope(serializer.data, data_version=snapshot_version)
             cache.set(cache_key, envelope, timeout=CACHE_TTL_EXPECTED_TABLE)
             response = Response(envelope, status=status.HTTP_200_OK)
             timer.status_code = response.status_code
             return response
-
-    def _parse_optional_int(self, value, field_name):
-        if value in (None, ""):
-            return None
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            raise ValidationError({field_name: "Must be an integer."})
 
 
 class LeagueCompareView(LiveFootballProtectedAPIView):
@@ -500,62 +429,6 @@ class LeagueCompareView(LiveFootballProtectedAPIView):
             timer.status_code = response.status_code
             return response
 
-    def _parse_optional_int(self, value, field_name):
-        if value in (None, ""):
-            return None
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            raise ValidationError({field_name: "Must be an integer."})
-            
-            
-class LeagueCompareView(LiveFootballProtectedAPIView):
-    def get(self, request, competition_id):
-        season_label = request.query_params.get("season")
-        mode = request.query_params.get("mode")
-        projection_window = request.query_params.get("projection_window")
-        matchweek = self._parse_optional_int(
-            request.query_params.get("matchweek"),
-            "matchweek",
-        )
-
-        try:
-            payload = get_league_compare_payload(
-                competition_id=competition_id,
-                season_label=season_label,
-                mode=mode,
-                matchweek=matchweek,
-                projection_window=projection_window,
-            )
-        except ObjectDoesNotExist:
-            return Response(
-                {"detail": "Competition not found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        except TeamMappingNotFoundError as exc:
-            return Response(
-                {"detail": str(exc)},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        except ValueError as exc:
-            return Response(
-                {"detail": str(exc)},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        serializer = LeagueCompareResponseSerializer(payload)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def _parse_optional_int(self, value, field_name):
-        if value in (None, ""):
-            return None
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            raise ValidationError({field_name: "Must be an integer."})
-        serializer = LeagueCompareResponseSerializer(payload)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
 class LeagueScenarioView(LiveFootballProtectedAPIView):
     def post(self, request, competition_id):
         season_label = request.query_params.get("season")
@@ -594,14 +467,6 @@ class LeagueScenarioView(LiveFootballProtectedAPIView):
 
         serializer = LeagueScenarioResponseSerializer(payload)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def _parse_optional_int(self, value, field_name):
-        if value in (None, ""):
-            return None
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            raise ValidationError({field_name: "Must be an integer."})
 
 class LeagueSavedScenarioListCreateView(LiveFootballProtectedAPIView):
     def get(self, request, competition_id):
@@ -670,14 +535,6 @@ class LeagueSavedScenarioListCreateView(LiveFootballProtectedAPIView):
         serializer = SavedLeagueScenarioDetailSerializer(payload)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def _parse_optional_int(self, value, field_name):
-        if value in (None, ""):
-            return None
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            raise ValidationError({field_name: "Must be an integer."})
-
 
 class LeagueSavedScenarioDetailView(LiveFootballProtectedAPIView):
     def get(self, request, scenario_id):
@@ -708,11 +565,3 @@ class LeagueSavedScenarioDetailView(LiveFootballProtectedAPIView):
             )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
-        
-    def _parse_optional_int(self, value, field_name):
-        if value in (None, ""):
-            return None
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            raise ValidationError({field_name: "Must be an integer."})

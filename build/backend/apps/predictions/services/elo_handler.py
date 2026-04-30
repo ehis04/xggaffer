@@ -6,6 +6,7 @@ from pathlib import Path
 
 from apps.predictions.services.base_handler import EngineHandler, QueryPayload
 from apps.predictions.services.intent_types import IntentClass, ParsedQuery
+from apps.predictions.services.source_policy import source_coverage_metadata
 
 _logger = logging.getLogger(__name__)
 
@@ -54,6 +55,11 @@ class EloHandler(EngineHandler):
                 "team": team,
                 "league": league,
                 "elo_rating": home_rating,
+                "source_coverage": source_coverage_metadata(
+                    intent=IntentClass.ELO_QUERY.value,
+                    used_sources=["elo_ratings"],
+                    required_sources=["elo_ratings"],
+                ),
             }
 
             if parsed_query.home_team and parsed_query.away_team:

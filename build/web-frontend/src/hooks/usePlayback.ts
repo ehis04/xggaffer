@@ -209,13 +209,16 @@ export const usePlayback = ({
     cancelPlaybackFrame();
     lastTimestampRef.current = null;
 
-    applyState({
-      status: 'paused',
+    const nextState = {
+      status: 'paused' as const,
       sourceFrameIndex: sourceFrameIndexRef.current,
       targetFrameIndex: targetFrameIndexRef.current,
       progress: state.progress,
-    });
-  }, [applyState, cancelPlaybackFrame, state.progress]);
+    };
+
+    syncRefsFromState(nextState);
+    setState(nextState);
+  }, [cancelPlaybackFrame, state.progress, syncRefsFromState]);
 
   const tick = useCallback(
     (timestamp: number) => {
@@ -269,7 +272,13 @@ export const usePlayback = ({
         elapsedMsRef.current / activeDurationMs
       );
 
-      applyState({
+      syncRefsFromState({
+        status: 'playing',
+        sourceFrameIndex: activePair.sourceFrameIndex,
+        targetFrameIndex: activePair.targetFrameIndex,
+        progress: nextProgress,
+      });
+      setState({
         status: 'playing',
         sourceFrameIndex: activePair.sourceFrameIndex,
         targetFrameIndex: activePair.targetFrameIndex,
@@ -278,7 +287,7 @@ export const usePlayback = ({
 
       animationFrameIdRef.current = requestAnimationFrame(tick);
     },
-    [applyState, sortedFrames, stop]
+    [sortedFrames, stop, syncRefsFromState]
   );
 
   const play = useCallback(
@@ -295,7 +304,13 @@ export const usePlayback = ({
         startFrameIndex === undefined &&
         targetFrameIndexRef.current !== null
       ) {
-        applyState({
+        syncRefsFromState({
+          status: 'playing',
+          sourceFrameIndex: sourceFrameIndexRef.current,
+          targetFrameIndex: targetFrameIndexRef.current,
+          progress: state.progress,
+        });
+        setState({
           status: 'playing',
           sourceFrameIndex: sourceFrameIndexRef.current,
           targetFrameIndex: targetFrameIndexRef.current,
@@ -322,7 +337,13 @@ export const usePlayback = ({
 
       resetTimingRefs();
 
-      applyState({
+      syncRefsFromState({
+        status: 'playing',
+        sourceFrameIndex: initialPair.sourceFrameIndex,
+        targetFrameIndex: initialPair.targetFrameIndex,
+        progress: 0,
+      });
+      setState({
         status: 'playing',
         sourceFrameIndex: initialPair.sourceFrameIndex,
         targetFrameIndex: initialPair.targetFrameIndex,
@@ -332,13 +353,13 @@ export const usePlayback = ({
       animationFrameIdRef.current = requestAnimationFrame(tick);
     },
     [
-      applyState,
       cancelPlaybackFrame,
       initialFrameIndex,
       reset,
       resetTimingRefs,
       sortedFrames,
       state.progress,
+      syncRefsFromState,
       tick,
     ]
   );

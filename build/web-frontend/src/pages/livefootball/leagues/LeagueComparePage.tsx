@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { usePageTiming } from '../../../common/hooks/usePageTiming';
 import { queryKeys } from '../../../common/query/queryKeys';
 import { STALE_TIME_STANDARD } from '../../../common/query/queryClient';
 import { buildLeagueProjectionParams } from '../../../services/api/livefootballApi';
@@ -15,6 +16,7 @@ import type {
   LeagueMetaItem,
 } from '../../../types/livefootball';
 import styles from '../../../components/livefootball/leagues/css/LeagueComparePage.module.css';
+import { FreshnessBadge } from '../../../common/components/FreshnessBadge';
 
 type ProjectionMode = 'current_expected' | 'pre_season' | 'as_of_matchweek';
 type ProjectionWindow = 'full_season' | 'to_date';
@@ -31,6 +33,7 @@ const ENABLE_MATCHWEEK_UI = false;
 type UnavailableMode = LeagueMetaItem['unavailable_modes'][number];
 
 const LeagueComparePage: React.FC = () => {
+  const { markDataReceived } = usePageTiming('LeagueComparePage');
   const [searchParams, setSearchParams] = useSearchParams();
 
   const { data: metaEnvelope, isPending: metaLoading, isError: metaErrored } = useQuery({
@@ -305,6 +308,12 @@ const LeagueComparePage: React.FC = () => {
   });
   const comparison = comparisonEnvelope?.data ?? null;
 
+  useEffect(() => {
+    if (comparisonEnvelope) {
+      markDataReceived();
+    }
+  }, [comparisonEnvelope, markDataReceived]);
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -314,6 +323,7 @@ const LeagueComparePage: React.FC = () => {
             Compare actual standings against the model's expected table and inspect the key deltas.
           </p>
         </div>
+        <FreshnessBadge freshness={comparisonEnvelope?.freshness} />
 
         <div className={styles.actions}>
           <Link
@@ -339,7 +349,7 @@ const LeagueComparePage: React.FC = () => {
             }
             className={styles.secondaryLink}
           >
-            Saved scenarios
+            Custom scenarios
           </Link>
         </div>
       </header>

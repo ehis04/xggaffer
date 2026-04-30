@@ -1,5 +1,12 @@
+"""
+Understat sync service for club and player enrichment data
+
+Fetches Understat team and player season payloads, normalises them, and stores club, player, and provider identity enrichment records
+"""
+
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from django.conf import settings
@@ -15,6 +22,8 @@ from apps.players.models import (
     ProviderSyncJob,
     ProviderSyncStatus,
 )
+from apps.predictions.data_collection.config.team_name_mappings import to_canonical
+from common.utils import normalise_lookup_name
 
 from .client import UnderstatClient
 from .normalisers import (
@@ -22,15 +31,39 @@ from .normalisers import (
     normalise_understat_team_player,
     normalise_understat_team_season,
 )
+from .team_slugs import canonicalise_understat_team_slug
 
+
+# ---------------------------------------------------------------------------
+# Provider constants
+# ---------------------------------------------------------------------------
 
 UNDERSTAT_PROVIDER = ExternalProvider.UNDERSTAT
+_GENERIC_CLUB_TOKENS = {
+    "fc",
+    "cf",
+    "afc",
+    "ac",
+    "sc",
+    "sv",
+    "fk",
+    "if",
+    "bk",
+}
 
 
+# ---------------------------------------------------------------------------
+# Understat sync service
+# ---------------------------------------------------------------------------
+
+# Service for syncing Understat club, player, and league season data
 class UnderstatSyncService:
+
+    # Set up the sync service with an Understat client
     def __init__(self, client: UnderstatClient | None = None) -> None:
         self.client = client or UnderstatClient()
 
+    # Sync one club season enrichment record from Understat
     def sync_understat_club_season(
         self,
         club: Club,
@@ -42,7 +75,7 @@ class UnderstatSyncService:
         self._assert_understat_enabled()
 
         resolved_external_team_id = (
-            str(external_team_id).strip()
+            canonicalise_understat_team_slug(external_team_id)
             if external_team_id
             else self._resolve_understat_club_external_id(club)
         )
@@ -118,6 +151,7 @@ class UnderstatSyncService:
             self._finish_sync_job_failure(job, exc)
             raise
 
+    # Sync all player season enrichment rows for one club season
     def sync_understat_club_players_season(
         self,
         club: Club,
@@ -129,7 +163,7 @@ class UnderstatSyncService:
         self._assert_understat_enabled()
 
         resolved_external_team_id = (
-            str(external_team_id).strip()
+            canonicalise_understat_team_slug(external_team_id)
             if external_team_id
             else self._resolve_understat_club_external_id(club)
         )
@@ -209,7 +243,7 @@ class UnderstatSyncService:
                                 competition_code=competition_code,
                             )
 
-                            # Keep team-page identity hints for robust local player matching.
+                            # Keep team-page identity hints for local player matching
                             player_metadata = dict(normalised_player.get("metadata", {}) or {})
                             if not player_metadata.get("player_name"):
                                 player_metadata["player_name"] = (
@@ -321,6 +355,7 @@ class UnderstatSyncService:
             self._finish_sync_job_failure(job, exc)
             raise
 
+    # Sync one player season enrichment record from Understat
     def sync_understat_player_season(
         self,
         player: Player,
@@ -420,6 +455,7 @@ class UnderstatSyncService:
             self._finish_sync_job_failure(job, exc)
             raise
 
+    # Create a provider sync job for an Understat operation
     def _start_sync_job(
         self,
         *,
@@ -437,6 +473,7 @@ class UnderstatSyncService:
             metadata=metadata or {},
         )
 
+    # Mark an Understat sync job as successful or partially successful
     def _finish_sync_job_success(
         self,
         job: ProviderSyncJob,
@@ -463,6 +500,7 @@ class UnderstatSyncService:
             ]
         )
 
+    # Mark an Understat sync job as failed
     def _finish_sync_job_failure(
         self,
         job: ProviderSyncJob,
@@ -481,6 +519,7 @@ class UnderstatSyncService:
             ]
         )
 
+    # Resolve the Understat external team ID mapped to a club
     def _resolve_understat_club_external_id(self, club: Club) -> str:
         identity = (
             ClubExternalIdentity.objects
@@ -497,8 +536,9 @@ class UnderstatSyncService:
         if not identity:
             raise ValueError(f"Club {club.id} has no understat team mapping.")
 
-        return str(identity.external_id)
+        return canonicalise_understat_team_slug(identity.external_id)
 
+    # Resolve the Understat external player ID mapped to a player
     def _resolve_understat_player_external_id(self, player: Player) -> str:
         identity = (
             PlayerExternalIdentity.objects
@@ -517,11 +557,12 @@ class UnderstatSyncService:
 
         return str(identity.external_id)
 
+    # Resolve an internal club from an Understat external team ID
     def _resolve_understat_club_from_external_id(
         self,
         external_team_id: str,
     ) -> Club | None:
-        external_team_id = str(external_team_id or "").strip()
+        external_team_id = canonicalise_understat_team_slug(external_team_id)
         if not external_team_id:
             return None
 
@@ -539,6 +580,7 @@ class UnderstatSyncService:
 
         return None
 
+    # Resolve an internal player from an Understat identity or deterministic club roster match
     def _resolve_understat_player_identity(
         self,
         *,
@@ -606,6 +648,7 @@ class UnderstatSyncService:
 
         return None
 
+    # Create or update an Understat club external identity
     @transaction.atomic
     def _upsert_understat_club_identity(
         self,
@@ -616,7 +659,7 @@ class UnderstatSyncService:
         competition_code: str = "",
         metadata: dict[str, Any] | None = None,
     ) -> tuple[ClubExternalIdentity, bool, bool]:
-        external_team_id = str(external_team_id or "").strip()
+        external_team_id = canonicalise_understat_team_slug(external_team_id)
         if not external_team_id:
             raise ValueError("Understat club identity requires a non-empty external team id.")
 
@@ -679,6 +722,7 @@ class UnderstatSyncService:
 
         return identity, False, updated
 
+    # Create or update an Understat player external identity
     @transaction.atomic
     def _upsert_understat_player_identity(
         self,
@@ -762,6 +806,7 @@ class UnderstatSyncService:
 
         return identity, False, updated
 
+    # Create or update a club season enrichment record
     @transaction.atomic
     def _upsert_club_season_enrichment(
         self,
@@ -800,6 +845,7 @@ class UnderstatSyncService:
         )
         return enrichment, created, not created
 
+    # Create or update a player season enrichment record
     @transaction.atomic
     def _upsert_player_season_enrichment(
         self,
@@ -845,11 +891,12 @@ class UnderstatSyncService:
         )
         return enrichment, created, not created
 
-
+    # Raise an error if Understat sync is disabled in settings
     def _assert_understat_enabled(self) -> None:
         if not getattr(settings, "UNDERSTAT_ENABLED", False):
             raise ValueError("Understat sync is disabled by configuration.")
 
+    # Format a raw player sync error for the summary
     def _format_player_error(self, raw_player: dict[str, Any], exc: Exception) -> str:
         raw_id = raw_player.get("id", "unknown")
         raw_name = (
@@ -860,6 +907,7 @@ class UnderstatSyncService:
         )
         return f"player:{raw_id}:{raw_name} {exc}"
 
+    # Format a deterministic player matching failure for the summary
     def _format_player_match_error(
         self,
         player_data: dict[str, Any],
@@ -876,6 +924,7 @@ class UnderstatSyncService:
             f"could not be matched deterministically to club {club.id}"
         )
 
+    # Sync every deterministically matched club in an Understat league season
     def sync_understat_league_season(
         self,
         league_code: str,
@@ -996,6 +1045,7 @@ class UnderstatSyncService:
             self._finish_sync_job_failure(job, exc)
             raise
 
+    # Extract team entries from an Understat league payload
     def _extract_understat_league_team_entries(
         self,
         payload: dict[str, Any],
@@ -1025,13 +1075,16 @@ class UnderstatSyncService:
                 ).strip()
             )
 
-            external_team_id = str(
+            raw_external_team_id = str(
                 value.get("id")
                 or value.get("team_id")
                 or key
                 or provider_display_name
                 or ""
             ).strip()
+
+            # Use the team slug expected by Understat team-season endpoints where possible
+            external_team_id = self._to_understat_team_slug(provider_display_name) or raw_external_team_id
 
             if not provider_display_name and not external_team_id:
                 continue
@@ -1045,7 +1098,16 @@ class UnderstatSyncService:
 
         return entries
 
+    # Convert an Understat team display name into the team slug format
+    @staticmethod
+    def _to_understat_team_slug(provider_display_name: str) -> str:
+        name = (provider_display_name or "").strip()
+        if not name:
+            return ""
+        slug = re.sub(r"[^A-Za-z0-9]+", "_", name).strip("_")
+        return slug
 
+    # Resolve an internal club from an Understat league team entry
     def _resolve_understat_league_club(
         self,
         team_entry: dict[str, str],
@@ -1073,23 +1135,95 @@ class UnderstatSyncService:
             if len(exact_name_matches) == 1:
                 return exact_name_matches[0]
 
+            canonical_name = ""
+            try:
+                canonical_name = to_canonical(provider_display_name, "understat")
+            except KeyError:
+                canonical_name = ""
+
+            deterministic_candidates = self._resolve_club_by_name_candidates(
+                [provider_display_name, canonical_name]
+            )
+            if len(deterministic_candidates) == 1:
+                return deterministic_candidates[0]
+
         return None
 
+    # Return unique deterministic club matches from normalised candidate names
+    def _resolve_club_by_name_candidates(
+        self,
+        candidate_names: list[str],
+    ) -> list[Club]:
+        candidate_keys: set[str] = set()
+
+        for name in candidate_names:
+            candidate_keys.update(self._name_lookup_keys(name))
+
+        candidate_keys.discard("")
+        if not candidate_keys:
+            return []
+
+        matches: list[Club] = []
+        seen_ids: set[int] = set()
+
+        for club in Club.objects.all():
+            club_keys = self._name_lookup_keys(club.name)
+            if not (candidate_keys & club_keys):
+                continue
+
+            if club.id not in seen_ids:
+                matches.append(club)
+                seen_ids.add(club.id)
+
+            if len(matches) > 1:
+                break
+
+        return matches
+
+    # Build name lookup keys for deterministic club matching
+    @classmethod
+    def _name_lookup_keys(cls, value: str | None) -> set[str]:
+        base = cls._normalise_name(value)
+        if not base:
+            return set()
+
+        keys = {base}
+        stripped = cls._strip_generic_club_tokens(base)
+        if stripped:
+            keys.add(stripped)
+        return keys
+
+    # Remove generic club suffix or prefix tokens from a normalised name
+    @classmethod
+    def _strip_generic_club_tokens(cls, value: str) -> str:
+        tokens = [token for token in value.split() if token not in _GENERIC_CLUB_TOKENS]
+        return " ".join(tokens)
+
+    # Normalise a name for deterministic lookup comparisons
     @staticmethod
     def _normalise_name(value: str | None) -> str:
-        return " ".join((value or "").strip().casefold().split())
+        return normalise_lookup_name(value)
 
 
+# ---------------------------------------------------------------------------
+# Convenience module-level sync wrappers
+# ---------------------------------------------------------------------------
+
+# Sync one club season through a new Understat sync service instance
 def sync_understat_club_season(*args, **kwargs):
     return UnderstatSyncService().sync_understat_club_season(*args, **kwargs)
 
 
+# Sync one club's player season records through a new Understat sync service instance
 def sync_understat_club_players_season(*args, **kwargs):
     return UnderstatSyncService().sync_understat_club_players_season(*args, **kwargs)
 
 
+# Sync one player season through a new Understat sync service instance
 def sync_understat_player_season(*args, **kwargs):
     return UnderstatSyncService().sync_understat_player_season(*args, **kwargs)
 
+
+# Sync one league season through a new Understat sync service instance
 def sync_understat_league_season(*args, **kwargs):
     return UnderstatSyncService().sync_understat_league_season(*args, **kwargs)

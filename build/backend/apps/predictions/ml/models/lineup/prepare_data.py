@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import logging
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from .config import (
     LINEUP_DIR,
     MATCHES_CSV,
     POSITION_CATEGORY_MAP,
+    RAW_DIR,
     TARGET,
 )
 from .match_index import load_match_index
@@ -20,6 +22,32 @@ from .match_index import load_match_index
 logger = logging.getLogger(__name__)
 
 ELO_CSV = DATA_DIR / 'processed' / 'elo_ratings.csv'
+
+
+def _build_team_id_name_lookup() -> dict[int, str]:
+    """Build {team_id: team_name} from Understat raw teams CSVs."""
+    lookup: dict[int, str] = {}
+    understat_dir = RAW_DIR / 'understat'
+    if not understat_dir.exists():
+        return lookup
+    for season_dir in understat_dir.iterdir():
+        if not season_dir.is_dir():
+            continue
+        for path in season_dir.glob('understat_teams_*_raw.csv'):
+            try:
+                df = pd.read_csv(path)
+                for _, row in df.iterrows():
+                    try:
+                        team_id = int(row['source_team_id'])
+                        d = ast.literal_eval(str(row['team_info']))
+                        name = d.get('title', '')
+                        if name and team_id not in lookup:
+                            lookup[team_id] = name
+                    except Exception:
+                        continue
+            except Exception:
+                continue
+    return lookup
 
 EARLY_PHASE_END = 10
 LATE_PHASE_START = 29
@@ -120,25 +148,17 @@ def _attach_match_context_vectorized(
 
     match_info = matches_df[['match_id', 'home_team', 'away_team']].copy()
 
-    first_starter_per_side = (
-        merged[merged['started']]
-        .sort_values('match_id')
-        .drop_duplicates(subset=['match_id', 'team_id'])
-        [['match_id', 'team_id']]
-    )
+    # Build a team_id → team_name mapping from Understat raw data so we can
+    # match each numeric team_id to the string name that appears in matches_df.
+    # This avoids the previous "first team in DataFrame = home" heuristic which
+    # was wrong whenever the home team had a higher team_id than the away team.
+    team_id_to_name = _build_team_id_name_lookup()
 
-    home_team_ids = (
-        first_starter_per_side
-        .merge(match_info[['match_id']], on='match_id')
-        .groupby('match_id')['team_id']
-        .first()
-        .rename('home_team_id')
-    )
-
-    merged = merged.merge(home_team_ids, on='match_id', how='left')
-    merged['is_home'] = merged['team_id'] == merged['home_team_id']
+    merged['_team_name_from_id'] = merged['team_id'].map(team_id_to_name)
 
     merged = merged.merge(match_info, on='match_id', how='left')
+
+    merged['is_home'] = merged['_team_name_from_id'] == merged['home_team']
 
     merged['team_name'] = np.where(
         merged['is_home'],
@@ -151,7 +171,7 @@ def _attach_match_context_vectorized(
         merged['home_team'],
     )
 
-    merged.drop(columns=['home_team', 'away_team', 'home_team_id'], inplace=True)
+    merged.drop(columns=['home_team', 'away_team', '_team_name_from_id'], inplace=True)
 
     return merged
 

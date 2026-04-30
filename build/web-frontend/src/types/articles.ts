@@ -47,8 +47,9 @@ export interface ArticleListItem {
     is_featured: boolean;
     // Per-request user context fields
     user_rating: number | null;
-    user_feedback: 'LIKE' | 'DISLIKE' | null;
+    user_feedback: 'like' | 'dislike' | null;
     is_read: boolean;
+    is_favorited: boolean;
 }
 
 export interface ArticleDetail extends ArticleListItem {
@@ -67,18 +68,43 @@ export interface ArticleRating {
 }
 
 export interface UserArticleProfile {
-    articles_read: number;
-    last_active: string | null;
-    quality_threshold: number;
+    preferred_quality_threshold: number;
     min_read_time: number;
     max_read_time: number;
     preferred_topics: ArticleTopic[];
+    disliked_topics: ArticleTopic[];
     preferred_authors: ArticleAuthor[];
+    disliked_authors: ArticleAuthor[];
     preferred_sites: ArticleSite[];
+    disliked_sites: ArticleSite[];
+    liked_topics: ArticleTopic[];
+    inferred_disliked_topics: ArticleTopic[];
+    liked_authors: ArticleAuthor[];
+    inferred_disliked_authors: ArticleAuthor[];
+    liked_sites: ArticleSite[];
+    inferred_disliked_sites: ArticleSite[];
+    articles_liked: number;
+    articles_disliked: number;
+    articles_favorited: number;
     daily_recommendation_count: number;
     enable_auto_refresh: boolean;
-    last_recommendation_refresh: string | null;
 }
+
+export interface UserArticleProfileUpdatePayload {
+    preferred_topic_ids?: number[];
+    disliked_topic_ids?: number[];
+    preferred_author_ids?: number[];
+    disliked_author_ids?: number[];
+    preferred_site_ids?: number[];
+    disliked_site_ids?: number[];
+    preferred_quality_threshold?: number;
+    min_read_time?: number;
+    max_read_time?: number;
+    daily_recommendation_count?: number;
+    enable_auto_refresh?: boolean;
+}
+
+export type ArticleSortOption = 'relevance' | 'recent' | 'popularity';
 
 export interface ArticleFeedParams {
     page?: number;
@@ -87,4 +113,5 @@ export interface ArticleFeedParams {
     site?: number;
     author?: number;
     min_quality?: number;
+    sort?: ArticleSortOption;
 }

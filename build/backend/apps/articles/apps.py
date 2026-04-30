@@ -1,3 +1,7 @@
+"""
+Application configuration for the articles app
+"""
+
 from django.apps import AppConfig
 
 

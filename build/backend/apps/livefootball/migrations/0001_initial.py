@@ -146,7 +146,7 @@ class Migration(migrations.Migration):
             options={
                 'ordering': ['name', 'provider', 'id'],
                 'indexes': [models.Index(fields=['provider', 'name'], name='lf_comp_provider_name_idx'), models.Index(fields=['provider', 'code'], name='lf_comp_provider_code_idx'), models.Index(fields=['provider', 'current_season_label'], name='lf_comp_provider_season_idx')],
-                'constraints': [models.UniqueConstraint(fields=('provider', 'external_id'), name='lf_comp_provider_ext_uq'), models.UniqueConstraint(condition=models.Q(('code', ''), _negated=True), fields=('provider', 'code'), name='lf_comp_provider_code_uq')],
+                'constraints': [models.UniqueConstraint(fields=('provider', 'external_id'), name='lf_comp_provider_ext_uq'), models.UniqueConstraint(fields=('provider', 'code'), name='lf_comp_provider_code_uq')],
             },
         ),
         migrations.CreateModel(

@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from apps.clubs.models import Club, ClubExternalIdentity, ClubPlayer, ProClubProviderLink
@@ -104,9 +105,15 @@ PRO_CLUBS: list[dict] = [
     },
 ]
 
-# Season labels Understat uses — just the start year of the season.
-# 2014 = 2014/15, 2024 = 2024/25 (current, may be partial).
-ALL_SEASONS = [str(y) for y in range(2014, 2025)]
+# Season labels Understat uses: the start year of the season.
+# 2014 = 2014/15, 2025 = 2025/26.
+def _current_understat_season_start() -> int:
+    today = timezone.now().date()
+    return today.year if today.month >= 7 else today.year - 1
+
+
+CURRENT_UNDERSTAT_SEASON = _current_understat_season_start()
+ALL_SEASONS = [str(y) for y in range(2014, CURRENT_UNDERSTAT_SEASON + 1)]
 
 # Short delay between Understat calls to avoid hammering their server.
 UNDERSTAT_CALL_DELAY_SECONDS = 1.5
@@ -143,7 +150,8 @@ class Command(BaseCommand):
     help = (
         "Seed one professional club per top-5 league with squad data from "
         "football-data.org and historical player/team enrichment from Understat "
-        "(seasons 2014/15 – 2024/25)."
+        f"(seasons 2014/15 through {CURRENT_UNDERSTAT_SEASON}/"
+        f"{CURRENT_UNDERSTAT_SEASON + 1})."
     )
 
     def add_arguments(self, parser):
@@ -171,7 +179,8 @@ class Command(BaseCommand):
             default=None,
             help=(
                 "Understat season labels to sync (start year). "
-                "Defaults to 2014–2024. Example: --seasons 2023 2024"
+                f"Defaults to 2014–{CURRENT_UNDERSTAT_SEASON}. "
+                f"Example: --seasons {CURRENT_UNDERSTAT_SEASON}"
             ),
         )
         parser.add_argument(
@@ -554,7 +563,7 @@ class Command(BaseCommand):
                                 },
                             )
 
-                        _, was_created = PlayerSeasonEnrichment.objects.get_or_create(
+                        _, was_created = PlayerSeasonEnrichment.objects.update_or_create(
                             player=player,
                             provider=ExternalProvider.SOFASCORE,
                             season_label=season_label,
@@ -579,6 +588,12 @@ class Command(BaseCommand):
         source_player_id: str,
         raw_name: str,
     ) -> Player | None:
+        active_club_player = self._find_club_player_by_name(
+            club,
+            raw_name,
+            active_only=True,
+        )
+
         # 1. Already has a Sofascore identity.
         if source_player_id:
             identity = (
@@ -588,25 +603,89 @@ class Command(BaseCommand):
                 .first()
             )
             if identity:
+                identity_has_active_link = ClubPlayer.objects.filter(
+                    club=club,
+                    player=identity.player,
+                    is_active=True,
+                ).exists()
+                if (
+                    not identity_has_active_link
+                    and active_club_player is not None
+                    and active_club_player.player_id
+                    and active_club_player.player_id != identity.player_id
+                ):
+                    self._move_identity_to_player(identity, active_club_player.player)
+                    return active_club_player.player
                 return identity.player
 
         # 2. Name match against ClubPlayer records for this club.
+        if active_club_player is not None and active_club_player.player_id:
+            return active_club_player.player
+
+        club_player = self._find_club_player_by_name(club, raw_name)
+        if club_player is not None and club_player.player_id:
+            return club_player.player
+
+        return None
+
+    def _find_club_player_by_name(
+        self,
+        club: Club,
+        raw_name: str,
+        *,
+        active_only: bool = False,
+    ) -> ClubPlayer | None:
         normalised = self._normalise_name(raw_name)
         if not normalised:
             return None
 
-        for cp in ClubPlayer.objects.filter(club=club).select_related("player"):
+        queryset = ClubPlayer.objects.filter(club=club).select_related("player")
+        if active_only:
+            queryset = queryset.filter(is_active=True)
+
+        matches: list[ClubPlayer] = []
+        for cp in queryset:
             possible = {
                 self._normalise_name(cp.display_name),
                 self._normalise_name(f"{cp.first_name} {cp.last_name}"),
-                self._normalise_name(cp.player.full_name if hasattr(cp.player, 'full_name') else ""),
-                self._normalise_name(cp.player.display_name),
             }
+            if cp.player_id:
+                possible.update({
+                    self._normalise_name(cp.player.full_name),
+                    self._normalise_name(cp.player.display_name),
+                })
             possible.discard("")
             if normalised in possible:
-                return cp.player
+                matches.append(cp)
 
-        return None
+        if not matches:
+            return None
+
+        matches.sort(
+            key=lambda cp: (
+                bool(cp.player_id),
+                bool(cp.is_active),
+                cp.squad_number is not None,
+                -(cp.squad_number or 9999),
+                -cp.id,
+            ),
+            reverse=True,
+        )
+        return matches[0]
+
+    @staticmethod
+    def _move_identity_to_player(identity: PlayerExternalIdentity, player: Player) -> None:
+        if identity.player_id == player.id:
+            return
+
+        identity.player = player
+        identity.last_synced_at = timezone.now()
+        identity.save(update_fields=["player", "last_synced_at", "updated_at"])
+        PlayerExternalIdentity.objects.filter(
+            player=player,
+            provider=identity.provider,
+            is_primary=True,
+        ).exclude(pk=identity.pk).update(is_primary=False)
 
     @staticmethod
     def _build_sofascore_enrichment_defaults(club: Club, row: dict) -> dict:
@@ -641,6 +720,7 @@ class Command(BaseCommand):
 
         return {
             "club": club,
+            "external_player_id": str(row.get("source_player_id") or "").strip(),
             "matches_played": _int("appearances") or _int("games"),
             "minutes_played": _int("minutes_played") or _int("minutes"),
             "goals": _int("goals"),
@@ -706,12 +786,30 @@ class Command(BaseCommand):
 
                     if existing_identity:
                         player = existing_identity.player
+                        active_club_player = self._find_club_player_by_name(
+                            club,
+                            raw_name,
+                            active_only=True,
+                        )
+                        identity_has_active_link = ClubPlayer.objects.filter(
+                            club=club,
+                            player=player,
+                            is_active=True,
+                        ).exists()
+                        if (
+                            not identity_has_active_link
+                            and active_club_player is not None
+                            and active_club_player.player_id
+                            and active_club_player.player_id != player.id
+                        ):
+                            player = active_club_player.player
+                            self._move_identity_to_player(existing_identity, player)
                         self._ensure_club_player_link(club, player, raw)
                         pre_linked += 1
                         continue
 
                     # 2. No Understat identity yet — try to find a canonical Player by name.
-                    player = self._find_player_by_name(raw_name)
+                    player = self._find_player_by_name(raw_name, club=club)
 
                     if player is None:
                         # 3. Nobody matched — create a new canonical Player from Understat data.
@@ -741,7 +839,7 @@ class Command(BaseCommand):
 
         return pre_created, pre_linked
 
-    def _find_player_by_name(self, raw_name: str) -> Player | None:
+    def _find_player_by_name(self, raw_name: str, *, club: Club | None = None) -> Player | None:
         """
         Try to find an existing canonical Player whose full_name or display_name
         normalises to the same value as raw_name.
@@ -750,13 +848,33 @@ class Command(BaseCommand):
         if not normalised_target:
             return None
 
-        # Search only among players whose normalised full_name starts with the
-        # same first token — avoids a full-table scan.
-        first_token = normalised_target.split()[0]
+        if club is not None:
+            club_player = self._find_club_player_by_name(
+                club,
+                raw_name,
+                active_only=True,
+            )
+            if club_player is not None and club_player.player_id:
+                return club_player.player
 
-        candidates = Player.objects.filter(
-            last_name__icontains=first_token.split()[-1] if first_token else ""
-        ).select_related()[:200]
+        tokens = normalised_target.split()
+        first_token = tokens[0]
+        last_token = tokens[-1]
+
+        candidate_filter = (
+            Q(first_name__icontains=first_token)
+            | Q(last_name__icontains=last_token)
+            | Q(display_name__icontains=first_token)
+            | Q(display_name__icontains=last_token)
+        )
+        if len(tokens) > 1:
+            candidate_filter |= (
+                Q(first_name__icontains=first_token)
+                & Q(last_name__icontains=last_token)
+            )
+
+        candidates = Player.objects.filter(candidate_filter).order_by("id")[:500]
+        matches: list[Player] = []
 
         for player in candidates:
             possible = {
@@ -765,7 +883,18 @@ class Command(BaseCommand):
             }
             possible.discard("")
             if normalised_target in possible:
-                return player
+                matches.append(player)
+
+        if not matches:
+            return None
+
+        unique = {player.id: player for player in matches}
+        if len(unique) == 1:
+            return next(iter(unique.values()))
+
+        active_matches = [player for player in unique.values() if player.is_active]
+        if len(active_matches) == 1:
+            return active_matches[0]
 
         return None
 

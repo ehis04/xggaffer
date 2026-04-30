@@ -1,11 +1,11 @@
 from rest_framework import serializers
 
-
+# Validates a user's selected option for a scenario item
 class SubmitScenarioSerializer(serializers.Serializer):
     item_id     = serializers.IntegerField()
     selected_id = serializers.CharField(max_length=10)
 
-
+# Validates a user's true or false answers for a drill item
 class SubmitDrillSerializer(serializers.Serializer):
     item_id = serializers.IntegerField()
     answers = serializers.DictField(

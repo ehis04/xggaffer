@@ -12,6 +12,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     path('internal/', include('apps.sync_pipeline.urls')),
+    
+    path('api/internal/', include('apps.internal.urls')),
 
     # Authentication and user management
     path('api/auth/', include('rest_framework.urls')),
@@ -24,6 +26,7 @@ urlpatterns = [
     path('api/players/', include('apps.players.urls')),
 
     # Predictions and football data
+    path('predictions/', include('apps.predictions.urls')),
     path('api/predictions/', include('apps.predictions.urls')),
     path('api/playerdata/', include('apps.playerdata.urls')),
     path('api/livefootball/', include('apps.livefootball.urls')),

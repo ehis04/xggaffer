@@ -49,7 +49,6 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name='publishedsnapshot',
             constraint=models.UniqueConstraint(
-                condition=models.Q(is_active=True),
                 fields=('surface',),
                 name='uniq_active_snapshot_per_surface',
             ),

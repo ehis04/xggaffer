@@ -1,5 +1,5 @@
 from django.db import models
-from apps.users.models import User, UserProfile
+from apps.users.models import User
 from django.db.models import Q, F
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -9,20 +9,24 @@ from django.contrib.contenttypes.models import ContentType
 
 
 #& Choices
+# visibility options for posts
 class Visibility(models.TextChoices):
     PUBLIC = "PB", "Public"
     FOLLOWERS = "F", "Followers"
     PRIVATE = "PR", "Private"
 
+# moderation choices for posts
 class ModerationStatus(models.TextChoices):
     OK = "OK", "Ok"
     UNDER_REVIEW = "UR", "Under Review"
     REMOVED = "R", "Removed"
-    
+
+# content type choics
 class TargetType(models.TextChoices):
     POST = "P", "Post"
     COMMENT = "C", "Comment"
 
+# the different notification types a user can receive
 class NotificationType(models.TextChoices):
     FOLLOW_REQUEST = "FR", "Follow Request"
     FOLLOW_ACCEPTED = "FA", "Follow Accepted"
@@ -34,6 +38,7 @@ class NotificationType(models.TextChoices):
     REPOST = "R", "Repost"
 
 #& Functions
+# limits generic relations to posts comments, and follow requests
 def function_targets():
     return (
         models.Q(app_label="community", model="post")
@@ -42,6 +47,8 @@ def function_targets():
     )
 
 #& Community Models
+# stores a community post created by a user
+
 class Post(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="posts", db_index=True)
     text_body = models.TextField(blank=True, default="")
@@ -52,17 +59,18 @@ class Post(models.Model):
     visibility = models.CharField(max_length=10, choices=Visibility.choices, default=Visibility.PUBLIC)
     moderation_status = models.CharField(max_length=15, choices=ModerationStatus.choices, default=ModerationStatus.OK)
     
-    # Include workout_plan and meal_plan once they are created
     # Include images once cloud storage is set up
     
     def __str__(self):
         return f"Post {self.id} Created by {self.author.username}"
 
+# tracks that a user has viewed a specific post
 class PostView(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="post_views", db_index=True)
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="post_views", db_index=True)
     viewed_at = models.DateTimeField(auto_now_add=True)
     
+ # prevents duplicate post view records for the same user and post
     class Meta:
         verbose_name = _("Post View")
         verbose_name_plural = _("Post Views")
@@ -81,9 +89,11 @@ class PostView(models.Model):
     def __str__(self):
         return f"{self.user.username} viewed post {self.post.id}"
 
+    # returns the detail URL for this post view record
     def get_absolute_url(self):
         return reverse("PostView_detail", kwargs={"pk": self.pk})
 
+# stores comments and replies attached to posts
 class Comment(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments", db_index=True)
     post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True, blank=True, related_name="comments", db_index=True)
@@ -112,9 +122,11 @@ class Comment(models.Model):
     def get_absolute_url(self):
         return reverse("comment_detail", kwargs={"pk": self.pk})
     
+    # checks whether this comment is a reply to another comment
     def is_reply(self) -> bool:
         return self.parent_id is not None
     
+    # validates that comments belong to a post and replies stay attached to the same post as their parent
     def clean(self):
         if self.parent_id is None and self.post_id is None:
             raise ValidationError(_("Comment must belong to a post."))
@@ -133,6 +145,7 @@ class Comment(models.Model):
         self.full_clean()
         return super().save(*args, **kwargs)
 
+# stores a like made by a user on a post or comment using a generic relation
 class Like(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="likes", db_index=True)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, limit_choices_to=function_targets,)
@@ -162,6 +175,7 @@ class Like(models.Model):
     def get_absolute_url(self):
         return reverse("like_detail", kwargs={"pk": self.pk})
 
+# stores a hashtag that can be attached to posts
 class HashTag(models.Model):
 
     body = models.CharField(max_length=100)
@@ -183,6 +197,7 @@ class HashTag(models.Model):
     def get_absolute_url(self):
         return reverse("hashTag_detail", kwargs={"pk": self.pk})
 
+# links a post to a hashtag
 class PostTag(models.Model):
 
     post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True, blank=True, related_name="post_tags", db_index=True)
@@ -204,7 +219,9 @@ class PostTag(models.Model):
 
     def get_absolute_url(self):
         return reverse("postTag_detail", kwargs={"pk": self.pk})
-    
+
+# stores a user mention made inside a post or comment
+   
 class Mention(models.Model):
     user_mentioned = models.ForeignKey(User, on_delete=models.CASCADE, related_name="mention", db_index=True)
     post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True, blank=True, related_name="mention", db_index=True)
@@ -223,6 +240,7 @@ class Mention(models.Model):
     def get_absolute_url(self):
         return reverse("mention_detail", kwargs={"pk": self.pk})
 
+# stores a notification sent to a user about an action triggered by another user
 class Notification(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notification", db_index=True)
@@ -259,6 +277,7 @@ class Notification(models.Model):
         return reverse("notification_detail", kwargs={"pk": self.pk})
 
 
+# stores that one user has blocked another user
 class Block(models.Model):
 
     blocker = models.ForeignKey(User, on_delete=models.CASCADE, related_name="block_initiated", db_index=True)
@@ -270,7 +289,7 @@ class Block(models.Model):
         verbose_name_plural = _("Blocks")
         constraints = [
             models.UniqueConstraint(fields=["blocker", "blocked_user"], name="uniq_blocker_blocked"),
-            models.CheckConstraint(condition=~Q(blocker=F("blocked_user")), name="no_self_block"),
+            models.CheckConstraint(check=~Q(blocker=F("blocked_user")), name="no_self_block"),
         ]
         indexes = [models.Index(fields=["blocker", "blocked_user"])]
 
@@ -280,11 +299,7 @@ class Block(models.Model):
     def get_absolute_url(self):
         return reverse("block_detail", kwargs={"pk": self.pk})
 
-#! Things to add
-#^ Follow
-
-#& User Interest Model
-
+# stores the overall interest profile used to personalise community content for a user
 class UserInterestProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='interest_profile')
     last_updated = models.DateTimeField(auto_now=True)
@@ -292,6 +307,7 @@ class UserInterestProfile(models.Model):
     def __str__(self):
         return f"{self.user.username}'s Interest Profile"
 
+# stores how interested a user is in a specific hashtag
 class UserHashtagInterest(models.Model):
     profile = models.ForeignKey(UserInterestProfile, on_delete=models.CASCADE, related_name='hashtag_interests')
     hashtag = models.ForeignKey(HashTag, on_delete=models.CASCADE)
@@ -305,6 +321,7 @@ class UserHashtagInterest(models.Model):
     def __str__(self):
         return f"{self.profile.user.username} -> #{self.hashtag.body} ({self.score})"
 
+# stores how interested a user is in content from a specific author
 class UserAuthorInterest(models.Model):
     profile = models.ForeignKey(UserInterestProfile, on_delete=models.CASCADE, related_name='author_interests')
     author = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -318,6 +335,7 @@ class UserAuthorInterest(models.Model):
     def __str__(self):
         return f"{self.profile.user.username} -> @{self.author.username} ({self.score})"
 
+# stores the calculated interest score between a user and a specific post
 class PostUserInterestScore(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True)
     post = models.ForeignKey(Post, on_delete=models.CASCADE, db_index=True)

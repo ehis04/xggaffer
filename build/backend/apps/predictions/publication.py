@@ -7,6 +7,7 @@ from django.db import transaction
 from apps.predictions.models import InferenceSnapshotRecord, ModelArtefactRecord
 from apps.sync_pipeline.services import publish_snapshot
 from common.constants import ProviderName
+from common.cache_keys import clear_surface_cache
 from common.utils import utcnow
 
 _logger = logging.getLogger(__name__)
@@ -76,4 +77,13 @@ def run_predictions_publication() -> None:
         source_max_fetched_at=utcnow(),
         metadata={'algorithms': KNOWN_ALGORITHMS, 'warnings': warnings},
     )
-    _logger.info('Predictions publication promoted: version=%s warnings=%s', snapshot.version, warnings)
+    cleared = {
+        surface: clear_surface_cache(surface)
+        for surface in ('predictions', 'odds', 'chat')
+    }
+    _logger.info(
+        'Predictions publication promoted: version=%s warnings=%s cleared=%s',
+        snapshot.version,
+        warnings,
+        cleared,
+    )

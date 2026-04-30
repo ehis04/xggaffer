@@ -1,0 +1,129 @@
+.wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.chartArea {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-width: 360px;
+}
+
+.refLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: flex-start;
+  pointer-events: none;
+}
+
+.refLineModel {
+  border-top: none;
+  background-image: repeating-linear-gradient(to right,
+      rgba(52, 211, 153, 0.9) 0,
+      rgba(52, 211, 153, 0.9) 9px,
+      transparent 9px,
+      transparent 14px);
+  background-size: 100% 2px;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+}
+
+.refLineMarket {
+  border-top: none;
+  background-image: repeating-linear-gradient(to right,
+      rgba(251, 191, 36, 0.95) 0,
+      rgba(251, 191, 36, 0.95) 2px,
+      transparent 2px,
+      transparent 8px);
+  background-size: 100% 2px;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+}
+
+.refLabel {
+  font-size: 0.63rem;
+  color: var(--tertiary-text);
+  background: rgba(7, 43, 35, 0.92);
+  padding: 0.02rem 0.24rem;
+  border-radius: 0.2rem;
+  white-space: nowrap;
+  transform: translateY(-50%);
+}
+
+.refLabelModel {
+  color: #6ee7b7;
+}
+
+.refLabelMarket {
+  color: #fcd34d;
+}
+
+.refLabelLeft {
+  margin-left: 0.35rem;
+}
+
+.refLabelRight {
+  margin-left: auto;
+  margin-right: 0.35rem;
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  padding: 0 0.5rem;
+}
+
+.barGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.accuracyLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--primary-text);
+}
+
+.barTrack {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.25rem 0.25rem 0 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+
+.bar {
+  width: 100%;
+  border-radius: 0.25rem 0.25rem 0 0;
+  transition: height 0.3s ease;
+}
+
+.barAbove {
+  background: rgba(74, 222, 128, 0.55);
+}
+
+.barBelow {
+  background: rgba(148, 163, 184, 0.4);
+}
+
+.sampleSize {
+  font-size: 0.62rem;
+  color: var(--tertiary-text);
+}
+
+.bucketLabel {
+  font-size: 0.65rem;
+  color: var(--secondary-text);
+  text-align: center;
+  white-space: nowrap;
+}

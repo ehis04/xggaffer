@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import CompetitionSelector from '../../components/livefootball/CompetitionSelector';
 import FixturesPanel from '../../components/livefootball/FixturesPanel';
 import LeagueTable from '../../components/livefootball/LeagueTable';
@@ -206,6 +207,13 @@ const LiveFootballPage: React.FC = () => {
           <p className={styles.subtitle}>
             Browse league tables, recent and upcoming fixtures, and top scorers.
           </p>
+          <nav className={styles.navTabs} aria-label="Live football data views">
+            <Link className={styles.navTab} to="/livefootball/browse">Browse</Link>
+            <Link className={styles.navTab} to="/livefootball/matches">Matches</Link>
+            <Link className={styles.navTab} to="/livefootball/clubs">Clubs</Link>
+            <Link className={styles.navTab} to="/livefootball/players">Players</Link>
+            <Link className={styles.navTab} to="/livefootball/leagues">League Tools</Link>
+          </nav>
         </div>
 
         <CompetitionSelector

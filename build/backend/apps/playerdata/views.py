@@ -1,3 +1,9 @@
+"""
+API views for player data summaries, overviews, and comparisons
+
+Parses request filters, calls player data service functions, validates responses, and returns standard player data envelopes
+"""
+
 import inspect
 
 from django.core.exceptions import ImproperlyConfigured
@@ -20,6 +26,11 @@ from .serializers import (
 )
 
 
+# ---------------------------------------------------------------------------
+# Query parameter helpers
+# ---------------------------------------------------------------------------
+
+# Return a cleaned string query parameter or None
 def _get_query_param(request, key: str) -> str | None:
     value = request.query_params.get(key)
     if value is None:
@@ -29,6 +40,7 @@ def _get_query_param(request, key: str) -> str | None:
     return value or None
 
 
+# Return an integer query parameter or raise a validation error
 def _get_int_query_param(request, key: str) -> int | None:
     value = _get_query_param(request, key)
     if value is None:
@@ -40,6 +52,7 @@ def _get_int_query_param(request, key: str) -> int | None:
         raise ValidationError({key: "Must be an integer."}) from exc
 
 
+# Return a boolean query parameter or raise a validation error
 def _get_bool_query_param(request, key: str) -> bool | None:
     value = _get_query_param(request, key)
     if value is None:
@@ -54,6 +67,7 @@ def _get_bool_query_param(request, key: str) -> bool | None:
     raise ValidationError({key: "Must be a boolean."})
 
 
+# Build the shared player data filters from request query parameters
 def _get_common_filters(request) -> dict:
     return {
         "provider": _get_query_param(request, "provider"),
@@ -64,6 +78,11 @@ def _get_common_filters(request) -> dict:
     }
 
 
+# ---------------------------------------------------------------------------
+# Service call helpers
+# ---------------------------------------------------------------------------
+
+# Remove unsupported keyword arguments before calling a service function
 def _filter_kwargs_for_callable(func, candidate_kwargs: dict) -> dict:
     signature = inspect.signature(func)
     accepts_kwargs = any(
@@ -81,6 +100,7 @@ def _filter_kwargs_for_callable(func, candidate_kwargs: dict) -> dict:
     return filtered_kwargs
 
 
+# Try several possible service function names and return the first matching result
 def _try_call(module, function_names: list[str], **candidate_kwargs):
     last_type_error = None
 
@@ -106,10 +126,16 @@ def _try_call(module, function_names: list[str], **candidate_kwargs):
     return None
 
 
+# Convert service validation failures into DRF validation errors
 def _raise_service_validation_error(exc: Exception) -> None:
     raise ValidationError({"detail": str(exc)}) from exc
 
 
+# ---------------------------------------------------------------------------
+# Base player data view
+# ---------------------------------------------------------------------------
+
+# Base API view with shared service lookup and payload building helpers
 class BasePlayerDataAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -169,6 +195,7 @@ class BasePlayerDataAPIView(APIView):
         "build_players_overview_comparison",
     ]
 
+    # Build the player summary payload from summaries or enrichment fallback data
     def get_player_summary_payload(self, player_id: int, filters: dict) -> dict:
         try:
             summary_payload = _try_call(
@@ -205,6 +232,7 @@ class BasePlayerDataAPIView(APIView):
         except ValueError as exc:
             _raise_service_validation_error(exc)
 
+    # Build the club summary payload from summaries or enrichment fallback data
     def get_club_summary_payload(self, club_id: int, filters: dict) -> dict:
         try:
             summary_payload = _try_call(
@@ -241,6 +269,7 @@ class BasePlayerDataAPIView(APIView):
         except ValueError as exc:
             _raise_service_validation_error(exc)
 
+    # Build a two-player comparison payload
     def get_comparison_payload(
         self, player_a_id: int, player_b_id: int, filters: dict
     ) -> dict:
@@ -262,6 +291,7 @@ class BasePlayerDataAPIView(APIView):
 
         return payload
 
+    # Build an enriched player list payload from query filters
     def get_enriched_player_list_payload(self, request, filters: dict):
         list_filters = {
             **filters,
@@ -291,6 +321,7 @@ class BasePlayerDataAPIView(APIView):
 
         return payload
 
+    # Build a merged player overview payload
     def get_player_overview_payload(self, player_id: int, filters: dict) -> dict:
         try:
             payload = _try_call(
@@ -309,6 +340,7 @@ class BasePlayerDataAPIView(APIView):
 
         return payload
 
+    # Build a merged two-player overview comparison payload
     def get_player_overview_comparison_payload(
         self, player_a_id: int, player_b_id: int, filters: dict
     ) -> dict:
@@ -331,7 +363,14 @@ class BasePlayerDataAPIView(APIView):
         return payload
 
 
+# ---------------------------------------------------------------------------
+# Summary views
+# ---------------------------------------------------------------------------
+
+# API view for one player's season summary
 class PlayerSeasonSummaryView(BasePlayerDataAPIView):
+
+    # Return one player season summary
     def get(self, request, player_id: int):
         filters = _get_common_filters(request)
         try:
@@ -342,7 +381,10 @@ class PlayerSeasonSummaryView(BasePlayerDataAPIView):
         return Response(build_playerdata_envelope(serializer.data))
 
 
+# API view for one club's season summary
 class ClubSeasonSummaryView(BasePlayerDataAPIView):
+
+    # Return one club season summary
     def get(self, request, club_id: int):
         filters = _get_common_filters(request)
         payload = self.get_club_summary_payload(club_id=club_id, filters=filters)
@@ -350,7 +392,14 @@ class ClubSeasonSummaryView(BasePlayerDataAPIView):
         return Response(build_playerdata_envelope(serializer.data))
 
 
+# ---------------------------------------------------------------------------
+# Comparison views
+# ---------------------------------------------------------------------------
+
+# API view for comparing two player season summaries
 class PlayerComparisonView(BasePlayerDataAPIView):
+
+    # Return a two-player comparison
     def get(self, request):
         player_a_id = _get_int_query_param(request, "player_a_id")
         player_b_id = _get_int_query_param(request, "player_b_id")
@@ -374,40 +423,10 @@ class PlayerComparisonView(BasePlayerDataAPIView):
         return Response(build_playerdata_envelope(serializer.data))
 
 
-class EnrichedPlayerListView(BasePlayerDataAPIView):
-    def get(self, request):
-        filters = _get_common_filters(request)
-        payload = self.get_enriched_player_list_payload(request=request, filters=filters)
-
-        if isinstance(payload, dict):
-            raw_results = payload.get("results", payload.get("items", []))
-            count = payload.get("count", len(raw_results))
-        else:
-            raw_results = payload
-            count = len(raw_results)
-
-        serializer = EnrichedPlayerListItemSerializer(raw_results, many=True)
-        return Response(
-            build_playerdata_envelope({
-                "count": count,
-                "results": serializer.data,
-            })
-        )
-
-
-class PlayerOverviewView(BasePlayerDataAPIView):
-    def get(self, request, player_id: int):
-        filters = {
-            **_get_common_filters(request),
-            "club_id": _get_int_query_param(request, "club_id"),
-            "active_only": _get_bool_query_param(request, "active_only"),
-        }
-        payload = self.get_player_overview_payload(player_id=player_id, filters=filters)
-        serializer = PlayerOverviewSerializer(payload)
-        return Response(build_playerdata_envelope(serializer.data))
-
-
+# API view for comparing two merged player overviews
 class PlayerOverviewComparisonView(BasePlayerDataAPIView):
+
+    # Return a two-player overview comparison
     def get(self, request):
         player_a_id = _get_int_query_param(request, "player_a_id")
         player_b_id = _get_int_query_param(request, "player_b_id")
@@ -434,4 +453,47 @@ class PlayerOverviewComparisonView(BasePlayerDataAPIView):
             filters=filters,
         )
         serializer = PlayerOverviewComparisonSerializer(payload)
+        return Response(build_playerdata_envelope(serializer.data))
+
+
+# ---------------------------------------------------------------------------
+# List and overview views
+# ---------------------------------------------------------------------------
+
+# API view for listing enriched players
+class EnrichedPlayerListView(BasePlayerDataAPIView):
+
+    # Return a filtered list of enriched players
+    def get(self, request):
+        filters = _get_common_filters(request)
+        payload = self.get_enriched_player_list_payload(request=request, filters=filters)
+
+        if isinstance(payload, dict):
+            raw_results = payload.get("results", payload.get("items", []))
+            count = payload.get("count", len(raw_results))
+        else:
+            raw_results = payload
+            count = len(raw_results)
+
+        serializer = EnrichedPlayerListItemSerializer(raw_results, many=True)
+        return Response(
+            build_playerdata_envelope({
+                "count": count,
+                "results": serializer.data,
+            })
+        )
+
+
+# API view for one merged player overview
+class PlayerOverviewView(BasePlayerDataAPIView):
+
+    # Return a merged player overview
+    def get(self, request, player_id: int):
+        filters = {
+            **_get_common_filters(request),
+            "club_id": _get_int_query_param(request, "club_id"),
+            "active_only": _get_bool_query_param(request, "active_only"),
+        }
+        payload = self.get_player_overview_payload(player_id=player_id, filters=filters)
+        serializer = PlayerOverviewSerializer(payload)
         return Response(build_playerdata_envelope(serializer.data))

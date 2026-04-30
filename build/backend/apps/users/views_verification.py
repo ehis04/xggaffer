@@ -6,10 +6,13 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import User
 from .services.email_service import send_verification_email
 
+# Handles email verification endpoints for sending verification emails, resending them, verifying tokens, and checking verification status
 
+# Sends a verification email to the currently authenticated user
 class SendVerificationEmailView(APIView):
     permission_classes = [IsAuthenticated]
     
+    # Sends a verification link unless the user's email is already verified
     def post(self, request):
         user = request.user
         
@@ -32,13 +35,14 @@ class SendVerificationEmailView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
+# Resends a verification email to the currently authenticated user
 class ResendVerificationEmailView(APIView):
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
         user = request.user
         
+        # Sends another verification link unless the user's email is already verified
         if user.email_verified:
             return Response(
                 {'message': 'Email is already verified'},
@@ -58,10 +62,10 @@ class ResendVerificationEmailView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
+# Verifies a user's email address using a verification token submitted from the frontend
 class VerifyEmailView(APIView):
     permission_classes = [AllowAny]
-
+    # Validates the token, checks expiry, and marks the matching user email as verified
     def post(self, request):
         token = request.data.get('token')
         print(f"DEBUG: Received token: {token}")
@@ -78,9 +82,6 @@ class VerifyEmailView(APIView):
             print(f"DEBUG: Found user: {user.email}")
         except User.DoesNotExist:
             print(f"DEBUG: No user found with token: {token}")
-            # Check if any user has a similar token
-            all_users_with_tokens = User.objects.filter(verification_token__isnull=False).values_list('email', 'verification_token')
-            print(f"DEBUG: Users with tokens: {list(all_users_with_tokens)}")
             return Response(
                 {'error': 'Invalid or expired verification link. Please request a new verification email.'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -112,7 +113,7 @@ class VerifyEmailView(APIView):
             status=status.HTTP_200_OK
         )
 
-
+# Returns the email verification state for the currently authenticated user
 class VerificationStatusView(APIView):
     permission_classes = [IsAuthenticated]
     

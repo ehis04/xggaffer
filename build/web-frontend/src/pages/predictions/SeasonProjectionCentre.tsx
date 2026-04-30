@@ -125,7 +125,8 @@ export default function SeasonProjectionCentre() {
         const comp = (competitions as Array<{ id: number; code: string }>)
           .find(c => c.code === leagueCode);
         if (!comp) return null;
-        return liveFootballApi.getCompetitionFixtures(comp.id, { status: 'SCHEDULED', limit: 10 });
+        // Query for both SCHEDULED and TIMED fixtures
+        return liveFootballApi.getCompetitionFixtures(comp.id, { status: 'SCHEDULED,TIMED', limit: 10 });
       })
       .then(res => {
         if (cancelled || !res) return;
@@ -165,7 +166,7 @@ export default function SeasonProjectionCentre() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Season Projection Centre</h1>
+        <h1 className={styles.title}>Pre-Season Projection Centre</h1>
       </header>
 
       <div className={styles.leagueTabBar}>
@@ -228,6 +229,12 @@ export default function SeasonProjectionCentre() {
               </button>
             ))}
           </div>
+
+          <p className={styles.viewExplanation}>
+            {view === 'table' && 'Shows the predicted final league table with points, title chances, and relegation risk based on thousands of season simulations.'}
+            {view === 'matrix' && 'Displays the probability of each team finishing in each position — darker colours mean higher confidence in that placement.'}
+            {view === 'chart' && 'Illustrates the range of possible points totals for each team, showing the spread of outcomes from the simulations.'}
+          </p>
 
           <div className={styles.viewContainer}>
             {view === 'table' && freshness && (

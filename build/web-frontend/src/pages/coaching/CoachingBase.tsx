@@ -39,18 +39,11 @@ const SECTIONS: Section[] = [
     path: '/coaching/playerdata/compare',
   },
   {
-    icon: '📋',
-    title: 'Teamsheets',
-    description: 'Build, duplicate, and manage teamsheets for your clubs and fixtures.',
-    label: 'View Teamsheets',
-    path: '/coaching/teamsheets',
-  },
-  {
     icon: '🎯',
     title: 'Predictions',
     description: 'Run match outcome predictions powered by historical data and Elo ratings.',
     label: 'Open Predictions',
-    path: '/coaching/predictions',
+    path: '/predictions/hub',
   },
   {
     icon: '📡',

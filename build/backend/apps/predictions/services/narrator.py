@@ -19,6 +19,7 @@ Rules you must follow without exception:
 6. If intent is UNKNOWN, explain what xgGaffer can do using the capabilities list.
 7. Always refer to probabilities as percentages rounded to the nearest whole number.
 8. Do not repeat the user's question back to them.
+9. For TACTICAL_QUERY, if requested_season and profile_season (or season_name) differ, explicitly state that the latest available tactical profile season was used.
 
 Intent-specific guidance:
 - FORM_ANALYSIS: Summarise the team's record, recent form string, home/away split, and avg xG/xGA trend.
@@ -121,9 +122,12 @@ class LLMNarrator:
             away_pct = round(probs.get("away", 0) * 100)
             home = entities.get("home_team", "Home")
             away = entities.get("away_team", "Away")
-            return (
+            return self._append_source_coverage(
+                (
                 f"Prediction: {prediction}. {home} {home_pct}% | "
                 f"Draw {draw_pct}% | {away} {away_pct}%."
+                ),
+                data,
             )
 
         if intent == "SCORE_PREDICTION":
@@ -136,8 +140,14 @@ class LLMNarrator:
             team = entities.get("team") or entities.get("home_team", "The team")
             rating = data.get("elo_rating")
             if rating:
-                return f"{team} currently has an Elo rating of {rating:.0f}."
-            return f"Elo rating data for {team} is not available."
+                return self._append_source_coverage(
+                    f"{team} currently has an Elo rating of {rating:.0f}.",
+                    data,
+                )
+            return self._append_source_coverage(
+                f"Elo rating data for {team} is not available.",
+                data,
+            )
 
         if intent == "SEASON_SIMULATION":
             league = entities.get("league", "the league")
@@ -145,8 +155,14 @@ class LLMNarrator:
             if title_probs:
                 leader = max(title_probs, key=title_probs.get)
                 pct = round(title_probs[leader] * 100)
-                return f"{leader} are the title favourites in {league} with a {pct}% chance."
-            return f"Season simulation data for {league} is not available."
+                return self._append_source_coverage(
+                    f"{leader} are the title favourites in {league} with a {pct}% chance.",
+                    data,
+                )
+            return self._append_source_coverage(
+                f"Season simulation data for {league} is not available.",
+                data,
+            )
 
         if intent == "GLOSSARY":
             term = data.get("term", "").upper()
@@ -159,10 +175,14 @@ class LLMNarrator:
 
         if intent == "TACTICAL_QUERY":
             team = entities.get("team") or entities.get("home_team", "The team")
-            label = data.get("cluster_label", "")
+            label = data.get("cluster_label") or data.get("style_label") or ""
             if label:
-                return f"{team} play a {label} style based on their tactical profile."
-            return f"Tactical profile for {team} is not available."
+                text = f"{team} play a {label} style based on their tactical profile."
+                text = self._append_tactical_season_note(text, data)
+                return self._append_source_coverage(text, data)
+            text = f"Tactical profile for {team} is not available."
+            text = self._append_tactical_season_note(text, data)
+            return self._append_source_coverage(text, data)
 
         if intent == "AVAILABILITY_QUERY":
             players = data.get("players", [])
@@ -198,12 +218,18 @@ class LLMNarrator:
             losses = data.get("losses", "—")
             avg_xg = data.get("avg_xg", "—")
             if form:
-                return (
+                return self._append_source_coverage(
+                    (
                     f"{team} recent form: {form}. "
                     f"Season record: {wins}W {draws}D {losses}L. "
                     f"Avg xG per game: {avg_xg}."
+                    ),
+                    data,
                 )
-            return f"Form data for {team} is not available."
+            return self._append_source_coverage(
+                f"Form data for {team} is not available.",
+                data,
+            )
 
         if intent == "HEAD_TO_HEAD":
             team_a = data.get("team_a", entities.get("home_team", "Team A"))
@@ -213,11 +239,17 @@ class LLMNarrator:
             b_wins = data.get(f"{team_b}_wins", "—")
             draws = data.get("draws", "—")
             if total:
-                return (
+                return self._append_source_coverage(
+                    (
                     f"In {total} meetings: {team_a} {a_wins} wins, "
                     f"{team_b} {b_wins} wins, {draws} draws."
+                    ),
+                    data,
                 )
-            return f"No head-to-head history found between {team_a} and {team_b}."
+            return self._append_source_coverage(
+                f"No head-to-head history found between {team_a} and {team_b}.",
+                data,
+            )
 
         if intent == "PLAYER_STATS":
             name = data.get("name", entities.get("player_name", "The player"))
@@ -227,11 +259,17 @@ class LLMNarrator:
             xg = data.get("xg", "—")
             npxg90 = data.get("npxg90", "—")
             if goals != "—":
-                return (
+                return self._append_source_coverage(
+                    (
                     f"{name} ({team}): {goals} goals, {assists} assists. "
                     f"xG: {xg}, npxG/90: {npxg90}."
+                    ),
+                    data,
                 )
-            return f"Player stats for {name} are not available."
+            return self._append_source_coverage(
+                f"Player stats for {name} are not available.",
+                data,
+            )
 
         if intent == "TEAM_RANKINGS":
             league = data.get("league", entities.get("league", "the league"))
@@ -241,10 +279,13 @@ class LLMNarrator:
             relegation = data.get("relegation_zone", [])
             top_4_str = ", ".join(top_4) if top_4 else "—"
             rel_str = ", ".join(relegation) if relegation else "—"
-            return (
+            return self._append_source_coverage(
+                (
                 f"{league} {season} standings. Leader: {leader}. "
                 f"Top 4: {top_4_str}. "
                 f"Relegation zone: {rel_str}."
+                ),
+                data,
             )
 
         if intent == "REST_DAYS":
@@ -252,9 +293,42 @@ class LLMNarrator:
             avg = data.get("avg_days_between_matches", "—")
             recent = data.get("matches_in_last_28_days", "—")
             last = data.get("last_match_date", "—")
-            return (
+            return self._append_source_coverage(
+                (
                 f"{team} rest analysis: avg {avg} days between matches. "
                 f"{recent} games in the last 28 days. Last match: {last}."
+                ),
+                data,
+            )
+
+        if intent == "ODDS_COMPARISON":
+            home = data.get("home_team", entities.get("home_team", "Home"))
+            away = data.get("away_team", entities.get("away_team", "Away"))
+            comparison = data.get("comparison", {})
+            if isinstance(comparison, dict) and comparison.get("summary"):
+                return self._append_source_coverage(str(comparison["summary"]), data)
+            return self._append_source_coverage(
+                f"Odds comparison for {home} vs {away} is shown in the data panel.",
+                data,
             )
 
         return "xgGaffer retrieved the data for your query. Results are shown below."
+
+    def _append_source_coverage(self, text: str, data: dict) -> str:
+        return text
+
+    def _append_tactical_season_note(self, text: str, data: dict) -> str:
+        coverage_note = data.get("coverage_note")
+        requested = data.get("requested_season")
+        profile = data.get("profile_season") or data.get("season_name")
+
+        if isinstance(coverage_note, str) and coverage_note.strip():
+            return f"{text} {coverage_note}"
+
+        if requested and profile and str(requested).strip() != str(profile).strip():
+            return (
+                f"{text} Requested season was {requested}, so the latest available "
+                f"tactical profile season was used ({profile})."
+            )
+
+        return text

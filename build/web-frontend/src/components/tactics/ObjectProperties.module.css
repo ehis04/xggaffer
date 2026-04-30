@@ -1,0 +1,86 @@
+.form {
+    display: grid;
+    gap: 12px;
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.field {
+    display: grid;
+    gap: 6px;
+}
+
+.label {
+    font-weight: 700;
+    color: var(--primary-text);
+    font-size: 0.85rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.input {
+    padding: 9px 11px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.18);
+    color: var(--primary-text);
+}
+
+.input:focus-visible {
+    outline: 2px solid #a7f3d0;
+    outline-offset: 1px;
+    border-color: rgba(167, 243, 208, 0.5);
+}
+
+.dimensionGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.submitButton {
+    justify-self: start;
+    padding: 9px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(167, 243, 208, 0.36);
+    background: linear-gradient(180deg, rgba(22, 101, 52, 0.92), rgba(21, 128, 61, 0.92));
+    color: #ffffff;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.18s ease, transform 0.12s ease;
+}
+
+.submitButton:hover:not(:disabled) {
+    background: linear-gradient(180deg, rgba(21, 128, 61, 0.96), rgba(34, 197, 94, 0.92));
+}
+
+.submitButton:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.submitButton:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.emptyCard {
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.emptyText {
+    margin: 0;
+    color: var(--secondary-text);
+}
+
+@media (max-width: 720px) {
+    .dimensionGrid {
+        grid-template-columns: 1fr;
+    }
+}

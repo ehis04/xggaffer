@@ -1,20 +1,20 @@
 import { useNavigate } from "react-router-dom";
-import { authApi } from "../../services/api/auth";
+import { useAuth } from "../../context/useAuth";
 import "./css/SocialUserButtons.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import communityApi from "../../services/api/communityApi";
 import type { NotificationItem } from "../../services/api/communityApi";
 
-const http = "http://localhost:5173/";
 const MAX_NOTIFICATIONS_TO_SHOW = 8;
 
 export const SocialUserButtons = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const handleLogout = async () => {
     try {
-      await authApi.logout();
-      navigate("/");
+      await logout();
+      navigate("/", { replace: true });
     } catch (error) {
       console.error("Logout failed:", error);
     }

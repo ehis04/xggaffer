@@ -7,6 +7,11 @@ import pandas as pd
 
 from apps.predictions.services.base_handler import EngineHandler, QueryPayload
 from apps.predictions.services.intent_types import IntentClass, ParsedQuery
+from apps.predictions.services.source_policy import (
+    apply_source_priority,
+    latest_available_season,
+    source_coverage_metadata,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -21,14 +26,12 @@ MATCHES_CSV_PATH = (
 
 FORM_WINDOW = 5
 DEFAULT_LEAGUE = "EPL"
-DEFAULT_SEASON = "2024"
 
 
 class FormHandler(EngineHandler):
     def handle(self, parsed_query: ParsedQuery) -> QueryPayload:
         team = parsed_query.team or parsed_query.home_team
         league = parsed_query.league or DEFAULT_LEAGUE
-        season = parsed_query.season or DEFAULT_SEASON
 
         if not team:
             return QueryPayload(
@@ -40,12 +43,17 @@ class FormHandler(EngineHandler):
 
         try:
             df = pd.read_csv(MATCHES_CSV_PATH, low_memory=False)
+            season = parsed_query.season or latest_available_season(df)
             df = df[df["is_finished"] == True]
             df["date"] = pd.to_datetime(df["date"], errors="coerce")
 
             season_df = df[
                 (df["league"] == league) & (df["season"] == int(season))
             ]
+            season_df, used_sources = apply_source_priority(
+                season_df,
+                dedupe_keys=["league", "season", "date", "home_team", "away_team"],
+            )
 
             home_mask = season_df["home_team"] == team
             away_mask = season_df["away_team"] == team
@@ -115,6 +123,10 @@ class FormHandler(EngineHandler):
                     "recent_form": form_string,
                     "recent_matches": recent,
                     "all_matches": records,
+                    "source_coverage": source_coverage_metadata(
+                        intent=IntentClass.FORM_ANALYSIS.value,
+                        used_sources=used_sources,
+                    ),
                 },
                 partial=False,
                 error=None,

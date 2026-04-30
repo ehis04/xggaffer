@@ -2,11 +2,30 @@ import type { FreshnessPayload } from '../types/freshness';
 import { getFreshnessState, formatLastUpdated } from '../utils/freshness';
 import styles from './css/FreshnessBadge.module.css';
 
+const STATIC_DATASET_STATUS = 'static_dataset' as const;
+const NO_COVERAGE_STATUS = 'no_coverage' as const;
+
+interface ExtendedFreshnessPayload extends FreshnessPayload {
+  staleness_status?: string;
+}
+
 interface FreshnessBadgeProps {
-  freshness: FreshnessPayload | null | undefined;
+  freshness: ExtendedFreshnessPayload | null | undefined;
 }
 
 export function FreshnessBadge({ freshness }: FreshnessBadgeProps) {
+  if (freshness?.staleness_status === NO_COVERAGE_STATUS) {
+    return null;
+  }
+
+  if (freshness?.staleness_status === STATIC_DATASET_STATUS) {
+    return (
+      <span className={`${styles.badge} ${styles.static}`}>
+        StatsBomb Historical Data 
+      </span>
+    );
+  }
+
   const state = getFreshnessState(freshness);
   const lastUpdated = formatLastUpdated(freshness);
 

@@ -1,0 +1,238 @@
+.container {
+  min-height: 100vh;
+  padding: 24px;
+  color: var(--primary-text);
+  background: var(--brand-light-green);
+}
+
+.header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 18px;
+}
+
+.title {
+  margin: 0;
+  font-family: 'Syne', sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.subtitle {
+  max-width: 760px;
+  margin: 8px 0 0;
+  color: var(--secondary-text);
+  line-height: 1.5;
+}
+
+.selectorCard {
+  width: 100%;
+}
+
+.navTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.navTab,
+.inlineAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 8px;
+  color: var(--hover-lightest-green);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--hover-lightest-green) 8%, transparent);
+}
+
+.navTab:hover,
+.inlineAction:hover {
+  background: color-mix(in srgb, var(--hover-lightest-green) 14%, transparent);
+}
+
+.competitionSummary,
+.emptyState,
+.panel {
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 8px;
+  background: var(--brand-lightest-green-border);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.panel {
+  margin-top: 16px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.metaText {
+  margin: 6px 0 0;
+  color: var(--tertiary-text);
+  font-size: 13px;
+}
+
+.stateText,
+.errorText,
+.mutedText {
+  color: var(--tertiary-text);
+  font-size: 13px;
+}
+
+.errorText {
+  color: #f87171;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.directoryCard {
+  min-height: 132px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 8px;
+  background: var(--brand-light-green);
+}
+
+.cardHeader,
+.cardFooter,
+.cardActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cardFooter,
+.cardActions {
+  justify-content: space-between;
+}
+
+.crest,
+.crestPlaceholder {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 8px;
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.crestPlaceholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--hover-lightest-green);
+  font-weight: 800;
+}
+
+.cardTitle {
+  margin: 0;
+  color: var(--primary-text);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.cardMeta {
+  margin: 5px 0 0;
+  color: var(--tertiary-text);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 28px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--hover-lightest-green) 12%, transparent);
+  color: var(--hover-lightest-green);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.searchInput {
+  min-width: min(100%, 280px);
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 8px;
+  color: var(--primary-text);
+  background: var(--brand-light-green);
+}
+
+.scorerStrip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+
+.scorerPill {
+  min-width: 190px;
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--brand-light-green);
+}
+
+.scorerPill strong,
+.scorerPill span {
+  display: block;
+}
+
+.scorerPill strong {
+  font-size: 13px;
+}
+
+.scorerPill span {
+  margin-top: 4px;
+  color: var(--tertiary-text);
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .header {
+    grid-template-columns: 1fr;
+  }
+
+  .panelHeader {
+    flex-direction: column;
+  }
+
+  .searchInput {
+    width: 100%;
+  }
+}

@@ -272,27 +272,26 @@ class TacticsBoardTrashApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-def test_trash_only_list_returns_only_current_users_trashed_boards(self):
-    self.client.force_authenticate(user=self.creator)
+    def test_trash_only_list_returns_only_current_users_trashed_boards(self):
+        self.client.force_authenticate(user=self.creator)
 
-    response = self.client.get(
-        f'/api/clubs/{self.club.id}/tactics-boards/',
-        {'trash': 'only'},
-    )
+        response = self.client.get(
+            f'/api/clubs/{self.club.id}/tactics-boards/',
+            {'trash': 'only'},
+        )
 
-    self.assertEqual(response.status_code, status.HTTP_200_OK)
-    returned_ids = {item['id'] for item in response.data}
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        returned_ids = {item['id'] for item in response.data}
 
-    self.assertIn(self.trashed_board.id, returned_ids)
-    self.assertNotIn(self.other_users_trashed_board.id, returned_ids)
+        self.assertIn(self.trashed_board.id, returned_ids)
+        self.assertNotIn(self.other_users_trashed_board.id, returned_ids)
 
+    def test_retrieve_with_trash_only_cannot_load_someone_elses_trashed_board(self):
+        self.client.force_authenticate(user=self.creator)
 
-def test_retrieve_with_trash_only_cannot_load_someone_elses_trashed_board(self):
-    self.client.force_authenticate(user=self.creator)
+        response = self.client.get(
+            f'/api/clubs/{self.club.id}/tactics-boards/{self.other_users_trashed_board.id}/',
+            {'trash': 'only'},
+        )
 
-    response = self.client.get(
-        f'/api/clubs/{self.club.id}/tactics-boards/{self.other_users_trashed_board.id}/',
-        {'trash': 'only'},
-    )
-
-    self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

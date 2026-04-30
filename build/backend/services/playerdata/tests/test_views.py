@@ -9,6 +9,7 @@ from apps.playerdata.views import (
     PlayerOverviewComparisonView,
     PlayerOverviewView,
 )
+from common.freshness import FreshnessPayload
 
 
 class DummyUser:
@@ -20,6 +21,22 @@ class PlayerDataMergedViewsTests(SimpleTestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
         self.user = DummyUser()
+        self._freshness_patcher = patch(
+            "apps.playerdata.envelope.compute_surface_freshness",
+            return_value=FreshnessPayload(
+                source_fetched_at=None,
+                snapshot_published_at=None,
+                is_stale=True,
+                is_degraded=False,
+                stale_reason="no_snapshot_published",
+                sla_seconds=21600,
+            ),
+        )
+        self._freshness_patcher.start()
+        self.addCleanup(self._freshness_patcher.stop)
+
+    def _payload(self, response):
+        return response.data["data"]
 
     def _overview_payload(self):
         return {
@@ -256,12 +273,13 @@ class PlayerDataMergedViewsTests(SimpleTestCase):
         force_authenticate(request, user=self.user)
 
         response = PlayerOverviewView.as_view()(request, player_id=7)
+        payload = self._payload(response)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["player"]["id"], 7)
-        self.assertEqual(response.data["context"]["competition_code"], "EPL")
-        self.assertEqual(response.data["metric_groups"][0]["key"], "general")
-        self.assertEqual(response.data["provider_coverage"]["coverage_status"], "available")
+        self.assertEqual(payload["player"]["id"], 7)
+        self.assertEqual(payload["context"]["competition_code"], "EPL")
+        self.assertEqual(payload["metric_groups"][0]["key"], "general")
+        self.assertEqual(payload["provider_coverage"]["coverage_status"], "available")
 
     @patch("apps.playerdata.views.overview_queries.get_player_overview")
     def test_player_overview_view_preserves_honest_missing_data_payload(self, get_player_overview_mock):
@@ -282,13 +300,14 @@ class PlayerDataMergedViewsTests(SimpleTestCase):
         force_authenticate(request, user=self.user)
 
         response = PlayerOverviewView.as_view()(request, player_id=7)
+        payload = self._payload(response)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertFalse(response.data["has_overview_data"])
-        self.assertEqual(response.data["metric_groups"], [])
-        self.assertEqual(response.data["provider_coverage"]["coverage_status"], "missing")
+        self.assertFalse(payload["has_overview_data"])
+        self.assertEqual(payload["metric_groups"], [])
+        self.assertEqual(payload["provider_coverage"]["coverage_status"], "missing")
         self.assertEqual(
-            response.data["missing_reasons"],
+            payload["missing_reasons"],
             payload["missing_reasons"],
         )
 
@@ -311,12 +330,13 @@ class PlayerDataMergedViewsTests(SimpleTestCase):
         force_authenticate(request, user=self.user)
 
         response = PlayerOverviewComparisonView.as_view()(request)
+        payload = self._payload(response)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["player_a"]["player"]["id"], 7)
-        self.assertEqual(response.data["player_b"]["player"]["id"], 8)
-        self.assertEqual(response.data["overall_winner"]["winner"], "player_a")
-        self.assertEqual(response.data["metric_groups"][0]["key"], "role_focus")
+        self.assertEqual(payload["player_a"]["player"]["id"], 7)
+        self.assertEqual(payload["player_b"]["player"]["id"], 8)
+        self.assertEqual(payload["overall_winner"]["winner"], "player_a")
+        self.assertEqual(payload["metric_groups"][0]["key"], "role_focus")
 
     def test_player_overview_comparison_view_requires_two_distinct_players(self):
         request = self.factory.get(

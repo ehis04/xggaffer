@@ -10,12 +10,11 @@ import type {
   ClubPlayer,
   CreateClubPlayerPayload,
   UpdateClubPlayerPayload,
-  LinkClubPlayerPayload,
-  RelinkClubPlayerPayload,
 } from '../../../../types/clubPlayers';
 import type { ClubPlayerInjury, ClubPlayerManualStats } from '../../../../types/club';
 import type { PlayerDataFilters, PlayerDataMetric, PlayerSeasonSummary } from '../../../../types/playerdata';
 import { statusConfig } from '../../../../components/Dashboard/functions/statusConfig';
+import { getCurrentFootballSeason } from '../../../../utils/footballSeason';
 import styles from './css/PlayersTab.module.css';
 import { SectionSkeleton } from '../../../../common/components/SectionSkeleton';
 import { InlineRetry } from '../../../../common/components/InlineRetry';
@@ -149,10 +148,6 @@ const PlayersTab = ({ ctx }: Props) => {
   const [manualStats, setManualStats] = useState<ClubPlayerManualStats | null>(null);
   const [injuries, setInjuries] = useState<ClubPlayerInjury[]>([]);
 
-  const [identityLoading, setIdentityLoading] = useState(false);
-  const [identityErr, setIdentityErr] = useState<string | null>(null);
-  const [identityMsg, setIdentityMsg] = useState<string | null>(null);
-  const [canonicalInput, setCanonicalInput] = useState('');
   const [showInjuryModal, setShowInjuryModal] = useState(false);
 
   const loadPlayers = useCallback(async () => {
@@ -171,14 +166,12 @@ const PlayersTab = ({ ctx }: Props) => {
 
   const selectedPlayer = useMemo(() => players.find((p) => p.id === selectedId) ?? null, [players, selectedId]);
   const canonicalId = useMemo(() => resolveCanonicalId(selectedPlayer), [selectedPlayer]);
+  const currentSeason = getCurrentFootballSeason();
 
   useEffect(() => {
     if (!selectedPlayer) {
-      setCanonicalInput(''); setIdentityErr(null); setIdentityMsg(null);
       setManualStats(null); setInjuries([]); return;
     }
-    setCanonicalInput(canonicalId ? String(canonicalId) : '');
-    setIdentityErr(null); setIdentityMsg(null);
 
     void Promise.allSettled([
       clubsApi.manualStats.list(clubId, selectedPlayer.id),
@@ -187,7 +180,7 @@ const PlayersTab = ({ ctx }: Props) => {
       setManualStats(stats.status === 'fulfilled' ? (stats.value[0] ?? null) : null);
       setInjuries(inj.status === 'fulfilled' ? inj.value : []);
     });
-  }, [selectedPlayer, canonicalId, clubId]);
+  }, [selectedPlayer, clubId]);
 
   useEffect(() => {
     if (!selectedPlayer || !canonicalId) {
@@ -201,8 +194,8 @@ const PlayersTab = ({ ctx }: Props) => {
       setSummaryLoading(true); setSummaryErr(null);
       try {
         const [uResult, ssResult] = await Promise.allSettled([
-          playerdataApi.getPlayerSeasonSummary(canonicalId, { season: '2025', provider: 'understat' }),
-          playerdataApi.getPlayerSeasonSummary(canonicalId, { season: '2025', provider: 'sofascore' }),
+          playerdataApi.getPlayerSeasonSummary(canonicalId, { season: currentSeason, provider: 'understat' }),
+          playerdataApi.getPlayerSeasonSummary(canonicalId, { season: currentSeason, provider: 'sofascore' }),
         ]);
         const merged = mergePlayerSummaries(
           uResult.status === 'fulfilled' ? uResult.value : null,
@@ -210,14 +203,14 @@ const PlayersTab = ({ ctx }: Props) => {
         );
         if (active) {
           setSummary(merged);
-          if (!merged) setSummaryErr('No 2025 data available for this player.');
+          if (!merged) setSummaryErr(`No ${currentSeason} data available for this player.`);
         }
       } catch (err) { if (active) { setSummary(null); setSummaryErr(normalizeError(err)); } }
       finally { if (active) setSummaryLoading(false); }
     };
     void load();
     return () => { active = false; };
-  }, [selectedPlayer, canonicalId]);
+  }, [selectedPlayer, canonicalId, currentSeason]);
 
   const resetForm = () => { setForm(emptyForm()); setEditingPlayer(null); setFormError(null); setShowAddForm(false); };
 
@@ -266,40 +259,6 @@ const PlayersTab = ({ ctx }: Props) => {
       setSyncMsg(`Sync done — ${r.players_created} created, ${r.players_updated} updated.`);
     } catch (err) { setSyncErr(normalizeError(err)); }
     finally { setSyncing(false); }
-  };
-
-  const handleLink = async () => {
-    if (!selectedPlayer) return;
-    const id = Number(canonicalInput);
-    if (!Number.isInteger(id) || id <= 0) { setIdentityErr('Enter a valid ID.'); return; }
-    try {
-      setIdentityLoading(true); setIdentityErr(null);
-      await clubsApi.linkPlayer(clubId, selectedPlayer.id, { canonical_player_id: id } as LinkClubPlayerPayload);
-      await loadPlayers(); setIdentityMsg('Linked.');
-    } catch (err) { setIdentityErr(normalizeError(err)); }
-    finally { setIdentityLoading(false); }
-  };
-
-  const handleRelink = async () => {
-    if (!selectedPlayer) return;
-    const id = Number(canonicalInput);
-    if (!Number.isInteger(id) || id <= 0) { setIdentityErr('Enter a valid ID.'); return; }
-    try {
-      setIdentityLoading(true); setIdentityErr(null);
-      await clubsApi.relinkPlayer(clubId, selectedPlayer.id, { canonical_player_id: id } as RelinkClubPlayerPayload);
-      await loadPlayers(); setIdentityMsg('Link updated.');
-    } catch (err) { setIdentityErr(normalizeError(err)); }
-    finally { setIdentityLoading(false); }
-  };
-
-  const handleUnlink = async () => {
-    if (!selectedPlayer) return;
-    try {
-      setIdentityLoading(true); setIdentityErr(null);
-      await clubsApi.unlinkPlayer(clubId, selectedPlayer.id);
-      await loadPlayers(); setCanonicalInput(''); setIdentityMsg('Unlinked.');
-    } catch (err) { setIdentityErr(normalizeError(err)); }
-    finally { setIdentityLoading(false); }
   };
 
   const handleResolveInjury = async (injuryId: number) => {
@@ -545,7 +504,6 @@ const PlayersTab = ({ ctx }: Props) => {
                 <CompactPlayerPreview
                   player={selectedPlayer} summary={summary} isLoading={summaryLoading}
                   error={summaryErr} canonicalPlayerId={canonicalId}
-                  canonicalPlayerIdSource={selectedPlayer.canonical_player_id ? 'canonical_player_id' : 'player_id'}
                   onOpenReadPage={canonicalId && !summaryLoading
                     ? () => navigate(buildProfileUrl(canonicalId, clubId, selectedPlayer.id, summaryFilters))
                     : null}
@@ -557,44 +515,6 @@ const PlayersTab = ({ ctx }: Props) => {
                 clubId={clubId} player={selectedPlayer} currentStats={manualStats}
                 canManage={canManage} onUpdate={setManualStats}
               />
-
-              {canManage && (
-                <div className={styles.panel}>
-                  <div className={styles.panelHeader}>
-                    <span className={styles.panelTitle}>Canonical alignment</span>
-                    <span className={styles.badge}
-                      style={selectedPlayer.is_linked_to_player
-                        ? { color: '#86efac', background: 'rgba(34,197,94,0.12)' } : {}}>
-                      {selectedPlayer.is_linked_to_player ? 'Linked' : 'Unlinked'}
-                    </span>
-                  </div>
-                  {identityErr && <div className={`${styles.notice} ${styles.noticeError}`}>{identityErr}</div>}
-                  {identityMsg && <div className={styles.notice}>{identityMsg}</div>}
-                  <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
-                      <label className={styles.label} htmlFor="pt_canonical_id">Canonical player ID</label>
-                      <input id="pt_canonical_id" type="number" min="1" className={styles.input}
-                        value={canonicalInput} onChange={(e) => setCanonicalInput(e.target.value)} placeholder="Enter ID" />
-                    </div>
-                  </div>
-                  <div className={styles.formActions}>
-                    {!selectedPlayer.is_linked_to_player ? (
-                      <button type="button" className={styles.primaryBtn} disabled={identityLoading} onClick={handleLink}>
-                        {identityLoading ? 'Linking...' : 'Link'}
-                      </button>
-                    ) : (
-                      <>
-                        <button type="button" className={styles.primaryBtn} disabled={identityLoading} onClick={handleRelink}>
-                          {identityLoading ? 'Updating...' : 'Relink'}
-                        </button>
-                        <button type="button" className={styles.ghostBtn} disabled={identityLoading} onClick={handleUnlink}>
-                          {identityLoading ? 'Removing...' : 'Unlink'}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
 
               {injuries.length > 0 && (
                 <div className={styles.panel}>

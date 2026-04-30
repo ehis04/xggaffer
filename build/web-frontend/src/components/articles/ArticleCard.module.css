@@ -152,6 +152,28 @@
     transition: background 0.1s;
 }
 
+.favoriteBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    color: #9ca3af;
+    padding: 2px 4px;
+    border-radius: 6px;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+.favoriteBtn:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.favoriteBtnActive {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.12);
+}
+
 .feedbackBtn:hover,
 .feedbackBtn.active {
     background: var(--brand-light-green);

@@ -1,17 +1,17 @@
+"""
+Models for player and club season enrichment data
+
+Stores provider-backed football metrics linked to internal clubs and players without replacing canonical identity records
+"""
+
 from django.db import models
 
 from apps.clubs.models import Club
 from apps.players.models import ExternalProvider, Player
 
 
+# Season-level provider-backed team metrics linked to an internal club
 class ClubSeasonEnrichment(models.Model):
-    """
-    Season-level provider-backed team metrics linked to an internal Club.
-
-    This is enrichment data, not the canonical identity source.
-    Identity remains in Club + ClubExternalIdentity.
-    """
-
     club = models.ForeignKey(
         Club,
         on_delete=models.CASCADE,
@@ -85,19 +85,14 @@ class ClubSeasonEnrichment(models.Model):
             ),
         ]
 
+    # Return a readable club season enrichment label
     def __str__(self) -> str:
         competition = f" {self.competition_code}" if self.competition_code else ""
         return f"{self.club} | {self.provider} | {self.season_label}{competition}"
 
 
+# Season-level provider-backed player metrics linked to a canonical player
 class PlayerSeasonEnrichment(models.Model):
-    """
-    Season-level provider-backed player metrics linked to a canonical Player.
-
-    This is enrichment data, not the canonical identity source.
-    Identity remains in Player + PlayerExternalIdentity.
-    """
-
     player = models.ForeignKey(
         Player,
         on_delete=models.CASCADE,
@@ -202,10 +197,13 @@ class PlayerSeasonEnrichment(models.Model):
             ),
         ]
 
+    # Return a readable player season enrichment label
     def __str__(self) -> str:
         competition = f" {self.competition_code}" if self.competition_code else ""
         return f"{self.player} | {self.provider} | {self.season_label}{competition}"
 
+
+# Snapshot marker for published player enrichment data scopes
 class PlayerEnrichmentSnapshot(models.Model):
     scope_key = models.CharField(max_length=128)
     is_active = models.BooleanField(default=False)
@@ -216,6 +214,7 @@ class PlayerEnrichmentSnapshot(models.Model):
             models.Index(fields=['scope_key', 'is_active']),
         ]
 
+    # Return a readable player enrichment snapshot label
     def __str__(self):
         active = 'active' if self.is_active else 'inactive'
         return f'PlayerEnrichmentSnapshot({self.scope_key}, {active}, {self.published_at})'

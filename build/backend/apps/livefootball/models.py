@@ -44,7 +44,6 @@ class Competition(models.Model):
             ),
             models.UniqueConstraint(
                 fields=["provider", "code"],
-                condition=~Q(code=""),
                 name="lf_comp_provider_code_uq",
             ),
         ]
@@ -302,7 +301,6 @@ class CompetitionTableRow(models.Model):
             ),
             models.UniqueConstraint(
                 fields=["snapshot", "external_team_id"],
-                condition=~Q(external_team_id=""),
                 name="lf_table_row_snapshot_team_uq",
             ),
         ]
@@ -450,7 +448,6 @@ class CompetitionTopScorer(models.Model):
             ),
             models.UniqueConstraint(
                 fields=["competition", "season_label", "external_player_id"],
-                condition=~Q(external_player_id=""),
                 name="lf_scorer_comp_player_uq",
             ),
         ]

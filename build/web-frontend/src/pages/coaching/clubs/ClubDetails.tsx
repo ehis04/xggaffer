@@ -474,7 +474,7 @@ export const ClubDetailsPage = () => {
       <div className={styles.individualClubMain}>
         <header className={styles.individualClubHeader}>
           <div className={styles.individualClubHeaderLeft}>
-            <span className={styles.individualClubHeaderLabel}>Coaching</span>
+            <span className={styles.individualClubHeaderLabel} onClick={handleBackToClubs} style={{ cursor: 'pointer' }}>← Clubs</span>
             <span className={styles.individualClubHeaderSep}>·</span>
             <span className={styles.individualClubHeaderTitle}>{club.name}</span>
           </div>
@@ -605,6 +605,7 @@ export const ClubDetailsPage = () => {
                       const competition = isFixture ? item.fixture?.competition ?? 'Fixture' : item.event?.event_type_display ?? 'Event';
                       const venue = isFixture ? item.fixture?.venue_display : item.event?.location;
                       const compColor = fixtureTypeColors[competition] ?? '#22c55e';
+                      const summary = getScheduleItemSummary(item);
                       return (
                         <div key={`${item.item_type}-${isFixture ? item.fixture?.id : item.event?.id}`} className={styles.individualClubUpcomingRow}>
                           <div className={styles.individualClubUpcomingDate}>
@@ -626,6 +627,7 @@ export const ClubDetailsPage = () => {
                             <div className={styles.individualClubUpcomingMeta}>
                               {time}{item.item_type === 'event' && item.event?.location ? ` · ${item.event.location}` : ''}
                               {item.item_type === 'fixture' && item.fixture?.location ? ` · ${item.fixture.location}` : ''}
+                              {summary && ` · ${summary}`}
                             </div>
                           </div>
                           <button className={styles.individualClubDetailsBtn}>Details</button>
@@ -670,7 +672,7 @@ export const ClubDetailsPage = () => {
                               <div className={styles.individualClubSquadAvatar}>{playerInitials}</div>
                               <span className={styles.individualClubSquadName}>{player.full_name}</span>
                             </div>
-                            <span className={styles.individualClubSquadPos}>{player.position ?? '—'}</span>
+                            <span className={styles.individualClubSquadPos}>{player.primary_position ?? '—'}</span>
                             <span className={styles.individualClubSquadAge}>{(player as any).age ?? '—'}</span>
                             <span className={styles.individualClubSquadForm}>
                               {(player as any).form_label ? (
@@ -837,6 +839,29 @@ export const ClubDetailsPage = () => {
                 <ClubCalendar calendarItems={calendarFeed} />
               </div>
 
+              <div className={styles.individualClubPanel}>
+                <div className={styles.individualClubPanelHead}>
+                  <h2 className={styles.individualClubPanelTitle}>Quick actions</h2>
+                </div>
+                <div className={styles.individualClubWorkflowList}>
+                  {QUICK_ACTIONS.map((action) => (
+                    <button
+                      key={action.key}
+                      type="button"
+                      className={styles.individualClubGhostBtn}
+                      onClick={() => navigate(action.path(club.id))}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%', textAlign: 'left', marginBottom: '0.4rem' }}
+                    >
+                      {action.icon}
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{action.title}</div>
+                        <div style={{ color: '#888', fontSize: '0.75rem' }}>{action.desc}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {reviewAccess && !club.is_trashed && (
                 <div className={styles.individualClubPanel}>
                   <div className={styles.individualClubPanelHead}>
@@ -851,32 +876,63 @@ export const ClubDetailsPage = () => {
                   ) : (
                     <div className={styles.individualClubRequestList}>
                       {reviewJoinRequests.map((request) => (
-                        <div key={request.id} className={styles.individualClubRequestRow}>
-                          <div className={styles.individualClubRequestAvatar}>
-                            {(request.user_email ?? '?')[0].toUpperCase()}
-                          </div>
-                          <div className={styles.individualClubRequestInfo}>
-                            <div className={styles.individualClubRequestName}>{request.user_email}</div>
-                            <div className={styles.individualClubRequestMeta}>
-                              {request.requested_role} · {getRequestStatusLabel(request.status)}
+                        <div key={request.id}>
+                          <div className={styles.individualClubRequestRow}>
+                            <div className={styles.individualClubRequestAvatar}>
+                              {(request.user_email ?? '?')[0].toUpperCase()}
                             </div>
+                            <div className={styles.individualClubRequestInfo}>
+                              <div className={styles.individualClubRequestName}>{request.user_email}</div>
+                              <div className={styles.individualClubRequestMeta}>
+                                {request.requested_role} · {getRequestStatusLabel(request.status)}
+                              </div>
+                            </div>
+                            {request.status === 'pending' && (
+                              <div className={styles.individualClubRequestActions}>
+                                <button
+                                  className={styles.individualClubDeclineBtn}
+                                  disabled={loadingKey === `reject-${request.id}`}
+                                  onClick={() => handleRejectRequest(request)}
+                                >
+                                  Decline
+                                </button>
+                                <button
+                                  className={styles.individualClubApproveBtn}
+                                  disabled={loadingKey === `approve-${request.id}`}
+                                  onClick={() => handleApproveRequest(request)}
+                                >
+                                  {loadingKey === `approve-${request.id}` ? 'Approving…' : 'Approve'}
+                                </button>
+                              </div>
+                            )}
                           </div>
                           {request.status === 'pending' && (
-                            <div className={styles.individualClubRequestActions}>
-                              <button
-                                className={styles.individualClubDeclineBtn}
-                                disabled={loadingKey === `reject-${request.id}`}
-                                onClick={() => handleRejectRequest(request)}
-                              >
-                                Decline
-                              </button>
-                              <button
-                                className={styles.individualClubApproveBtn}
-                                disabled={loadingKey === `approve-${request.id}`}
-                                onClick={() => handleApproveRequest(request)}
-                              >
-                                {loadingKey === `approve-${request.id}` ? 'Approving…' : 'Approve'}
-                              </button>
+                            <div className={styles.individualClubFormGrid} style={{ marginTop: '0.4rem', paddingLeft: '2.5rem' }}>
+                              {availableRosterLinks.length > 0 && (
+                                <div className={styles.individualClubFormField}>
+                                  <label className={styles.individualClubFormLabel}>Link to roster slot (optional)</label>
+                                  <select
+                                    className={styles.individualClubSelect}
+                                    value={selectedClubPlayerByRequest[request.id] ?? ''}
+                                    onChange={(e) => setSelectedClubPlayerByRequest((prev) => ({ ...prev, [request.id]: e.target.value }))}
+                                  >
+                                    <option value="">No link</option>
+                                    {availableRosterLinks.map((p) => (
+                                      <option key={p.id} value={String(p.id)}>{p.full_name}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              )}
+                              <div className={styles.individualClubFormField}>
+                                <label className={styles.individualClubFormLabel}>Review note</label>
+                                <input
+                                  className={styles.individualClubInput}
+                                  type="text"
+                                  placeholder="Optional note for the applicant"
+                                  value={reviewNoteByRequest[request.id] ?? ''}
+                                  onChange={(e) => setReviewNoteByRequest((prev) => ({ ...prev, [request.id]: e.target.value }))}
+                                />
+                              </div>
                             </div>
                           )}
                         </div>
@@ -903,6 +959,46 @@ export const ClubDetailsPage = () => {
                     <button className={styles.individualClubPrimaryBtn} style={{ width: '100%', marginTop: '0.5rem' }} type="button" disabled={loadingKey === 'create-invitation'} onClick={handleCreateInvitation}>
                       {loadingKey === 'create-invitation' ? 'Sending…' : 'Send Invitation'}
                     </button>
+                  </div>
+                </div>
+              )}
+
+              {reviewAccess && !club.is_trashed && reviewInvitations.length > 0 && (
+                <div className={styles.individualClubPanel}>
+                  <div className={styles.individualClubPanelHead}>
+                    <h2 className={styles.individualClubPanelTitle}>Invitations sent</h2>
+                  </div>
+                  <div className={styles.individualClubWorkflowList}>
+                    {reviewInvitations.map((invitation) => (
+                      <div key={invitation.id} className={styles.individualClubWorkflowCard}>
+                        <div className={styles.individualClubWorkflowRow}>
+                          <div>
+                            <div className={styles.individualClubWorkflowTitle}>{invitation.invited_user_email}</div>
+                            <div className={styles.individualClubWorkflowMeta}>
+                              {invitation.invited_role} · {getInvitationStatusLabel(invitation.status)}
+                            </div>
+                          </div>
+                        </div>
+                        {invitation.status === 'pending' && (
+                          <div className={styles.individualClubInlineActions}>
+                            <input
+                              className={styles.individualClubInput}
+                              type="text"
+                              placeholder="Revoke note (optional)"
+                              value={revokeNoteByInvitation[invitation.id] ?? ''}
+                              onChange={(e) => setRevokeNoteByInvitation((prev) => ({ ...prev, [invitation.id]: e.target.value }))}
+                            />
+                            <button
+                              className={styles.individualClubGhostBtn}
+                              disabled={loadingKey === `revoke-${invitation.id}`}
+                              onClick={() => handleRevokeInvitation(invitation)}
+                            >
+                              {loadingKey === `revoke-${invitation.id}` ? 'Revoking…' : 'Revoke'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

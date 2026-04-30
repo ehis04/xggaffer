@@ -1,6 +1,6 @@
 from django.db import models
 
-
+# Stores one official football law used as the top-level course unit
 class Law(models.Model):
     law_number  = models.PositiveSmallIntegerField(unique=True)
     title       = models.CharField(max_length=200)
@@ -13,7 +13,7 @@ class Law(models.Model):
     def __str__(self):
         return f"Law {self.law_number}: {self.title}"
 
-
+# Stores a grouped course section within a specific law, orders sections within a course
 class CourseSection(models.Model):
     law   = models.ForeignKey(Law, on_delete=models.CASCADE, related_name='sections')
     title = models.CharField(max_length=200)
@@ -25,14 +25,14 @@ class CourseSection(models.Model):
     def __str__(self):
         return f"{self.law} — {self.title}"
 
-
+# Possible course types with a section
 class ItemType(models.TextChoices):
     CLAUSE   = 'clause',   'Clause'
     SCENARIO = 'scenario', 'Scenario'
     DRILL    = 'drill',    'Drill'
     QUIZ     = 'quiz',     'Quiz'
 
-
+# Stores one learning item inside a course section
 class CourseItem(models.Model):
     section   = models.ForeignKey(CourseSection, on_delete=models.CASCADE, related_name='items')
     item_type = models.CharField(max_length=10, choices=ItemType.choices)

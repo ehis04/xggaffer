@@ -1,22 +1,45 @@
+"""
+Custom exception classes for the Understat provider service layer
+
+Defines provider-specific request, access, rate limit, missing resource, and malformed response errors
+"""
+
+
+# Base exception for all Understat provider errors
 class UnderstatError(Exception):
-    """Base exception for all Understat provider errors."""
+    pass
 
 
+# Raised when an Understat request fails or returns an unexpected HTTP error
 class UnderstatRequestError(UnderstatError):
-    """Raised when an Understat request fails or returns an unexpected HTTP-level error."""
+    pass
 
 
+# Raised when Understat rejects access to a resource
 class UnderstatAuthenticationError(UnderstatRequestError):
-    """Raised when Understat access is rejected due to authentication or authorisation issues."""
+    pass
 
 
+# Raised when Understat throttles or rate-limits requests
 class UnderstatRateLimitError(UnderstatRequestError):
-    """Raised when Understat throttles or rate-limits requests."""
+    pass
 
 
+# Raised when a requested Understat resource cannot be found
 class UnderstatNotFoundError(UnderstatRequestError):
-    """Raised when a requested Understat resource cannot be found."""
+    pass
 
 
+# Raised when Understat returns data that cannot be parsed into the expected shape
 class UnderstatMalformedResponseError(UnderstatError):
-    """Raised when Understat returns data that cannot be parsed into the expected shape."""
+    pass
+
+
+__all__ = [
+    "UnderstatError",
+    "UnderstatRequestError",
+    "UnderstatAuthenticationError",
+    "UnderstatRateLimitError",
+    "UnderstatNotFoundError",
+    "UnderstatMalformedResponseError",
+]

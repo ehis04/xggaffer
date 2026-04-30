@@ -1,8 +1,15 @@
+"""
+Admin configuration for player data enrichment models
+
+Adds searchable and filterable admin views for club and player season enrichment records
+"""
+
 from django.contrib import admin
 
 from .models import ClubSeasonEnrichment, PlayerSeasonEnrichment
 
 
+# Admin view for club season enrichment records
 @admin.register(ClubSeasonEnrichment)
 class ClubSeasonEnrichmentAdmin(admin.ModelAdmin):
     list_display = (
@@ -20,6 +27,7 @@ class ClubSeasonEnrichmentAdmin(admin.ModelAdmin):
     search_fields = ("club__name", "competition_code", "competition_name", "external_team_id")
 
 
+# Admin view for player season enrichment records
 @admin.register(PlayerSeasonEnrichment)
 class PlayerSeasonEnrichmentAdmin(admin.ModelAdmin):
     list_display = (

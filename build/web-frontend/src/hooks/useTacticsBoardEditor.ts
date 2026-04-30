@@ -588,6 +588,7 @@ const tacticsBoardEditorReducer = (
                 activeFrameIndex: nextActiveFrameIndex,
                 selectedItemId: nextSelectedItemId,
                 draftItem: null,
+                isDirty: true,
                 error: null,
             };
         }
@@ -616,6 +617,7 @@ const tacticsBoardEditorReducer = (
                     action.payload.setActiveFrame ? null : state.selectedItemId
                 ),
                 draftItem: null,
+                isDirty: true,
                 error: null,
             };
         }
@@ -634,6 +636,7 @@ const tacticsBoardEditorReducer = (
                     activeFrameIndex: 0,
                     selectedItemId: null,
                     draftItem: null,
+                    isDirty: true,
                     error: null,
                 };
             }
@@ -655,6 +658,7 @@ const tacticsBoardEditorReducer = (
                     state.selectedItemId
                 ),
                 draftItem: null,
+                isDirty: true,
                 error: null,
             };
         }
@@ -676,6 +680,7 @@ const tacticsBoardEditorReducer = (
                         ? state.selectedItemId
                         : action.payload.item.id,
                 draftItem: null,
+                isDirty: true,
                 error: null,
             };
 
@@ -697,6 +702,7 @@ const tacticsBoardEditorReducer = (
                         : state.selectedItemId === action.payload.item.id
                             ? action.payload.item.id
                             : state.selectedItemId,
+                isDirty: true,
                 error: null,
             };
 
@@ -717,6 +723,7 @@ const tacticsBoardEditorReducer = (
                         ? null
                         : state.selectedItemId,
                 draftItem: null,
+                isDirty: true,
                 error: null,
             };
 
