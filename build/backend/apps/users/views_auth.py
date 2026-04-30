@@ -3,8 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
-from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+from rest_framework_simplejwt.exceptions import TokenError
 from django.contrib.auth import authenticate
 from django.conf import settings
 
@@ -15,9 +14,12 @@ from .services.cookie_service import (
     get_refresh_token_from_cookie,
 )
 
+# handles authentication endpoints that store JWT tokens in secure browser cookies
+
+# Logs a user in, creates JWT tokens, and stores them in authentication cookies
 class CookieTokenObtainPairView(APIView):
     permission_classes = [AllowAny]
-    
+    # Validates login details, creates access and refresh tokens, and returns the logged-in user
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
@@ -57,9 +59,10 @@ class CookieTokenObtainPairView(APIView):
         
         return response
 
+# refreshes the access token using the refresh token stored in the browser cookie
 class CookieTokenRefreshView(APIView):
     permission_classes = [AllowAny]
-    
+    # reads the refresh token from cookies, validates it, and issues a new access token
     def post(self, request):
         refresh_token = get_refresh_token_from_cookie(request)
         
@@ -106,9 +109,10 @@ class CookieTokenRefreshView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+# Logs the user out by blacklisting the refresh token and clearing auth cookies
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
-    
+    # blacklists the current refresh token, then removes authentication cookies from the response
     def post(self, request):
         refresh_token = get_refresh_token_from_cookie(request)
 
@@ -126,9 +130,10 @@ class LogoutView(APIView):
         
         return response
 
+# returns the currently authenticated user's account details
 class CurrentUserView(APIView):
     permission_classes = [IsAuthenticated]
-    
+    # serializes and returns the user attached to the authenticated request
     def get(self, request):
         serializer = UserSerializer(request.user)
         return Response({
@@ -136,6 +141,7 @@ class CurrentUserView(APIView):
         })
 
 
+# Starts the password reset flow by generating a reset token and emailing it to the user
 class RequestPasswordResetView(APIView):
     permission_classes = [AllowAny]
     
@@ -173,10 +179,11 @@ class RequestPasswordResetView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
+# Completes the password reset flow by validating the token and saving the new password
 class ResetPasswordView(APIView):
     permission_classes = [AllowAny]
     
+    # Validates the reset token and password fields before updating the user's password
     def post(self, request):
         token = request.data.get('token')
         new_password = request.data.get('new_password')
@@ -223,8 +230,8 @@ class ResetPasswordView(APIView):
                 {'error': 'Invalid or expired password reset link'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        except Exception as e:
+        except Exception:
             return Response(
-                {'error': f'Failed to reset password: {str(e)}'},
+                {'error': 'Failed to reset password'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

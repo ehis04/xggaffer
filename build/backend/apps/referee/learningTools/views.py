@@ -7,7 +7,7 @@ from .serializers import SubmitScenarioSerializer, SubmitDrillSerializer
 
 from apps.referee.progressTracking.services import submit_scenario, submit_drill
 
-
+# Submits and marks a user's answer for a scenario course item
 class SubmitScenarioView(APIView):
     permission_classes = [IsAuthenticated, IsReferee]
 
@@ -27,7 +27,7 @@ class SubmitScenarioView(APIView):
             'completed': progress.completed,
         })
 
-
+# Submits and marks a user's answers for a drill course item
 class SubmitDrillView(APIView):
     permission_classes = [IsAuthenticated, IsReferee]
 

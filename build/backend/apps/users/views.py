@@ -1,24 +1,21 @@
 from django.shortcuts import render, get_object_or_404
-from rest_framework import status, viewsets, mixins
+from rest_framework import status, viewsets
 from rest_framework.response import Response
-from rest_framework import serializers
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from .serializers import *
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import UserProfile, Follow, UserRole, User
+from .models import UserProfile, Follow, UserRole
 from rest_framework.generics import CreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListAPIView
-from rest_framework.pagination import PageNumberPagination
-from django.db.models import Q
-from django.core.mail import send_mail
-from django.conf import settings
 from .services.cookie_service import set_auth_cookies
 
+role_required_message = "Role is required"
+# Handles new user registration and automatically logs the user in
 class UserRegisterView(APIView):
     permission_classes = [AllowAny]
-
+    
+    # Validates registration data, creates the user, sends verification email, and sets auth cookies
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -47,37 +44,41 @@ class UserRegisterView(APIView):
         set_auth_cookies(response, access_token, refresh_token, remember_me=True)
         return response
 
-
+# Creates a profile for the authenticated user if one does not already exist
 class UserCreateProfileView(CreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = UserProfileSerializer
-
+    
+    # Returns the existing profile instead of creating a duplicate profile for the same user
     def create(self, request, *args, **kwargs):
         existing_profile = UserProfile.objects.filter(user=request.user).first()
         if existing_profile:
             serializer = self.get_serializer(existing_profile)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return super().create(request, *args, **kwargs)
-
+    
+    # Saves the new profile and attaches it to the currently authenticated user
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-
+# Retrieves and updates the user's own profile
 class UserProfileView(RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
         return get_object_or_404(UserProfile, user=self.request.user)
 
+    # Returns the current user's full profile data
     def get(self, request, *args, **kwargs):
         profile = self.get_object()
         serializer = UserProfileSerializer(profile, context={'request': request})
         return Response(serializer.data)
-
+    
+    # Partially updates the current user's editable profile fields and returns the full updated profile
     def patch(self, request, *args, **kwargs):
         profile = self.get_object()
 
-        # Use the slim update serializer for validation/writing —
+        # Uses the slim update serializer
         # it only exposes the fields the user is allowed to change.
         update_serializer = UserProfileUpdateSerializer(
             profile,
@@ -90,11 +91,11 @@ class UserProfileView(RetrieveUpdateAPIView):
 
         update_serializer.save()
 
-        # Return the full profile so the frontend state is complete.
+        # Returns the full profile so the frontend state is complete.
         response_serializer = UserProfileSerializer(profile, context={'request': request})
         return Response(response_serializer.data)
 
-    # Block PUT — only PATCH is supported.
+    # Blocks full profile replacement because this endpoint only supports partial profile updates
     def put(self, request, *args, **kwargs):
         return Response(
             {'detail': 'Method "PUT" not allowed. Use PATCH.'},
@@ -102,20 +103,23 @@ class UserProfileView(RetrieveUpdateAPIView):
         )
 
 
+# Retrieves another user's public profile by username
 class GetProfileView(RetrieveAPIView):
     queryset = UserProfile.objects.select_related("user")
     serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'user__username'
     lookup_url_kwarg = "username"
-
+    
+    # Excludes superuser profiles from normal profile lookup responses
     def get_queryset(self):
         return super().get_queryset().filter(user__is_superuser=False)
 
-
+# Handles following and unfollowing another user by username
 class FollowUserView(APIView):
     permission_classes = [IsAuthenticated]
-
+    
+    # Creates a follow relationship between the current user and the target username
     def post(self, request, username):
         try:
             follower_profile = request.user.profile
@@ -149,7 +153,8 @@ class FollowUserView(APIView):
             {"message": f"You are already following {username}", "following": True},
             status=status.HTTP_200_OK,
         )
-
+        
+    # Deletes the follow relationship between the current user and the target username
     def delete(self, request, username):
         try:
             follower_profile = request.user.profile
@@ -180,7 +185,7 @@ class FollowUserView(APIView):
             status=status.HTTP_200_OK,
         )
 
-
+# Lists the profiles that follow a selected user
 class FollowersListView(ListAPIView):
     serializer_class = FollowerListSerializer
     permission_classes = [IsAuthenticated]
@@ -197,7 +202,7 @@ class FollowersListView(ListAPIView):
             id__in=followers_ids
         ).select_related('user').order_by('followers_count')
 
-
+# Lists the profiles that a selected user is following
 class FollowingListView(ListAPIView):
     serializer_class = FollowerListSerializer
     permission_classes = [IsAuthenticated]
@@ -214,7 +219,7 @@ class FollowingListView(ListAPIView):
             id__in=following_ids
         ).select_related('user').order_by('followers_count')
 
-
+# Checks the follow relationship between the current user and another user
 class CheckFollowStatusView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -246,17 +251,15 @@ class CheckFollowStatusView(APIView):
             "username": username,
         })
 
-
+# Handles listing, adding, and removing roles from the current user's profile
 class UserRoleView(APIView):
     permission_classes = [IsAuthenticated]
 
+    # Reads the role from the request body first and falls back to query parameters for clients that do not support DELETE bodies
     def _get_role_from_request(self, request):
-        """
-        Read the role value from the request body first, then fall back to
-        query params. This handles HTTP clients that strip DELETE bodies.
-        """
         return request.data.get("role") or request.query_params.get("role")
-
+    
+    # Returns all roles currently assigned to the authenticated user's profile
     def get(self, request):
         try:
             profile = request.user.profile
@@ -269,6 +272,7 @@ class UserRoleView(APIView):
         serializer = UserRoleSerializer(roles, many=True)
         return Response(serializer.data)
 
+    # Adds a role to the authenticated user's profile and sets it as active if no active role exists
     def post(self, request):
         try:
             profile = request.user.profile
@@ -281,7 +285,7 @@ class UserRoleView(APIView):
         role = self._get_role_from_request(request)
         if not role:
             return Response(
-                {"error": "Role is required"},
+                {"error": role_required_message},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -302,6 +306,7 @@ class UserRoleView(APIView):
             status=status.HTTP_200_OK,
         )
 
+    # Removes a role from the authenticated user's profile and clears active_role if that role was active
     def delete(self, request):
         try:
             profile = request.user.profile
@@ -311,11 +316,11 @@ class UserRoleView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Accept from body OR query param — clients vary on DELETE body support.
+        # Accepts the role from either the body or query parameters because DELETE request bodies are not always preserved
         role = self._get_role_from_request(request)
         if not role:
             return Response(
-                {"error": "Role is required"},
+                {"error": role_required_message},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -336,10 +341,11 @@ class UserRoleView(APIView):
             status=status.HTTP_404_NOT_FOUND,
         )
 
-
+# Handles reading and updating the current user's active role
 class ActiveUserRoleView(APIView):
     permission_classes = [IsAuthenticated]
-
+    
+    # Returns the current active role, its display label, and all roles assigned to the profile
     def get(self, request):
         try:
             profile = request.user.profile
@@ -362,7 +368,8 @@ class ActiveUserRoleView(APIView):
             "active_role_display": active_role_display,
             "available_roles": roles,
         })
-
+    
+    # Sets the current user's active role or clears it when an empty role is provided
     def put(self, request):
         try:
             profile = request.user.profile
@@ -399,13 +406,14 @@ class ActiveUserRoleView(APIView):
             "message": "Active role updated",
         })
 
-
+# ViewSet version of the profile API with retrieve, update, follow, followers, and following actions
 class UserProfileViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = UserProfileSerializer
     lookup_field = 'user__username'
     lookup_url_kwarg = 'username'
 
+    # Returns only the current user's profile for list requests and non-superuser profiles for detail requests
     def get_queryset(self):
         if self.action == 'list':
             return UserProfile.objects.filter(
@@ -415,16 +423,18 @@ class UserProfileViewSet(viewsets.ModelViewSet):
             user__is_superuser=False
         )
 
+    # Uses the slimmer update serializer for profile update actions and the full serializer for read actions
     def get_serializer_class(self):
         if self.action in ['update', 'partial_update']:
             return UserProfileUpdateSerializer
         return UserProfileSerializer
 
+    # Forces update actions to operate only on the authenticated user's own profile
     def get_object(self):
         if self.action in ['update', 'partial_update']:
             return get_object_or_404(UserProfile, user=self.request.user)
         return super().get_object()
-
+    # Creates the current user's profile or returns their existing profile if one already exists
     def create(self, request, *args, **kwargs):
         existing_profile = UserProfile.objects.filter(user=request.user).first()
         if existing_profile:
@@ -435,7 +445,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(user=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
+    # Follows or unfollows the selected user depending on whether the request method is POST or DELETE
     @action(detail=True, methods=['post', 'delete'], url_path='follow')
     def follow(self, request, username=None):
         try:
@@ -483,7 +493,8 @@ class UserProfileViewSet(viewsets.ModelViewSet):
                 {"message": f"Not following {username}", "following": False},
                 status=status.HTTP_200_OK,
             )
-
+            
+    # Returns whether the authenticated user follows the selected user and whether the selected user follows them back
     @action(detail=True, methods=['get'], url_path='follow-status')
     def follow_status(self, request, username=None):
         try:
@@ -543,10 +554,10 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         )
         return Response(serializer.data)
 
-
+# ViewSet version of the user role API for listing, assigning, and removing profile roles
 class UserRoleViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
-
+    # Lists all roles assigned to the authenticated user's profile
     def list(self, request):
         try:
             profile = request.user.profile
@@ -558,7 +569,8 @@ class UserRoleViewSet(viewsets.ViewSet):
                 {"error": "Couldn't get profile"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
+            
+    # Adds a new role to the authenticated user's profile and sets it active if no active role exists
     def create(self, request):
         try:
             profile = request.user.profile
@@ -571,7 +583,7 @@ class UserRoleViewSet(viewsets.ViewSet):
         role = request.data.get("role")
         if not role:
             return Response(
-                {"error": "Role is required"},
+                {"error": role_required_message},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -591,7 +603,8 @@ class UserRoleViewSet(viewsets.ViewSet):
             {"message": "Role has already been assigned", "role": serializer.data},
             status=status.HTTP_200_OK,
         )
-
+        
+    # Removes a role from the authenticated user's profile and clears active_role if the removed role was active
     def destroy(self, request, pk=None):
         try:
             profile = request.user.profile
@@ -604,7 +617,7 @@ class UserRoleViewSet(viewsets.ViewSet):
         role = request.data.get("role") or request.query_params.get("role")
         if not role:
             return Response(
-                {"error": "Role is required"},
+                {"error": role_required_message},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
