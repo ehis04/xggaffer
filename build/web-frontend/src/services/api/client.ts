@@ -1,6 +1,7 @@
 import { AppError } from "../../common/AppError";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const DEFAULT_REQUEST_TIMEOUT_MS = 15000;
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean>;
@@ -132,7 +133,22 @@ class ApiClient {
       headers,
     };
 
-    const response = await fetch(url, config);
+    const timeoutController = new AbortController();
+    const externalSignal = fetchOptions.signal;
+    const timeoutId = window.setTimeout(() => {
+      timeoutController.abort();
+    }, DEFAULT_REQUEST_TIMEOUT_MS);
+
+    const signal = externalSignal
+      ? AbortSignal.any([externalSignal, timeoutController.signal])
+      : timeoutController.signal;
+
+    const response = await fetch(url, {
+      ...config,
+      signal,
+    }).finally(() => {
+      window.clearTimeout(timeoutId);
+    });
 
     if (response.status === 401 && !isRetry) {
       if (!endpoint.includes('/auth/refresh')) {

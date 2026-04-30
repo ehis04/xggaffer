@@ -6,6 +6,7 @@ import type {
   UpdateTacticsBoardItemPayload,
 } from '../../types/tactics';
 import ObjectProperties from './ObjectProperties';
+import styles from './BoardSidebar.module.css';
 
 interface BoardSidebarProps {
   board: TacticsBoard;
@@ -47,96 +48,68 @@ const BoardSidebar: React.FC<BoardSidebarProps> = ({
       : null;
 
   return (
-    <aside
-      style={{
-        border: '1px solid #d1d5db',
-        borderRadius: '14px',
-        padding: '16px',
-        minWidth: '280px',
-      }}
-    >
+    <aside className={styles.sidebar}>
       <section>
-        <h2 style={{ marginTop: 0, marginBottom: '12px' }}>Board Details</h2>
+        <h2 className={styles.sectionTitle}>Board Details</h2>
 
-        <p>
+        <p className={styles.detailRow}>
           <strong>Type:</strong> {board.board_type}
         </p>
-        <p>
+        <p className={styles.detailRow}>
           <strong>Orientation:</strong> {board.pitch_orientation}
         </p>
-        <p>
+        <p className={styles.detailRow}>
           <strong>Active frame:</strong> {activeFrameIndex}
         </p>
-        <p>
+        <p className={styles.detailRow}>
           <strong>Players shown:</strong> {playerCount}
         </p>
-        <p>
+        <p className={styles.detailRow}>
           <strong>Home formation:</strong> {board.home_formation || '—'}
         </p>
-        <p>
+        <p className={styles.detailRow}>
           <strong>Away formation:</strong> {board.away_formation || '—'}
         </p>
       </section>
 
       {error ? (
-        <section
-          style={{
-            marginTop: '18px',
-            padding: '12px',
-            border: '1px solid #ef4444',
-            borderRadius: '10px',
-            background: 'rgba(239, 68, 68, 0.04)',
-          }}
-        >
+        <section className={styles.errorCard}>
           <strong>Last action failed</strong>
-          <p style={{ margin: '8px 0 0 0' }}>{error}</p>
+          <p className={styles.errorText}>{error}</p>
         </section>
       ) : null}
 
-      <section style={{ marginTop: '20px' }}>
-        <h3 style={{ marginBottom: '10px' }}>Selected Object</h3>
+      <section className={styles.selectionSection}>
+        <h3 className={styles.subsectionTitle}>Selected Object</h3>
 
         {!selectedItem ? (
-          <div
-            style={{
-              padding: '12px',
-              border: '1px dashed #9ca3af',
-              borderRadius: '10px',
-            }}
-          >
-            <p style={{ margin: 0 }}>
+          <div className={styles.emptyState}>
+            <p className={styles.emptyLead}>
               No object selected.
             </p>
-            <p style={{ margin: '8px 0 0 0', color: '#4b5563' }}>
+            <p className={styles.emptyText}>
               Select an annotation to edit it, or choose a drawing tool and place a new one.
             </p>
           </div>
         ) : (
-          <div>
-            <p>
+          <div className={styles.selectedBlock}>
+            <p className={styles.detailRow}>
               <strong>Type:</strong> {selectedItem.item_type}
             </p>
-            <p>
+            <p className={styles.detailRow}>
               <strong>Team side:</strong> {selectedItem.team_side}
             </p>
-            <p>
+            <p className={styles.detailRow}>
               <strong>Name:</strong> {getSelectedItemName(selectedItem)}
             </p>
-            <p>
+            <p className={styles.detailRow}>
               <strong>Coordinates:</strong>{' '}
               x {selectedItem.x.toFixed(1)} · y {selectedItem.y.toFixed(1)}
             </p>
 
             {selectedItem.item_type === 'player' ? (
-              <div
-                style={{
-                  marginTop: '12px',
-                  padding: '12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '10px',
-                }}
-              >
-                <p style={{ margin: 0 }}>
+              <div className={styles.playerNotice}>
+                <p className={styles.playerNoticeText}>
                   Player editing in this phase stays limited to dragging and saving position changes.
                 </p>
               </div>
@@ -152,21 +125,12 @@ const BoardSidebar: React.FC<BoardSidebarProps> = ({
                   type="button"
                   onClick={onDeleteSelectedItem}
                   disabled={isDeletingItem}
-                  style={{
-                    marginTop: '12px',
-                    padding: '9px 14px',
-                    borderRadius: '999px',
-                    border: '1px solid #b91c1c',
-                    background: '#b91c1c',
-                    color: '#ffffff',
-                    fontWeight: 600,
-                    cursor: isDeletingItem ? 'default' : 'pointer',
-                  }}
+                  className={styles.deleteButton}
                 >
                   {isDeletingItem ? 'Deleting...' : 'Delete item'}
                 </button>
 
-                <p style={{ margin: '10px 0 0 0', color: '#4b5563' }}>
+                <p className={styles.deleteHint}>
                   You can also press Delete when this object is selected.
                 </p>
               </>

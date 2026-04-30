@@ -13,7 +13,23 @@ export function formatLastUpdated(freshness: FreshnessPayload | null | undefined
   const dt = freshness?.snapshot_published_at ?? freshness?.source_fetched_at;
   if (!dt) return null;
   try {
-    return new Date(dt).toLocaleString();
+    const parsed = new Date(dt);
+    if (Number.isNaN(parsed.getTime())) {
+      return null;
+    }
+
+    // Render in dd/mm/yyyy with 24-hour time for consistent UI output.
+    const formatted = new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).format(parsed);
+
+    return formatted.replace(',', '');
   } catch {
     return null;
   }

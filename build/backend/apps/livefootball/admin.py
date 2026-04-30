@@ -1,3 +1,9 @@
+"""
+Admin configuration for live football data models
+
+Adds searchable and filterable Django admin views for competitions, teams, players, tables, fixtures, and top scorers
+"""
+
 from django.contrib import admin
 
 from .models import (
@@ -11,6 +17,7 @@ from .models import (
 )
 
 
+# Admin view for synced competition records
 @admin.register(Competition)
 class CompetitionAdmin(admin.ModelAdmin):
     list_display = (
@@ -28,6 +35,7 @@ class CompetitionAdmin(admin.ModelAdmin):
     ordering = ("name", "provider", "id")
 
 
+# Admin view for synced team directory entries
 @admin.register(TeamDirectoryEntry)
 class TeamDirectoryEntryAdmin(admin.ModelAdmin):
     list_display = (
@@ -52,6 +60,7 @@ class TeamDirectoryEntryAdmin(admin.ModelAdmin):
     ordering = ("competition", "name", "id")
 
 
+# Admin view for synced player directory entries
 @admin.register(PlayerDirectoryEntry)
 class PlayerDirectoryEntryAdmin(admin.ModelAdmin):
     list_display = (
@@ -87,6 +96,7 @@ class PlayerDirectoryEntryAdmin(admin.ModelAdmin):
     ordering = ("team", "player_name", "id")
 
 
+# Inline admin rows for table positions inside a snapshot
 class CompetitionTableRowInline(admin.TabularInline):
     model = CompetitionTableRow
     extra = 0
@@ -109,6 +119,7 @@ class CompetitionTableRowInline(admin.TabularInline):
     show_change_link = True
 
 
+# Admin view for competition table snapshots
 @admin.register(CompetitionTableSnapshot)
 class CompetitionTableSnapshotAdmin(admin.ModelAdmin):
     list_display = (
@@ -127,6 +138,7 @@ class CompetitionTableSnapshotAdmin(admin.ModelAdmin):
     ordering = ("competition", "-season_label", "-synced_at", "-id")
 
 
+# Admin view for individual competition table rows
 @admin.register(CompetitionTableRow)
 class CompetitionTableRowAdmin(admin.ModelAdmin):
     list_display = (
@@ -155,6 +167,7 @@ class CompetitionTableRowAdmin(admin.ModelAdmin):
     ordering = ("snapshot", "position", "id")
 
 
+# Admin view for synced competition fixtures
 @admin.register(CompetitionFixture)
 class CompetitionFixtureAdmin(admin.ModelAdmin):
     list_display = (
@@ -183,6 +196,7 @@ class CompetitionFixtureAdmin(admin.ModelAdmin):
     ordering = ("competition", "kickoff_at", "id")
 
 
+# Admin view for synced competition top scorers
 @admin.register(CompetitionTopScorer)
 class CompetitionTopScorerAdmin(admin.ModelAdmin):
     list_display = (

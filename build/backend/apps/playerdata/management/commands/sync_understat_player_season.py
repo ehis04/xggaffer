@@ -1,3 +1,9 @@
+"""
+Management command for syncing Understat player season data
+
+Runs a manual player enrichment backfill for a selected player, season, and optional club or external player ID
+"""
+
 from django.core.management.base import BaseCommand, CommandError
 
 from apps.clubs.models import Club
@@ -6,9 +12,11 @@ from apps.players.models import ExternalProvider, Player
 from services.providers.understat.sync import sync_understat_player_season
 
 
+# Command for manually syncing one player season enrichment row
 class Command(BaseCommand):
     help = 'Manual backfill and admin repair tool. Automated scheduling is handled by sync_pipeline.'
 
+    # Register command line arguments for the sync
     def add_arguments(self, parser):
         parser.add_argument(
             "--player-id",
@@ -53,6 +61,7 @@ class Command(BaseCommand):
             help="Optional internal Club ID if you want to pin the enrichment row to a club.",
         )
 
+    # Run the player season sync and print a verification summary
     def handle(self, *args, **options):
         provider = (options["provider"] or "").strip()
         if provider != ExternalProvider.UNDERSTAT:

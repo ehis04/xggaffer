@@ -93,7 +93,6 @@ const formatUnknownValue = (v: unknown): string => {
   if (Array.isArray(v)) return v.map(formatUnknownValue).join(', ');
   try { return JSON.stringify(v); } catch { return String(v); }
 };
-const getPreviewCounts = (j: ClubImportJob | null) => asRecord(asRecord(j?.preview_payload).counts);
 const getReportCounts = (j: ClubImportJob | null) => asRecord(asRecord(j?.report_payload).counts);
 const getPreviewRows = (j: ClubImportJob | null) => asArray<UnknownRecord>(asRecord(j?.preview_payload).rows);
 const getPreviewHeaders = (j: ClubImportJob | null) => asArray<string>(asRecord(j?.preview_payload).headers);
@@ -149,7 +148,6 @@ export const ClubResourcesSection = ({ club, isMember, canManageResources }: Clu
   const [loadingImportDetail, setLoadingImportDetail] = useState(false);
   const [committingImport, setCommittingImport] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
-
   const fileInputRef = useRef<HTMLInputElement>(null);
   const currentPageRef = useRef(1);
   const activeViewerResourceRef = useRef<ClubResource | null>(null);
@@ -327,7 +325,6 @@ export const ClubResourcesSection = ({ club, isMember, canManageResources }: Clu
     finally { setCommittingImport(false); }
   };
 
-  const previewCounts = getPreviewCounts(selectedImportJob);
   const previewRows = getPreviewRows(selectedImportJob);
   const previewHeaders = getPreviewHeaders(selectedImportJob).slice(0, 5);
   const allRawPreviewRows = getRawPreviewRows(selectedImportJob);

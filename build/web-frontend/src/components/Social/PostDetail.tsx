@@ -10,7 +10,7 @@ import { ProfileButton } from "../Buttons/ProfileButton";
 import type { UserData } from "../Navigation/SideBar";
 import { getUserProfile } from "../Navigation/functions/getUserProfile";
 import { COMMUNITY } from "../../services/api/endpoints";
-import type { PaginatedResponse } from "../../services/api/communityApi";
+import communityApi, { type PaginatedResponse } from "../../services/api/communityApi";
 
 export const PostDetail = () => {
   const { postId } = useParams<{ postId: string }>();
@@ -50,6 +50,7 @@ export const PostDetail = () => {
           author: {
             id: postData.author.id,
             username: postData.author.username,
+            profile_image: postData.author.profile_image,
           },
           text_body: postData.text_body,
           created_at: postData.created_at,
@@ -113,6 +114,41 @@ export const PostDetail = () => {
       await apiClient.post(endpoint);
     } catch (err) {
       console.error("Like error:", err);
+    }
+  };
+
+  const handleDelete = async (postToDelete: PostData) => {
+    try {
+      if (postToDelete.type === "post") {
+        await communityApi.deletePost(postToDelete.id);
+        navigate("/social");
+        return;
+      }
+
+      await communityApi.deleteComment(postToDelete.id);
+      const removedIds = new Set<number>([postToDelete.id]);
+      comments.forEach((comment) => {
+        if (comment.parent_id === postToDelete.id) {
+          removedIds.add(comment.id);
+        }
+      });
+
+      setComments((currentComments) =>
+        currentComments.filter((comment) => !removedIds.has(comment.id))
+      );
+      setPost((currentPost) =>
+        currentPost
+          ? {
+              ...currentPost,
+              no_of_comments: Math.max(0, currentPost.no_of_comments - removedIds.size),
+            }
+          : currentPost
+      );
+      if (replyingToId && removedIds.has(replyingToId)) {
+        setReplyingToId(null);
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
     }
   };
 
@@ -181,6 +217,7 @@ export const PostDetail = () => {
               onComment={handleComment}
               onProfileClick={handleProfileClick}
               onPostClick={handlePostClick}
+              onDelete={handleDelete}
             />
 
             <div className="pd-composer">
@@ -189,6 +226,7 @@ export const PostDetail = () => {
                   {userData && (
                     <ProfileButton
                       username={userData.username}
+                      profileImage={userData.profile_image ?? undefined}
                       size="medium"
                       onClick={handleProfileClick}
                     />
@@ -262,6 +300,7 @@ export const PostDetail = () => {
                         onComment={handleComment}
                         onProfileClick={handleProfileClick}
                         showReplyLine={replies.length > 0}
+                        onDelete={handleDelete}
                       />
                       {replies.map((reply) => (
                         <Post
@@ -271,6 +310,7 @@ export const PostDetail = () => {
                           onComment={handleComment}
                           onProfileClick={handleProfileClick}
                           depth={1}
+                          onDelete={handleDelete}
                         />
                       ))}
                     </div>

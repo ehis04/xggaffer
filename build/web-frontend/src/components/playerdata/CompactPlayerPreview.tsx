@@ -2,19 +2,12 @@ import React from 'react';
 import type { ClubPlayer } from '../../types/clubPlayers';
 import type { PlayerSeasonSummary } from '../../types/playerdata';
 
-type CanonicalPlayerIdSource =
-  | 'player_id'
-  | 'canonical_player_id'
-  | 'linked_player_id'
-  | string;
-
 interface CompactPlayerPreviewProps {
   player: ClubPlayer | null;
   summary?: PlayerSeasonSummary | null;
   isLoading?: boolean;
   error?: string | null;
   canonicalPlayerId?: number | null;
-  canonicalPlayerIdSource?: CanonicalPlayerIdSource | null;
   onOpenReadPage?: (() => void) | null;
   emptyMessage?: string;
   className?: string;
@@ -89,18 +82,7 @@ const buildContextLine = (summary?: PlayerSeasonSummary | null): string | null =
     return null;
   }
 
-  const provider =
-    getFirstPresentValue(summary, [
-      ['context', 'provider'],
-      ['provider_coverage', 'provider'],
-    ]) || null;
-
-  const season =
-    getFirstPresentValue(summary, [
-      ['context', 'season'],
-      ['season'],
-    ]) || null;
-
+  // Only show competition, not provider or season
   const competition =
     getFirstPresentValue(summary, [
       ['context', 'competition_name'],
@@ -109,9 +91,7 @@ const buildContextLine = (summary?: PlayerSeasonSummary | null): string | null =
       ['competition_code'],
     ]) || null;
 
-  const bits = [provider, season, competition].filter(Boolean);
-
-  return bits.length > 0 ? bits.join(' · ') : null;
+  return competition;
 };
 
 
@@ -131,7 +111,6 @@ const CompactPlayerPreview: React.FC<CompactPlayerPreviewProps> = ({
   isLoading = false,
   error = null,
   canonicalPlayerId = null,
-  canonicalPlayerIdSource = null,
   onOpenReadPage = null,
   emptyMessage = 'Select a player to preview useful summary information.',
   className,
@@ -198,13 +177,6 @@ const CompactPlayerPreview: React.FC<CompactPlayerPreviewProps> = ({
         >
           <span>
             <strong>Canonical ID</strong> {canonicalPlayerId ?? '—'}
-          </span>
-          <span>
-            <strong>ID source</strong> {canonicalPlayerIdSource ?? 'Unavailable'}
-          </span>
-          <span>
-            <strong>Providers</strong>{' '}
-            {player.provider_sources?.length ? player.provider_sources.join(', ') : '—'}
           </span>
           <span>
             <strong>Sync</strong> {formatLastSyncedAt(player.last_synced_at)}

@@ -3,6 +3,8 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
@@ -15,8 +17,18 @@ from apps.livefootball.models import (
 )
 
 
+TEST_CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "test-cache",
+    }
+}
+
+
+@override_settings(CACHES=TEST_CACHES)
 class LeagueViewsTests(APITestCase):
     def setUp(self) -> None:
+        cache.clear()
         self.user = get_user_model().objects.create_user(
             email="league-test@example.com",
             password="password123",
@@ -108,10 +120,11 @@ class LeagueViewsTests(APITestCase):
         self.assertEqual(response.status_code, 200)
 
         payload = response.json()
-        self.assertIn("leagues", payload)
-        self.assertGreaterEqual(len(payload["leagues"]), 1)
+        self.assertIn("data", payload)
+        self.assertIn("leagues", payload["data"])
+        self.assertGreaterEqual(len(payload["data"]["leagues"]), 1)
 
-        premier_league = next(item for item in payload["leagues"] if item["id"] == self.competition.id)
+        premier_league = next(item for item in payload["data"]["leagues"] if item["id"] == self.competition.id)
         self.assertEqual(premier_league["code"], "PL")
         self.assertIn("2024", premier_league["available_seasons"])
         self.assertIn("2023", premier_league["available_seasons"])
@@ -194,11 +207,11 @@ class LeagueViewsTests(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         payload = response.json()
-        self.assertEqual(payload["season_label"], "2024")
-        self.assertEqual(payload["mode"], "current_expected")
-        self.assertEqual(len(payload["expected_table"]), 2)
-        self.assertEqual(payload["commentary"][0]["type"], "headline")
-        self.assertIn("supported_modes", payload["metadata"])
+        self.assertEqual(payload["data"]["season_label"], "2024")
+        self.assertEqual(payload["data"]["mode"], "current_expected")
+        self.assertEqual(len(payload["data"]["expected_table"]), 2)
+        self.assertEqual(payload["data"]["commentary"][0]["type"], "headline")
+        self.assertIn("supported_modes", payload["data"]["metadata"])
 
     def test_expected_table_endpoint_rejects_invalid_mode(self) -> None:
         response = self.client.get(
@@ -288,12 +301,96 @@ class LeagueViewsTests(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         payload = response.json()
-        self.assertIn("actual_table", payload)
-        self.assertIn("expected_table", payload)
-        self.assertIn("deltas", payload)
-        self.assertIn("comparison_metrics", payload)
-        self.assertIn("commentary", payload)
-        self.assertEqual(payload["commentary"][0]["type"], "comparison")
+        self.assertIn("data", payload)
+        self.assertIn("freshness", payload)
+        self.assertIn("version", payload)
+        self.assertIn("generated_at", payload)
+        self.assertIn("actual_table", payload["data"])
+        self.assertIn("expected_table", payload["data"])
+        self.assertIn("deltas", payload["data"])
+        self.assertIn("comparison_metrics", payload["data"])
+        self.assertIn("commentary", payload["data"])
+        self.assertEqual(payload["data"]["commentary"][0]["type"], "comparison")
+
+    @patch("apps.livefootball.views.get_active_snapshot_version", return_value="42")
+    @patch("apps.livefootball.services.league_data.generate_comparison_commentary")
+    @patch("apps.livefootball.services.league_data.generate_expected_table_commentary")
+    @patch("apps.livefootball.services.league_data.simulate_league_season")
+    def test_compare_endpoint_uses_cached_envelope_when_available(
+        self,
+        mock_simulate,
+        mock_expected_commentary,
+        mock_compare_commentary,
+        _mock_snapshot_version,
+    ) -> None:
+        cache.clear()
+        mock_simulate.return_value = {
+            "league": "EPL",
+            "season": "2024",
+            "mode": "current_expected",
+            "simulation_count": 5000,
+            "based_on_matchweek": 30,
+            "data_cutoff_date": "2025-04-01",
+            "expected_table": [
+                {
+                    "team": "Arsenal",
+                    "predicted_points": 88.4,
+                    "predicted_position": 1,
+                    "position_probabilities": {1: 0.61, 2: 0.29},
+                    "title_probability": 0.61,
+                    "top_4_probability": 0.97,
+                    "relegation_probability": 0.0,
+                    "simulated_wins": 27.1,
+                    "simulated_draws": 7.1,
+                    "simulated_losses": 3.8,
+                    "simulated_goals_for": 84.2,
+                    "simulated_goals_against": 30.6,
+                },
+                {
+                    "team": "Manchester City",
+                    "predicted_points": 85.7,
+                    "predicted_position": 2,
+                    "position_probabilities": {1: 0.29, 2: 0.48},
+                    "title_probability": 0.29,
+                    "top_4_probability": 0.95,
+                    "relegation_probability": 0.0,
+                    "simulated_wins": 26.1,
+                    "simulated_draws": 7.4,
+                    "simulated_losses": 4.5,
+                    "simulated_goals_for": 86.1,
+                    "simulated_goals_against": 33.0,
+                },
+            ],
+            "metadata": {
+                "engine_versions": {
+                    "elo": "v1",
+                    "outcome": "v2",
+                    "score": "score-test",
+                    "simulation": "v1",
+                },
+                "remaining_fixtures": 8,
+                "total_fixtures_simulated": 40000,
+            },
+        }
+        mock_expected_commentary.return_value = []
+        mock_compare_commentary.return_value = []
+
+        url = reverse(
+            "livefootball-league-compare",
+            kwargs={"competition_id": self.competition.id},
+        )
+        params = {"season": "2024", "mode": "current_expected"}
+
+        first_response = self.client.get(url, params)
+        self.assertEqual(first_response.status_code, 200)
+        self.assertIn("data", first_response.json())
+        self.assertIn("freshness", first_response.json())
+
+        mock_simulate.reset_mock()
+        second_response = self.client.get(url, params)
+        self.assertEqual(second_response.status_code, 200)
+        self.assertEqual(second_response.json(), first_response.json())
+        mock_simulate.assert_not_called()
 
     def test_compare_endpoint_returns_404_for_unknown_competition(self) -> None:
         response = self.client.get(
@@ -414,8 +511,8 @@ class LeagueViewsTests(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         payload = response.json()
-        self.assertEqual(payload["metadata"]["actual_matchday"], 10)
-        self.assertEqual(payload["actual_table"][0]["played"], 10)
+        self.assertEqual(payload["data"]["metadata"]["actual_matchday"], 10)
+        self.assertEqual(payload["data"]["actual_table"][0]["played"], 10)
 
     def test_expected_table_endpoint_accepts_as_of_matchweek_for_current_season(self) -> None:
         response = self.client.get(
@@ -505,7 +602,7 @@ class LeagueViewsTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["mode"], "as_of_matchweek")
+        self.assertEqual(response.json()["data"]["mode"], "as_of_matchweek")
         mock_simulate.assert_called_once_with(
             league="EPL",
             season="2024",

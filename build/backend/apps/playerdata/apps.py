@@ -1,3 +1,7 @@
+"""
+Application configuration for the player data app
+"""
+
 from django.apps import AppConfig
 
 

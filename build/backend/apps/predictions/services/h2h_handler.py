@@ -7,6 +7,10 @@ import pandas as pd
 
 from apps.predictions.services.base_handler import EngineHandler, QueryPayload
 from apps.predictions.services.intent_types import IntentClass, ParsedQuery
+from apps.predictions.services.source_policy import (
+    apply_source_priority,
+    source_coverage_metadata,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -44,6 +48,11 @@ class H2HHandler(EngineHandler):
             league = parsed_query.league
             if league:
                 df = df[df["league"] == league]
+
+            df, used_sources = apply_source_priority(
+                df,
+                dedupe_keys=["league", "season", "date", "home_team", "away_team"],
+            )
 
             mask = (
                 ((df["home_team"] == home) & (df["away_team"] == away)) |
@@ -109,6 +118,10 @@ class H2HHandler(EngineHandler):
                     "away_win_pct": round(away_wins / total, 3),
                     "draw_pct": round(draws / total, 3),
                     "matches": records,
+                    "source_coverage": source_coverage_metadata(
+                        intent=IntentClass.HEAD_TO_HEAD.value,
+                        used_sources=used_sources,
+                    ),
                 },
                 partial=False,
                 error=None,

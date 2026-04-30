@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { ProfileData } from "./types/ProfileTypes";
 import "./css/EditProfile.css";
 import { ProfileButton } from "../Buttons/ProfileButton";
 
-type Visibility = "PUBLIC" | "FOLLOWERS" | "PRIVATE";
+type Visibility = "PB" | "PR";
 
 interface EditProfileForm {
   display_name: string;
@@ -11,13 +11,14 @@ interface EditProfileForm {
   gender: string;
   date_of_birth: string;
   visibility: Visibility;
+  profile_picture?: File | null;
 }
 
 interface EditProfileProps {
   isOpen: boolean;
   userData: ProfileData | null;
   onClose: () => void;
-  onSave: (form: EditProfileForm) => void;
+  onSave: (form: EditProfileForm) => Promise<void> | void;
 }
 
 const VISIBILITY_OPTIONS: {
@@ -26,19 +27,14 @@ const VISIBILITY_OPTIONS: {
   desc: string;
 }[] = [
   {
-    value: "PUBLIC",
+    value: "PB",
     label: "Public",
     desc: "Anyone can see your profile",
   },
   {
-    value: "FOLLOWERS",
-    label: "Followers",
-    desc: "Only followers see posts",
-  },
-  {
-    value: "PRIVATE",
+    value: "PR",
     label: "Private",
-    desc: "Approve all followers",
+    desc: "Only you can see your profile",
   },
 ];
 
@@ -48,23 +44,31 @@ export const EditProfile = ({
   onClose,
   onSave,
 }: EditProfileProps) => {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [form, setForm] = useState<EditProfileForm>({
     display_name: "",
     bio: "",
-    gender: "",
+    gender: "NS",
     date_of_birth: "",
-    visibility: "PUBLIC",
+    visibility: "PB",
+    profile_picture: null,
   });
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [fileError, setFileError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (userData) {
       setForm({
         display_name: userData.display_name ?? "",
         bio: userData.bio ?? "",
-        gender: userData.gender ?? "",
-        date_of_birth: "",
-        visibility: (userData.visibility as Visibility) ?? "PUBLIC",
+        gender: userData.gender || "NS",
+        date_of_birth: userData.date_of_birth ?? "",
+        visibility: userData.visibility === "PR" || userData.visibility === "PRIVATE" ? "PR" : "PB",
+        profile_picture: null,
       });
+      setPreviewUrl(null);
+      setFileError("");
     }
   }, [userData]);
 
@@ -79,11 +83,51 @@ export const EditProfile = ({
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
   if (!isOpen) return null;
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose();
   };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      setFileError("Please choose a JPEG, PNG, or WebP image.");
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setFileError("Profile photos must be 5MB or smaller.");
+      e.target.value = "";
+      return;
+    }
+
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setForm((f) => ({ ...f, profile_picture: file }));
+    setPreviewUrl(URL.createObjectURL(file));
+    setFileError("");
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await onSave(form);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const profileImage = previewUrl || userData?.profile_image || undefined;
 
   return (
     <div
@@ -102,26 +146,45 @@ export const EditProfile = ({
           </span>
           <div className="epm-header-actions">
             <button className="epm-close" onClick={onClose}>
-              ✕
+              X
             </button>
-            <button className="epm-save" onClick={() => onSave(form)}>
-              Save
+            <button className="epm-save" onClick={handleSave} disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save"}
             </button>
           </div>
         </div>
 
         <div className="epm-body">
           <div className="epm-avatar-section">
-            <ProfileButton username={userData?.username ?? ''} size="large"/>
+            <ProfileButton
+              username={userData?.username ?? ""}
+              profileImage={profileImage}
+              size="large"
+              onClick={() => undefined}
+            />
             <div className="epm-avatar-info">
               <div className="epm-avatar-name">
                 {userData?.display_name || userData?.username}
               </div>
               <div className="epm-avatar-hint">Profile photo</div>
-              <button className="epm-btn-photo" disabled title="Coming soon">
+              <input
+                ref={fileInputRef}
+                className="epm-file-input"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleFileChange}
+              />
+              <button
+                className="epm-btn-photo"
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+              >
                 Change photo
               </button>
-              <div className="epm-coming-soon">Photo upload coming soon</div>
+              {form.profile_picture && (
+                <div className="epm-photo-file">{form.profile_picture.name}</div>
+              )}
+              {fileError && <div className="epm-file-error">{fileError}</div>}
             </div>
           </div>
 
@@ -171,7 +234,7 @@ export const EditProfile = ({
                 setForm((f) => ({ ...f, gender: e.target.value }))
               }
             >
-              <option value="">Prefer not to say</option>
+              <option value="NS">Prefer not to say</option>
               <option value="M">Male</option>
               <option value="F">Female</option>
               <option value="O">Other</option>

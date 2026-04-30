@@ -59,6 +59,61 @@ class UnderstatNormaliserTests(SimpleTestCase):
         self.assertEqual(result["metadata"]["source"], "understat")
         self.assertEqual(len(result["raw_snapshot"]["history_rows"]), 2)
 
+    def test_normalise_understat_team_season_aggregates_dates_when_stats_are_grouped(self):
+        payload = {
+            "team_external_id": "Manchester_United",
+            "league": "EPL",
+            "stats": {
+                "situation": {
+                    "OpenPlay": {
+                        "shots": 10,
+                        "goals": 1,
+                        "xG": 1.2,
+                    }
+                }
+            },
+            "dates": [
+                {
+                    "id": "m1",
+                    "isResult": True,
+                    "side": "h",
+                    "goals": {"h": "2", "a": "1"},
+                    "xG": {"h": "1.40", "a": "0.80"},
+                    "result": "w",
+                },
+                {
+                    "id": "m2",
+                    "isResult": True,
+                    "side": "a",
+                    "goals": {"h": "1", "a": "1"},
+                    "xG": {"h": "1.10", "a": "1.30"},
+                    "result": "d",
+                },
+                {
+                    "id": "m3",
+                    "isResult": False,
+                    "side": "h",
+                    "goals": {"h": "", "a": ""},
+                    "xG": {"h": "", "a": ""},
+                },
+            ],
+        }
+
+        result = normalise_understat_team_season(
+            payload,
+            season_label="2025",
+            competition_code="EPL",
+        )
+
+        self.assertEqual(result["matches_played"], 2)
+        self.assertEqual(result["wins"], 1)
+        self.assertEqual(result["draws"], 1)
+        self.assertEqual(result["goals_for"], 3)
+        self.assertEqual(result["goals_against"], 2)
+        self.assertEqual(result["xg"], Decimal("2.70"))
+        self.assertEqual(result["xga"], Decimal("1.90"))
+        self.assertEqual(len(result["raw_snapshot"]["history_rows"]), 2)
+
     def test_normalise_understat_player_season_returns_expected_shape(self):
         payload = {
             "player_external_id": "19",

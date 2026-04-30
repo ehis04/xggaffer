@@ -21,6 +21,10 @@ interface Props {
   ctx: ClubContext;
 }
 
+type UnderstatResponseCandidate = Partial<ClubUnderstatSeasonSummaryResponse> & {
+  summary?: unknown;
+};
+
 type MatchOutcome = 'W' | 'D' | 'L';
 
 interface ResultFormState {
@@ -67,6 +71,51 @@ const getOutcomeStyle = (outcome: MatchOutcome) => {
 const getTeamLabel = (team: { name: string; short_name?: string; tla?: string }): string =>
   team.short_name?.trim() || team.tla?.trim() || team.name;
 
+const coerceUnderstatSummary = (
+  value: unknown,
+): ClubUnderstatSeasonSummaryResponse | null => {
+  if (!value || typeof value !== 'object') return null;
+
+  const candidate = value as UnderstatResponseCandidate;
+  const payload =
+    candidate.summary && typeof candidate.summary === 'object'
+      ? (candidate.summary as Partial<ClubUnderstatSeasonSummaryResponse>)
+      : candidate;
+
+  if (
+    typeof payload.wins !== 'number' ||
+    typeof payload.draws !== 'number' ||
+    typeof payload.losses !== 'number' ||
+    typeof payload.goals_for !== 'number' ||
+    typeof payload.goals_against !== 'number'
+  ) {
+    return null;
+  }
+
+  return {
+    club_id: typeof payload.club_id === 'number' ? payload.club_id : 0,
+    provider: 'understat',
+    season_label:
+      typeof payload.season_label === 'string' ? payload.season_label : '',
+    competition_code:
+      typeof payload.competition_code === 'string' ? payload.competition_code : '',
+    competition_name:
+      typeof payload.competition_name === 'string' ? payload.competition_name : '',
+    matches_played:
+      typeof payload.matches_played === 'number' ? payload.matches_played : 0,
+    wins: payload.wins,
+    draws: payload.draws,
+    losses: payload.losses,
+    goals_for: payload.goals_for,
+    goals_against: payload.goals_against,
+    xg: payload.xg ?? null,
+    xga: payload.xga ?? null,
+    npxg: payload.npxg ?? null,
+    ppda: payload.ppda ?? null,
+    last_synced_at: payload.last_synced_at ?? null,
+  };
+};
+
 // ── Pro club path ────────────────────────────────────────────────────────────
 
 interface ProSeasonData {
@@ -77,7 +126,15 @@ interface ProSeasonData {
   competition: CompetitionListItem | null;
 }
 
-const ProSeasonView = ({ clubId, clubName }: { clubId: number; clubName: string }) => {
+const ProSeasonView = ({
+  clubId,
+  clubName,
+  fallbackUnderstat,
+}: {
+  clubId: number;
+  clubName: string;
+  fallbackUnderstat: unknown;
+}) => {
   const [data, setData] = useState<ProSeasonData>({
     understat: null, table: null,
     previous: [], upcoming: [], competition: null,
@@ -93,10 +150,9 @@ const ProSeasonView = ({ clubId, clubName }: { clubId: number; clubName: string 
         setError(null);
 
         const understatEnvelope = await clubsApi.getUnderstatSeasonSummary(clubId);
-        const understatRaw = understatEnvelope.data;
-        const understat = understatRaw && 'wins' in understatRaw
-          ? (understatRaw as ClubUnderstatSeasonSummaryResponse)
-          : null;
+        const understat =
+          coerceUnderstatSummary(understatEnvelope.data) ||
+          coerceUnderstatSummary(fallbackUnderstat);
 
         const competitionCode = understat?.competition_code ?? null;
         let table: CompetitionTableResponse | null = null;
@@ -138,7 +194,7 @@ const ProSeasonView = ({ clubId, clubName }: { clubId: number; clubName: string 
       }
     };
     void load();
-  }, [clubId, retryKey]);
+  }, [clubId, retryKey, fallbackUnderstat]);
 
   if (loading) return <SectionSkeleton rows={3} height="56px" gap="12px" />;
   if (error) return <InlineRetry message={error} onRetry={() => setRetryKey((k) => k + 1)} retrying={loading} />;
@@ -581,12 +637,18 @@ const ManualSeasonView = ({ clubId, canManage }: { clubId: number; canManage: bo
 
 const SeasonTab = ({ ctx }: Props) => {
   const { club, clubId, canManage } = ctx;
-  const isProClub = club.club_type === 'system_professional';
+  const isProClub =
+    club.club_type === 'system_professional' ||
+    (club.club_type === null && !!coerceUnderstatSummary(club.latest_understat_summary));
 
   return (
     <div className={styles.tabContent}>
       {isProClub ? (
-        <ProSeasonView clubId={clubId} clubName={club.name} />
+        <ProSeasonView
+          clubId={clubId}
+          clubName={club.name}
+          fallbackUnderstat={club.latest_understat_summary}
+        />
       ) : (
         <ManualSeasonView clubId={clubId} canManage={canManage} />
       )}

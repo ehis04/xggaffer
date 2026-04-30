@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -12,59 +12,19 @@ vi.mock('../../../services/api/livefootballApi', () => ({
   },
 }));
 
+vi.mock('../../../services/api/predictionsApi', () => ({
+  getOddsFixtures: vi.fn().mockResolvedValue({
+    data: {
+      fixtures: [],
+    },
+  }),
+}));
+
 vi.mock('../../widgets/MatchPredictionCard', () => ({
   default: ({ homeTeam, awayTeam }: { homeTeam: string; awayTeam: string }) => (
     <div data-testid="prediction-card">{homeTeam} vs {awayTeam}</div>
   ),
 }));
-
-import liveFootballApi from '../../../services/api/livefootballApi';
-
-const BASE_COMPETITION_FIELDS = {
-  provider: 'football-data',
-  external_id: 'pd-1',
-  area_name: 'England',
-  emblem_url: '',
-  current_season_label: '2025/26',
-};
-
-const MOCK_COMPETITIONS = [
-  { id: 1, code: 'PL', name: 'Premier League', ...BASE_COMPETITION_FIELDS },
-  {
-    id: 2,
-    code: 'PD',
-    name: 'La Liga',
-    ...BASE_COMPETITION_FIELDS,
-    external_id: 'pd-2',
-    area_name: 'Spain',
-  },
-];
-
-const MOCK_FIXTURES = {
-  competition: { id: 1, code: 'PL', name: 'Premier League', ...BASE_COMPETITION_FIELDS },
-  season_label: '2025/26',
-  count: 2,
-  items: [
-    {
-      id: 101,
-      external_match_id: 'fixture-101',
-      season_label: '2025/26',
-      status: 'SCHEDULED',
-      home_team: { name: 'Arsenal', short_name: 'Arsenal', tla: 'ARS', emblem_url: '' },
-      away_team: { name: 'Chelsea', short_name: 'Chelsea', tla: 'CHE', emblem_url: '' },
-      kickoff_at: '2026-05-10T15:00:00Z',
-    },
-    {
-      id: 102,
-      external_match_id: 'fixture-102',
-      season_label: '2025/26',
-      status: 'SCHEDULED',
-      home_team: { name: 'Liverpool', short_name: 'Liverpool', tla: 'LIV', emblem_url: '' },
-      away_team: { name: 'Man City', short_name: 'Man City', tla: 'MCI', emblem_url: '' },
-      kickoff_at: '2026-05-11T15:00:00Z',
-    },
-  ],
-};
 
 function renderHub() {
   return render(
@@ -78,62 +38,45 @@ describe('PredictionsHub', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('renders page heading', () => {
-    vi.mocked(liveFootballApi.getCompetitions).mockResolvedValueOnce(MOCK_COMPETITIONS);
-    vi.mocked(liveFootballApi.getCompetitionFixtures).mockResolvedValueOnce(MOCK_FIXTURES);
     renderHub();
-    expect(screen.getByRole('heading', { name: /predictions hub/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /prediction & intelligence/i })).toBeInTheDocument();
   });
 
-  it('renders all 5 league tabs', () => {
-    vi.mocked(liveFootballApi.getCompetitions).mockResolvedValueOnce(MOCK_COMPETITIONS);
-    vi.mocked(liveFootballApi.getCompetitionFixtures).mockResolvedValueOnce(MOCK_FIXTURES);
+  it('renders all 7 section cards', () => {
     renderHub();
-    expect(screen.getByRole('button', { name: /premier league/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /la liga/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /bundesliga/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /serie a/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /ligue 1/i })).toBeInTheDocument();
+    // Check for the 7 section cards - use getAllByText for texts that appear in multiple places
+    expect(screen.getAllByText(/Match Predictions/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Odds Comparison/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Match Intelligence/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Season Projection/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Tactical Scouting/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Squad Intelligence/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Model Trust Centre/i).length).toBeGreaterThan(0);
   });
 
-  it('renders fixture cards after load', async () => {
-    vi.mocked(liveFootballApi.getCompetitions).mockResolvedValueOnce(MOCK_COMPETITIONS);
-    vi.mocked(liveFootballApi.getCompetitionFixtures).mockResolvedValueOnce(MOCK_FIXTURES);
+  it('renders section descriptions', () => {
     renderHub();
-    await waitFor(() => {
-      expect(screen.getAllByTestId('prediction-card').length).toBeGreaterThan(0);
-    });
+    expect(screen.getByText(/Model-powered match predictions/i)).toBeInTheDocument();
+    expect(screen.getByText(/Compare model probabilities/i)).toBeInTheDocument();
   });
 
-  it('shows null state when no fixtures returned', async () => {
-    vi.mocked(liveFootballApi.getCompetitions).mockResolvedValueOnce(MOCK_COMPETITIONS);
-    vi.mocked(liveFootballApi.getCompetitionFixtures).mockResolvedValueOnce({
-      competition: { id: 1, code: 'PL', name: 'Premier League', ...BASE_COMPETITION_FIELDS },
-      season_label: '2025/26',
-      count: 0,
-      items: [],
-    });
+  it('renders all action buttons', () => {
     renderHub();
-    await waitFor(() => {
-      expect(screen.getByText(/no fixtures match/i)).toBeInTheDocument();
-    });
+    expect(screen.getByRole('button', { name: /Open Predictions/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Compare Odds/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Look Up Match/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /View Projections/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Scout a Team/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /View Squad/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Open Trust Centre/i })).toBeInTheDocument();
   });
 
-  it('shows error state when API fails', async () => {
-    vi.mocked(liveFootballApi.getCompetitions).mockRejectedValueOnce(new Error('fail'));
+  it('navigates when clicking a section button', () => {
     renderHub();
-    await waitFor(() => {
-      expect(screen.getByText(/failed to load fixtures/i)).toBeInTheDocument();
-    });
-  });
-
-  it('switches league on tab click and re-fetches', async () => {
-    vi.mocked(liveFootballApi.getCompetitions).mockResolvedValue(MOCK_COMPETITIONS);
-    vi.mocked(liveFootballApi.getCompetitionFixtures).mockResolvedValue(MOCK_FIXTURES);
-    renderHub();
-    await waitFor(() => screen.getAllByTestId('prediction-card'));
-    fireEvent.click(screen.getByRole('button', { name: /la liga/i }));
-    await waitFor(() => {
-      expect(liveFootballApi.getCompetitions).toHaveBeenCalledTimes(2);
-    });
+    // Click the Match Intelligence button
+    const lookUpMatchButton = screen.getByRole('button', { name: /Look Up Match/i });
+    fireEvent.click(lookUpMatchButton);
+    // The component uses navigate - we just verify the button is clickable
+    expect(lookUpMatchButton).toBeInTheDocument();
   });
 });

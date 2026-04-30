@@ -14,6 +14,7 @@ import type {
 import styles from "./css/LeaguesPage.module.css";
 import { Sidebar } from "../../../components/Navigation/SideBar";
 import { SocialUserButtons } from "../../../components/Social/SocialUserButtons";
+import { FreshnessBadge } from '../../../common/components/FreshnessBadge';
 
 const normalizeError = (error: unknown): string => {
   if (error instanceof Error) {
@@ -229,6 +230,7 @@ const LeaguesPage: React.FC = () => {
             <SocialUserButtons />
           </div>
         </header>
+        <FreshnessBadge freshness={metaEnvelope?.freshness} />
 
         <div className={styles.LeagueBody}>
           <div className={styles.Leaguesactions}>

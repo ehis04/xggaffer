@@ -1,106 +1,101 @@
-from __future__ import annotations
+"""
+Repairs article source data after imports or source URL changes
 
-from urllib.parse import urlparse
+Normalises site domains, merges duplicate sites, and fixes article URLs so stored source links stay valid
+"""
+
+from __future__ import annotations
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from django.utils.text import slugify
 
-from apps.articles.models import Article, Site
+from apps.articles.models import Article, Author, Site, UserFeedback, UserProfile
+from apps.articles.services.source_utils import normalize_site_domain, sanitize_external_url
 
 
+# Command for repairing article source domains and URLs
 class Command(BaseCommand):
     help = 'Repair invalid article source URLs and normalize site domains.'
 
-    _BLOCKED_URL_TOKENS = (
-        'zclkvisitor',
-        'campaignid=',
-        'clickid=',
-        'utm_',
-    )
-
+    # Merge a duplicate site into the canonical site record
     @staticmethod
-    def _host(value: str | None) -> str:
-        if not value:
-            return ''
-        parsed = urlparse(value)
-        return (parsed.netloc or '').lower()
+    def _merge_sites(source: Site, target: Site) -> None:
+        if source.pk == target.pk:
+            return
 
-    @classmethod
-    def _same_source_family(cls, article_url: str, site_domain: str) -> bool:
-        article_host = cls._host(article_url)
-        site_host = cls._host(site_domain)
-        if not article_host or not site_host:
-            return False
-        return article_host.endswith(site_host) or site_host.endswith(article_host)
+        Article.objects.filter(site=source).update(site=target)
+        UserFeedback.objects.filter(site=source).update(site=target)
 
-    @classmethod
-    def _is_valid_http_url(cls, value: str | None, site_domain: str | None) -> bool:
-        if not value:
-            return False
-        try:
-            parsed = urlparse(value)
-        except Exception:
-            return False
+        for author in Author.objects.filter(sites=source).only('id'):
+            author.sites.add(target)
+            author.sites.remove(source)
 
-        if not (parsed.scheme in {'http', 'https'} and bool(parsed.netloc) and '.local' not in parsed.netloc):
-            return False
+        for profile in UserProfile.objects.filter(preferred_sites=source).only('id'):
+            profile.preferred_sites.add(target)
+            profile.preferred_sites.remove(source)
 
-        lowered = value.lower()
-        if any(token in lowered for token in cls._BLOCKED_URL_TOKENS):
-            return False
+        for profile in UserProfile.objects.filter(disliked_sites=source).only('id'):
+            profile.disliked_sites.add(target)
+            profile.disliked_sites.remove(source)
 
-        if site_domain and not cls._same_source_family(value, site_domain):
-            return False
+        source.delete()
 
-        return True
-
-    @staticmethod
-    def _normalize_domain(site: Site) -> str:
-        domain = (site.domain or '').strip()
-        if domain:
-            parsed = urlparse(domain)
-            if parsed.scheme in {'http', 'https'} and parsed.netloc and '.local' not in parsed.netloc:
-                return domain.rstrip('/')
-
-            if parsed.netloc:
-                host = parsed.netloc
-            else:
-                host = domain.replace('http://', '').replace('https://', '').strip('/')
-
-            if host and '.local' not in host:
-                return f'https://{host}'
-
-        return f'https://www.{slugify(site.name)}.com'
-
+    # Run the source repair command
     def handle(self, *args, **options):
         site_domain_updates = 0
+        site_merges = 0
         article_url_updates = 0
 
         with transaction.atomic():
-            for site in Site.objects.all():
-                normalized_domain = self._normalize_domain(site)
-                if site.domain != normalized_domain:
-                    site.domain = normalized_domain
-                    site.save(update_fields=['domain'])
-                    site_domain_updates += 1
+            for site in Site.objects.order_by('id'):
+                normalized_domain = normalize_site_domain(site.domain, site.name)
+                if site.domain == normalized_domain:
+                    continue
 
-            # Known typo cleanup if it exists in historical data.
+                collision = Site.objects.filter(domain=normalized_domain).exclude(pk=site.pk).order_by('id').first()
+                if collision:
+                    self._merge_sites(site, collision)
+                    site_merges += 1
+                    continue
+
+                site.domain = normalized_domain
+                site.save(update_fields=['domain'])
+                site_domain_updates += 1
+
             typo = 'https://theatheletic.com'
             fixed = 'https://www.nytimes.com/athletic'
-            typo_sites = Site.objects.filter(domain__iexact=typo)
-            site_domain_updates += typo_sites.update(domain=fixed)
+            for site in Site.objects.filter(domain__iexact=typo).order_by('id'):
+                collision = Site.objects.filter(domain=fixed).exclude(pk=site.pk).order_by('id').first()
+                if collision:
+                    self._merge_sites(site, collision)
+                    site_merges += 1
+                    continue
+
+                site.domain = fixed
+                site.save(update_fields=['domain'])
+                site_domain_updates += 1
 
             articles = Article.objects.select_related('site').all()
             for article in articles:
-                if self._is_valid_http_url(article.url, article.site.domain):
+                cleaned_url = sanitize_external_url(
+                    article.url,
+                    site_domain=article.site.domain,
+                    enforce_same_family=True,
+                )
+                if cleaned_url:
+                    if cleaned_url != article.url:
+                        article.url = cleaned_url
+                        article.save(update_fields=['url'])
+                        article_url_updates += 1
                     continue
 
-                base = self._normalize_domain(article.site)
-                article.url = f"{base}/article/{article.slug}"
-                article.save(update_fields=['url'])
-                article_url_updates += 1
+                base = normalize_site_domain(article.site.domain, article.site.name)
+                fallback_url = f"{base.rstrip('/')}/article/{article.slug}"
+                if fallback_url != article.url:
+                    article.url = fallback_url
+                    article.save(update_fields=['url'])
+                    article_url_updates += 1
 
         self.stdout.write(self.style.SUCCESS(
-            f'Repaired source data: {site_domain_updates} site domain(s), {article_url_updates} article URL(s).'
+            f'Repaired source data: {site_domain_updates} site domain(s), {site_merges} site merge(s), {article_url_updates} article URL(s).'
         ))

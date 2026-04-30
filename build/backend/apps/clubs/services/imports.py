@@ -231,11 +231,16 @@ def validate_import_job(job: ClubImportJob) -> ImportValidationResult:
     try:
         return _validate_structured_import_job(job)
     except ClubImportValidationError as exc:
-        if exc.details and any(
-            key in exc.details for key in (
-                'missing_required_headers',
-                'missing_header_groups',
-                'duplicate_headers',
+        if (
+            job.import_type == ClubImportJob.ImportType.PLAYER_PROFILE_UPDATE
+            and exc.details
+            and any(
+                key in exc.details
+                for key in (
+                    'missing_required_headers',
+                    'missing_header_groups',
+                    'duplicate_headers',
+                )
             )
         ):
             return _build_raw_preview_fallback(job)
@@ -282,94 +287,6 @@ def _validate_structured_import_job(job: ClubImportJob) -> ImportValidationResul
     headers, raw_rows = _read_tabular_resource(job.source_resource)
     header_mapping, normalised_headers = _canonicalise_headers(headers, schema)
     _validate_header_contract(normalised_headers, schema)
-
-    club_players = list(
-        ClubPlayer.objects.filter(club=job.club).select_related('player')
-    )
-
-    rows: list[ImportRowResult] = []
-    seen_squad_metric_keys: set[tuple[str, str]] = set()
-
-    for row_number, raw_row in enumerate(raw_rows, start=2):
-        if _row_is_blank(raw_row):
-            rows.append(
-                ImportRowResult(
-                    row_number=row_number,
-                    raw_data=raw_row,
-                    normalised_data={},
-                    status='skipped',
-                    target_model=schema.target_model,
-                )
-            )
-            continue
-
-        canonical_row = {
-            header_mapping[header]: value
-            for header, value in raw_row.items()
-            if header in header_mapping
-        }
-
-        normalised_data, row_errors = _coerce_row(canonical_row, schema)
-
-        for group in schema.required_value_groups:
-            if not any(normalised_data.get(field_name) is not None for field_name in group):
-                row_errors.append(
-                    f'At least one of {", ".join(group)} must contain a value.'
-                )
-
-        if row_errors:
-            rows.append(
-                ImportRowResult(
-                    row_number=row_number,
-                    raw_data=raw_row,
-                    normalised_data=normalised_data,
-                    status='invalid',
-                    target_model=schema.target_model,
-                    errors=row_errors,
-                )
-            )
-            continue
-
-        if job.import_type == ClubImportJob.ImportType.PLAYER_PROFILE_UPDATE:
-            rows.append(
-                _resolve_player_profile_row(
-                    row_number=row_number,
-                    raw_row=raw_row,
-                    normalised_data=normalised_data,
-                    club_players=club_players,
-                )
-            )
-            continue
-
-        if job.import_type == ClubImportJob.ImportType.PLAYER_SEASON_STATS:
-            rows.append(
-                _resolve_player_season_row(
-                    row_number=row_number,
-                    raw_row=raw_row,
-                    normalised_data=normalised_data,
-                    club_players=club_players,
-                )
-            )
-            continue
-
-        rows.append(
-            _resolve_squad_metrics_row(
-                row_number=row_number,
-                raw_row=raw_row,
-                normalised_data=normalised_data,
-                club_id=job.club_id,
-                seen_keys=seen_squad_metric_keys,
-            )
-        )
-
-    return ImportValidationResult(
-        job_id=job.id,
-        import_type=job.import_type,
-        source_resource_id=job.source_resource_id,
-        headers=headers,
-        normalised_headers=normalised_headers,
-        rows=rows,
-    )
 
     club_players = list(
         ClubPlayer.objects.filter(club=job.club).select_related('player')

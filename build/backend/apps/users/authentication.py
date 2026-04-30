@@ -1,9 +1,9 @@
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from django.conf import settings
 
-
+#JWT authentication class that checks for an access token in cookies before falling back to the default header-based JWT authentication
 class CookieJWTAuthentication(JWTAuthentication):
+    # authenticates the request by reading the JWT token from the configured auth cookie
     def authenticate(self, request):
         cookie_name = getattr(settings, 'AUTH_COOKIE_ACCESS', 'access_token')
         raw_token = request.COOKIES.get(cookie_name)

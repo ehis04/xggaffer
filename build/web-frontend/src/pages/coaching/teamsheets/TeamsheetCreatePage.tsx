@@ -96,6 +96,7 @@ const TeamsheetCreatePage: React.FC = () => {
   const [lockSubsAfterKickoff, setLockSubsAfterKickoff] = useState(false);
   const [trackMinutes, setTrackMinutes] = useState(true);
 
+
   const [slots, setSlots] = useState<SlotState[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const [positionFilter, setPositionFilter] = useState("");
@@ -451,6 +452,60 @@ const TeamsheetCreatePage: React.FC = () => {
                       onChange={(e) => setMatchDate(e.target.value)}
                     />
                   </div>
+                  <div className={styles.TTSCreateFormGroup}>
+                    <label className={styles.TTSCreateLabel}>KICK-OFF</label>
+                    <input
+                      type="time"
+                      className={styles.TTSCreateInput}
+                      value={kickOff}
+                      onChange={(e) => setKickOff(e.target.value)}
+                    />
+                  </div>
+                  <div className={styles.TTSCreateFormGroup}>
+                    <label className={styles.TTSCreateLabel}>HOME / AWAY</label>
+                    <select
+                      className={styles.TTSCreateInput}
+                      value={homeAway}
+                      onChange={(e) => setHomeAway(e.target.value)}
+                    >
+                      <option value="Home">Home</option>
+                      <option value="Away">Away</option>
+                      <option value="Neutral">Neutral</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className={styles.TTSCreateFormRow}>
+                  <div className={styles.TTSCreateFormGroup}>
+                    <label className={styles.TTSCreateLabel}>COMPETITION</label>
+                    <input
+                      type="text"
+                      className={styles.TTSCreateInput}
+                      value={competition}
+                      onChange={(e) => setCompetition(e.target.value)}
+                      placeholder="League, Cup…"
+                    />
+                  </div>
+                  <div className={styles.TTSCreateFormGroup}>
+                    <label className={styles.TTSCreateLabel}>VENUE</label>
+                    <input
+                      type="text"
+                      className={styles.TTSCreateInput}
+                      value={venue}
+                      onChange={(e) => setVenue(e.target.value)}
+                      placeholder="e.g. Main ground"
+                    />
+                  </div>
+                  <div className={styles.TTSCreateFormGroup}>
+                    <label className={styles.TTSCreateLabel}>SQUAD</label>
+                    <input
+                      type="text"
+                      className={styles.TTSCreateInput}
+                      value={squad}
+                      onChange={(e) => setSquad(e.target.value)}
+                      placeholder="First team, U21s…"
+                    />
+                  </div>
                 </div>
 
                 <label className={styles.TTSCreateCheckRow}>
@@ -503,6 +558,52 @@ const TeamsheetCreatePage: React.FC = () => {
                   placeholder="Tactical notes, key points, team talk prompts…"
                   rows={5}
                 />
+              </div>
+
+              <div className={styles.TTSCreatePanel}>
+                <div className={styles.TTSCreatePanelHead}>
+                  <h2 className={styles.TTSCreatePanelTitle}>Match settings</h2>
+                </div>
+
+                <div className={styles.TTSCreateFormRow}>
+                  <div className={styles.TTSCreateFormGroup}>
+                    <label className={styles.TTSCreateLabel}>START FROM</label>
+                    <select
+                      className={styles.TTSCreateInput}
+                      value={startFrom}
+                      onChange={(e) => setStartFrom(e.target.value as typeof startFrom)}
+                    >
+                      <option value="blank">Blank</option>
+                      <option value="duplicate">Duplicate previous</option>
+                      <option value="tactics">From tactics board</option>
+                    </select>
+                  </div>
+                  <div className={styles.TTSCreateFormGroup}>
+                    <label className={styles.TTSCreateLabel}>CAPTAIN</label>
+                    <input
+                      type="text"
+                      className={styles.TTSCreateInput}
+                      value={captain}
+                      onChange={(e) => setCaptain(e.target.value)}
+                      placeholder="auto"
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.TTSCreateFormGroup}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
+                    <label className={styles.TTSCreateLabel} style={{ margin: 0 }}>NOTIFY ON PUBLISH</label>
+                    <Toggle checked={notifyOnPublish} onChange={setNotifyOnPublish} />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
+                    <label className={styles.TTSCreateLabel} style={{ margin: 0 }}>LOCK SUBS AFTER KICK-OFF</label>
+                    <Toggle checked={lockSubsAfterKickoff} onChange={setLockSubsAfterKickoff} />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <label className={styles.TTSCreateLabel} style={{ margin: 0 }}>TRACK MINUTES</label>
+                    <Toggle checked={trackMinutes} onChange={setTrackMinutes} />
+                  </div>
+                </div>
               </div>
             </div>
 

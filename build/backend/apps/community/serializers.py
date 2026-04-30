@@ -1,37 +1,45 @@
 from rest_framework import serializers
-from .models import Post, Comment, HashTag, PostTag, Notification, Mention, Block, Like, PostView
-from apps.users.models import User, UserProfile
+from .models import Post, Comment, HashTag, PostTag, Notification, Like
+from apps.users.models import User
+
+# serializes post data for creating and returning posts
 class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ['id', 'author', 'text_body', 'visibility', 'attachments_count', 'created_at', 'no_of_likes', 'no_of_comments']
         read_only_fields = ['id', 'author', 'moderation_status', 'no_of_likes', 'attachments_count', 'created_at', 'no_of_comments']
+
+# seializes comment data for creating and returning comments
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = "__all__"
         read_only_fields = ['author']
 
+# serializes hashtag data used on posts
 
 class HashTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = HashTag
         fields = ['id', 'body', 'usage_count']
 
+# serializes the link between a post and a hashtag
 class PostTagSerializer(serializers.ModelSerializer):
     hashtag = HashTagSerializer(read_only=True)
     
     class Meta:
         model = PostTag
         fields = ['hashtag']
-        
+
+# a compact comment preview for displaying recent comments under posts       
 class CommentSummarySerializer(serializers.ModelSerializer):
     author = serializers.StringRelatedField()
     
     class Meta:
         model = Comment
         fields = ['id', 'author', 'text_body', 'created_at', 'no_of_likes']
-        
+
+# serializes comments for comment lists with replies and whether the current user liked each comment
 class CommentListSerializer(serializers.ModelSerializer):
     author = serializers.CharField(source='author.username', read_only=True)
     children = serializers.SerializerMethodField()
@@ -44,7 +52,7 @@ class CommentListSerializer(serializers.ModelSerializer):
     def get_children(self, obj):
         qs = obj.children.select_related("author").filter(moderation_status="OK")
         return CommentListSerializer(qs, many=True, context=self.context).data
-
+    # checks whether the comment has been liked
     def get_is_liked(self, obj):
         request = self.context.get("request")
         if request and request.user and request.user.is_authenticated:
@@ -57,11 +65,25 @@ class CommentListSerializer(serializers.ModelSerializer):
             ).exists()
         return False
 
+# Serializes the minimal author fields needed inside post responses
 class PostAuthorSerializer(serializers.ModelSerializer):
+    profile_image = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'username']
+        fields = ['id', 'username', 'profile_image']
 
+    def get_profile_image(self, obj):
+        profile = getattr(obj, 'profile', None)
+        if not profile or not profile.profile_picture:
+            return None
+
+        try:
+            return profile.profile_picture.url
+        except Exception:
+            return str(profile.profile_picture) or None
+
+# Serializes posts for the explore feed
 class ExplorePostSerializer(serializers.ModelSerializer):
     author = PostAuthorSerializer(read_only=True)
     post_tags = PostTagSerializer(read_only=True)
@@ -78,7 +100,8 @@ class ExplorePostSerializer(serializers.ModelSerializer):
         model = Post
         fields = ['id', 'author', 'text_body', 'created_at', 'no_of_likes', 'no_of_comments', 'visibility', 'post_tags', 'recent_comments', 'is_liked', 'hashtags', 'time_since_posted', 'type', 'ranked_score', 'popularity', 'recency_scaled']
         read_only_fields = ['id', 'author', 'created_at', 'no_of_likes', 'no_of_comments', 'attachments_count', 'type']
-        
+    
+    # identifies the feed item as a post
     def get_type(self, obj):
         return "post"
 
@@ -114,7 +137,8 @@ class ExplorePostSerializer(serializers.ModelSerializer):
             return f"{diff.seconds // 60}m"
         else:
             return "now"
-        
+
+# serializes the comment response returned after creating or updating a comment
 class CommentResponseSerializer(serializers.ModelSerializer):
     author = serializers.CharField(source='author.username', read_only=True)
     
@@ -122,6 +146,7 @@ class CommentResponseSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ['id', 'author', 'text_body', 'created_at', 'no_of_likes', 'no_of_replies', 'post', 'parent', 'moderation_status']
 
+# serializes notifications for list views in the frontend
 
 class NotificationListSerializer(serializers.ModelSerializer):
     triggered_by = PostAuthorSerializer(read_only=True)

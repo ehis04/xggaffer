@@ -1,5 +1,9 @@
 from django.conf import settings
 
+# helper functions for storing, clearing, and reading JWT authentication cookies
+
+
+# builds the cookie configuration from django settings with safe fallback values
 def get_cookie_config():
     return {
         'access_name': getattr(settings, 'AUTH_COOKIE_ACCESS', 'access_token'),
@@ -13,6 +17,7 @@ def get_cookie_config():
         'refresh_max_age_session': getattr(settings, 'AUTH_COOKIE_REFRESH_MAX_AGE_SESSION', None),
     }
 
+# Stores access and refresh JWT tokens as browser cookies on the response
 def set_auth_cookies(response, access_token, refresh_token, remember_me=False):
     config = get_cookie_config()
 
@@ -43,6 +48,7 @@ def set_auth_cookies(response, access_token, refresh_token, remember_me=False):
     
     return response
 
+# Clears authentication cookies by overwriting them with empty expired values
 def clear_auth_cookies(response):
     config = get_cookie_config()
 
@@ -68,11 +74,12 @@ def clear_auth_cookies(response):
     
     return response
 
+# Reads the access JWT token from the configured browser cookie
 def get_access_token_from_cookie(request):
     config = get_cookie_config()
     return request.COOKIES.get(config['access_name'])
 
-
+# Reads the refresh JWT token from the configured browser cookie
 def get_refresh_token_from_cookie(request):
     config = get_cookie_config()
     return request.COOKIES.get(config['refresh_name'])

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { useNavigate } from 'react-router-dom';
+import authApi from '../../services/api/auth';
 
 export function VerifyEmailPromptPage() {
   const { user, resendVerificationEmail, refreshUser } = useAuth();
@@ -23,8 +24,18 @@ export function VerifyEmailPromptPage() {
   };
 
   const handleCheckStatus = async () => {
-    await refreshUser();
-    navigate('/social', { replace: true });
+    setError(null);
+    try {
+      const status = await authApi.getVerificationStatus();
+      await refreshUser();
+      if (status.email_verified) {
+        navigate('/social', { replace: true });
+      } else {
+        setError('Your email is not verified yet. Click the link in your inbox, then try again.');
+      }
+    } catch (err: unknown) {
+      setError((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Could not check verification status');
+    }
   };
 
   return (

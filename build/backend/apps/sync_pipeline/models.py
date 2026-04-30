@@ -45,7 +45,6 @@ class PublishedSnapshot(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['surface'],
-                condition=models.Q(is_active=True),
                 name='uniq_active_snapshot_per_surface',
             ),
         ]

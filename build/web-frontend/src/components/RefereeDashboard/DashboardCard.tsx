@@ -32,6 +32,7 @@ export const DashboardCard = ({
         {userData && (
           <ProfileButton
             username={userData.username}
+            profileImage={userData.profile_image ?? undefined}
             size="extra-large"
             onClick={handleProfileClick}
           />

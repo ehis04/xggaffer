@@ -49,6 +49,7 @@ class DatasetName(models.TextChoices):
     STANDINGS             = 'standings',             'Standings'
     SCORERS               = 'scorers',               'Scorers'
     SQUADS                = 'squads',                'Squads'
+    INJURIES              = 'injuries',              'Injuries'
     LEAGUE_STATS          = 'league_stats',          'League Stats'
     PLAYER_STATS          = 'player_stats',          'Player Stats'
     CLUB_STATS            = 'club_stats',            'Club Stats'

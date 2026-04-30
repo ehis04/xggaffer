@@ -1,7 +1,9 @@
 import { ProfileButton } from "../Buttons/ProfileButton";
 import "./css/SideBar.css";
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getUserProfile } from "./functions/getUserProfile";
+import { useAuth } from "../../context/useAuth";
 
 interface NavItem {
   id: string;
@@ -9,7 +11,7 @@ interface NavItem {
   label: string;
   badge?: number;
   onClick?: () => void;
-  link: string;
+  link?: string;
 }
 
 interface SidebarProps {
@@ -40,20 +42,19 @@ export interface UserData {
   followers_count: number;
   following_count: number;
   gender: string;
-  profile_image?: string;
+  date_of_birth?: string | null;
+  profile_image?: string | null;
   roles: UserRole[];
   visibility: string;
   created_at: string;
 }
 
-
-
-const http = "http://localhost:5173/";
-
 export const Sidebar: React.FC<SidebarProps> = ({
   items,
   bottomItems,
 }) => {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
 
@@ -169,6 +170,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
       link: "http://localhost:5173/referee",
     },
     {
+      id: "articles",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          fill="currentColor"
+          className="bi bi-newspaper"
+          viewBox="0 0 16 16"
+        >
+          <path d="M0 2.5A1.5 1.5 0 0 1 1.5 1h11A1.5 1.5 0 0 1 14 2.5V4h1a1 1 0 0 1 1 1v8.5a1.5 1.5 0 0 1-3 0V2.5a.5.5 0 0 0-.5-.5h-11a.5.5 0 0 0-.5.5v11a.5.5 0 0 0 .5.5H12a.5.5 0 0 1 0 1H1.5A1.5 1.5 0 0 1 0 13.5z" />
+          <path d="M2 3h10v2H2zM2 6h4v1H2zm0 2h4v1H2zm0 2h4v1H2zm5-4h5v5H7z" />
+        </svg>
+      ),
+      label: "Articles",
+      onClick: () => console.log("Articles clicked"),
+      link: "http://localhost:5173/articles",
+    },
+    {
       id: "trash",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-trash3" viewBox="0 0 16 16">
@@ -198,8 +218,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </svg>
       ),
       label: "logout",
-      onClick: () => console.log("Logout clicked"),
-      link: http,
+      onClick: async () => {
+        await logout();
+        navigate("/", { replace: true });
+      },
+      link: "#",
     },
     {
       id: "settings",
@@ -275,6 +298,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {userData && (
             <ProfileButton
               username={userData.username}
+              profileImage={userData.profile_image ?? undefined}
               size="small"
               showLabel={isHovered}
               onClick={handleProfileClick}

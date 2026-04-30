@@ -1,3 +1,9 @@
+"""
+Understat normalisers for team and player enrichment data
+
+Converts raw Understat team, player, and team-player payloads into internal enrichment dictionary shapes
+"""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -5,26 +11,41 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from typing import Any
 
 
+# ---------------------------------------------------------------------------
+# Normalisation constants
+# ---------------------------------------------------------------------------
+
 _DECIMAL_PLACES = Decimal("0.01")
+_COMPETITION_ALIASES = {
+    "pl": "epl",
+    "premierleague": "epl",
+    "englandpremierleague": "epl",
+    "epl": "epl",
+    "pd": "laliga",
+    "laliga": "laliga",
+    "primeradivision": "laliga",
+    "bl1": "bundesliga",
+    "bundesliga": "bundesliga",
+    "sa": "seriea",
+    "seriea": "seriea",
+    "fl1": "ligue1",
+    "ligue1": "ligue1",
+    "league1": "ligue1",
+    "elc": "championship",
+    "championship": "championship",
+}
 
 
+# ---------------------------------------------------------------------------
+# Public normalisers
+# ---------------------------------------------------------------------------
+
+# Normalise an Understat team-season payload into the club season enrichment shape
 def normalise_understat_team_season(
     payload: dict[str, Any],
     season_label: str,
     competition_code: str | None = None,
 ) -> dict[str, Any]:
-    """
-    Normalise an Understat team-season payload into the ClubSeasonEnrichment shape.
-
-    Expected input:
-    - either a team-page envelope containing "stats"/"history"
-    - or a direct list/dict-like team stats payload already unwrapped
-
-    Important:
-    - no DB writes here
-    - no fake values invented
-    - raw provider leftovers stay in metadata/raw_snapshot
-    """
     team_payload = _unwrap_team_payload(payload)
     team_rows = _extract_team_history_rows(team_payload)
     aggregated = _aggregate_team_history(team_rows)
@@ -83,23 +104,12 @@ def normalise_understat_team_season(
     }
 
 
+# Normalise an Understat player-season payload into the player season enrichment shape
 def normalise_understat_player_season(
     payload: dict[str, Any],
     season_label: str,
     competition_code: str | None = None,
 ) -> dict[str, Any]:
-    """
-    Normalise an Understat player-season payload into the PlayerSeasonEnrichment shape.
-
-    Supports:
-    - a full player-page envelope containing "groups"/"matches"/"shots"
-    - a single season row already selected upstream
-
-    The normaliser is conservative:
-    - it prefers explicit season-group rows where possible
-    - if more than one group matches the requested season, it aggregates them
-    - it does not invent club/team ids when the source is ambiguous
-    """
     selected_rows = _select_player_season_rows(payload, season_label, competition_code)
     aggregated = _aggregate_player_rows(selected_rows)
 
@@ -185,6 +195,7 @@ def normalise_understat_player_season(
     }
 
 
+# Normalise a single Understat team-page player row into the player season enrichment shape
 def normalise_understat_team_player(
     payload: dict[str, Any],
     season_label: str,
@@ -193,12 +204,6 @@ def normalise_understat_team_player(
     external_team_id: str | None = None,
     competition_name: str | None = None,
 ) -> dict[str, Any]:
-    """
-    Optional helper for normalising a single player row from an Understat team page.
-
-    This is useful for club-season roster syncs where the team page already contains
-    season-level player stats and we want a PlayerSeasonEnrichment-compatible shape.
-    """
     return {
         "provider": "understat",
         "season_label": str(season_label),
@@ -267,6 +272,7 @@ def normalise_understat_team_player(
 # Team helpers
 # ---------------------------------------------------------------------------
 
+# Unwrap a team-page envelope into the team stats payload used by the normaliser
 def _unwrap_team_payload(payload: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(payload, dict):
         return {}
@@ -285,6 +291,7 @@ def _unwrap_team_payload(payload: dict[str, Any]) -> dict[str, Any]:
     return payload
 
 
+# Extract team history rows from an Understat team stats payload
 def _extract_team_history_rows(team_payload: dict[str, Any]) -> list[dict[str, Any]]:
     if not isinstance(team_payload, dict):
         return []
@@ -299,17 +306,57 @@ def _extract_team_history_rows(team_payload: dict[str, Any]) -> list[dict[str, A
         if isinstance(history, list):
             return [row for row in history if isinstance(row, dict)]
 
-        # if the provider already gave us a dict of aggregate metrics rather than rows,
-        # keep it as one pseudo-row so the aggregate helper can still read from it.
+        date_rows = _extract_team_date_rows(team_payload.get("dates"))
+        if date_rows:
+            return date_rows
+
+        # Keep aggregate metric dictionaries as one pseudo-row for the aggregate helper
         return [stats]
 
     history = team_payload.get("history")
     if isinstance(history, list):
         return [row for row in history if isinstance(row, dict)]
 
+    date_rows = _extract_team_date_rows(team_payload.get("dates"))
+    if date_rows:
+        return date_rows
+
     return []
 
 
+def _extract_team_date_rows(dates: Any) -> list[dict[str, Any]]:
+    if not isinstance(dates, list):
+        return []
+
+    rows: list[dict[str, Any]] = []
+    for row in dates:
+        if not isinstance(row, dict) or not row.get("isResult"):
+            continue
+
+        side = _as_str(row.get("side")).lower()
+        if side not in {"h", "a"}:
+            continue
+
+        opponent_side = "a" if side == "h" else "h"
+        goals = row.get("goals") if isinstance(row.get("goals"), dict) else {}
+        xg = row.get("xG") if isinstance(row.get("xG"), dict) else {}
+
+        rows.append(
+            {
+                "result": row.get("result"),
+                "scored": goals.get(side),
+                "missed": goals.get(opponent_side),
+                "xG": xg.get(side),
+                "xGA": xg.get(opponent_side),
+                "datetime": row.get("datetime"),
+                "match_id": row.get("id"),
+            }
+        )
+
+    return rows
+
+
+# Aggregate match-level team history rows into season totals
 def _aggregate_team_history(rows: list[dict[str, Any]]) -> dict[str, Any]:
     matches_played = len(rows)
     wins = 0
@@ -398,8 +445,7 @@ def _aggregate_team_history(rows: list[dict[str, Any]]) -> dict[str, Any]:
         else:
             ppda_value = _to_decimal(ppda)
             if ppda_value is not None:
-                # If the provider gives a direct ppda figure per row rather than att/def,
-                # average it conservatively later by treating each row equally.
+                # Average direct PPDA rows by treating each row equally
                 ppda_att_total += ppda_value
                 ppda_def_total += Decimal("1")
                 has_ppda = True
@@ -426,6 +472,7 @@ def _aggregate_team_history(rows: list[dict[str, Any]]) -> dict[str, Any]:
 # Player helpers
 # ---------------------------------------------------------------------------
 
+# Select the rows matching the requested player season and optional competition
 def _select_player_season_rows(
     payload: dict[str, Any],
     season_label: str,
@@ -467,6 +514,7 @@ def _select_player_season_rows(
     return season_matches
 
 
+# Return True when a payload already looks like one player-season group row
 def _looks_like_single_player_group_row(payload: dict[str, Any]) -> bool:
     if not isinstance(payload, dict):
         return False
@@ -486,6 +534,7 @@ def _looks_like_single_player_group_row(payload: dict[str, Any]) -> bool:
     return has_row_signals and "groups" not in payload
 
 
+# Aggregate selected player rows into season totals
 def _aggregate_player_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
     matches_played = 0
     minutes_played = 0
@@ -562,18 +611,21 @@ def _aggregate_player_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
 # Generic helpers
 # ---------------------------------------------------------------------------
 
+# Return True when two season labels match after cleaning
 def _season_matches(value: Any, season_label: str) -> bool:
     left = _clean_str(value)
     right = _clean_str(season_label)
     return bool(left and right and left == right)
 
 
+# Return True when two competition values resolve to the same canonical code
 def _competition_matches(value: Any, competition_code: str) -> bool:
     left = _canonical_competition_code(value)
     right = _canonical_competition_code(competition_code)
     return bool(left and right and left == right)
 
 
+# Convert a competition value into its canonical internal code
 def _canonical_competition_code(value: Any) -> str:
     raw = _clean_str(value).lower()
     if not raw:
@@ -586,28 +638,10 @@ def _canonical_competition_code(value: Any) -> str:
         .replace(".", "")
     )
 
-    aliases = {
-        "pl": "epl",
-        "premierleague": "epl",
-        "englandpremierleague": "epl",
-        "epl": "epl",
-        "pd": "laliga",
-        "laliga": "laliga",
-        "primeradivision": "laliga",
-        "bl1": "bundesliga",
-        "bundesliga": "bundesliga",
-        "sa": "seriea",
-        "seriea": "seriea",
-        "fl1": "ligue1",
-        "ligue1": "ligue1",
-        "league1": "ligue1",
-        "elc": "championship",
-        "championship": "championship",
-    }
-
-    return aliases.get(compact, compact)
+    return _COMPETITION_ALIASES.get(compact, compact)
 
 
+# Convert a raw value to an integer, defaulting to zero
 def _to_int(value: Any) -> int:
     if value in (None, "", False):
         return 0
@@ -618,6 +652,7 @@ def _to_int(value: Any) -> int:
         return 0
 
 
+# Convert a raw value to a two-decimal Decimal when possible
 def _to_decimal(value: Any) -> Decimal | None:
     if value in (None, "", False):
         return None
@@ -628,21 +663,25 @@ def _to_decimal(value: Any) -> Decimal | None:
         return None
 
 
+# Round a Decimal to the configured number of places
 def _quantize(value: Decimal) -> Decimal:
     return value.quantize(_DECIMAL_PLACES, rounding=ROUND_HALF_UP)
 
 
+# Convert a raw value to a stripped string
 def _clean_str(value: Any) -> str:
     if value is None:
         return ""
     return str(value).strip()
 
 
+# Convert a raw value to a stripped string or blank
 def _as_str(value: Any) -> str:
     cleaned = _clean_str(value)
     return cleaned if cleaned else ""
 
 
+# Return the first non-blank value from an iterable
 def _first_non_blank(values: Any) -> str:
     for value in values:
         cleaned = _as_str(value)
@@ -651,6 +690,7 @@ def _first_non_blank(values: Any) -> str:
     return ""
 
 
+# Return the only unique non-blank value or blank when ambiguous
 def _single_or_blank(values: Any) -> str:
     cleaned_values = {value for value in (_as_str(v) for v in values) if value}
     if len(cleaned_values) == 1:

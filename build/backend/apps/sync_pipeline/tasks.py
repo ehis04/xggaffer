@@ -15,11 +15,11 @@ from apps.sync_pipeline.services import (
     open_sync_run,
     record_provider_request,
 )
-from apps.predictions.tasks import rebuild_predictions_publication_task
 from apps.playerdata.tasks import refresh_understat_all_leagues_task
 from common.constants import DatasetName, ProviderName
 from common.provider_policy import acquire_task_lock, get_lock_key, is_budget_safe
 from common.sync_constants import BUDGET_SAFETY_MARGIN
+from common.utils import current_football_season
 
 _logger = logging.getLogger(__name__)
 
@@ -118,7 +118,6 @@ def refresh_understat_cycle_task(self):
     with acquire_task_lock(lock_key, timeout_seconds=300):
         run = open_sync_run(provider, dataset, scope, TRIGGERED_BY_CELERY)
         try:
-            rebuild_predictions_publication_task.delay()
             refresh_understat_all_leagues_task.delay()
             close_sync_run_success(run, rows_seen=0, rows_changed=0)
         except Exception as exc:
@@ -148,7 +147,7 @@ def refresh_whoscored_cycle_task(self):
 
     SUPPORTED_LEAGUES = ['EPL', 'La_Liga', 'Bundesliga', 'Serie_A', 'Ligue_1']
     WHOSCORED_DATASETS = ['matches', 'players', 'teams']
-    current_season = str(timezone.now().year - 1)
+    current_season = current_football_season()
 
     with acquire_task_lock(lock_key, timeout_seconds=3600):
         run = open_sync_run(provider, dataset, scope, TRIGGERED_BY_CELERY)
@@ -212,7 +211,7 @@ def refresh_sofascore_cycle_task(self):
 
     SUPPORTED_LEAGUES = ['EPL', 'La_Liga', 'Bundesliga', 'Serie_A', 'Ligue_1']
     SOFASCORE_DATASETS = ['matches', 'players', 'teams']
-    current_season = str(timezone.now().year - 1)
+    current_season = current_football_season()
 
     with acquire_task_lock(lock_key, timeout_seconds=1800):
         run = open_sync_run(provider, dataset, scope, TRIGGERED_BY_CELERY)
@@ -282,7 +281,7 @@ def refresh_transfermarkt_cycle_task(self):
     lock_key = get_lock_key(provider, dataset, scope)
 
     SUPPORTED_LEAGUES = ['EPL', 'La_Liga', 'Bundesliga', 'Serie_A', 'Ligue_1']
-    season_year = timezone.now().year - 1
+    season_year = int(current_football_season())
 
     with acquire_task_lock(lock_key, timeout_seconds=3600):
         run = open_sync_run(provider, dataset, scope, TRIGGERED_BY_CELERY)
@@ -303,6 +302,8 @@ def refresh_transfermarkt_cycle_task(self):
                     _logger.warning('Transfermarkt sync failed for league %s: %s', league, exc)
 
             close_sync_run_success(run, rows_seen=total_seen, rows_changed=total_updated)
+            trigger_publication_rebuild('playerdata')
+            trigger_publication_rebuild('clubs')
         except Exception as exc:
             close_sync_run_failure(run, str(exc))
             raise self.retry(exc=exc, countdown=300)
@@ -381,6 +382,10 @@ def refresh_odds_snapshots_task(self):
                 rows_seen=result.get('fixtures_seen', 0),
                 rows_changed=result.get('snapshots_created', 0),
             )
+            from common.cache_keys import clear_surface_cache
+            cleared = clear_surface_cache('odds')
+            _logger.info('refresh_odds_snapshots_task: odds cache cleared, deleted=%s', cleared)
+            trigger_publication_rebuild('predictions')
         except Exception as exc:
             close_sync_run_failure(run, str(exc))
             raise

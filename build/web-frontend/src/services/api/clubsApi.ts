@@ -60,7 +60,14 @@ import type {
   RelinkClubPlayerPayload,
 } from '../../types/clubPlayers';
 
-type ListResponse<T> = T[] | { results: T[] };
+type ListResponse<T> =
+  | T[]
+  | {
+    results: T[];
+    count?: number;
+    next?: string | null;
+    previous?: string | null;
+  };
 
 export interface SyncClubSquadPayload {
   provider?: string;
@@ -121,7 +128,10 @@ const buildClubListParams = (
 
 export const clubsApi = {
   list: async (scopeOrParams?: ClubListScope | ClubListParams) => {
-    const params = buildClubListParams(scopeOrParams);
+    const params = {
+      ...(buildClubListParams(scopeOrParams) ?? {}),
+      page_size: '500',
+    };
 
     const response = await apiClient.get<ListResponse<Club>>(
       '/clubs/',
@@ -186,7 +196,8 @@ export const clubsApi = {
 
   listPlayers: async (clubId: number) => {
     const response = await apiClient.get<ListResponse<ClubPlayerListItem>>(
-      `/clubs/${clubId}/players/`
+      `/clubs/${clubId}/players/`,
+      { page_size: 500 }
     );
     return unwrapListResponse(response);
   },

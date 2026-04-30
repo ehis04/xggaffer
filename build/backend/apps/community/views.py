@@ -15,7 +15,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import ValidationError
 from .models import Post, Visibility, ModerationStatus, PostView, Comment, Like, ContentType, Notification
 from apps.users.models import User, UserProfile, Follow
-from rest_framework.generics import CreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import CreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView, RetrieveDestroyAPIView
 from django.shortcuts import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from django.utils.dateparse import parse_date
@@ -25,7 +25,6 @@ from django.db import transaction
 from django.contrib.contenttypes.prefetch import GenericPrefetch
 
 # Create New Post
-
 class CreateNewPostView(CreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = PostSerializer
@@ -49,6 +48,8 @@ class GetPostView(RetrieveAPIView):
         queryset = super().get_queryset()
         return queryset.filter(visibility=Visibility.PUBLIC)
 
+
+# Retrieves a single approved comment by id
 class GetCommentView(RetrieveAPIView):
     queryset = (
         Comment.objects
@@ -87,13 +88,29 @@ class UserPostView(RetrieveUpdateDestroyAPIView):
     def perform_destroy(self, instance):
         instance.delete()
 
+class UserCommentView(RetrieveDestroyAPIView):
+    serializer_class = CommentListSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = "id"
+    lookup_url_kwarg = "comment_id"
+    queryset = Comment.objects.none()
+
+    def get_queryset(self):
+        return Comment.objects.select_related("author").filter(author=self.request.user)
+
+    @transaction.atomic
+    def perform_destroy(self, instance):
+        instance.delete()
+
 # List Posts
+# Paginates explore feed results
 class ExplorePagination(PageNumberPagination):
     page_size = 15
     page_size_query_param = 'page-size'
     max_page_size = 50
     page_query_param = 'page'
 
+# Lists public explore posts with filtering, sorting, pagination, and viewed-post exclusion
 class ExplorePostsView(ListAPIView):
     serializer_class = ExplorePostSerializer
     permission_classes = [IsAuthenticated]
@@ -120,7 +137,8 @@ class ExplorePostsView(ListAPIView):
         queryset = self._apply_ordering(queryset)
         
         return queryset
-    
+
+    # Applies query parameter filters for hashtags, likes, comments, text search, author, dates, and attachments
     def _apply_filters(self, queryset):
         hashtag = self.request.query_params.get('hashtag')
         if hashtag:
@@ -193,7 +211,8 @@ class ExplorePostsView(ListAPIView):
             queryset = queryset.filter(attachments_count=0)
         
         return queryset
-    
+
+    # Applies the requested ordering mode to the explore feed queryset
     def _apply_ordering(self, queryset):
         order_by = self.request.query_params.get('order_by', 'likes')
         
@@ -209,7 +228,7 @@ class ExplorePostsView(ListAPIView):
                 output_field=FloatField(),
             )
             
-            # MySQL: age in hours and exponential decay for recncy
+            # SQL: age in hours and exponential decay for recncy
             age_hours_sql = RawSQL("EXTRACT(EPOCH FROM (NOW() - community_post.created_at)) / 3600", [])
             recency_sql = RawSQL("EXP(-LN(2) * EXTRACT(EPOCH FROM (NOW() - community_post.created_at)) / 3600 / %s)", [half_life_hours])
             
@@ -269,6 +288,7 @@ class ExplorePostsView(ListAPIView):
         
         return response
 
+# Lists approved posts from users followed by the authenticated user
 class FollowingPostsView(ListAPIView):
     serializer_class = ExplorePostSerializer
     permission_classes = [IsAuthenticated]
@@ -303,7 +323,7 @@ class FollowingPostsView(ListAPIView):
         
         return queryset
 
-
+# Lists approved posts for a specific hashtag while respecting public and followers-only visibility
 class HashtagPostsView(ListAPIView):
 
     serializer_class = ExplorePostSerializer
@@ -346,6 +366,7 @@ class HashtagPostsView(ListAPIView):
             .order_by("-created_at")
         )
 
+# Lists posts written by a selected user
 class UserPostsListView(ListAPIView):
     serializer_class = ExplorePostSerializer
     permission_classes = [IsAuthenticated]
@@ -366,6 +387,7 @@ class UserPostsListView(ListAPIView):
             visibility=Visibility.PUBLIC
         ).select_related("author", "author__profile").prefetch_related("post_tags__hashtag").order_by("-created_at")
 
+# Marks a single post as viewed by the authenticated user
 class MarkPostViewedView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -381,7 +403,8 @@ class MarkPostViewedView(APIView):
             
         except Post.DoesNotExist:
             return Response({'detail': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
-        
+
+# Marks multiple posts as viewed by the authenticated user
 class BulkMarkPostViewedView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -414,10 +437,12 @@ class CommentPagination(PageNumberPagination):
     max_page_size = 50
     page_query_param = 'page'
 
+# Creates a new comment or reply on a post
 class CreateNewCommentView(CreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = CommentSerializer
     
+    # Saves a top-level comment or reply and attaches it to the current user and target post
     def perform_create(self, serializer):
         post = get_object_or_404(Post, pk=self.kwargs["post_id"])
         parent_id = self.request.data.get("parent")
@@ -434,7 +459,9 @@ class CreateNewCommentView(CreateAPIView):
         response_serializer = CommentResponseSerializer(serializer.instance)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
         
-        
+
+# Lists top-level comments for a post
+   
 class CommentPostView(ListAPIView):
     serializer_class = CommentListSerializer
     permission_classes = [IsAuthenticated]
@@ -470,7 +497,8 @@ class CommentPostView(ListAPIView):
             return queryset.order_by('no_of_likes', 'created_at')
         else:
             return queryset.order_by('-no_of_likes', '-created_at')
-        
+
+# Toggles the authenticated user's like on a post 
 class LikePostView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -486,6 +514,7 @@ class LikePostView(APIView):
             post_like.delete()
             return Response({'detail': 'Post unliked.', 'liked': False}, status=status.HTTP_200_OK)
 
+# Toggles the authenticated user's like on a comment
 class LikeCommentView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -500,14 +529,14 @@ class LikeCommentView(APIView):
         else:
             comment_like.delete()
             return Response({'detail': 'Comment unliked.', 'liked': False}, status=status.HTTP_200_OK)
-        
+
 class NotificationPagination(PageNumberPagination):
     page_size = 25
     page_size_query_param = "page-size"
     max_page_size = 100
     page_query_param = "page"
 
-
+# Lists notifications for the authenticated user
 class NotificationsListView(ListAPIView):
     serializer_class = NotificationListSerializer
     permission_classes = [IsAuthenticated]
@@ -536,7 +565,7 @@ class NotificationsListView(ListAPIView):
             qs = qs.filter(is_read=False)
         return qs
 
-
+# Marks one notification as read
 class NotificationMarkReadView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -548,7 +577,3 @@ class NotificationMarkReadView(APIView):
             notification.is_read = True
             notification.save(update_fields=["is_read"])
         return Response({"id": notification.id, "is_read": notification.is_read})
-
-
-# TODO search for posts with potentially various filters
-# TODO search by text, author, hashtags

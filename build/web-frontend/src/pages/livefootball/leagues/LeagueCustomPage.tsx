@@ -6,22 +6,39 @@ import LeagueTable from "../../../components/livefootball/leagues/LeagueTable";
 import MatchweekSelector from "../../../components/livefootball/leagues/MatchweekSelector";
 import PredictionSummary from "../../../components/livefootball/leagues/PredictionSummary";
 import SeasonSelector from "../../../components/livefootball/leagues/SeasonSelector";
+import { Sidebar } from "../../../components/Navigation/SideBar";
+import { SocialUserButtons } from "../../../components/Social/SocialUserButtons";
 import liveFootballApi from "../../../services/api/livefootballApi";
 import type {
   CreateSavedLeagueScenarioPayload,
+  LeagueMetaItem,
+  LeagueScenarioFixture,
   LeagueScenarioLockedResultInput,
   LeagueScenarioResponse,
-  LeagueMetaItem,
-  LeaguesMetaResponse,
   LeagueTableRow,
+  LeaguesMetaResponse,
   SavedLeagueScenarioDetail,
   SavedLeagueScenarioListItem,
+  TeamReference,
 } from "../../../types/livefootball";
 import styles from "./css/LeagueCustomPage.module.css";
-import { Sidebar } from "../../../components/Navigation/SideBar";
-import { SocialUserButtons } from "../../../components/Social/SocialUserButtons";
 
 type ProjectionMode = "current_expected" | "pre_season" | "as_of_matchweek";
+type UnavailableMode = LeagueMetaItem["unavailable_modes"][number];
+
+interface MatchupGroup {
+  opponent: TeamReference;
+  homeFixture: LeagueScenarioFixture | null;
+  awayFixture: LeagueScenarioFixture | null;
+}
+
+type ScoreInputState = Record<
+  string,
+  {
+    home_goals: string;
+    away_goals: string;
+  }
+>;
 
 const MODE_LABELS: Record<ProjectionMode, string> = {
   current_expected: "Current expected",
@@ -34,7 +51,6 @@ const MODE_ORDER: ProjectionMode[] = [
   "pre_season",
   "as_of_matchweek",
 ];
-type UnavailableMode = LeagueMetaItem["unavailable_modes"][number];
 
 const normalizeError = (error: unknown): string => {
   if (error instanceof Error) {
@@ -80,14 +96,6 @@ const parsePositiveInteger = (value: string | null): number | null => {
 
   return parsed;
 };
-
-type ScoreInputState = Record<
-  string,
-  {
-    home_goals: string;
-    away_goals: string;
-  }
->;
 
 const toExpectedLeagueRows = (
   payload: LeagueScenarioResponse | null,
@@ -144,9 +152,7 @@ const LeagueCustomPage: React.FC = () => {
   >(null);
 
   const [scoreInputs, setScoreInputs] = useState<ScoreInputState>({});
-  const [selectedFixtureKeys, setSelectedFixtureKeys] = useState<Set<string>>(
-    new Set(),
-  );
+  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
 
   useEffect(() => {
     let isActive = true;
@@ -267,6 +273,10 @@ const LeagueCustomPage: React.FC = () => {
       return modeParam;
     }
 
+    if (seasonAllowsAsOfMatchweek && supported.includes("pre_season")) {
+      return "pre_season";
+    }
+
     if (supported.includes("current_expected")) {
       return "current_expected";
     }
@@ -279,56 +289,123 @@ const LeagueCustomPage: React.FC = () => {
     return parsed ?? 1;
   }, [searchParams]);
 
-  const handleRemoveScore = useCallback((fixtureKey: string): void => {
+  const allTeams = useMemo<TeamReference[]>(() => {
+    if (!scenario) {
+      return [];
+    }
+
+    return [...scenario.expected_table.map((row) => row.team)].sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+  }, [scenario]);
+
+  const matchupGroups = useMemo<MatchupGroup[]>(() => {
+    if (!selectedTeam || !scenario) {
+      return [];
+    }
+
+    const groups = new Map<string, MatchupGroup>();
+
+    for (const row of scenario.expected_table) {
+      if (row.team.name !== selectedTeam) {
+        groups.set(row.team.name, {
+          opponent: row.team,
+          homeFixture: null,
+          awayFixture: null,
+        });
+      }
+    }
+
+    for (const fixture of scenario.remaining_fixtures) {
+      if (fixture.home_team.name === selectedTeam) {
+        const group = groups.get(fixture.away_team.name);
+        if (group) {
+          group.homeFixture = fixture;
+        }
+      } else if (fixture.away_team.name === selectedTeam) {
+        const group = groups.get(fixture.home_team.name);
+        if (group) {
+          group.awayFixture = fixture;
+        }
+      }
+    }
+
+    return [...groups.values()].sort((a, b) =>
+      a.opponent.name.localeCompare(b.opponent.name),
+    );
+  }, [selectedTeam, scenario]);
+
+  const lockedCount = useMemo<number>(() => {
+    return Object.values(scoreInputs).filter((value) => {
+      const homeGoals = Number(value.home_goals);
+      const awayGoals = Number(value.away_goals);
+
+      return (
+        value.home_goals !== "" &&
+        value.away_goals !== "" &&
+        Number.isInteger(homeGoals) &&
+        Number.isInteger(awayGoals) &&
+        homeGoals >= 0 &&
+        awayGoals >= 0
+      );
+    }).length;
+  }, [scoreInputs]);
+
+  useEffect(() => {
+    if (!selectedTeam || matchupGroups.length === 0) {
+      return;
+    }
+
     setScoreInputs((current) => {
-      const { [fixtureKey]: _removed, ...rest } = current;
-      return rest;
+      const nextInputs: ScoreInputState = { ...current };
+      let hasChanges = false;
+
+      for (const { homeFixture, awayFixture } of matchupGroups) {
+        if (homeFixture && !nextInputs[homeFixture.fixture_key]) {
+          nextInputs[homeFixture.fixture_key] = {
+            home_goals: "",
+            away_goals: "",
+          };
+          hasChanges = true;
+        }
+
+        if (awayFixture && !nextInputs[awayFixture.fixture_key]) {
+          nextInputs[awayFixture.fixture_key] = {
+            home_goals: "",
+            away_goals: "",
+          };
+          hasChanges = true;
+        }
+      }
+
+      return hasChanges ? nextInputs : current;
     });
-  }, []);
+  }, [selectedTeam, matchupGroups]);
 
-  const handleToggleFixture = useCallback(
-    (fixtureKey: string): void => {
-      setSelectedFixtureKeys((current) => {
-        const next = new Set(current);
-        if (next.has(fixtureKey)) {
-          next.delete(fixtureKey);
-          handleRemoveScore(fixtureKey);
-        } else {
-          next.add(fixtureKey);
-        }
-        return next;
-      });
-    },
-    [handleRemoveScore],
-  );
+  const buildLockedResults = useCallback((): LeagueScenarioLockedResultInput[] => {
+    return Object.entries(scoreInputs).flatMap(([fixture_key, values]) => {
+      const home_goals = values.home_goals.trim();
+      const away_goals = values.away_goals.trim();
 
-  const buildLockedResults =
-    useCallback((): LeagueScenarioLockedResultInput[] => {
-      return Object.entries(scoreInputs).flatMap(([fixture_key, values]) => {
-        const home_goals = values.home_goals.trim();
-        const away_goals = values.away_goals.trim();
+      if (home_goals === "" || away_goals === "") {
+        return [];
+      }
 
-        if (home_goals === "" || away_goals === "") {
-          return [];
-        }
+      const parsedHome = Number(home_goals);
+      const parsedAway = Number(away_goals);
 
-        const parsedHome = Number(home_goals);
-        const parsedAway = Number(away_goals);
+      if (
+        !Number.isInteger(parsedHome) ||
+        !Number.isInteger(parsedAway) ||
+        parsedHome < 0 ||
+        parsedAway < 0
+      ) {
+        return [];
+      }
 
-        if (
-          !Number.isInteger(parsedHome) ||
-          !Number.isInteger(parsedAway) ||
-          parsedHome < 0 ||
-          parsedAway < 0
-        ) {
-          return [];
-        }
-
-        return [
-          { fixture_key, home_goals: parsedHome, away_goals: parsedAway },
-        ];
-      });
-    }, [scoreInputs]);
+      return [{ fixture_key, home_goals: parsedHome, away_goals: parsedAway }];
+    });
+  }, [scoreInputs]);
 
   const loadScenario = useCallback(
     async (
@@ -404,7 +481,7 @@ const LeagueCustomPage: React.FC = () => {
     }
 
     setScoreInputs({});
-    setSelectedFixtureKeys(new Set());
+    setSelectedTeam(null);
     void loadScenario([]);
     void loadSavedScenarios();
   }, [
@@ -413,6 +490,7 @@ const LeagueCustomPage: React.FC = () => {
     selectedMode,
     selectedMatchweek,
     loadScenario,
+    loadSavedScenarios,
   ]);
 
   useEffect(() => {
@@ -424,7 +502,6 @@ const LeagueCustomPage: React.FC = () => {
     const currentSeason = searchParams.get("season");
     const currentMode = searchParams.get("mode");
     const currentMatchweek = searchParams.get("matchweek");
-
     const expectedMatchweek =
       selectedMode === "as_of_matchweek" ? String(selectedMatchweek) : null;
 
@@ -463,10 +540,10 @@ const LeagueCustomPage: React.FC = () => {
       (league: LeagueMetaItem) => league.id === competitionId,
     );
     const nextSeason = nextLeague?.available_seasons[0] ?? "";
-    const nextSeasonAllowsAsOf = Boolean(
+    const isPastSeason = Boolean(
       nextLeague &&
-      nextSeason &&
-      nextSeason !== (nextLeague.current_season_label ?? ""),
+        nextSeason &&
+        nextSeason !== (nextLeague.current_season_label ?? ""),
     );
 
     const supportedModes = MODE_ORDER.filter((mode) => {
@@ -474,16 +551,19 @@ const LeagueCustomPage: React.FC = () => {
         return false;
       }
 
-      if (mode === "as_of_matchweek" && !nextSeasonAllowsAsOf) {
+      if (mode === "as_of_matchweek" && !isPastSeason) {
         return false;
       }
 
       return true;
     });
 
-    const nextMode = supportedModes.includes("current_expected")
-      ? "current_expected"
-      : (supportedModes[0] ?? "");
+    const nextMode =
+      isPastSeason && supportedModes.includes("pre_season")
+        ? "pre_season"
+        : supportedModes.includes("current_expected")
+          ? "current_expected"
+          : (supportedModes[0] ?? "");
 
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set("competition", String(competitionId));
@@ -506,26 +586,37 @@ const LeagueCustomPage: React.FC = () => {
       nextParams.delete("matchweek");
     }
 
+    setSelectedTeam(null);
+    setScoreInputs({});
     setSearchParams(nextParams);
   };
 
   const handleSeasonChange = (season: string): void => {
+    setSelectedTeam(null);
+    setScoreInputs({});
+
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set("season", season);
 
-    const allowsAsOf =
-      selectedLeague && season !== (selectedLeague.current_season_label ?? "");
+    const isPastSeason = selectedLeague
+      ? season !== (selectedLeague.current_season_label ?? "")
+      : false;
     const currentMode = nextParams.get("mode") as ProjectionMode | null;
 
-    if (currentMode === "as_of_matchweek" && !allowsAsOf) {
+    if (currentMode === "as_of_matchweek" && !isPastSeason) {
       nextParams.set("mode", "current_expected");
       nextParams.delete("matchweek");
+    } else if (currentMode === "current_expected" && isPastSeason) {
+      nextParams.set("mode", "pre_season");
     }
 
     setSearchParams(nextParams);
   };
 
   const handleModeChange = (mode: ProjectionMode): void => {
+    setSelectedTeam(null);
+    setScoreInputs({});
+
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set("mode", mode);
 
@@ -543,22 +634,41 @@ const LeagueCustomPage: React.FC = () => {
   const handleMatchweekChange = (matchweek: number): void => {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set("matchweek", String(matchweek));
+    setSelectedTeam(null);
+    setScoreInputs({});
     setSearchParams(nextParams);
   };
 
-  const handleScoreInputChange = (
+  const handleTeamSelect = (teamName: string): void => {
+    setSelectedTeam((current) => (current === teamName ? null : teamName));
+  };
+
+  const handleScoreChange = (
     fixtureKey: string,
     side: "home_goals" | "away_goals",
     value: string,
   ): void => {
-    setScoreInputs((current) => ({
-      ...current,
-      [fixtureKey]: {
-        home_goals: current[fixtureKey]?.home_goals ?? "",
-        away_goals: current[fixtureKey]?.away_goals ?? "",
-        [side]: value,
-      },
-    }));
+    setScoreInputs((current) => {
+      const existing = current[fixtureKey] ?? {
+        home_goals: "",
+        away_goals: "",
+      };
+      const updated = { ...existing, [side]: value };
+
+      if (updated.home_goals === "" && updated.away_goals === "") {
+        const { [fixtureKey]: _removed, ...rest } = current;
+        return rest;
+      }
+
+      return { ...current, [fixtureKey]: updated };
+    });
+  };
+
+  const handleClearFixture = (fixtureKey: string): void => {
+    setScoreInputs((current) => {
+      const { [fixtureKey]: _removed, ...rest } = current;
+      return rest;
+    });
   };
 
   const handleApplyScenario = async (): Promise<void> => {
@@ -567,7 +677,6 @@ const LeagueCustomPage: React.FC = () => {
 
   const handleResetScenario = async (): Promise<void> => {
     setScoreInputs({});
-    setSelectedFixtureKeys(new Set());
     await loadScenario([]);
   };
 
@@ -621,17 +730,15 @@ const LeagueCustomPage: React.FC = () => {
         await liveFootballApi.getSavedLeagueScenario(scenarioId);
 
       const nextInputs: ScoreInputState = {};
-      const nextSelected = new Set<string>();
       detail.locked_results.forEach((item) => {
         nextInputs[item.fixture_key] = {
           home_goals: String(item.home_goals),
           away_goals: String(item.away_goals),
         };
-        nextSelected.add(item.fixture_key);
       });
 
       setScoreInputs(nextInputs);
-      setSelectedFixtureKeys(nextSelected);
+      setSelectedTeam(null);
 
       await loadScenario(
         detail.locked_results.map((item) => ({
@@ -685,9 +792,10 @@ const LeagueCustomPage: React.FC = () => {
     selectedLeague && selectedSeason && selectedMode,
   );
   const totalMatchweeks = scenario?.metadata.total_matchweeks ?? null;
-  const expectedRows = useMemo(
-    () => toExpectedLeagueRows(scenario),
-    [scenario],
+  const expectedRows = useMemo(() => toExpectedLeagueRows(scenario), [scenario]);
+  const remainingCount = Math.max(
+    0,
+    (scenario?.remaining_fixtures.length ?? 0) - lockedCount,
   );
 
   return (
@@ -704,13 +812,14 @@ const LeagueCustomPage: React.FC = () => {
             <SocialUserButtons />
           </div>
         </header>
-        <div className={styles.Body}>
+
+        <main className={styles.Body}>
           <div className={styles.header}>
             <div className={styles.titleBlock}>
               <h1 className={styles.title}>Custom league scenario</h1>
               <p className={styles.subtitle}>
-                Lock hypothetical scorelines for remaining fixtures and rerun
-                the expected table without saving the scenario yet.
+                Pick a team, override any fixture scoreline, and rerun the
+                expected table to explore what-if scenarios.
               </p>
             </div>
 
@@ -768,7 +877,9 @@ const LeagueCustomPage: React.FC = () => {
                     <button
                       key={mode}
                       type="button"
-                      className={styles.modeBtn}
+                      className={`${styles.modeBtn} ${
+                        selectedMode === mode ? styles.modeBtnActive : ""
+                      }`}
                       onClick={() => handleModeChange(mode)}
                       disabled={disabled}
                       title={
@@ -821,10 +932,13 @@ const LeagueCustomPage: React.FC = () => {
               <section className={styles.builderCard}>
                 <div className={styles.builderHeader}>
                   <div>
-                    <h2 className={styles.builderTitle}>Fixture locks</h2>
+                    <h2 className={styles.builderTitle}>Fixture builder</h2>
                     <p className={styles.builderText}>
-                      Enter scorelines for any remaining fixtures you want to
-                      lock into the simulation.
+                      {lockedCount > 0
+                        ? `${lockedCount} fixture${
+                            lockedCount === 1 ? "" : "s"
+                          } with custom scores - ${remainingCount} following model`
+                        : "Select a team to view their fixtures and override any scoreline."}
                     </p>
                   </div>
 
@@ -835,126 +949,259 @@ const LeagueCustomPage: React.FC = () => {
                       onClick={handleApplyScenario}
                       disabled={scenarioLoading}
                     >
-                      {scenarioLoading ? "Running…" : "Apply scenario"}
+                      {scenarioLoading ? "Running..." : "Apply scenario"}
                     </button>
 
                     <button
                       type="button"
                       className={styles.secondaryButton}
                       onClick={handleResetScenario}
-                      disabled={scenarioLoading}
+                      disabled={scenarioLoading || lockedCount === 0}
                     >
-                      Reset
+                      Reset all
                     </button>
                   </div>
                 </div>
 
-                <p className={styles.helperText}>
-                  {selectedFixtureKeys.size} fixture
-                  {selectedFixtureKeys.size === 1 ? "" : "s"} locked ·{" "}
-                  {(scenario?.remaining_fixtures.length ?? 0) -
-                    selectedFixtureKeys.size}{" "}
-                  following model. Click a fixture to lock a score.
-                </p>
+                {scenarioLoading && !scenario ? (
+                  <div className={styles.emptyState}>Loading fixtures...</div>
+                ) : null}
 
-                {scenario && scenario.remaining_fixtures.length === 0 ? (
+                {!scenarioLoading &&
+                scenario &&
+                scenario.remaining_fixtures.length === 0 ? (
                   <div className={styles.emptyState}>
-                    No remaining fixtures are available for this league, season,
-                    and mode selection.
+                    No fixtures are available for this league, season, and mode.
+                    {seasonAllowsAsOfMatchweek
+                      ? " Try switching to Pre-season mode to see all season fixtures."
+                      : ""}
                   </div>
                 ) : null}
 
-                {scenario && scenario.remaining_fixtures.length > 0 ? (
-                  <div className={styles.fixtureList}>
-                    {scenario.remaining_fixtures.map((fixture) => {
-                      const isLocked = selectedFixtureKeys.has(
-                        fixture.fixture_key,
-                      );
-                      return (
-                        <article
-                          key={fixture.fixture_key}
-                          className={`${styles.fixtureCard} ${isLocked ? styles.fixtureCardLocked : styles.fixtureCardOpen}`}
+                {scenario && allTeams.length > 0 ? (
+                  <>
+                    {selectedTeam ? (
+                      <div className={styles.teamHeader}>
+                        <span className={styles.teamHeaderLabel}>
+                          Fixtures for <strong>{selectedTeam}</strong> - type a
+                          score to override the model prediction
+                        </span>
+                        <button
+                          type="button"
+                          className={styles.changeTeamButton}
+                          onClick={() => setSelectedTeam(null)}
                         >
-                          <div className={styles.fixtureTeams}>
-                            <span className={styles.fixtureName}>
-                              {fixture.home_team.short_name ||
-                                fixture.home_team.name}{" "}
-                              vs{" "}
-                              {fixture.away_team.short_name ||
-                                fixture.away_team.name}
-                            </span>
-                            {!isLocked && (
-                              <span className={styles.fixturePredicted}>
-                                Model predicted
-                              </span>
-                            )}
-                          </div>
+                          Change team
+                        </button>
+                      </div>
+                    ) : (
+                      <p className={styles.teamPickerPrompt}>
+                        Select a team to view and override their fixture
+                        scorelines:
+                      </p>
+                    )}
 
-                          {isLocked ? (
-                            <div className={styles.scoreRow}>
-                              <input
-                                type="number"
-                                min={0}
-                                className={styles.scoreInput}
-                                value={
-                                  scoreInputs[fixture.fixture_key]
-                                    ?.home_goals ?? ""
-                                }
-                                onChange={(event) =>
-                                  handleScoreInputChange(
-                                    fixture.fixture_key,
-                                    "home_goals",
-                                    event.target.value,
-                                  )
-                                }
-                                placeholder="H"
+                    {!selectedTeam ? (
+                      <div className={styles.teamGrid}>
+                        {allTeams.map((team) => (
+                          <button
+                            key={team.name}
+                            type="button"
+                            className={styles.teamCard}
+                            onClick={() => handleTeamSelect(team.name)}
+                          >
+                            {team.emblem_url ? (
+                              <img
+                                src={team.emblem_url}
+                                alt=""
+                                className={styles.teamBadge}
                               />
-                              <span className={styles.scoreDivider}>-</span>
-                              <input
-                                type="number"
-                                min={0}
-                                className={styles.scoreInput}
-                                value={
-                                  scoreInputs[fixture.fixture_key]
-                                    ?.away_goals ?? ""
-                                }
-                                onChange={(event) =>
-                                  handleScoreInputChange(
-                                    fixture.fixture_key,
-                                    "away_goals",
-                                    event.target.value,
-                                  )
-                                }
-                                placeholder="A"
-                              />
-                              <button
-                                type="button"
-                                className={styles.unlockButton}
-                                onClick={() =>
-                                  handleToggleFixture(fixture.fixture_key)
-                                }
-                                title="Remove lock"
+                            ) : null}
+                            <span className={styles.teamCardName}>
+                              {team.short_name || team.tla || team.name}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className={styles.opponentGrid}>
+                        {matchupGroups.map(
+                          ({ opponent, homeFixture, awayFixture }) => {
+                            const homeScored = homeFixture
+                              ? Boolean(scoreInputs[homeFixture.fixture_key])
+                              : false;
+                            const awayScored = awayFixture
+                              ? Boolean(scoreInputs[awayFixture.fixture_key])
+                              : false;
+                            const isOverridden = homeScored || awayScored;
+
+                            return (
+                              <div
+                                key={opponent.name}
+                                className={`${styles.opponentCard} ${
+                                  isOverridden
+                                    ? styles.opponentCardActive
+                                    : ""
+                                }`}
                               >
-                                ×
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              type="button"
-                              className={styles.lockButton}
-                              onClick={() =>
-                                handleToggleFixture(fixture.fixture_key)
-                              }
-                            >
-                              Lock score
-                            </button>
-                          )}
-                        </article>
-                      );
-                    })}
-                  </div>
+                                <div className={styles.opponentHeader}>
+                                  {opponent.emblem_url ? (
+                                    <img
+                                      src={opponent.emblem_url}
+                                      alt=""
+                                      className={styles.opponentBadge}
+                                    />
+                                  ) : null}
+                                  <span className={styles.opponentName}>
+                                    {opponent.short_name ||
+                                      opponent.tla ||
+                                      opponent.name}
+                                  </span>
+                                </div>
+
+                                {homeFixture ? (
+                                  <div className={styles.fixtureRow}>
+                                    <span
+                                      className={styles.fixtureLabel}
+                                      title="Home fixture"
+                                    >
+                                      H
+                                    </span>
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      step={1}
+                                      className={styles.scoreInput}
+                                      value={
+                                        scoreInputs[homeFixture.fixture_key]
+                                          ?.home_goals ?? ""
+                                      }
+                                      onChange={(event) =>
+                                        handleScoreChange(
+                                          homeFixture.fixture_key,
+                                          "home_goals",
+                                          event.target.value,
+                                        )
+                                      }
+                                      placeholder="-"
+                                    />
+                                    <span className={styles.scoreDivider}>
+                                      -
+                                    </span>
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      step={1}
+                                      className={styles.scoreInput}
+                                      value={
+                                        scoreInputs[homeFixture.fixture_key]
+                                          ?.away_goals ?? ""
+                                      }
+                                      onChange={(event) =>
+                                        handleScoreChange(
+                                          homeFixture.fixture_key,
+                                          "away_goals",
+                                          event.target.value,
+                                        )
+                                      }
+                                      placeholder="-"
+                                    />
+                                    {scoreInputs[homeFixture.fixture_key] ? (
+                                      <button
+                                        type="button"
+                                        className={styles.clearButton}
+                                        onClick={() =>
+                                          handleClearFixture(
+                                            homeFixture.fixture_key,
+                                          )
+                                        }
+                                        title="Clear score"
+                                      >
+                                        x
+                                      </button>
+                                    ) : null}
+                                  </div>
+                                ) : null}
+
+                                {awayFixture ? (
+                                  <div className={styles.fixtureRow}>
+                                    <span
+                                      className={`${styles.fixtureLabel} ${styles.fixtureLabelAway}`}
+                                      title="Away fixture"
+                                    >
+                                      A
+                                    </span>
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      step={1}
+                                      className={styles.scoreInput}
+                                      value={
+                                        scoreInputs[awayFixture.fixture_key]
+                                          ?.home_goals ?? ""
+                                      }
+                                      onChange={(event) =>
+                                        handleScoreChange(
+                                          awayFixture.fixture_key,
+                                          "home_goals",
+                                          event.target.value,
+                                        )
+                                      }
+                                      placeholder="-"
+                                    />
+                                    <span className={styles.scoreDivider}>
+                                      -
+                                    </span>
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      step={1}
+                                      className={styles.scoreInput}
+                                      value={
+                                        scoreInputs[awayFixture.fixture_key]
+                                          ?.away_goals ?? ""
+                                      }
+                                      onChange={(event) =>
+                                        handleScoreChange(
+                                          awayFixture.fixture_key,
+                                          "away_goals",
+                                          event.target.value,
+                                        )
+                                      }
+                                      placeholder="-"
+                                    />
+                                    {scoreInputs[awayFixture.fixture_key] ? (
+                                      <button
+                                        type="button"
+                                        className={styles.clearButton}
+                                        onClick={() =>
+                                          handleClearFixture(
+                                            awayFixture.fixture_key,
+                                          )
+                                        }
+                                        title="Clear score"
+                                      >
+                                        x
+                                      </button>
+                                    ) : null}
+                                  </div>
+                                ) : null}
+
+                                {!homeFixture && !awayFixture ? (
+                                  <span className={styles.noFixtures}>
+                                    All played
+                                  </span>
+                                ) : null}
+                              </div>
+                            );
+                          },
+                        )}
+                      </div>
+                    )}
+                  </>
                 ) : null}
               </section>
+
               <section className={styles.builderCard}>
                 <div className={styles.builderHeader}>
                   <div>
@@ -972,7 +1219,7 @@ const LeagueCustomPage: React.FC = () => {
                       onClick={handleSaveScenario}
                       disabled={saveSubmitting || !saveTitle.trim()}
                     >
-                      {saveSubmitting ? "Saving…" : "Save scenario"}
+                      {saveSubmitting ? "Saving..." : "Save scenario"}
                     </button>
                   </div>
                 </div>
@@ -1006,7 +1253,7 @@ const LeagueCustomPage: React.FC = () => {
 
                 {savedScenariosLoading ? (
                   <div className={styles.emptyState}>
-                    Loading saved scenarios…
+                    Loading saved scenarios...
                   </div>
                 ) : null}
 
@@ -1034,7 +1281,7 @@ const LeagueCustomPage: React.FC = () => {
                           </span>
                           <span className={styles.savedSubtitle}>
                             {item.locked_result_count} locked result
-                            {item.locked_result_count === 1 ? "" : "s"} ·
+                            {item.locked_result_count === 1 ? "" : "s"} -
                             updated {new Date(item.updated_at).toLocaleString()}
                           </span>
                           {item.description ? (
@@ -1103,7 +1350,7 @@ const LeagueCustomPage: React.FC = () => {
               ) : null}
             </>
           ) : null}
-        </div>
+        </main>
       </div>
     </div>
   );

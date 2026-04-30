@@ -1,14 +1,18 @@
 from __future__ import annotations
 
-from apps.predictions.ml.data.odds.devig import (
-    devig_single as ml_devig_single,
-    validate_odds as ml_validate_odds,
-)
+import math
+
 from apps.predictions.services.odds.exceptions import OddsDataUnavailableError
 
 
 def validate_quote_odds(home_odds: float, draw_odds: float, away_odds: float) -> bool:
-    return ml_validate_odds(home_odds, draw_odds, away_odds)
+    odds = (home_odds, draw_odds, away_odds)
+    if any(not isinstance(value, (int, float)) for value in odds):
+        return False
+    if any(not math.isfinite(float(value)) for value in odds):
+        return False
+    # Decimal odds at or below 1 imply zero/negative payout and cannot be de-vigged.
+    return all(float(value) > 1.0 for value in odds)
 
 
 def compute_implied_probabilities(
@@ -39,7 +43,18 @@ def devig_probabilities(
 ) -> tuple[float, float, float]:
     if not validate_quote_odds(home_odds, draw_odds, away_odds):
         raise OddsDataUnavailableError("Invalid 1X2 odds supplied for de-vigging.")
-    return ml_devig_single(home_odds, draw_odds, away_odds)
+
+    implied_home, implied_draw, implied_away = compute_implied_probabilities(
+        home_odds,
+        draw_odds,
+        away_odds,
+    )
+    overround = implied_home + implied_draw + implied_away
+    return (
+        implied_home / overround,
+        implied_draw / overround,
+        implied_away / overround,
+    )
 
 
 def devig_quote_dict(quote: dict) -> dict:

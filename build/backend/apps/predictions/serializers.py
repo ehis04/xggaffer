@@ -248,6 +248,8 @@ class TacticalResponseSerializer(serializers.Serializer):
 
 class ChatRequestSerializer(serializers.Serializer):
     query = serializers.CharField(max_length=500, min_length=1)
+    image_b64 = serializers.CharField(required=False, allow_blank=False)
+    image_media_type = serializers.CharField(required=False, allow_blank=False)
 
 class OddsComparisonRequestSerializer(serializers.Serializer):
     home_team = serializers.CharField(max_length=100)

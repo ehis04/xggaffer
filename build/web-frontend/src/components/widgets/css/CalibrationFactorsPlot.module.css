@@ -1,0 +1,156 @@
+.wrapper {
+  width: 100%;
+}
+
+/* 2×2 grid on desktop, single column on mobile */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+/* ── card ─────────────────────────────────────────────────── */
+
+.card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.cardTitle {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--primary-text);
+}
+
+.cardDirection {
+  font-size: 0.68rem;
+  color: var(--tertiary-text);
+  white-space: nowrap;
+}
+
+.cardDesc {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--tertiary-text);
+  line-height: 1.4;
+}
+
+/* ── rows ─────────────────────────────────────────────────── */
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: 0.1rem;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 10px 100px 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.rowBest {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dotRandom { background: #a0a4aa; }
+.dotMarket  { background: #ff8070; }
+.dotModel   { background: #5be48f; }
+
+.rowLabel {
+  font-size: 0.78rem;
+  color: var(--secondary-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── bar ──────────────────────────────────────────────────── */
+
+.barTrack {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.barRandom { background: #a0a4aa; }
+.barMarket  { background: #ff8070; }
+.barModel   { background: #5be48f; }
+
+/* ── value ────────────────────────────────────────────────── */
+
+.value {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--secondary-text);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.valueBest {
+  color: var(--primary-text);
+}
+
+.bestBadge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(91, 228, 143, 0.18);
+  color: #5be48f;
+  border-radius: 4px;
+  padding: 0.1rem 0.3rem;
+}
+
+.noData {
+  font-size: 0.8rem;
+  color: var(--tertiary-text);
+  grid-column: 3 / -1;
+}
+
+/* ── responsive ───────────────────────────────────────────── */
+
+@media (max-width: 680px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .row {
+    grid-template-columns: 10px 80px 1fr auto;
+  }
+}

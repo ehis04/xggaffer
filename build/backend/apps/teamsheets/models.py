@@ -268,7 +268,6 @@ class TeamsheetPlayer(models.Model):
             ),
             models.UniqueConstraint(
                 fields=['teamsheet', 'club_player'],
-                condition=models.Q(club_player__isnull=False),
                 name='unique_club_player_per_teamsheet',
             ),
         ]

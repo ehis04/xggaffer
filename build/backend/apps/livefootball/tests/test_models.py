@@ -55,7 +55,7 @@ class LiveFootballModelTests(TestCase):
                 area_name="England",
             )
 
-    def test_competition_allows_multiple_blank_codes(self):
+    def test_competition_rejects_duplicate_blank_codes(self):
         Competition.objects.create(
             provider=self.provider,
             external_id="SA",
@@ -63,17 +63,15 @@ class LiveFootballModelTests(TestCase):
             name="Serie A",
             area_name="Italy",
         )
-        Competition.objects.create(
-            provider=self.provider,
-            external_id="LL",
-            code="",
-            name="La Liga",
-            area_name="Spain",
-        )
-        self.assertEqual(
-            Competition.objects.filter(provider=self.provider, code="").count(),
-            2,
-        )
+
+        with self.assertRaises(IntegrityError):
+            Competition.objects.create(
+                provider=self.provider,
+                external_id="LL",
+                code="",
+                name="La Liga",
+                area_name="Spain",
+            )
 
     def test_team_directory_entry_unique_per_competition_season_provider_external_id(self):
         with self.assertRaises(IntegrityError):

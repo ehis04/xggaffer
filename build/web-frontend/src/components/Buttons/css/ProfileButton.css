@@ -23,7 +23,34 @@
 }
 
 .profile-pic {
-    
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.profile-button.small .profile-button-pic,
+.profile-button.small .profile-pic {
+    width: 32px;
+    height: 32px;
+}
+
+.profile-button.medium .profile-button-pic,
+.profile-button.medium .profile-pic {
+    width: 40px;
+    height: 40px;
+}
+
+.profile-button.large .profile-button-pic,
+.profile-button.large .profile-pic {
+    width: 48px;
+    height: 48px;
+}
+
+.profile-button.extra-large .profile-button-pic,
+.profile-button.extra-large .profile-pic {
+    width: 80px;
+    height: 80px;
 }
 
 .profile-placeholder {

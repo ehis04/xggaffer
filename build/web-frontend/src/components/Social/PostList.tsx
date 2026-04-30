@@ -4,7 +4,7 @@ import type { PostData } from "./Post";
 import apiClient from "../../services/api/client";
 import { useState, useEffect } from "react";
 import { COMMUNITY } from "../../services/api/endpoints";
-import type { PaginatedResponse } from "../../services/api/communityApi";
+import communityApi, { type PaginatedResponse } from "../../services/api/communityApi";
 import { getPostsUrl, type PostListType } from "./functions/getPosts";
 
 export interface PostListProps {
@@ -58,6 +58,22 @@ export const PostList: React.FC<PostListProps> = ({
     await apiClient.post(COMMUNITY.LIKE_POST(postId));
   };
 
+  const handleDelete = async (post: PostData) => {
+    try {
+      if (post.type === "comment") {
+        await communityApi.deleteComment(post.id);
+      } else {
+        await communityApi.deletePost(post.id);
+      }
+
+      setPosts((currentPosts) =>
+        currentPosts.filter((currentPost) => currentPost.id !== post.id)
+      );
+    } catch (error) {
+      console.error("Couldn't delete post: ", error);
+    }
+  };
+
   return (
     <div className="post-list-container">
       {postsPB.map((post) => (
@@ -68,6 +84,7 @@ export const PostList: React.FC<PostListProps> = ({
           onComment={onComment}
           onProfileClick={onProfileClick}
           onPostClick={onPostClick}
+          onDelete={handleDelete}
         />
       ))}
     </div>

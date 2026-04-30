@@ -4,8 +4,39 @@ import { clubsApi } from "../../../services/api";
 import type { Club, ClubJoinRequest } from "../../../types/club";
 import styles from "./css/BrowseClubsPage.module.css";
 import { Sidebar } from "../../../components/Navigation/SideBar";
-import { ClubsNavBar } from "../../../components/Navigation/ClubsNavBar";
 import { SocialUserButtons } from "../../../components/Social/SocialUserButtons";
+
+const ALLOWED_BROWSE_CLUBS = [
+  'manchester united',
+  'manchester united fc',
+  'paris saint germain',
+  'paris saint germain fc',
+  'real madrid cf',
+  'fc bayern munchen',
+  'juventus fc',
+] as const;
+
+const ALLOWED_BROWSE_CLUB_SET = new Set<string>(ALLOWED_BROWSE_CLUBS);
+const ALLOWED_BROWSE_CLUB_ORDER = new Map<string, number>(
+  ALLOWED_BROWSE_CLUBS.map((name, idx) => [name, idx])
+);
+
+const normalizeClubName = (name: string): string =>
+  name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const isPopulatedSystemClub = (club: Club): boolean => {
+  if (club.club_type && club.club_type !== 'system_professional') {
+    return false;
+  }
+
+  return ALLOWED_BROWSE_CLUB_SET.has(normalizeClubName(club.name));
+};
 
 const getRequestStatusLabel = (status: ClubJoinRequest["status"]) => {
   const map: Record<string, string> = {
@@ -171,10 +202,33 @@ const BrowseClubsPage: React.FC = () => {
         clubsApi.browse(search ? { search } : undefined),
         clubsApi.listMyJoinRequests(),
       ]);
-      setClubs(clubsData);
+      const targetClubs = clubsData.filter(isPopulatedSystemClub);
+      const playerLists = await Promise.all(
+        targetClubs.map(async (club) => {
+          try {
+            const players = await clubsApi.listPlayers(club.id);
+            return { clubId: club.id, playerCount: players.length };
+          } catch {
+            return { clubId: club.id, playerCount: club.player_count };
+          }
+        })
+      );
+
+      const countByClubId = new Map(playerLists.map((x) => [x.clubId, x.playerCount]));
+      const visibleClubs = targetClubs.map((club) => ({
+        ...club,
+        player_count: countByClubId.get(club.id) ?? club.player_count,
+      })).sort(
+        (a, b) =>
+          (ALLOWED_BROWSE_CLUB_ORDER.get(normalizeClubName(a.name)) ?? Number.MAX_SAFE_INTEGER) -
+          (ALLOWED_BROWSE_CLUB_ORDER.get(normalizeClubName(b.name)) ?? Number.MAX_SAFE_INTEGER)
+      );
+
+      setClubs(visibleClubs);
       setMyJoinRequests(requestsData);
       if (selectedClub) {
-        setSelectedClub(clubsData.find((c) => c.id === selectedClub.id) ?? null);
+        const refreshedSelection = visibleClubs.find((club) => club.id === selectedClub.id) || null;
+        setSelectedClub(refreshedSelection);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load clubs");
@@ -275,7 +329,6 @@ const BrowseClubsPage: React.FC = () => {
             <span className={styles.pageHeaderTitle}>Clubs</span>
           </div>
           <div className={styles.pageHeaderMiddle}>
-            <ClubsNavBar />
           </div>
           <div className={styles.pageHeaderRight}>
             <SocialUserButtons />

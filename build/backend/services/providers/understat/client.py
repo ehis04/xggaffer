@@ -1,3 +1,9 @@
+"""
+Understat client for raw football data payload retrieval
+
+Handles Understat HTTP requests, retry behaviour, AJAX endpoints, and embedded page payload extraction without writing to the database
+"""
+
 from __future__ import annotations
 
 import html
@@ -12,6 +18,8 @@ from django.conf import settings
 from requests import Session
 from requests.exceptions import RequestException, Timeout
 
+from common.provider_policy import exponential_backoff_seconds
+
 from .exceptions import (
     UnderstatAuthenticationError,
     UnderstatMalformedResponseError,
@@ -23,31 +31,32 @@ from .exceptions import (
 logger = logging.getLogger(__name__)
 
 
+# -------------------------------------------------------------------------
+# Understat client
+# -------------------------------------------------------------------------
+
+# Client for retrieving raw Understat page and AJAX payloads
 class UnderstatClient:
-    """
-    Lightweight synchronous client for retrieving raw Understat page payloads.
 
-    Important:
-    - this client does not import Django business models
-    - this client does not normalise payloads
-    - this client does not write to the database
-
-    In this implementation, "team_external_id" is treated as the Understat team slug
-    used in routes such as /team/Rennes/2019.
-    """
-
+    # Set up the client with request settings and default headers
     def __init__(
         self,
         *,
         base_url: str | None = None,
         timeout_seconds: int | None = None,
         retry_count: int | None = None,
+        request_delay_seconds: float | None = None,
         user_agent: str | None = None,
         session: Session | None = None,
     ) -> None:
         self.base_url = (base_url or settings.UNDERSTAT_BASE_URL).rstrip("/")
         self.timeout_seconds = timeout_seconds or settings.UNDERSTAT_TIMEOUT_SECONDS
         self.retry_count = retry_count if retry_count is not None else settings.UNDERSTAT_RETRY_COUNT
+        self.request_delay_seconds = float(
+            request_delay_seconds
+            if request_delay_seconds is not None
+            else getattr(settings, "UNDERSTAT_REQUEST_DELAY_SECONDS", 2.0)
+        )
         self.user_agent = user_agent or settings.UNDERSTAT_USER_AGENT
 
         self.session = session or requests.Session()
@@ -64,13 +73,8 @@ class UnderstatClient:
     # Public API
     # -------------------------------------------------------------------------
 
+    # Fetch raw league-level team, date, and player payloads for a season
     def get_league_teams(self, league: str, season: str | int) -> dict[str, Any]:
-        """
-        Fetch raw league-level team/table payloads for a season.
-
-        Returns an envelope that keeps the raw extracted page payloads grouped
-        together for later normalisation.
-        """
         try:
             ajax_payload = self._fetch_league_data_api(league, season)
             teams = ajax_payload.get("teams")
@@ -82,7 +86,7 @@ class UnderstatClient:
             dates = ajax_payload.get("dates")
             players = ajax_payload.get("players")
         except (UnderstatRequestError, UnderstatMalformedResponseError):
-            # Backward-compatible fallback for legacy pages embedding payloads inline.
+            # Fallback for legacy pages that embed payloads inside the HTML
             page_html = self._fetch_page(f"/league/{league}/{season}")
 
             teams = self._extract_required_payload(
@@ -107,8 +111,9 @@ class UnderstatClient:
             "players": players,
         }
 
+    # Fetch raw league data from the Understat AJAX endpoint
     def _fetch_league_data_api(self, league: str, season: str | int) -> dict[str, Any]:
-        # Prime cookies/context from the human-readable page first.
+        # Prime cookies and context from the visible league page first
         self._request("GET", f"/league/{league}/{season}")
 
         response = self._request(
@@ -121,24 +126,13 @@ class UnderstatClient:
             },
         )
 
-        try:
-            payload = json.loads(response.text)
-        except json.JSONDecodeError as exc:
-            raise UnderstatMalformedResponseError(
-                f"Could not parse Understat AJAX league data for '{league}/{season}'."
-            ) from exc
+        return self._parse_json_dict(
+            response.text,
+            context=f"AJAX league data for '{league}/{season}'",
+        )
 
-        if not isinstance(payload, dict):
-            raise UnderstatMalformedResponseError(
-                f"Unexpected Understat AJAX payload shape for '{league}/{season}'."
-            )
-
-        return payload
-
+    # Fetch the raw Understat player list for a team season
     def get_team_players(self, team_external_id: str, season: str | int) -> list[dict[str, Any]]:
-        """
-        Fetch the raw Understat player list for a team season page.
-        """
         payload = self.get_team_season_payload(team_external_id, season)
         players = payload.get("players")
 
@@ -149,10 +143,8 @@ class UnderstatClient:
 
         return players
 
+    # Fetch the raw Understat statistics payload for a team season
     def get_team_stats(self, team_external_id: str, season: str | int) -> dict[str, Any] | list[Any]:
-        """
-        Fetch the raw Understat season statistics/history payload for a team page.
-        """
         payload = self.get_team_season_payload(team_external_id, season)
         stats = payload.get("stats")
 
@@ -163,14 +155,8 @@ class UnderstatClient:
 
         return stats
 
+    # Fetch all useful raw team-season payloads from Understat
     def get_team_season_payload(self, team_external_id: str, season: str | int) -> dict[str, Any]:
-        """
-        Fetch all raw season-level payloads we currently care about from a team page.
-
-        This is useful because Understat team pages usually contain several related
-        blobs, and later sync code may want more than one of them without making
-        multiple HTTP requests.
-        """
         try:
             ajax_payload = self._fetch_team_data_api(team_external_id, season)
             return {
@@ -206,6 +192,7 @@ class UnderstatClient:
                 "dates": dates,
             }
 
+    # Fetch raw team data from the Understat AJAX endpoint
     def _fetch_team_data_api(self, team_external_id: str, season: str | int) -> dict[str, Any]:
         response = self._request(
             "GET",
@@ -216,17 +203,10 @@ class UnderstatClient:
             },
         )
 
-        try:
-            payload = json.loads(response.text)
-        except json.JSONDecodeError as exc:
-            raise UnderstatMalformedResponseError(
-                f"Could not parse Understat AJAX team data for '{team_external_id}/{season}'."
-            ) from exc
-
-        if not isinstance(payload, dict):
-            raise UnderstatMalformedResponseError(
-                f"Unexpected Understat AJAX payload shape for '{team_external_id}/{season}'."
-            )
+        payload = self._parse_json_dict(
+            response.text,
+            context=f"AJAX team data for '{team_external_id}/{season}'",
+        )
 
         if "players" not in payload:
             raise UnderstatMalformedResponseError(
@@ -235,6 +215,7 @@ class UnderstatClient:
 
         return payload
 
+    # Fetch raw match data from the Understat AJAX endpoint
     def _fetch_match_data_api(self, match_id: str | int) -> dict[str, Any]:
         response = self._request(
             "GET",
@@ -245,31 +226,17 @@ class UnderstatClient:
             },
         )
 
-        try:
-            payload = json.loads(response.text)
-        except json.JSONDecodeError as exc:
-            raise UnderstatMalformedResponseError(
-                f"Could not parse Understat AJAX match data for '{match_id}'."
-            ) from exc
+        return self._parse_json_dict(
+            response.text,
+            context=f"AJAX match data for '{match_id}'",
+        )
 
-        if not isinstance(payload, dict):
-            raise UnderstatMalformedResponseError(
-                f"Unexpected Understat AJAX payload shape for match '{match_id}'."
-            )
-
-        return payload
-
+    # Fetch raw player-page payloads for a player
     def get_player_stats(
         self,
         player_external_id: str,
         season: str | int | None = None,
     ) -> dict[str, Any]:
-        """
-        Fetch raw player-page payloads.
-
-        Understat player pages expose multiple blobs. We return them grouped in one
-        raw envelope and leave the season-specific interpretation to the normaliser.
-        """
         page_html = self._fetch_page(f"/player/{player_external_id}")
 
         groups = self._extract_optional_payload(
@@ -298,14 +265,8 @@ class UnderstatClient:
             "shots": shots,
         }
 
+    # Fetch the raw roster payload for a match
     def get_match_roster(self, match_id: str | int) -> dict[str, Any]:
-        """
-        Fetch raw roster payload for a match.
-
-        Modern Understat pages serve match rosters from the AJAX endpoint
-        ``/getMatchData/{match_id}``. We try that first and keep HTML payload
-        extraction as a fallback.
-        """
         try:
             ajax_payload = self._fetch_match_data_api(match_id)
             roster = ajax_payload.get("rosters")
@@ -335,10 +296,12 @@ class UnderstatClient:
     # HTTP helpers
     # -------------------------------------------------------------------------
 
+    # Fetch a raw HTML page from Understat
     def _fetch_page(self, path: str) -> str:
         response = self._request("GET", path)
         return response.text
 
+    # Send an Understat request with retry and error conversion
     def _request(self, method: str, path: str, **kwargs: Any) -> requests.Response:
         url = f"{self.base_url}{path}"
         last_error: Exception | None = None
@@ -352,20 +315,24 @@ class UnderstatClient:
                     **kwargs,
                 )
                 self._raise_for_status(response)
-                time.sleep(2)
+                if self.request_delay_seconds > 0:
+                    time.sleep(self.request_delay_seconds)
                 return response
             except (Timeout, RequestException, UnderstatRequestError) as exc:
                 last_error = exc
 
                 should_retry = attempt < self.retry_count and self._is_retryable_error(exc)
                 if should_retry:
+                    delay = exponential_backoff_seconds(attempt + 1, base=2.0, cap=30.0)
                     logger.warning(
-                        "Understat request failed on attempt %s/%s for %s: %s",
+                        "Understat request failed on attempt %s/%s for %s: %s (retry in %.2fs)",
                         attempt + 1,
                         self.retry_count + 1,
                         url,
                         exc,
+                        delay,
                     )
+                    time.sleep(delay)
                     continue
 
                 if isinstance(exc, UnderstatRequestError):
@@ -375,6 +342,24 @@ class UnderstatClient:
 
         raise UnderstatRequestError(f"Understat request failed for {url}: {last_error}")
 
+    # Parse raw response text into a JSON dictionary
+    @staticmethod
+    def _parse_json_dict(raw_text: str, *, context: str) -> dict[str, Any]:
+        try:
+            payload = json.loads(raw_text)
+        except json.JSONDecodeError as exc:
+            raise UnderstatMalformedResponseError(
+                f"Could not parse Understat {context}."
+            ) from exc
+
+        if not isinstance(payload, dict):
+            raise UnderstatMalformedResponseError(
+                f"Unexpected Understat payload shape for {context}."
+            )
+
+        return payload
+
+    # Return True when a failed request should be retried
     @staticmethod
     def _is_retryable_error(exc: Exception) -> bool:
         if isinstance(exc, (Timeout,)):
@@ -391,6 +376,7 @@ class UnderstatClient:
 
         return False
 
+    # Convert HTTP error responses into provider-specific exceptions
     @staticmethod
     def _raise_for_status(response: requests.Response) -> None:
         status_code = response.status_code
@@ -417,6 +403,7 @@ class UnderstatClient:
     # Embedded payload extraction
     # -------------------------------------------------------------------------
 
+    # Extract a required embedded payload from a page
     def _extract_required_payload(
         self,
         page_html: str,
@@ -432,6 +419,7 @@ class UnderstatClient:
             )
         return payload
 
+    # Extract the first available embedded payload from a list of variable names
     def _extract_optional_payload(
         self,
         page_html: str,
@@ -444,12 +432,8 @@ class UnderstatClient:
                 return payload
         return None
 
+    # Extract one named embedded payload from an Understat HTML page
     def _extract_named_payload(self, page_html: str, variable_name: str) -> Any | None:
-        """
-        Supports the two common shapes seen in provider pages:
-        1. var someName = JSON.parse('...');
-        2. var someName = {...}; or [...];
-        """
         json_parse_match = re.search(
             rf"{re.escape(variable_name)}\s*=\s*JSON\.parse\((?P<quote>['\"])(?P<data>.*?)(?<!\\)(?P=quote)\)",
             page_html,
@@ -471,11 +455,9 @@ class UnderstatClient:
 
         return None
 
+    # Decode an escaped JSON string from an Understat page
     @staticmethod
     def _decode_embedded_string(value: str) -> str:
-        """
-        Decode the escaped string passed into JSON.parse('...') on Understat pages.
-        """
         try:
             decoded = bytes(value, "utf-8").decode("unicode_escape")
         except UnicodeDecodeError:
@@ -483,6 +465,7 @@ class UnderstatClient:
 
         return html.unescape(decoded)
 
+    # Decode JSON and raise a provider-specific error on failure
     @staticmethod
     def _loads_json(value: str, variable_name: str) -> Any:
         try:

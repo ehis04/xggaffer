@@ -34,20 +34,82 @@ const ComparisonTable: React.FC<ComparisonTableProps> = ({
   metadata,
 }) => {
   const [mobileTab, setMobileTab] = useState<'actual' | 'expected'>('actual');
+  const isPreSeasonToDate = mode === 'pre_season' && metadata.projection_window === 'to_date';
+
+  const actualPlayedLookup = useMemo(() => {
+    const byTeamId = new Map<number, number>();
+    const byTeamName = new Map<string, number>();
+
+    actualRows.forEach((row) => {
+      const played = Number(row.played);
+      if (!Number.isFinite(played)) {
+        return;
+      }
+
+      if (typeof row.team.id === 'number') {
+        byTeamId.set(row.team.id, played);
+      }
+
+      const loweredName = (row.team.name || '').trim().toLowerCase();
+      if (loweredName) {
+        byTeamName.set(loweredName, played);
+      }
+    });
+
+    return { byTeamId, byTeamName };
+  }, [actualRows]);
+
+  const resolveActualPlayedForExpected = (row: LeagueExpectedTableRow): number | null => {
+    if (typeof row.team.id === 'number') {
+      const byId = actualPlayedLookup.byTeamId.get(row.team.id);
+      if (byId !== undefined) {
+        return byId;
+      }
+    }
+
+    const loweredName = (row.team.name || '').trim().toLowerCase();
+    if (!loweredName) {
+      return null;
+    }
+
+    const byName = actualPlayedLookup.byTeamName.get(loweredName);
+    return byName !== undefined ? byName : null;
+  };
 
   const expectedLeagueRows = useMemo<LeagueTableRow[]>(() => {
     return expectedRows.map((row) => {
-      const played = Math.round(row.simulated_wins + row.simulated_draws + row.simulated_losses);
+      const simulatedPlayed = Math.round(row.simulated_wins + row.simulated_draws + row.simulated_losses);
+      const actualPlayed = isPreSeasonToDate ? resolveActualPlayedForExpected(row) : null;
+      const played = actualPlayed ?? simulatedPlayed;
       const goalsFor = Math.round(row.simulated_goals_for);
       const goalsAgainst = Math.round(row.simulated_goals_against);
+      let won = Math.round(row.simulated_wins);
+      const drawn = Math.round(row.simulated_draws);
+      let lost = Math.round(row.simulated_losses);
+
+      if (actualPlayed !== null) {
+        const diff = played - (won + drawn + lost);
+        if (diff > 0) {
+          lost += diff;
+        } else if (diff < 0) {
+          let remaining = -diff;
+          const reduceLost = Math.min(lost, remaining);
+          lost -= reduceLost;
+          remaining -= reduceLost;
+          if (remaining > 0) {
+            const reduceWon = Math.min(won, remaining);
+            won -= reduceWon;
+          }
+        }
+      }
 
       return {
         position: row.predicted_position,
         team: row.team,
         played,
-        won: Math.round(row.simulated_wins),
-        drawn: Math.round(row.simulated_draws),
-        lost: Math.round(row.simulated_losses),
+        won,
+        drawn,
+        lost,
         goals_for: goalsFor,
         goals_against: goalsAgainst,
         goal_difference: goalsFor - goalsAgainst,
@@ -55,21 +117,7 @@ const ComparisonTable: React.FC<ComparisonTableProps> = ({
         form: '',
       };
     });
-  }, [expectedRows]);
-
-  const actualSourceNote = metadata.actual_table_source;
-  const expectedSourceNote = [
-    metadata.expected_table_source,
-    metadata.data_cutoff_date ? `Cut-off ${metadata.data_cutoff_date}` : null,
-    metadata.based_on_matchweek !== null && metadata.based_on_matchweek !== undefined
-      ? `Based on matchweek ${metadata.based_on_matchweek}`
-      : null,
-    metadata.remaining_fixtures !== null && metadata.remaining_fixtures !== undefined
-      ? `${metadata.remaining_fixtures} remaining fixtures`
-      : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  }, [expectedRows, isPreSeasonToDate, actualPlayedLookup]);
 
   return (
     <section className={styles.section}>
@@ -96,7 +144,6 @@ const ComparisonTable: React.FC<ComparisonTableProps> = ({
         >
           <div className={styles.panelHeader}>
             <h2 className={styles.panelTitle}>Actual</h2>
-            <p className={styles.panelMeta}>{actualSourceNote}</p>
           </div>
 
           <LeagueTable
@@ -110,7 +157,6 @@ const ComparisonTable: React.FC<ComparisonTableProps> = ({
         >
           <div className={styles.panelHeader}>
             <h2 className={styles.panelTitle}>Expected ({formatModeLabel(mode)})</h2>
-            <p className={styles.panelMeta}>{expectedSourceNote}</p>
           </div>
 
           <LeagueTable

@@ -69,6 +69,7 @@ def get_engine_widget_freshness(engine_key: str) -> dict:
     return {
         "snapshot_published_at": snapshot_dt,
         "is_stale": own_stale or cascade_degraded,
+        "is_degraded": cascade_degraded,
         "stale_reason": "sla_exceeded" if own_stale else None,
         "cascade_degraded": cascade_degraded,
         "cascade_reason": cascade_reason,

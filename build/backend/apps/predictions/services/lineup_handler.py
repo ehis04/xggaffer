@@ -6,11 +6,16 @@ import pandas as pd
 
 from apps.predictions.services.base_handler import EngineHandler, QueryPayload
 from apps.predictions.services.intent_types import IntentClass, ParsedQuery
+from apps.predictions.services.source_policy import (
+    MERGED_MATCHES_CSV,
+    latest_available_season,
+    source_coverage_metadata,
+)
 
 _logger = logging.getLogger(__name__)
 
 DEFAULT_LEAGUE = "EPL"
-DEFAULT_SEASON = "2024"
+DEFAULT_SEASON = "2025"
 
 
 def _serialise_team_result(team_result: dict) -> dict:
@@ -32,6 +37,9 @@ class LineupHandler(EngineHandler):
         league = parsed_query.league or DEFAULT_LEAGUE
         season = parsed_query.season or DEFAULT_SEASON
         try:
+            if parsed_query.season is None and MERGED_MATCHES_CSV.exists():
+                season = latest_available_season(pd.read_csv(MERGED_MATCHES_CSV), default=DEFAULT_SEASON)
+
             from apps.predictions.ml.models.lineup.feature_service import (
                 get_latest_team_features,
             )
@@ -61,6 +69,11 @@ class LineupHandler(EngineHandler):
                 team_name: _serialise_team_result(team_result)
                 for team_name, team_result in raw.items()
             }
+            engine_data["source_coverage"] = source_coverage_metadata(
+                intent=IntentClass.LINEUP_PREDICTION.value,
+                used_sources=["understat", "sofascore", "whoscored"],
+                required_sources=["understat", "sofascore", "whoscored", "football_data", "native_stats_api"],
+            )
 
             return QueryPayload(
                 intent=IntentClass.LINEUP_PREDICTION,

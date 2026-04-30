@@ -1,3 +1,9 @@
+"""
+Tests for player data serializers
+
+Checks summary, comparison, and enriched list serializer contracts using deterministic payload fixtures
+"""
+
 from django.test import SimpleTestCase
 
 from apps.playerdata.serializers import (
@@ -8,7 +14,10 @@ from apps.playerdata.serializers import (
 )
 
 
+# Tests for player data serializer contracts
 class PlayerDataSerializerTests(SimpleTestCase):
+
+    # Build a complete player season summary payload
     def _player_summary_payload(self):
         return {
             "player": {
@@ -79,6 +88,7 @@ class PlayerDataSerializerTests(SimpleTestCase):
             "missing_reasons": [],
         }
 
+    # Build a complete club season summary payload
     def _club_summary_payload(self):
         return {
             "club": {
@@ -128,6 +138,7 @@ class PlayerDataSerializerTests(SimpleTestCase):
             "missing_reasons": [],
         }
 
+    # Build a complete player comparison payload
     def _comparison_payload(self):
         return {
             "player_a": {
@@ -227,6 +238,7 @@ class PlayerDataSerializerTests(SimpleTestCase):
             "missing_reasons": [],
         }
 
+    # Build one enriched player list item payload
     def _enriched_list_item_payload(self):
         return {
             "player": {
@@ -279,6 +291,7 @@ class PlayerDataSerializerTests(SimpleTestCase):
             "has_enrichment_data": True,
         }
 
+    # Check the player season summary serializer accepts a full payload
     def test_player_season_summary_serializer_validates_complete_payload(self):
         serializer = PlayerSeasonEnrichmentSummarySerializer(
             data=self._player_summary_payload()
@@ -288,6 +301,7 @@ class PlayerDataSerializerTests(SimpleTestCase):
         self.assertEqual(serializer.validated_data["context"]["provider"], "understat")
         self.assertEqual(len(serializer.validated_data["metrics"]), 2)
 
+    # Check the player season summary serializer represents instance data
     def test_player_season_summary_serializer_represents_instance_payload(self):
         serializer = PlayerSeasonEnrichmentSummarySerializer(
             instance=self._player_summary_payload()
@@ -300,6 +314,7 @@ class PlayerDataSerializerTests(SimpleTestCase):
             "Deterministic season summary",
         )
 
+    # Check the club season summary serializer accepts nullable fields
     def test_club_season_summary_serializer_is_null_safe(self):
         payload = self._club_summary_payload()
         serializer = ClubSeasonEnrichmentSummarySerializer(data=payload)
@@ -309,6 +324,7 @@ class PlayerDataSerializerTests(SimpleTestCase):
         self.assertIsNone(serializer.validated_data["provider_coverage"]["last_synced_at"])
         self.assertIsNone(serializer.validated_data["provider_coverage"]["minutes_sampled"])
 
+    # Check the player comparison serializer accepts the expected response shape
     def test_player_comparison_serializer_validates_expected_contract(self):
         serializer = PlayerComparisonSerializer(data=self._comparison_payload())
         self.assertTrue(serializer.is_valid(), serializer.errors)
@@ -318,6 +334,7 @@ class PlayerDataSerializerTests(SimpleTestCase):
         self.assertTrue(serializer.validated_data["metrics"][1]["is_tie"])
         self.assertIsNone(serializer.validated_data["metrics"][1]["winner"])
 
+    # Check the player comparison serializer requires both comparison sides
     def test_player_comparison_serializer_requires_both_sides(self):
         payload = self._comparison_payload()
         del payload["player_b"]
@@ -327,6 +344,7 @@ class PlayerDataSerializerTests(SimpleTestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn("player_b", serializer.errors)
 
+    # Check the enriched list item serializer accepts a full payload
     def test_enriched_player_list_item_serializer_validates_complete_payload(self):
         serializer = EnrichedPlayerListItemSerializer(
             data=self._enriched_list_item_payload()
@@ -335,6 +353,7 @@ class PlayerDataSerializerTests(SimpleTestCase):
         self.assertEqual(serializer.validated_data["player"]["id"], 7)
         self.assertEqual(serializer.validated_data["key_metrics"][0]["label"], "Goals")
 
+    # Check the enriched list item serializer accepts optional null blocks
     def test_enriched_player_list_item_serializer_allows_optional_null_blocks(self):
         payload = {
             "player": {
@@ -367,6 +386,7 @@ class PlayerDataSerializerTests(SimpleTestCase):
         self.assertIsNone(serializer.validated_data["explanation_snippet"])
         self.assertIsNone(serializer.validated_data["provider_coverage"])
 
+    # Check metric labels are required in summary payloads
     def test_summary_serializer_rejects_metric_without_required_label(self):
         payload = self._player_summary_payload()
         del payload["metrics"][0]["label"]
@@ -376,6 +396,7 @@ class PlayerDataSerializerTests(SimpleTestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn("metrics", serializer.errors)
 
+    # Check enriched list items require a player block
     def test_enriched_player_list_item_serializer_requires_player(self):
         payload = self._enriched_list_item_payload()
         del payload["player"]

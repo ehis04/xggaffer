@@ -12,6 +12,7 @@ import type {
 } from '../../types/prediction';
 import type { ApiEnvelope } from '../../common/types/response';
 import { isEnvelope } from '../../common/types/response';
+import { getCurrentFootballSeason } from '../../utils/footballSeason';
 
 const DEFAULT_PREDICTIONS_API_BASE = '/predictions';
 
@@ -204,7 +205,7 @@ export interface OddsAccuracyResponse {
 
 export async function getOddsAccuracy(
   league: string,
-  season: string = '2025',
+  season: string = getCurrentFootballSeason(),
 ): Promise<ApiEnvelope<OddsAccuracyResponse | null>> {
   return withPredictionsErrorHandling(() =>
     apiClient.get<ApiEnvelope<OddsAccuracyResponse | null>>(

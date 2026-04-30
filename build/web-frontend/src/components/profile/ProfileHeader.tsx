@@ -25,8 +25,7 @@ export const ProfileHeader = ({
   };
 
   const getVisibilityLabel = () => {
-    if (userData?.visibility === "PRIVATE") return "Private";
-    if (userData?.visibility === "FOLLOWERS") return "Followers";
+    if (userData?.visibility === "PR" || userData?.visibility === "PRIVATE") return "Private";
     return "Public";
   };
 
@@ -46,9 +45,16 @@ export const ProfileHeader = ({
   return (
     <div className="ph-container">
       <div className="ph-top-row">
-        <div className="ph-avatar-wrap">
+        <div
+          className="ph-avatar-wrap"
+          onClick={isOwnProfile ? onEditProfile : undefined}
+        >
           {userData && (
-            <ProfileButton username={userData.username} size="extra-large" />
+            <ProfileButton
+              username={userData.username}
+              profileImage={userData.profile_image ?? undefined}
+              size="extra-large"
+            />
           )}
           {isOwnProfile && (
             <div className="ph-avatar-overlay">
@@ -145,7 +151,7 @@ export const ProfileHeader = ({
         {isOwnProfile && userData?.visibility && (
           <div className="ph-meta-item">
             <span
-              className={`ph-visibility-badge${userData.visibility === "PRIVATE" ? " ph-visibility-private" : ""}`}
+              className={`ph-visibility-badge${userData.visibility === "PR" || userData.visibility === "PRIVATE" ? " ph-visibility-private" : ""}`}
               onClick={isOwnProfile ? onEditProfile : undefined}
             >
               {getVisibilityLabel()}

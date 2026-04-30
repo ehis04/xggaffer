@@ -22,6 +22,7 @@ def create_board_with_initial_frame(
     created_by,
     title,
     description='',
+    board_type=TacticsBoard.BoardType.STATIC,
     pitch_orientation=TacticsBoard.PitchOrientation.VERTICAL,
     linked_teamsheet=None,
     home_formation='',
@@ -35,6 +36,7 @@ def create_board_with_initial_frame(
         created_by=created_by,
         title=title,
         description=description,
+        board_type=board_type,
         pitch_orientation=pitch_orientation,
         linked_teamsheet=linked_teamsheet,
         home_formation=home_formation,
@@ -52,7 +54,6 @@ def create_board_with_initial_frame(
         notes='',
     )
 
-    update_board_type_for_frame_count(board)
     return board
 
 
@@ -63,6 +64,7 @@ def create_frame_for_board(
     label='',
     duration_ms=DEFAULT_FRAME_DURATION_MS,
     notes='',
+    copy_items_from_frame_index=None,
 ):
     if duration_ms is None:
         duration_ms = DEFAULT_FRAME_DURATION_MS
@@ -79,6 +81,38 @@ def create_frame_for_board(
         duration_ms=duration_ms,
         notes=notes,
     )
+
+    # Copy items from a previous frame if requested
+    if copy_items_from_frame_index is not None:
+        source_frame = board.frames.filter(
+            frame_index=copy_items_from_frame_index
+        ).first()
+
+        if source_frame:
+            items_to_copy = [
+                TacticsBoardItem(
+                    frame=frame,
+                    item_type=item.item_type,
+                    team_side=item.team_side,
+                    stable_id=item.stable_id,
+                    linked_player=item.linked_player,
+                    label=item.label,
+                    shirt_number=item.shirt_number,
+                    position_label=item.position_label,
+                    x=item.x,
+                    y=item.y,
+                    end_x=item.end_x,
+                    end_y=item.end_y,
+                    width=item.width,
+                    height=item.height,
+                    rotation=item.rotation,
+                    z_index=item.z_index,
+                    style=copy.deepcopy(item.style or {}),
+                )
+                for item in source_frame.items.order_by('z_index', 'id')
+            ]
+            if items_to_copy:
+                TacticsBoardItem.objects.bulk_create(items_to_copy)
 
     update_board_type_for_frame_count(board)
     return frame

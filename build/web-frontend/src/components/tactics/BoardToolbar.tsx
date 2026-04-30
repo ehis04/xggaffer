@@ -3,6 +3,7 @@ import type {
   TacticsActiveTool,
   TacticsPlaybackStatus,
 } from '../../types/tactics';
+import styles from './BoardToolbar.module.css';
 
 interface BoardToolbarProps {
   title: string;
@@ -13,6 +14,7 @@ interface BoardToolbarProps {
   currentFrameIndex: number;
   targetFrameIndex: number | null;
   playbackStatus: TacticsPlaybackStatus;
+  isAnimatedBoard: boolean;
   canPlay: boolean;
   isPresentationOpen: boolean;
   isExportingPng: boolean;
@@ -96,6 +98,7 @@ const BoardToolbar: React.FC<BoardToolbarProps> = ({
   currentFrameIndex,
   targetFrameIndex,
   playbackStatus,
+  isAnimatedBoard,
   canPlay,
   isPresentationOpen,
   isExportingPng,
@@ -125,162 +128,108 @@ const BoardToolbar: React.FC<BoardToolbarProps> = ({
   const isPlaying = playbackStatus === 'playing';
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-        gap: '12px',
-        alignItems: 'center',
-        padding: '16px',
-        border: '1px solid #d1d5db',
-        borderRadius: '14px',
-        marginBottom: '16px',
-      }}
-    >
-      <div>
-        <button type="button" onClick={onBack}>
+    <section className={styles.toolbar} aria-label="Board controls">
+      <div className={styles.toolbarHeader}>
+        <button type="button" onClick={onBack} className={styles.backButton}>
           ← Back to Tactics Boards
         </button>
 
-        <h1 style={{ margin: '12px 0 6px 0' }}>{title}</h1>
+        <h1 className={styles.title}>{title}</h1>
 
-        <p style={{ margin: 0 }}>
+        <p className={styles.subtitle}>
           {saveStatusLabel}
           {hasDraft ? ' · Draft in progress' : ''}
         </p>
 
         {exportError ? (
-          <p style={{ margin: '6px 0 0 0', color: '#b91c1c' }}>
-            {exportError}
-          </p>
+          <p className={styles.errorText}>{exportError}</p>
         ) : null}
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          gap: '10px',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          justifyContent: 'flex-end',
-        }}
-      >
-        <span
-          style={{
-            border: '1px solid #9ca3af',
-            borderRadius: '999px',
-            padding: '6px 10px',
-            fontSize: '0.95rem',
-            whiteSpace: 'nowrap',
-          }}
-        >
+      <div className={styles.metaRow}>
+        <span className={styles.metaChip}>
           {toolLabel}
         </span>
-
-        <span
-          style={{
-            border: '1px solid #9ca3af',
-            borderRadius: '999px',
-            padding: '6px 10px',
-            fontSize: '0.95rem',
-            whiteSpace: 'nowrap',
-          }}
-        >
+        <span className={styles.metaChip}>
           {saveStatusLabel}
         </span>
-
-        <span
-          style={{
-            border: '1px solid #9ca3af',
-            borderRadius: '999px',
-            padding: '6px 10px',
-            fontSize: '0.95rem',
-            whiteSpace: 'nowrap',
-          }}
-        >
+        <span className={styles.metaChip}>
           {playbackLabel}
         </span>
-
-        <span
-          style={{
-            border: '1px solid #9ca3af',
-            borderRadius: '999px',
-            padding: '6px 10px',
-            fontSize: '0.95rem',
-            whiteSpace: 'nowrap',
-          }}
-        >
+        <span className={styles.metaChip}>
           {exportStatusLabel}
         </span>
-
-        <button
-          type="button"
-          onClick={onUndo}
-          disabled={!canUndo}
-        >
-          Undo
-        </button>
-
-        <button
-          type="button"
-          onClick={onRedo}
-          disabled={!canRedo}
-        >
-          Redo
-        </button>
-
-        {isPlaying ? (
-          <button
-            type="button"
-            onClick={onPause}
-            disabled={!canPlay}
-          >
-            Pause
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={onPlay}
-            disabled={!canPlay}
-          >
-            Play
-          </button>
-        )}
-
-        <button
-          type="button"
-          onClick={onStop}
-          disabled={!canPlay}
-        >
-          Stop
-        </button>
-
-        <button
-          type="button"
-          onClick={onOpenPresentation}
-          disabled={!canPlay || isPresentationOpen}
-        >
-          {isPresentationOpen ? 'Presentation Open' : 'Presentation Mode'}
-        </button>
-
-        <button
-          type="button"
-          onClick={onExportPng}
-          disabled={!canExportPng}
-        >
-          {isExportingPng ? 'Exporting...' : 'Export PNG'}
-        </button>
-
-        <button
-          type="button"
-          onClick={onSave}
-          disabled={!canSave}
-        >
-          {isSaving ? 'Saving...' : 'Save Changes'}
-        </button>
       </div>
-    </div>
+
+      <div className={styles.actionsRow}>
+        <div className={styles.actionGroup} aria-label="History controls">
+          <span className={styles.groupLabel}>Edit</span>
+          <button type="button" onClick={onUndo} disabled={!canUndo} className={styles.secondaryButton}>
+            Undo
+          </button>
+          <button type="button" onClick={onRedo} disabled={!canRedo} className={styles.secondaryButton}>
+            Redo
+          </button>
+        </div>
+
+        <span className={styles.actionDivider} aria-hidden="true">||</span>
+
+        <div className={styles.actionGroup} aria-label="Playback controls">
+          <span className={styles.groupLabel}>Playback</span>
+          {isAnimatedBoard ? (
+            <>
+              {isPlaying ? (
+                <button type="button" onClick={onPause} disabled={!canPlay} className={styles.secondaryButton}>
+                  Pause
+                </button>
+              ) : (
+                <button type="button" onClick={onPlay} disabled={!canPlay} className={styles.secondaryButton}>
+                  Play
+                </button>
+              )}
+
+              <button type="button" onClick={onStop} disabled={!canPlay} className={styles.secondaryButton}>
+                Stop
+              </button>
+
+              <button
+                type="button"
+                onClick={onOpenPresentation}
+                disabled={!canPlay || isPresentationOpen}
+                className={styles.secondaryButton}
+              >
+                {isPresentationOpen ? 'Presentation Open' : 'Presentation'}
+              </button>
+            </>
+          ) : (
+            <span className={styles.staticNotice}>Static board: playback unavailable</span>
+          )}
+        </div>
+
+        <span className={styles.actionDivider} aria-hidden="true">||</span>
+
+        <div className={styles.actionGroup} aria-label="Output controls">
+          <span className={styles.groupLabel}>Output</span>
+          <button
+            type="button"
+            onClick={onExportPng}
+            disabled={!canExportPng}
+            className={styles.secondaryButton}
+          >
+            {isExportingPng ? 'Exporting...' : 'Export PNG'}
+          </button>
+
+          <button
+            type="button"
+            onClick={onSave}
+            disabled={!canSave}
+            className={styles.primaryButton}
+          >
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
+      </div>
+    </section>
   );
 };
 

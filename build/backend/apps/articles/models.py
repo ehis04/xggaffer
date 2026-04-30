@@ -1,3 +1,9 @@
+"""
+Article recommendation models
+
+Defines article sources, topics, articles, authors, user feedback, favourites, recommendations, reading history, and article user profiles
+"""
+
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -6,15 +12,17 @@ from datetime import timedelta
 
 User = get_user_model()
 
+
+# Stores external article source information and reputation metrics
 class Site(models.Model):
     name = models.CharField(max_length=100, blank=False)
-    domain = models.CharField(max_length=100, blank=False, unique=True) #url field?
+    domain = models.CharField(max_length=100, blank=False, unique=True)
     description = models.TextField(blank=True)
     logo_url = models.URLField(blank=True)
 
     reputation_score = models.FloatField(
         default=50.0,
-        validators=[MinValueValidator(0.0), MaxValueValidator(100.0)], #?
+        validators=[MinValueValidator(0.0), MaxValueValidator(100.0)],
         help_text="Aggregated quality score (0-100)"
     )
     alexa_rank = models.IntegerField(null=True, blank=True)
@@ -28,11 +36,13 @@ class Site(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering =['-reputation_score']
+        ordering = ['-reputation_score']
 
+    # Return the site name for admin and shell display
     def __str__(self):
-        return self.name    #whats this and the meta bit for?
+        return self.name
 
+    # Calculate the like ratio for the site
     @property
     def user_sentiment_score(self):
         total = self.total_likes + self.total_dislikes
@@ -41,20 +51,31 @@ class Site(models.Model):
         return self.total_likes / total
 
 
+# Stores article topic categories and optional topic hierarchy
 class Topic(models.Model):
     name = models.CharField(max_length=100, blank=False, unique=True)
-    slug = models.SlugField(max_length=100, blank=False, unique=True) #whats slugfield for?
+    slug = models.SlugField(max_length=100, blank=False, unique=True)
     description = models.TextField(blank=True)
-    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='subtopics') 
+
+    parent = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='subtopics'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['name']
 
+    # Return the topic name for admin and shell display
     def __str__(self):
         return self.name
 
 
+# Stores article content, metadata, quality scores, and engagement totals
 class Article(models.Model):
     title = models.CharField(max_length=255, blank=False)
     slug = models.SlugField(max_length=500, unique=True)
@@ -65,7 +86,7 @@ class Article(models.Model):
     image_url = models.URLField(blank=True)
 
     site = models.ForeignKey(Site, on_delete=models.CASCADE)
-    authors = models.ManyToManyField('Author', related_name='articles', blank=True) 
+    authors = models.ManyToManyField('Author', related_name='articles', blank=True)
     topics = models.ManyToManyField(Topic, related_name='articles')
 
     publication_date = models.DateTimeField()
@@ -73,7 +94,11 @@ class Article(models.Model):
     word_count = models.IntegerField(default=0)
     read_time_minutes = models.IntegerField(default=5)
 
-    quality_score = models.FloatField(default=50.0, validators=[MinValueValidator(0.0), MaxValueValidator(100.0)], help_text="Composite quality score (0-100)")
+    quality_score = models.FloatField(
+        default=50.0,
+        validators=[MinValueValidator(0.0), MaxValueValidator(100.0)],
+        help_text="Composite quality score (0-100)"
+    )
     readability_score = models.FloatField(default=50.0)
     engagement_score = models.FloatField(default=50.0)
 
@@ -101,13 +126,16 @@ class Article(models.Model):
             models.Index(fields=['site', '-publication_date'])
         ]
 
+    # Return the article title for admin and shell display
     def __str__(self):
         return self.title
 
+    # Check whether the article was published in the last seven days
     @property
     def is_recent(self):
         return self.publication_date >= timezone.now() - timedelta(days=7)
 
+    # Calculate the like ratio for the article
     @property
     def user_sentiment_score(self):
         total = self.total_likes + self.total_dislikes
@@ -116,6 +144,7 @@ class Article(models.Model):
         return self.total_likes / total
 
 
+# Stores article author information and credibility metrics
 class Author(models.Model):
     name = models.CharField(max_length=100, blank=False)
     email = models.EmailField(unique=True, blank=True, null=True)
@@ -124,8 +153,11 @@ class Author(models.Model):
     avatar_url = models.URLField(blank=True)
 
     sites = models.ManyToManyField(Site, related_name='authors', blank=True)
-    
-    expertise_score = models.FloatField(default=50.0, validators=[MinValueValidator(0.0), MaxValueValidator(100.0)])
+
+    expertise_score = models.FloatField(
+        default=50.0,
+        validators=[MinValueValidator(0.0), MaxValueValidator(100.0)]
+    )
     credibility_score = models.FloatField(default=50.0)
 
     total_likes = models.IntegerField(default=0)
@@ -138,9 +170,11 @@ class Author(models.Model):
     class Meta:
         ordering = ['name']
 
+    # Return the author name for admin and shell display
     def __str__(self):
         return self.name
 
+    # Calculate the like ratio for the author
     @property
     def user_sentiment_score(self):
         total = self.total_likes + self.total_dislikes
@@ -148,8 +182,8 @@ class Author(models.Model):
             return 0.5
         return self.total_likes / total
 
-    #user_feedback_score = models.FloatField(default=0.0)
-        
+
+# Stores a user's numeric rating and optional review for an article
 class ArticleRating(models.Model):
     RATING_CHOICES = [
         (1, 'Poor'),
@@ -161,6 +195,7 @@ class ArticleRating(models.Model):
 
     article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='ratings')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article_ratings')
+
     rating = models.IntegerField(choices=RATING_CHOICES)
     review = models.TextField(blank=True)
 
@@ -171,10 +206,14 @@ class ArticleRating(models.Model):
         unique_together = ('article', 'user')
         ordering = ['-created_at']
 
+    # Return a readable rating label for admin and shell display
     def __str__(self):
         return f"{self.user.email} - {self.article.title[:50]} ({self.rating}⭐)"
 
+
+# Stores like or dislike feedback against an article, author, or site
 class UserFeedback(models.Model):
+    # Feedback type choices
     FEEDBACK_TYPES = [
         ('like', 'Like'),
         ('dislike', 'Dislike'),
@@ -190,10 +229,28 @@ class UserFeedback(models.Model):
     feedback_type = models.CharField(max_length=10, choices=FEEDBACK_TYPES)
     target_type = models.CharField(max_length=20, choices=TARGET_TYPES)
 
-    article = models.ForeignKey(Article, null=True, blank=True, on_delete=models.CASCADE, related_name='feedbacks')
-    author = models.ForeignKey(Author, null=True, blank=True, on_delete=models.CASCADE, related_name='feedbacks')
-    site = models.ForeignKey(Site, null=True, blank=True, on_delete=models.CASCADE, related_name='feedbacks')
-    
+    article = models.ForeignKey(
+        Article,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='feedbacks'
+    )
+    author = models.ForeignKey(
+        Author,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='feedbacks'
+    )
+    site = models.ForeignKey(
+        Site,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='feedbacks'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -203,10 +260,33 @@ class UserFeedback(models.Model):
             models.Index(fields=['article']),
         ]
 
+    # Return a readable feedback label for admin and shell display
     def __str__(self):
         target = self.article or self.author or self.site
         return f"{self.user.email} - {self.feedback_type}s {target}"
 
+
+# Stores articles favourited by users
+class ArticleFavorite(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article_favorites')
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='favorited_by')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'article')
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['article']),
+        ]
+
+    # Return a readable favourite label for admin and shell display
+    def __str__(self):
+        return f"{self.user.email} favorited {self.article.title[:50]}"
+
+
+# Stores generated recommendation results for users
 class UserRecommendation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='recommendations')
     article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='recommendeds')
@@ -231,17 +311,21 @@ class UserRecommendation(models.Model):
             models.Index(fields=['user', '-score'])
         ]
 
+    # Return a readable recommendation label for admin and shell display
     def __str__(self):
         return f"{self.user.email} - {self.article.title[:50]} ({self.score:.2f})"
 
+
+# Stores a user's reading activity for an article
 class ReadingHistory(models.Model):
+    # Reading relationship
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reading_histories')
     article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='reading_histories')
 
     time_spent_seconds = models.IntegerField(default=0)
     scroll_depth_percentage = models.FloatField(default=0.0)
     completed = models.BooleanField(default=False)
-    
+
     read_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -249,15 +333,21 @@ class ReadingHistory(models.Model):
         ordering = ['-read_at']
         verbose_name_plural = "Reading Histories"
 
+    # Return a readable reading history label for admin and shell display
     def __str__(self):
         return f"{self.user.email} read {self.article.title[:50]}"
 
+
+# Stores article recommendation preferences for a user
 class UserProfile(models.Model):
+    # User relationship
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='article_profile')
 
     preferred_topics = models.ManyToManyField(Topic, related_name='interested_users', blank=True)
     preferred_authors = models.ManyToManyField(Author, related_name='article_followers', blank=True)
     preferred_sites = models.ManyToManyField(Site, related_name='article_followers', blank=True)
+
+    disliked_topics = models.ManyToManyField(Topic, related_name='disliked_by_users', blank=True)
     disliked_authors = models.ManyToManyField(Author, blank=True, related_name='article_disliked_by')
     disliked_sites = models.ManyToManyField(Site, blank=True, related_name='article_disliked_by')
 
@@ -276,5 +366,6 @@ class UserProfile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Return a readable profile label for admin and shell display
     def __str__(self):
         return f"Profile of {self.user.email}"

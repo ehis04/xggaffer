@@ -7,6 +7,7 @@ interface Props {
   onOpen?: (id: number) => void;
   onLike?: (id: number) => void;
   onDislike?: (id: number) => void;
+  onToggleFavorite?: (id: number) => void;
 }
 
 function StarRating({ value }: { value: number }) {
@@ -21,7 +22,7 @@ function StarRating({ value }: { value: number }) {
   );
 }
 
-const ArticleCard: React.FC<Props> = ({ article, onOpen, onLike, onDislike }) => {
+const ArticleCard: React.FC<Props> = ({ article, onOpen, onLike, onDislike, onToggleFavorite }) => {
   const canOpenSource = (() => {
     try {
       const parsed = new URL(article.url);
@@ -97,7 +98,19 @@ const ArticleCard: React.FC<Props> = ({ article, onOpen, onLike, onDislike }) =>
           )}
 
           <button
-            className={`${styles.feedbackBtn} ${article.user_feedback === 'LIKE' ? styles.active : ''}`}
+            type="button"
+            className={`${styles.favoriteBtn} ${article.is_favorited ? styles.favoriteBtnActive : ''}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavorite?.(article.id);
+            }}
+            aria-label={article.is_favorited ? 'Remove favorite' : 'Add favorite'}
+            title={article.is_favorited ? 'Remove favorite' : 'Add to favorites'}
+          >
+            ♥
+          </button>
+          <button
+            className={`${styles.feedbackBtn} ${article.user_feedback === 'like' ? styles.active : ''}`}
             onClick={(e) => {
               e.stopPropagation();
               onLike?.(article.id);
@@ -107,7 +120,7 @@ const ArticleCard: React.FC<Props> = ({ article, onOpen, onLike, onDislike }) =>
             👍 {article.total_likes > 0 ? article.total_likes : ''}
           </button>
           <button
-            className={`${styles.feedbackBtn} ${article.user_feedback === 'DISLIKE' ? styles.active : ''}`}
+            className={`${styles.feedbackBtn} ${article.user_feedback === 'dislike' ? styles.active : ''}`}
             onClick={(e) => {
               e.stopPropagation();
               onDislike?.(article.id);

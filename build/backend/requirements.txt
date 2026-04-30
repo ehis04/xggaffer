@@ -1,4 +1,4 @@
-Django>=4.2
+Django>=4.2,<5.0
 
 # Environment & config
 python-decouple
@@ -36,10 +36,10 @@ whitenoise
 # Database (PostgreSQL support)
 psycopg2-binary
 
+# ML & Data
 joblib
 feedparser
 textstat
-
 pandas
 playwright
 xgboost
@@ -48,3 +48,42 @@ scikit-learn
 statsmodels
 beautifulsoup4
 soccerdata
+
+# Django extras
+django-allauth
+django-ckeditor-5
+django-countries
+django-etc
+django-hitcount
+django-plotly-dash
+django-taggit
+channels
+djangorestframework-simplejwt
+
+# Utilities
+python-dateutil
+requests
+urllib3
+certifi
+idna
+charset-normalizer
+PyYAML
+pydantic
+pydantic-core
+httpx
+httpcore
+anyio
+sniffio
+typing-extensions
+typing-inspection
+packaging
+click
+click-didyoumean
+click-plugins
+click-repl
+vine
+amqp
+kombu
+billiard
+vine
+prometheus-client

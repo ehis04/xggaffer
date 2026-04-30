@@ -5,9 +5,11 @@ Django configuration, authentication, storage, 3rd-party integrations, and sched
 
 import os
 import sys
+import xgboost as xgb
 from datetime import timedelta
 from pathlib import Path
 
+import cloudinary
 from celery.schedules import crontab
 from decouple import config
 
@@ -70,6 +72,23 @@ CLUB_TRASH_LIMIT_PER_USER = config(
     cast=int,
 )
 
+# Per-user limits for created items (active, not trashed)
+CLUB_CREATE_LIMIT_PER_USER = config(
+    "CLUB_CREATE_LIMIT_PER_USER",
+    default=10,
+    cast=int,
+)
+TEAMSHEET_CREATE_LIMIT_PER_USER = config(
+    "TEAMSHEET_CREATE_LIMIT_PER_USER",
+    default=10,
+    cast=int,
+)
+TACTICS_BOARD_CREATE_LIMIT_PER_USER = config(
+    "TACTICS_BOARD_CREATE_LIMIT_PER_USER",
+    default=10,
+    cast=int,
+)
+
 
 # ---------------------------------------------------------------------------
 # Application definition
@@ -92,8 +111,6 @@ INSTALLED_APPS = [
     "cloudinary",
 
     # Local apps
-    "apps.laws",
-    "apps.quizzes",
     "apps.articles",
     "apps.teamsheets",
     "apps.users",
@@ -108,6 +125,8 @@ INSTALLED_APPS = [
     "apps.playerdata",
     "apps.livefootball",
     "apps.sync_pipeline.apps.SyncPipelineConfig",
+    "common",
+    'apps.internal',
     "apps.referee",
     "apps.referee.progressTracking",
     "apps.referee.learningTools",
@@ -227,6 +246,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 CLOUDINARY_CLOUD_NAME = config("CLOUDINARY_CLOUD_NAME", default="")
 CLOUDINARY_API_KEY = config("CLOUDINARY_API_KEY", default="")
 CLOUDINARY_API_SECRET = config("CLOUDINARY_API_SECRET", default="")
+
+if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET,
+        secure=True,
+    )
 
 # Club resources can fall back to local media storage unless Cloudinary is enabled.
 CLUB_RESOURCES_USE_CLOUDINARY = config(
@@ -461,6 +488,13 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(minute=0, hour=2, day_of_week=1),
         "options": {"expires": 7200, "queue": "queue_transfermarkt"},
     },
+    "sync-pro-club-injuries": {
+        # Twice daily: 06:30 and 18:30 UTC — after squad syncs (:00) so fresh squad data
+        # is available, but infrequent enough to avoid hammering Transfermarkt.
+        "task": "apps.clubs.tasks.sync_pro_club_injuries_task",
+        "schedule": crontab(minute=30, hour="6,18"),
+        "options": {"expires": 7200, "queue": "queue_transfermarkt"},
+    },
     "aggregate-sync-health": {
         "task": "apps.sync_pipeline.tasks.aggregate_sync_health_task",
         "schedule": crontab(minute="*/30"),
@@ -481,13 +515,26 @@ CELERY_BEAT_SCHEDULE = {
         # Pull fresh articles from RSS feeds every hour.
         "task": "apps.articles.tasks.ingest_rss_feeds_task",
         "schedule": crontab(minute=0, hour="*/1"),
-        "options": {"expires": 3300},
+        "options": {"expires": 3300, "queue": "queue_publication"},
     },
     "generate-article-recommendations": {
         # Rebuild per-user article recommendations once per day at 05:00 UTC.
         "task": "apps.articles.tasks.generate_recommendations_task",
         "schedule": crontab(minute=0, hour=5),
-        "options": {"expires": 7200},
+        "options": {"expires": 7200, "queue": "queue_publication"},
+    },
+    "resolve-prediction-results": {
+        # Scan unresolved PredictionRecords and write actual outcomes once fixtures are final.
+        "task": "apps.predictions.tasks.resolve_prediction_results",
+        "schedule": crontab(minute=0, hour="*/1"),
+        "options": {"expires": 3300, "queue": "queue_publication"},
+    },
+    "refresh-elo-ratings": {
+        # Recompute ELO from full match history daily, after the overnight Understat sync (00:30)
+        # has had time to complete. Writes elo_ratings.csv and syncs EloRating/CurrentEloRating.
+        "task": "apps.predictions.tasks.refresh_elo_ratings_task",
+        "schedule": crontab(minute=30, hour=5),
+        "options": {"expires": 7200, "queue": "queue_publication"},
     },
 }
 

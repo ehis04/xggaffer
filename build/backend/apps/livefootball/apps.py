@@ -1,3 +1,7 @@
+"""
+Application configuration for the live football app
+"""
+
 from django.apps import AppConfig
 
 

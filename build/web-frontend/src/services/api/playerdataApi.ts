@@ -92,11 +92,14 @@ const PLAYER_SUMMARY_BASE = `${PLAYERDATA_BASE}/players`;
 const CLUB_SUMMARY_BASE = `${PLAYERDATA_BASE}/clubs`;
 
 export const playerdataApi = {
-  getPlayerSeasonSummary: async (playerId: number, filters?: PlayerDataFilters): Promise<PlayerSeasonSummary | null> => {
-    const envelope = await apiClient.get<ApiEnvelope<PlayerSeasonSummary>>(
+  getPlayerSeasonSummaryEnvelope: (playerId: number, filters?: PlayerDataFilters) =>
+    apiClient.get<ApiEnvelope<PlayerSeasonSummary>>(
       `${PLAYER_SUMMARY_BASE}/${playerId}/season-summary/`,
       buildPlayerDataFilterParams(filters)
-    );
+    ),
+
+  getPlayerSeasonSummary: async (playerId: number, filters?: PlayerDataFilters): Promise<PlayerSeasonSummary | null> => {
+    const envelope = await playerdataApi.getPlayerSeasonSummaryEnvelope(playerId, filters);
     return envelope.data;
   },
 
@@ -107,13 +110,13 @@ export const playerdataApi = {
     ),
 
   getClubSeasonSummary: (clubId: number, filters?: PlayerDataFilters) =>
-    apiClient.get<ClubSeasonSummary>(
+    apiClient.get<ApiEnvelope<ClubSeasonSummary>>(
       `${CLUB_SUMMARY_BASE}/${clubId}/season-summary/`,
       buildPlayerDataFilterParams(filters)
     ),
 
   comparePlayers: (params: PlayerComparisonParams) =>
-    apiClient.get<PlayerComparisonResult>(
+    apiClient.get<ApiEnvelope<PlayerComparisonResult>>(
       `${PLAYER_SUMMARY_BASE}/compare/`,
       buildPlayerComparisonParams(params)
     ),

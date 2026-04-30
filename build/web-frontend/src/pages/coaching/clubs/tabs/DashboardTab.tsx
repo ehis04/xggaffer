@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { clubsApi } from '../../../../services/api';
 import { playerdataApi } from '../../../../services/api/playerdataApi';
+import { liveFootballApi } from '../../../../services/api/livefootballApi';
 import { PlayerCarousel } from '../../../../components/Dashboard/PlayerCarousel';
 import { StatsWidget } from '../../../../components/Dashboard/StatsWidget';
 import { SessionWidget } from '../../../../components/Dashboard/SessionWidget';
@@ -30,6 +31,10 @@ interface Props {
 }
 
 type UnderstatRecordShape = {
+  season_label?: string;
+  competition_code?: string;
+  competition_name?: string;
+  matches_played?: number;
   wins: number;
   draws: number;
   losses: number;
@@ -70,7 +75,79 @@ const extractUnderstatRecord = (value: unknown): UnderstatRecordShape | null => 
 
   if (!hasAnyCore) return null;
 
-  return { wins, draws, losses, goals_for, goals_against };
+  return {
+    season_label:
+      typeof candidate.season_label === 'string' ? candidate.season_label : undefined,
+    competition_code:
+      typeof candidate.competition_code === 'string' ? candidate.competition_code : undefined,
+    competition_name:
+      typeof candidate.competition_name === 'string' ? candidate.competition_name : undefined,
+    matches_played: toInt(candidate.matches_played),
+    wins,
+    draws,
+    losses,
+    goals_for,
+    goals_against,
+  };
+};
+
+const normaliseCompetitionCode = (code?: string): string | null => {
+  if (!code) return null;
+  const upper = code.trim().toUpperCase();
+  if (!upper) return null;
+  if (upper === 'EPL') return 'PL';
+  return upper;
+};
+
+const normaliseTeamName = (name: string): string =>
+  name
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, ' ')
+    .replace(/\b(fc|afc|cf|sc|ac|club)\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const findCompetitionIdByCode = (
+  competitions: Array<{ id: number; code?: string | null }>,
+  targetCode?: string,
+): number | null => {
+  const normCode = normaliseCompetitionCode(targetCode);
+  if (!normCode) return null;
+
+  const match = competitions.find(
+    (competition) =>
+      normaliseCompetitionCode(competition.code ?? undefined) === normCode,
+  );
+
+  return match?.id ?? null;
+};
+
+const findClubRowFromTable = (
+  rows: Array<{
+    team: { name: string };
+    won: number;
+    drawn: number;
+    lost: number;
+    goals_for: number;
+    goals_against: number;
+  }>,
+  clubName: string,
+) => {
+  const normalisedClubName = normaliseTeamName(clubName);
+  if (!normalisedClubName) return null;
+
+  const exact = rows.find(
+    (row) => normaliseTeamName(row.team.name) === normalisedClubName,
+  );
+  if (exact) return exact;
+
+  const clubTokens = normalisedClubName.split(' ').filter(Boolean);
+  return (
+    rows.find((row) => {
+      const normalisedTeamName = normaliseTeamName(row.team.name);
+      return clubTokens.every((token) => normalisedTeamName.includes(token));
+    }) ?? null
+  );
 };
 
 const mapPlayerToCardData = (p: ClubPlayer): PlayerCardData => ({
@@ -88,8 +165,15 @@ const deriveSquadStats = (players: ClubPlayer[]): SquadStats => {
   const suspended = players.filter((p) => p.availability_status === 'SU').length;
   const inDoubt = players.filter((p) => p.availability_status === 'DO').length;
   const available = total - injured - suspended - inDoubt;
+
+  // Use per-player fitness_score when available (model-based), otherwise fall back to availability ratio
+  const hasFitnessScores = total > 0 && players.some((p) => p.fitness_score !== undefined);
+  const avgFitness = hasFitnessScores
+    ? Math.round(players.reduce((sum, p) => sum + (p.fitness_score ?? 85), 0) / total)
+    : total > 0 ? Math.round((available / total) * 100) : 0;
+
   return {
-    avg_fitness: total > 0 ? Math.round((available / total) * 100) : 0,
+    avg_fitness: avgFitness,
     available,
     injured,
     suspended,
@@ -250,6 +334,7 @@ const DashboardTab = ({ ctx }: Props) => {
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const [selectedStats, setSelectedStats] = useState<ClubPlayerManualStats | null>(null);
   const [selectedExternalSummary, setSelectedExternalSummary] = useState<PlayerSeasonSummary | null>(null);
+  const [seasonLabel, setSeasonLabel] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
@@ -270,6 +355,8 @@ const DashboardTab = ({ ctx }: Props) => {
             extractUnderstatRecord(envelope.data) ||
             extractUnderstatRecord(ctx.club.latest_understat_summary);
 
+          setSeasonLabel(understatData?.season_label ?? null);
+
           if (understatData) {
             // Convert Understat enrichment to ClubSeasonResult format
             seasonData = [{
@@ -286,8 +373,39 @@ const DashboardTab = ({ ctx }: Props) => {
               created_by: undefined,
               created_at: new Date().toISOString(),
             } as any];
+
+            const competitionCode = understatData.competition_code;
+            if (competitionCode) {
+              const competitions = await liveFootballApi.getCompetitions();
+              const competitionId = findCompetitionIdByCode(competitions, competitionCode);
+
+              if (competitionId) {
+                const table = await liveFootballApi.getCompetitionTable(competitionId, {
+                  season: understatData.season_label,
+                });
+                const matchedRow = findClubRowFromTable(table.rows, ctx.club.name);
+
+                if (matchedRow) {
+                  seasonData = [{
+                    id: 0,
+                    club_id: clubId,
+                    opponent_name: '',
+                    outcome: '',
+                    goals_for: matchedRow.goals_for,
+                    goals_against: matchedRow.goals_against,
+                    wins: matchedRow.won,
+                    draws: matchedRow.drawn,
+                    losses: matchedRow.lost,
+                    match_date: new Date().toISOString(),
+                    created_by: undefined,
+                    created_at: new Date().toISOString(),
+                  } as any];
+                }
+              }
+            }
           }
           if (seasonData.length === 0) {
+            setSeasonLabel(null);
             seasonData = await clubsApi.seasonResults.list(clubId);
           }
         } catch {
@@ -295,6 +413,7 @@ const DashboardTab = ({ ctx }: Props) => {
           // use club-level understat fallback before dropping to manual entries.
           const understatFallback = extractUnderstatRecord(ctx.club.latest_understat_summary);
           if (understatFallback) {
+            setSeasonLabel(understatFallback.season_label ?? null);
             seasonData = [{
               id: 0,
               club_id: clubId,
@@ -310,6 +429,7 @@ const DashboardTab = ({ ctx }: Props) => {
               created_at: new Date().toISOString(),
             } as any];
           } else {
+            setSeasonLabel(null);
             seasonData = await clubsApi.seasonResults.list(clubId);
           }
         }
@@ -349,19 +469,36 @@ const DashboardTab = ({ ctx }: Props) => {
         if (active) setSelectedExternalSummary(null);
         return;
       }
-      const [uResult, ssResult] = await Promise.allSettled([
-        playerdataApi.getPlayerSeasonSummary(canonicalId, { season: '2025', provider: 'understat' }),
-        playerdataApi.getPlayerSeasonSummary(canonicalId, { season: '2025', provider: 'sofascore' }),
-      ]);
-      const merged = mergePlayerSummaries(
-        uResult.status === 'fulfilled' ? uResult.value : null,
-        ssResult.status === 'fulfilled' ? ssResult.value : null,
-      );
+
+      const requestProviderPair = async (season?: string) => {
+        const filters = season ? { season } : undefined;
+        const [uResult, ssResult] = await Promise.allSettled([
+          playerdataApi.getPlayerSeasonSummary(canonicalId, {
+            ...filters,
+            provider: 'understat',
+          }),
+          playerdataApi.getPlayerSeasonSummary(canonicalId, {
+            ...filters,
+            provider: 'sofascore',
+          }),
+        ]);
+
+        return mergePlayerSummaries(
+          uResult.status === 'fulfilled' ? uResult.value : null,
+          ssResult.status === 'fulfilled' ? ssResult.value : null,
+        );
+      };
+
+      let merged = await requestProviderPair(seasonLabel ?? undefined);
+      if (!merged && seasonLabel) {
+        merged = await requestProviderPair(undefined);
+      }
+
       if (active) setSelectedExternalSummary(merged);
     };
     void load();
     return () => { active = false; };
-  }, [selectedPlayerId, clubId, players]);
+  }, [selectedPlayerId, clubId, players, seasonLabel]);
 
   const cardPlayers = players.map(mapPlayerToCardData);
   const squadStats = deriveSquadStats(players);

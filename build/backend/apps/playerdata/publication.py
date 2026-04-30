@@ -1,3 +1,9 @@
+"""
+Publishes validated player data snapshots
+
+Checks player data coverage, promotes an active enrichment snapshot, publishes sync metadata, and clears cached player data responses
+"""
+
 from __future__ import annotations
 
 import logging
@@ -10,6 +16,7 @@ from apps.playerdata.models import (
     PlayerSeasonEnrichment,
 )
 from apps.sync_pipeline.services import publish_snapshot
+from common.cache_keys import clear_surface_cache
 from common.constants import ProviderName
 from common.utils import utcnow
 
@@ -20,6 +27,7 @@ PLAYERDATA_PROVIDERS = [ProviderName.UNDERSTAT]
 SCOPE_ALL = 'all'
 
 
+# Validate whether enough player data exists to publish a snapshot
 def validate_playerdata_snapshot(scope_key: str = SCOPE_ALL) -> tuple[bool, list[str]]:
     warnings = []
 
@@ -39,6 +47,7 @@ def validate_playerdata_snapshot(scope_key: str = SCOPE_ALL) -> tuple[bool, list
     return True, warnings
 
 
+# Promote a new active player enrichment snapshot for a scope
 def publish_playerdata_snapshot(scope_key: str = SCOPE_ALL) -> PlayerEnrichmentSnapshot:
     now = utcnow()
     with transaction.atomic():
@@ -55,6 +64,7 @@ def publish_playerdata_snapshot(scope_key: str = SCOPE_ALL) -> PlayerEnrichmentS
     return snapshot
 
 
+# Run validation, snapshot promotion, sync publication, and cache clearing
 def run_playerdata_publication(scope_key: str = SCOPE_ALL) -> None:
     valid, warnings = validate_playerdata_snapshot(scope_key)
 
@@ -73,4 +83,5 @@ def run_playerdata_publication(scope_key: str = SCOPE_ALL) -> None:
         source_max_fetched_at=utcnow(),
         metadata={'scope_key': scope_key, 'warnings': warnings},
     )
-    _logger.info('Playerdata publication promoted: version=%s', snapshot.version)
+    cleared = clear_surface_cache(PLAYERDATA_SURFACE)
+    _logger.info('Playerdata publication promoted: version=%s cleared=%s', snapshot.version, cleared)

@@ -13,6 +13,7 @@ export interface UserProfileResponse {
   };
   display_name: string;
   user_display_name: string;
+  profile_image: string | null;
   bio: string;
   gender: string;
   date_of_birth: string | null;

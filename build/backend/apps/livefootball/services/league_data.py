@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import pandas as pd
@@ -35,6 +36,8 @@ from services.livefootball.queries import get_competition_table
 
 RELEASE_ONE_COMPETITION_CODES = ("PL", "PD", "BL1", "SA", "FL1")
 DEFAULT_MODE = "current_expected"
+
+logger = logging.getLogger(__name__)
 
 
 SIMULATION_MODE_ORDER = ["current_expected", "pre_season", "as_of_matchweek"]
@@ -210,6 +213,7 @@ def get_league_expected_table_payload(
     mode: str | None,
     matchweek: int | None = None,
     projection_window: str | None = None,
+    per_team_played_counts: dict[str, int] | None = None,
 ) -> dict[str, Any]:
     competition = _get_competition(competition_id)
     resolved_season = _resolve_season_label(competition, season_label)
@@ -249,6 +253,8 @@ def get_league_expected_table_payload(
     }
     if projection_window:
         simulation_kwargs["projection_window"] = projection_window
+    if per_team_played_counts:
+        simulation_kwargs["per_team_played_counts"] = per_team_played_counts
 
     simulation_result = simulate_league_season(**simulation_kwargs)
 
@@ -442,17 +448,34 @@ def get_league_compare_payload(
             f"No actual table snapshot is available for competition {competition.id} in season '{resolved_season}'."
         )
 
+    # Resolve the team bridge early so we can derive per-team game counts for
+    # the pre_season/to_date simulation before calling the expected-table service.
+    competition_team_bridge = get_competition_team_bridge(
+        competition,
+        season_label=resolved_season,
+    )
+
+    # For pre_season + to_date, restrict the simulation to the exact number of
+    # games each team has genuinely played in the authoritative live table.
+    # This prevents Understat having more historical data than the live snapshot.
+    per_team_played_counts: dict[str, int] | None = None
+    resolved_mode_for_counts = (mode or DEFAULT_MODE).strip()
+    resolved_pw_for_counts = (projection_window or "full_season").strip()
+    if resolved_mode_for_counts == "pre_season" and resolved_pw_for_counts == "to_date":
+        per_team_played_counts = {}
+        for row in actual_table_payload["rows"]:
+            team_id = (row.get("team") or {}).get("id")
+            canonical = competition_team_bridge.get(team_id)
+            if canonical is not None and row.get("played") is not None:
+                per_team_played_counts[canonical] = int(row["played"])
+
     expected_payload = get_league_expected_table_payload(
         competition_id=competition.id,
         season_label=resolved_season,
         mode=mode,
         matchweek=matchweek,
         projection_window=projection_window,
-    )
-
-    competition_team_bridge = get_competition_team_bridge(
-        competition,
-        season_label=resolved_season,
+        per_team_played_counts=per_team_played_counts or None,
     )
 
     deltas = _build_deltas(
