@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.core.exceptions import ValidationError
 from django.db.models import Q, F
 from django.utils import timezone
+from cloudinary.models import CloudinaryField
 from datetime import timedelta
 import secrets
 from .managers import UserManager
@@ -95,7 +96,12 @@ class User(AbstractBaseUser, PermissionsMixin):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     display_name = models.CharField(max_length=150, blank=True)
-    # profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+    profile_picture = CloudinaryField(
+        'image',
+        folder='xggaffer/profile_pictures',
+        blank=True,
+        null=True,
+    )
     bio = models.TextField(blank=True)
     gender = models.CharField(
         max_length=8,

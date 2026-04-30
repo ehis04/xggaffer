@@ -96,6 +96,11 @@
   background: #57f0a8;
 }
 
+.epm-save:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
 .epm-body {
   padding: 20px;
   display: flex;
@@ -154,16 +159,31 @@
   background: transparent;
   border: 1px solid var(--brand-lightest-green-border);
   color: var(--secondary-text);
-  cursor: not-allowed;
-  opacity: 0.5;
+  cursor: pointer;
   transition: border-color 0.15s;
 }
 
-.epm-coming-soon {
+.epm-btn-photo:hover {
+  border-color: var(--hover-lightest-green);
+  color: var(--hover-lightest-green);
+}
+
+.epm-file-input {
+  display: none;
+}
+
+.epm-photo-file,
+.epm-file-error {
   font-size: 11px;
-  color: var(--tertiary-text);
-  font-style: italic;
   margin-top: 4px;
+}
+
+.epm-photo-file {
+  color: var(--tertiary-text);
+}
+
+.epm-file-error {
+  color: #ff8a8a;
 }
 
 .epm-field {

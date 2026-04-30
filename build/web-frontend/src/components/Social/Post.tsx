@@ -9,7 +9,7 @@ import { useAuth } from "../../context/useAuth";
 export interface PostAuthor {
   id: number;
   username?: string;
-  profile_image?: string;
+  profile_image?: string | null;
   display_name?: string;
 }
 
@@ -159,6 +159,7 @@ export const Post: React.FC<PostProps> = ({
       <div className="profile-picture">
         <ProfileButton
           username={post.author.username || "User"}
+          profileImage={post.author.profile_image ?? undefined}
           size="medium"
         />
       </div>

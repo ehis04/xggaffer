@@ -17,8 +17,9 @@ export interface ProfileData {
   followers_count: number;
   following_count: number;
   gender?: string;
+  date_of_birth?: string | null;
   visibility?: string;
   created_at?: string;
-  profile_image?: string;
+  profile_image?: string | null;
   roles?: ProfileRole[];
 }

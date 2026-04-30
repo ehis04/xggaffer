@@ -4,7 +4,7 @@ import { COMMUNITY } from './endpoints';
 export interface Author {
   id: number;
   username: string;
-  profile_image?: string;
+  profile_image?: string | null;
   display_name?: string;
 }
 

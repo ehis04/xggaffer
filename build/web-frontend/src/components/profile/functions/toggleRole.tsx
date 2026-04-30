@@ -3,13 +3,24 @@ import { USERS } from "../../../services/api/endpoints";
 import type { ProfileData, ProfileRole } from "../types/ProfileTypes";
 import type { Dispatch, SetStateAction } from "react";
 
-type RoleKey = "COACH" | "PLAYER" | "REFEREE" | "FAN";
+type RoleKey = "C" | "P" | "R" | "F";
 
 const ROLE_DISPLAY: Record<RoleKey, string> = {
-  COACH: "Coach",
-  PLAYER: "Player",
-  REFEREE: "Referee",
-  FAN: "Fan",
+  C: "Coach",
+  P: "Player",
+  R: "Referee",
+  F: "Fan",
+};
+
+const ROLE_CODE_BY_KEY: Record<string, RoleKey> = {
+  C: "C",
+  COACH: "C",
+  P: "P",
+  PLAYER: "P",
+  R: "R",
+  REFEREE: "R",
+  F: "F",
+  FAN: "F",
 };
 
 const roleAlreadyPresent = (roles: ProfileRole[], key: RoleKey): boolean =>
@@ -19,16 +30,30 @@ const roleAlreadyPresent = (roles: ProfileRole[], key: RoleKey): boolean =>
       r.role_display.toLowerCase() === ROLE_DISPLAY[key].toLowerCase(),
   );
 
+const unwrapRoleResponse = (
+  response: ProfileRole | { role: ProfileRole },
+): ProfileRole => {
+  if ("role_display" in response) {
+    return response;
+  }
+
+  return response.role;
+};
+
 export const toggleRole = async (
   roleKey: string,
   isCurrentlyActive: boolean,
   setUserData: Dispatch<SetStateAction<ProfileData | null>>,
 ): Promise<void> => {
-  const key = roleKey.toUpperCase() as RoleKey;
+  const key = ROLE_CODE_BY_KEY[roleKey.toUpperCase()];
+
+  if (!key) {
+    throw new Error(`Unknown role: ${roleKey}`);
+  }
 
   try {
     if (isCurrentlyActive) {
-      await apiClient.delete(`${USERS.ROLE}?role=${key}`);
+      await apiClient.delete<void>(`${USERS.ROLE}?role=${encodeURIComponent(key)}`);
 
       setUserData((prev) => {
         if (!prev) return prev;
@@ -42,18 +67,17 @@ export const toggleRole = async (
         };
       });
     } else {
-      await apiClient.post(USERS.ROLE, { role: key });
+      const createdRole = await apiClient.post<ProfileRole | { role: ProfileRole }>(
+        USERS.ROLE,
+        { role: key },
+      );
 
       setUserData((prev) => {
         if (!prev) return prev;
 
         if (roleAlreadyPresent(prev.roles ?? [], key)) return prev;
 
-        const newRole: ProfileRole = {
-          id: -Date.now(),
-          role: key,
-          role_display: ROLE_DISPLAY[key],
-        };
+        const newRole = unwrapRoleResponse(createdRole);
 
         return {
           ...prev,

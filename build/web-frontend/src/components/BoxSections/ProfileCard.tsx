@@ -19,7 +19,14 @@ export const ProfileCard = () => {
     return (
         <div className="profile-card-container">
             <div className="profile-pic-container">
-                {userData && <ProfileButton username={userData.username} size="extra-large" onClick={handleProfileClick}/>}
+                {userData && (
+                    <ProfileButton
+                        username={userData.username}
+                        profileImage={userData.profile_image ?? undefined}
+                        size="extra-large"
+                        onClick={handleProfileClick}
+                    />
+                )}
             </div>
             <div className="profile-info">
                 <p className="profile-name">

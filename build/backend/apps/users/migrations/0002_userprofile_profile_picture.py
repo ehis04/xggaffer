@@ -1,0 +1,23 @@
+import cloudinary.models
+from django.db import migrations
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('users', '0001_initial'),
+    ]
+
+    operations = [
+        migrations.AddField(
+            model_name='userprofile',
+            name='profile_picture',
+            field=cloudinary.models.CloudinaryField(
+                blank=True,
+                folder='xggaffer/profile_pictures',
+                max_length=255,
+                null=True,
+                verbose_name='image',
+            ),
+        ),
+    ]

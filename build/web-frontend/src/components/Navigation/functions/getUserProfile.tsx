@@ -14,8 +14,10 @@ const mapUserData = (data: UserData): UserData => ({
   display_name: data.display_name,
   bio: data.bio,
   followers_count: data.followers_count,
-  following_count: data.followers_count,
+  following_count: data.following_count,
   gender: data.gender,
+  date_of_birth: data.date_of_birth,
+  profile_image: data.profile_image,
   roles: data.roles ?? [],
   visibility: data.visibility,
   created_at: data.created_at,
@@ -29,8 +31,7 @@ export const getUserProfile = async (
     return;
   }
 
-  const now = Date.now();
-  if (now - lastProfileFetchFailureAt < PROFILE_RETRY_COOLDOWN_MS) {
+  if (Date.now() - lastProfileFetchFailureAt < PROFILE_RETRY_COOLDOWN_MS) {
     return;
   }
 
@@ -45,7 +46,7 @@ export const getUserProfile = async (
         })
         .catch((error) => {
           lastProfileFetchFailureAt = Date.now();
-          console.error("Counldn't get user's profile", error);
+          console.error("Couldn't get user's profile", error);
           return null;
         })
         .finally(() => {
@@ -59,6 +60,6 @@ export const getUserProfile = async (
     }
   } catch (error) {
     lastProfileFetchFailureAt = Date.now();
-    console.error("Counldn't get user's profile", error);
+    console.error("Couldn't get user's profile", error);
   }
 };

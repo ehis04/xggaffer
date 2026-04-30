@@ -66,11 +66,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
     followed_by = serializers.SerializerMethodField()
     active_role_display = serializers.CharField(source='get_active_role_display', read_only=True)
     posts_count = serializers.SerializerMethodField()
+    profile_image = serializers.SerializerMethodField()
     
     # the complete profile response returned by profile detail endpoints
     class Meta:
         model = UserProfile
-        fields = ['id', 'user', 'display_name', 'bio', 'gender',
+        fields = ['id', 'user', 'display_name', 'profile_image', 'bio', 'gender',
                   'date_of_birth', 'visibility', 'followers_count', 
                   'following_count', 'created_at', 'updated_at', 
                   'roles', 'active_role', 'active_role_display', 'is_following', 'followed_by','posts_count']
@@ -82,6 +83,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def get_user_display_name(self, obj):
         return obj.get_display_name()
     # checks whether the requesting user follows this profile
+    def get_profile_image(self, obj):
+        if not obj.profile_picture:
+            return None
+
+        try:
+            return obj.profile_picture.url
+        except Exception:
+            return str(obj.profile_picture) or None
+
     def get_is_following(self, obj):
         request = self.context.get('request')
         
@@ -118,9 +128,49 @@ class UserProfileSerializer(serializers.ModelSerializer):
 # handles profile update requests for editable profile fields only
      
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.ImageField(required=False, allow_null=True)
+
     class Meta:
         model = UserProfile
-        fields = ['display_name', 'bio', 'gender', 'date_of_birth', 'visibility']
+        fields = [
+            'display_name', 'profile_picture', 'bio', 'gender',
+            'date_of_birth', 'visibility'
+        ]
+
+    def validate_profile_picture(self, value):
+        if value is None:
+            return value
+
+        max_size = 5 * 1024 * 1024
+        if value.size > max_size:
+            raise serializers.ValidationError("Profile picture must be 5MB or smaller.")
+
+        allowed_types = {"image/jpeg", "image/png", "image/webp"}
+        content_type = getattr(value, "content_type", "")
+        if content_type not in allowed_types:
+            raise serializers.ValidationError("Upload a JPEG, PNG, or WebP image.")
+
+        return value
+
+    def to_internal_value(self, data):
+        data = data.copy()
+
+        if data.get("gender") == "":
+            data["gender"] = "NS"
+
+        if data.get("date_of_birth") == "":
+            data["date_of_birth"] = None
+
+        legacy_visibility = {
+            "PUBLIC": "PB",
+            "PRIVATE": "PR",
+            "FOLLOWERS": "PB",
+        }
+        visibility = data.get("visibility")
+        if visibility in legacy_visibility:
+            data["visibility"] = legacy_visibility[visibility]
+
+        return super().to_internal_value(data)
 
 # serializes a follow relationship between two user profiles
 
