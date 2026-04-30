@@ -10,25 +10,8 @@ import type {
   PlayerOverviewComparison,
   PlayerOverviewComparisonMetricGroup,
 } from "../../../types/playerdata";
+import { formatSeasonDisplay, getCurrentFootballSeason } from "../../../utils/footballSeason";
 import styles from "./css/InternalPlayerComparisonPage.module.css";
-
-const SEASON = '2025';
-const PROVIDER = "understat";
-
-const ALLOWED_COMPARE_CLUBS = new Set([
-  "manchester united",
-  "real madrid cf",
-  "paris saint-germain fc",
-  "fc bayern munchen",
-  "juventus fc",
-]);
-
-const normaliseClubName = (name: string): string =>
-  name
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
 
 const ComparisonMetricGroup: React.FC<{
   group: PlayerOverviewComparisonMetricGroup;
@@ -201,6 +184,8 @@ const PlayerPicker: React.FC<PlayerPickerProps> = ({
 
 const InternalPlayerComparisonPage: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const season = searchParams.get("season") || getCurrentFootballSeason();
+  const provider = searchParams.get("provider") || undefined;
 
   const playerAIdFromUrl = useMemo(() => {
     const v = searchParams.get("player_a_id");
@@ -239,11 +224,7 @@ const InternalPlayerComparisonPage: React.FC = () => {
       .browse()
       .then((clubs) =>
         setProClubs(
-          clubs.filter(
-            (c) =>
-              c.club_type === "system_professional" &&
-              ALLOWED_COMPARE_CLUBS.has(normaliseClubName(c.name)),
-          ),
+          clubs.filter((club) => club.club_type === "system_professional"),
         ),
       )
       .catch(() => {})
@@ -252,10 +233,10 @@ const InternalPlayerComparisonPage: React.FC = () => {
 
   useEffect(() => {
     if (!playerAIdFromUrl) return;
-    void playerdataApi.getPlayerOverview(playerAIdFromUrl, { season: SEASON, provider: PROVIDER })
+    void playerdataApi.getPlayerOverview(playerAIdFromUrl, { season, provider })
       .then((r) => setPreloadedAName(r.data?.player?.display_name || r.data?.player?.full_name || null))
       .catch(() => {});
-  }, [playerAIdFromUrl]);
+  }, [playerAIdFromUrl, season, provider]);
 
   useEffect(() => {
     if (!clubA && !searchA.trim()) {
@@ -267,14 +248,14 @@ const InternalPlayerComparisonPage: React.FC = () => {
     void playerdataApi.listEnrichedPlayers({
       club_id: clubA?.id,
       search: searchA.trim() || undefined,
-      season: SEASON,
-      provider: PROVIDER,
+      season,
+      provider,
       limit: 60,
     }).then((r) => { if (active) setPlayersA(r.data?.results ?? []); })
       .catch(() => { if (active) setPlayersA([]); })
       .finally(() => { if (active) setLoadingA(false); });
     return () => { active = false; };
-  }, [clubA, searchA]);
+  }, [clubA, searchA, season, provider]);
 
   useEffect(() => {
     if (!clubB && !searchB.trim()) {
@@ -286,14 +267,14 @@ const InternalPlayerComparisonPage: React.FC = () => {
     void playerdataApi.listEnrichedPlayers({
       club_id: clubB?.id,
       search: searchB.trim() || undefined,
-      season: SEASON,
-      provider: PROVIDER,
+      season,
+      provider,
       limit: 60,
     }).then((r) => { if (active) setPlayersB(r.data?.results ?? []); })
       .catch(() => { if (active) setPlayersB([]); })
       .finally(() => { if (active) setLoadingB(false); });
     return () => { active = false; };
-  }, [clubB, searchB]);
+  }, [clubB, searchB, season, provider]);
 
   const idA = selectedA?.player?.id ?? playerAIdFromUrl ?? null;
   const idB = selectedB?.player?.id ?? null;
@@ -310,8 +291,8 @@ const InternalPlayerComparisonPage: React.FC = () => {
     void playerdataApi.getPlayerOverviewComparison({
       player_a_id: idA,
       player_b_id: idB,
-      season: SEASON,
-      provider: PROVIDER,
+      season,
+      provider,
     }).then((r) => { if (active) setComparison(r.data ?? null); })
       .catch((err) => {
         if (active) {
@@ -327,7 +308,7 @@ const InternalPlayerComparisonPage: React.FC = () => {
     return () => {
       active = false;
     };
-  }, [idA, idB]);
+  }, [idA, idB, season, provider]);
 
   const handleSelectClubA = (club: Club) => {
     setClubA(clubA?.id === club.id ? null : club);
@@ -389,8 +370,7 @@ const InternalPlayerComparisonPage: React.FC = () => {
           <section className={styles["icp-hero"]}>
             <h1 className={styles["icp-title"]}>Player Comparison</h1>
             <p className={styles["icp-subtitle"]}>
-              Select two players to compare their {SEASON}/{String(Number(SEASON) + 1).slice(2)} season stats side by
-              side.
+              Select two players to compare their {formatSeasonDisplay(season)} season stats side by side.
             </p>
           </section>
 

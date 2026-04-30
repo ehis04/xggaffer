@@ -187,7 +187,7 @@ class Follow(models.Model):
                 name='unique_follow_relationship'
             ),
             models.CheckConstraint(
-                condition=~Q(follower=F('following')),
+                check=~Q(follower=F('following')),
                 name='prevent_self_follow'
             )
         ]

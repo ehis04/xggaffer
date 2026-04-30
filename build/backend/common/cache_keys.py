@@ -13,7 +13,7 @@ CACHE_TTL_ODDS_TEAMS = 3600
 CACHE_TTL_CHAT = 3600
 
 # Keep cache surface names in one place for API and command parity.
-KNOWN_CACHE_SURFACES = ("livefootball", "predictions", "odds", "chat")
+KNOWN_CACHE_SURFACES = ("livefootball", "predictions", "odds", "chat", "playerdata", "clubs")
 
 def clear_surface_cache(surface: str) -> int:
     from django.core.cache import cache

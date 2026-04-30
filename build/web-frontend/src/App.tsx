@@ -68,6 +68,12 @@ import ModelTrustCentre from "./pages/predictions/ModelTrustCentre";
 
 // --- Live Football ---
 import LiveFootballBasePage from "./pages/livefootball/LiveFootballBasePage";
+import LiveFootballPage from "./pages/livefootball/LiveFootballPage";
+import {
+  LiveFootballClubsPage,
+  LiveFootballMatchesPage,
+  LiveFootballPlayersPage,
+} from "./pages/livefootball/LiveFootballDirectoryPages";
 import Leagues from "./pages/livefootball/leagues/LeaguesPage";
 import LeagueComparePage from "./pages/livefootball/leagues/LeagueComparePage";
 import LeagueCustomPage from "./pages/livefootball/leagues/LeagueCustomPage";
@@ -129,12 +135,14 @@ function App() {
                   <Route path="/coaching" element={<CoachingBase />} />
                   <Route path="/coaching/clubs/create" element={<CreateClubPage />} />
                   <Route path="/clubs" element={<MyClubsPage />} />
+                  <Route path="/clubs/create" element={<CreateClubPage />} />
                   <Route path="/clubs/browse" element={<BrowseClubsPage />} />
                   <Route path="/clubs/:clubId/" element={<IndividualClubBase />} />
                   <Route path="/clubs/:clubId/teamsheets" element={<TeamsheetListPage />} />
                   <Route path="/clubs/:clubId/teamsheets/new" element={<TeamsheetCreatePage />} />
                   <Route path="/clubs/:clubId/teamsheets/:teamsheetId" element={<TeamsheetDetailPage />} />
                   <Route path="/clubs/:clubId/teamsheets/:teamsheetId/edit" element={<TeamsheetEditPage />} />
+                  <Route path="/clubs/:clubId/details" element={<ClubDetailsPage />} />
 
                   <Route path="/clubs/:clubId/tactics-boards/:boardId" element={<TacticsBoardEditorPage />} />
                   <Route path="/coaching/playerdata/player" element={<InternalPlayerProfilePage />} />
@@ -152,6 +160,10 @@ function App() {
 
                   {/* --- Live Football --- */}
                   <Route path="/livefootball" element={<LiveFootballBasePage />} />
+                  <Route path="/livefootball/browse" element={<LiveFootballPage />} />
+                  <Route path="/livefootball/matches" element={<LiveFootballMatchesPage />} />
+                  <Route path="/livefootball/clubs" element={<LiveFootballClubsPage />} />
+                  <Route path="/livefootball/players" element={<LiveFootballPlayersPage />} />
                   <Route path="/livefootball/leagues" element={<Leagues />} />
                   <Route path="/livefootball/leagues/compare" element={<LeagueComparePage />} />
                   <Route path="/livefootball/leagues/custom" element={<LeagueCustomPage />} />

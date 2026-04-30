@@ -1,8 +1,6 @@
 import { StatusBlock } from "../../common/components/StatusBlock";
 import styles from "./css/AppErrorPage.module.css";
 
-const HOME_PATH = "/";
-
 interface AppErrorPageProps {
   error?: unknown;
   onReset?: () => void;

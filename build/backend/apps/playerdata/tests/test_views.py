@@ -1,3 +1,9 @@
+"""
+Tests for player data API views
+
+Checks response envelopes, serializer output shapes, query validation, null data handling, and authentication requirements
+"""
+
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -14,7 +20,10 @@ from apps.playerdata.views import (
 from common.freshness import FreshnessPayload
 
 
+# Tests for player data API view contracts
 class PlayerDataViewTests(SimpleTestCase):
+
+    # Set up the request factory, fake authenticated user, and stable freshness payload
     def setUp(self):
         self.factory = APIRequestFactory()
         self.user = SimpleNamespace(is_authenticated=True)
@@ -32,13 +41,16 @@ class PlayerDataViewTests(SimpleTestCase):
         self._freshness_patcher.start()
         self.addCleanup(self._freshness_patcher.stop)
 
+    # Authenticate a test request
     def _authenticate(self, request):
         force_authenticate(request, user=self.user)
         return request
 
+    # Extract the data block from a response envelope
     def _payload(self, response):
         return response.data["data"]
 
+    # Build a complete player season summary payload
     def _player_summary_payload(self):
         return {
             "player": {
@@ -109,6 +121,7 @@ class PlayerDataViewTests(SimpleTestCase):
             "missing_reasons": [],
         }
 
+    # Build a complete club season summary payload
     def _club_summary_payload(self):
         return {
             "club": {
@@ -171,6 +184,7 @@ class PlayerDataViewTests(SimpleTestCase):
             "missing_reasons": [],
         }
 
+    # Build a complete player comparison payload
     def _comparison_payload(self):
         return {
             "player_a": {
@@ -270,6 +284,7 @@ class PlayerDataViewTests(SimpleTestCase):
             "missing_reasons": [],
         }
 
+    # Build a complete enriched player list payload
     def _enriched_list_payload(self):
         return {
             "count": 2,
@@ -350,6 +365,7 @@ class PlayerDataViewTests(SimpleTestCase):
             ],
         }
 
+    # Check the player season summary endpoint returns the expected envelope shape
     def test_player_season_summary_endpoint_returns_stable_shape(self):
         request = self.factory.get(
             "/playerdata/players/7/season-summary/",
@@ -385,6 +401,7 @@ class PlayerDataViewTests(SimpleTestCase):
         )
         self.assertEqual(payload["missing_reasons"], [])
 
+    # Check the club season summary endpoint handles nullable fields
     def test_club_season_summary_endpoint_is_null_safe(self):
         request = self.factory.get(
             "/playerdata/clubs/3/season-summary/",
@@ -415,6 +432,7 @@ class PlayerDataViewTests(SimpleTestCase):
         self.assertIsNone(payload["provider_coverage"]["minutes_sampled"])
         self.assertIn("notes", payload["explanation"])
 
+    # Check the player comparison endpoint returns the expected contract
     def test_player_comparison_endpoint_returns_expected_contract(self):
         request = self.factory.get(
             "/playerdata/players/compare/",
@@ -447,6 +465,7 @@ class PlayerDataViewTests(SimpleTestCase):
         self.assertIn("explanation", payload)
         self.assertIn("provider_coverage", payload)
 
+    # Check the enriched player list endpoint returns count and results
     def test_enriched_player_list_endpoint_returns_count_and_results(self):
         request = self.factory.get(
             "/playerdata/players/enriched/",
@@ -479,6 +498,7 @@ class PlayerDataViewTests(SimpleTestCase):
         self.assertIsNone(payload["results"][1]["club"])
         self.assertIsNone(payload["results"][1]["provider_coverage"])
 
+    # Check missing player summary data returns a null envelope
     def test_player_season_summary_endpoint_returns_null_envelope_when_no_data_exists(self):
         request = self.factory.get(
             "/playerdata/players/999/season-summary/",
@@ -507,6 +527,7 @@ class PlayerDataViewTests(SimpleTestCase):
         self.assertIsNone(response.data["data"])
         self.assertIn("freshness", response.data)
 
+    # Check player comparison requires both player IDs
     def test_player_comparison_endpoint_requires_both_player_ids(self):
         request = self.factory.get(
             "/playerdata/players/compare/",
@@ -519,6 +540,7 @@ class PlayerDataViewTests(SimpleTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("player_b_id", response.data)
 
+    # Check player data views reject unauthenticated requests
     def test_views_require_authentication(self):
         request = self.factory.get("/playerdata/players/7/season-summary/")
 

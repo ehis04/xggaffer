@@ -4,6 +4,10 @@ import ProbabilityBar from '../../common/ProbabilityBar';
 import { FreshnessBadge } from '../../common/components/FreshnessBadge';
 import { fetchMatchPredictionWidget } from '../../services/api/widgetApi';
 import type { MatchPredictionWidgetPayload } from '../../services/api/widgetApi';
+import {
+  getFootballSeasonForDate,
+  liveCompetitionCodeToPredictionLeague,
+} from '../../utils/footballSeason';
 import ConfidenceBadge from './ConfidenceBadge';
 import DegradedBanner from './DegradedBanner';
 import UncertaintyNote from './UncertaintyNote';
@@ -31,7 +35,7 @@ export default function MatchPredictionCard({
   homeTeam,
   awayTeam,
   kickoff,
-  leagueCode: _leagueCode,
+  leagueCode,
   fixtureId,
 }: MatchPredictionCardProps) {
   const [payload, setPayload] = useState<MatchPredictionWidgetPayload | null>(null);
@@ -40,18 +44,36 @@ export default function MatchPredictionCard({
 
   useEffect(() => {
     let cancelled = false;
-    fetchMatchPredictionWidget(homeTeam, awayTeam)
+    const predictionLeague = liveCompetitionCodeToPredictionLeague(leagueCode) ?? leagueCode;
+    const season = getFootballSeasonForDate(kickoff);
+    setLoading(true);
+    setError(false);
+    setPayload(null);
+    fetchMatchPredictionWidget(homeTeam, awayTeam, predictionLeague, season)
       .then(envelope => {
         if (!cancelled && envelope.data) setPayload(envelope.data);
       })
       .catch(() => { if (!cancelled) setError(true); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [homeTeam, awayTeam]);
+  }, [homeTeam, awayTeam, kickoff, leagueCode]);
 
   const kickoffStr = new Date(kickoff).toLocaleDateString(undefined, {
     weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
   });
+  const predictionLeague = liveCompetitionCodeToPredictionLeague(leagueCode) ?? leagueCode;
+  const season = getFootballSeasonForDate(kickoff);
+  const kickoffDate = new Date(kickoff);
+  const analysisParams = new URLSearchParams({
+    home: homeTeam,
+    away: awayTeam,
+    league: predictionLeague,
+    season,
+    fixture_id: String(fixtureId),
+  });
+  if (!Number.isNaN(kickoffDate.getTime())) {
+    analysisParams.set('date', kickoffDate.toISOString().slice(0, 10));
+  }
 
   return (
     <div className={styles.card}>
@@ -91,7 +113,7 @@ export default function MatchPredictionCard({
               <span className={styles.upsetBadge}>Upset watch</span>
             )}
           </div>
-          <Link className={styles.analysisLink} to={`/match/${fixtureId}`}>
+          <Link className={styles.analysisLink} to={`/match/lookup?${analysisParams.toString()}`}>
             View full analysis →
           </Link>
         </>

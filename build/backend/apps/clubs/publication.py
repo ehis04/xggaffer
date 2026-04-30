@@ -4,6 +4,7 @@ import logging
 
 from apps.clubs.models import Club, ClubPlayer
 from apps.sync_pipeline.services import publish_snapshot
+from common.cache_keys import clear_surface_cache
 from common.constants import ProviderName
 from common.utils import utcnow
 
@@ -50,4 +51,5 @@ def run_clubs_publication() -> None:
         source_max_fetched_at=utcnow(),
         metadata={'warnings': warnings},
     )
-    _logger.info('Clubs publication promoted: version=%s', snapshot.version)
+    cleared = clear_surface_cache(CLUBS_SURFACE)
+    _logger.info('Clubs publication promoted: version=%s cleared=%s', snapshot.version, cleared)

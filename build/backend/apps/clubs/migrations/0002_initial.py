@@ -272,7 +272,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='clubinvitation',
-            constraint=models.UniqueConstraint(condition=models.Q(('status', 'pending')), fields=('club', 'invited_user', 'invited_role'), name='unique_pending_invitation_per_user_club_role'),
+            constraint=models.UniqueConstraint(fields=('club', 'invited_user', 'invited_role'), name='unique_pending_invitation_per_user_club_role'),
         ),
         migrations.AddIndex(
             model_name='clubmembership',
@@ -300,7 +300,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='clubplayer',
-            constraint=models.UniqueConstraint(condition=models.Q(('squad_number__isnull', False)), fields=('club', 'squad_number'), name='unique_squad_number_per_club'),
+            constraint=models.UniqueConstraint(fields=('club', 'squad_number'), name='unique_squad_number_per_club'),
         ),
         migrations.AddIndex(
             model_name='clubjoinrequest',
@@ -316,7 +316,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='clubjoinrequest',
-            constraint=models.UniqueConstraint(condition=models.Q(('status', 'pending')), fields=('club', 'user'), name='unique_pending_join_request_per_user_club'),
+            constraint=models.UniqueConstraint(fields=('club', 'user'), name='unique_pending_join_request_per_user_club'),
         ),
         migrations.AddIndex(
             model_name='clubplayerinjury',
@@ -328,7 +328,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='clubplayerinjury',
-            constraint=models.UniqueConstraint(condition=models.Q(('is_current', True)), fields=('club_player',), name='unique_current_injury_per_club_player'),
+            constraint=models.UniqueConstraint(fields=('club_player',), name='unique_current_injury_per_club_player'),
         ),
         migrations.AddIndex(
             model_name='clubplayermanualstats',
@@ -400,7 +400,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='fixture',
-            constraint=models.UniqueConstraint(condition=models.Q(('external_fixture_id', ''), _negated=True), fields=('club', 'external_fixture_id'), name='unique_nonblank_external_fixture_id_per_club'),
+            constraint=models.UniqueConstraint(fields=('club', 'external_fixture_id'), name='unique_nonblank_external_fixture_id_per_club'),
         ),
         migrations.AddIndex(
             model_name='clubseasonresult',

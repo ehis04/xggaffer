@@ -14,6 +14,7 @@ import type {
 import type { ClubPlayerInjury, ClubPlayerManualStats } from '../../../../types/club';
 import type { PlayerDataFilters, PlayerDataMetric, PlayerSeasonSummary } from '../../../../types/playerdata';
 import { statusConfig } from '../../../../components/Dashboard/functions/statusConfig';
+import { getCurrentFootballSeason } from '../../../../utils/footballSeason';
 import styles from './css/PlayersTab.module.css';
 import { SectionSkeleton } from '../../../../common/components/SectionSkeleton';
 import { InlineRetry } from '../../../../common/components/InlineRetry';
@@ -165,6 +166,7 @@ const PlayersTab = ({ ctx }: Props) => {
 
   const selectedPlayer = useMemo(() => players.find((p) => p.id === selectedId) ?? null, [players, selectedId]);
   const canonicalId = useMemo(() => resolveCanonicalId(selectedPlayer), [selectedPlayer]);
+  const currentSeason = getCurrentFootballSeason();
 
   useEffect(() => {
     if (!selectedPlayer) {
@@ -192,8 +194,8 @@ const PlayersTab = ({ ctx }: Props) => {
       setSummaryLoading(true); setSummaryErr(null);
       try {
         const [uResult, ssResult] = await Promise.allSettled([
-          playerdataApi.getPlayerSeasonSummary(canonicalId, { season: '2025', provider: 'understat' }),
-          playerdataApi.getPlayerSeasonSummary(canonicalId, { season: '2025', provider: 'sofascore' }),
+          playerdataApi.getPlayerSeasonSummary(canonicalId, { season: currentSeason, provider: 'understat' }),
+          playerdataApi.getPlayerSeasonSummary(canonicalId, { season: currentSeason, provider: 'sofascore' }),
         ]);
         const merged = mergePlayerSummaries(
           uResult.status === 'fulfilled' ? uResult.value : null,
@@ -201,14 +203,14 @@ const PlayersTab = ({ ctx }: Props) => {
         );
         if (active) {
           setSummary(merged);
-          if (!merged) setSummaryErr('No 2025 data available for this player.');
+          if (!merged) setSummaryErr(`No ${currentSeason} data available for this player.`);
         }
       } catch (err) { if (active) { setSummary(null); setSummaryErr(normalizeError(err)); } }
       finally { if (active) setSummaryLoading(false); }
     };
     void load();
     return () => { active = false; };
-  }, [selectedPlayer, canonicalId]);
+  }, [selectedPlayer, canonicalId, currentSeason]);
 
   const resetForm = () => { setForm(emptyForm()); setEditingPlayer(null); setFormError(null); setShowAddForm(false); };
 

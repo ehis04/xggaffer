@@ -184,9 +184,11 @@ def refresh_elo_ratings_task(self):
 @shared_task(name='apps.predictions.tasks.compute_odds_accuracy_task', bind=True)
 def compute_odds_accuracy_task(self):
     from django.core.management import call_command
+    from common.utils import current_football_season
+    season = current_football_season()
     try:
-        call_command('compute_odds_accuracy', league='all', season='2025')
-        _logger.info('compute_odds_accuracy_task: completed for all leagues')
+        call_command('compute_odds_accuracy', league='all', season=season)
+        _logger.info('compute_odds_accuracy_task: completed for all leagues season=%s', season)
     except Exception as exc:
         _logger.error('compute_odds_accuracy_task failed: %s', exc, exc_info=True)
 
@@ -383,4 +385,3 @@ def resolve_prediction_results(self) -> int:
 
     _logger.info("resolve_prediction_results: resolved %d records", resolved_count)
     return resolved_count
-

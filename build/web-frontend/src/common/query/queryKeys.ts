@@ -16,8 +16,8 @@ export const queryKeys = {
                 ['predictions', 'odds', 'fixtures', league, view, teamA ?? '', teamB ?? ''] as const,
             teams: (league: string) =>
                 ['predictions', 'odds', 'teams', league] as const,
-            accuracy: (league: string) =>
-                ['predictions', 'odds', 'accuracy', league] as const,
+            accuracy: (league: string, season: string) =>
+                ['predictions', 'odds', 'accuracy', league, season] as const,
         },
     },
 } as const;

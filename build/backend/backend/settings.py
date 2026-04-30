@@ -5,6 +5,7 @@ Django configuration, authentication, storage, 3rd-party integrations, and sched
 
 import os
 import sys
+import xgboost as xgb
 from datetime import timedelta
 from pathlib import Path
 

@@ -279,7 +279,6 @@ class Fixture(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['club', 'external_fixture_id'],
-                condition=~models.Q(external_fixture_id=''),
                 name='unique_nonblank_external_fixture_id_per_club',
             ),
         ]

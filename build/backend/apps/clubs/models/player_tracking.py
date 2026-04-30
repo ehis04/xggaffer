@@ -73,7 +73,6 @@ class ClubPlayerInjury(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['club_player'],
-                condition=models.Q(is_current=True),
                 name='unique_current_injury_per_club_player',
             )
         ]

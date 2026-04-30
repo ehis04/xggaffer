@@ -1,12 +1,20 @@
+"""
+Management command for syncing Understat league season data
+
+Runs a manual league-wide enrichment backfill for a selected Understat league and season
+"""
+
 from django.core.management.base import BaseCommand, CommandError
 
 from apps.players.models import ExternalProvider
 from services.providers.understat.sync import sync_understat_league_season
 
 
+# Command for manually syncing one Understat league season
 class Command(BaseCommand):
     help = 'Manual backfill and admin repair tool. Automated scheduling is handled by sync_pipeline.'
 
+    # Register command line arguments for the sync
     def add_arguments(self, parser):
         parser.add_argument(
             "--league-code",
@@ -37,6 +45,7 @@ class Command(BaseCommand):
             help="Provider to use. Phase 3 expects understat.",
         )
 
+    # Run the league season sync and print a breakdown summary
     def handle(self, *args, **options):
         provider = (options["provider"] or "").strip()
         if provider != ExternalProvider.UNDERSTAT:

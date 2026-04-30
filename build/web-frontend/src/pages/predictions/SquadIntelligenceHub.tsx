@@ -14,6 +14,7 @@ import type {
   LineupWidgetPayload,
 } from '../../services/api/widgetApi';
 import liveFootballApi from '../../services/api/livefootballApi';
+import { parseSeasonStartYear } from '../../utils/footballSeason';
 import styles from './css/SquadIntelligenceHub.module.css';
 
 const CONGESTION_THRESHOLD_DAYS = 4;
@@ -33,6 +34,7 @@ interface FixtureOption {
   opponent: string;
   date: string;
   league: string;
+  season: string;
   isHome: boolean;
 }
 
@@ -78,7 +80,7 @@ export default function SquadIntelligenceHub() {
 
     liveFootballApi
       .getCompetitions()
-      .then(async (competitions: Array<{ id: number; code: string }>) => {
+      .then(async (competitions: Array<{ id: number; code: string; current_season_label?: string | null }>) => {
         const relevant = competitions.filter(c =>
           (ALL_COMPETITION_CODES as readonly string[]).includes(c.code)
         );
@@ -128,6 +130,7 @@ export default function SquadIntelligenceHub() {
                   opponent: isHome ? away : home,
                   date: (f.utc_date ?? f.kickoff_at ?? '').slice(0, 10),
                   league: comp.code,
+                  season: parseSeasonStartYear(f.season_label ?? comp.current_season_label),
                   isHome,
                 };
               });
@@ -165,23 +168,23 @@ export default function SquadIntelligenceHub() {
 
     const league = COMP_CODE_TO_LEAGUE[selectedFixture.league];
 
-    fetchAvailabilityWidget(teamName, selectedFixture.date, league)
+    fetchAvailabilityWidget(teamName, selectedFixture.date, league, selectedFixture.season)
       .then(env => { if (!cancelled) setAvailability(env.data); })
       .catch(() => { if (!cancelled) setAvailability(null); })
       .finally(() => { if (!cancelled) setAvailLoading(false); });
 
-    fetchLineupWidget(teamName, selectedFixture.date, league)
+    fetchLineupWidget(teamName, selectedFixture.date, league, selectedFixture.season)
       .then(env => { if (!cancelled) setLineup(env.data); })
       .catch(() => { if (!cancelled) setLineup(null); })
       .finally(() => { if (!cancelled) setLineupLoading(false); });
 
-    fetchLineupWidget(normaliseTeamName(selectedFixture.opponent), selectedFixture.date, league)
+    fetchLineupWidget(normaliseTeamName(selectedFixture.opponent), selectedFixture.date, league, selectedFixture.season)
       .then(env => { if (!cancelled) setOpponentLineup(env.data); })
       .catch(() => { if (!cancelled) setOpponentLineup(null); })
       .finally(() => { if (!cancelled) setOpponentLineupLoading(false); });
 
     return () => { cancelled = true; };
-  }, [teamName, selectedFixture?.date, selectedFixture?.league]);
+  }, [teamName, selectedFixture?.date, selectedFixture?.league, selectedFixture?.season]);
 
   const availData = availability?.data ?? null;
   const lineupData = lineup?.data ?? null;

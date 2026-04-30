@@ -13,23 +13,14 @@ import type {
   CompetitionPreviousNextFixturesResponse,
 } from '../../types/livefootball';
 import { predictMatch } from '../../services/api/predictionsApi';
+import {
+  liveCompetitionCodeToPredictionLeague,
+  parseSeasonStartYear,
+} from '../../utils/footballSeason';
 import MatchPredictionChip from '../predictions/MatchPredictionChip';
 import styles from './css/FixturesPanel.module.css';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const COMPETITION_CODE_TO_LEAGUE: Record<string, string> = {
-  PL:  'EPL',
-  PD:  'La_Liga',
-  BL1: 'Bundesliga',
-  SA:  'Serie_A',
-  FL1: 'Ligue_1',
-};
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-const parseSeasonYear = (label: string): string =>
-  label.match(/\d{4}/)?.[0] ?? String(new Date().getFullYear());
 
 const formatKickoff = (value?: string | null): string => {
   if (!value) return 'TBC';
@@ -212,11 +203,11 @@ const FixturesPanel: React.FC<FixturesPanelProps> = ({
     if (allFixtures.length === 0) return;
 
     setPredictionsLoading(true);
-    const league = COMPETITION_CODE_TO_LEAGUE[fixtures.competition.code ?? ''] ?? null;
+    const league = liveCompetitionCodeToPredictionLeague(fixtures.competition.code);
 
     const requests = allFixtures.map((fixture) => {
       if (!league) return Promise.resolve({ key: fixtureKey(fixture), probs: null });
-      const season = parseSeasonYear(fixture.season_label);
+      const season = parseSeasonStartYear(fixture.season_label);
       return predictMatch({
         home_team: fixture.home_team.name,
         away_team: fixture.away_team.name,

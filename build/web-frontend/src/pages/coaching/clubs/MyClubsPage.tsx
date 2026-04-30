@@ -268,10 +268,6 @@ const MyClubsPage: React.FC = () => {
     }
   };
 
-  const handleCreateClick = () => {
-    navigate('/coaching/clubs/create');
-  };
-
   const handleSwitchToCoach = async () => {
     try {
       setWorkflowLoadingKey("switch-to-coach");

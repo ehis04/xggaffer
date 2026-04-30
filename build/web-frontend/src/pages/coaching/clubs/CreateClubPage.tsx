@@ -644,7 +644,7 @@ const CreateClubPage: React.FC = () => {
               <div className={styles.createClubPreviewInfo}>
                 <div className={styles.createClubPreviewName}>{form.name || 'Club Name'}</div>
                 <div className={styles.createClubPreviewMeta}>
-                  {[form.match_format, form.age_group, form.city].filter(Boolean).join(' · ')}
+                  {previewTags.join(' · ')}
                 </div>
                 <div className={styles.createClubPreviewTags}>
                   {visibilityLabel && (

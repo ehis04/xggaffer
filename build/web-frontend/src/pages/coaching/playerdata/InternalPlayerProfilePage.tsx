@@ -11,29 +11,8 @@ import type {
   PlayerOverviewMetric,
   PlayerOverviewMetricGroup,
 } from '../../../types/playerdata';
+import { getCurrentFootballSeason } from '../../../utils/footballSeason';
 import styles from './css/InternalPlayerProfilePage.module.css';
-
-const SEASON = '2025';
-
-const ALLOWED_PLAYERDATA_CLUBS = new Set([
-  'manchester united',
-  'manchester united fc',
-  'paris saint german',
-  'paris saint germain',
-  'paris saint germain fc',
-  'real madrid cf',
-  'fc bayern munchen',
-  'juventus fc',
-]);
-
-const normalizeClubName = (name: string): string =>
-  name
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9 ]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
 
 const getMetricValue = (
   metric: { formatted_value?: string | null; value?: number | null },
@@ -287,6 +266,8 @@ const PlayerRadar: React.FC<{ metricGroups: PlayerOverviewMetricGroup[] }> = ({ 
 
 const InternalPlayerProfilePage: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const season = searchParams.get('season') || getCurrentFootballSeason();
+  const provider = searchParams.get('provider') || undefined;
   const [proClubs, setProClubs]         = useState<Club[]>([]);
   const [clubsLoading, setClubsLoading] = useState(true);
 
@@ -319,11 +300,7 @@ const InternalPlayerProfilePage: React.FC = () => {
       try {
         const clubs = await clubsApi.browse();
         setProClubs(
-          clubs.filter(
-            (c) =>
-              c.club_type === 'system_professional' &&
-              ALLOWED_PLAYERDATA_CLUBS.has(normalizeClubName(c.name)),
-          ),
+          clubs.filter((club) => club.club_type === 'system_professional'),
         );
       } catch {
       } finally {
@@ -345,7 +322,8 @@ const InternalPlayerProfilePage: React.FC = () => {
         const result = await playerdataApi.listEnrichedPlayers({
           club_id: selectedClub?.id,
           search: searchQuery.trim() || undefined,
-          season: SEASON,
+          season,
+          provider,
           limit: 80,
         });
         if (active) setPlayers(result.data?.results ?? []);
@@ -357,7 +335,7 @@ const InternalPlayerProfilePage: React.FC = () => {
     };
     void load();
     return () => { active = false; };
-  }, [selectedClub, searchQuery]);
+  }, [selectedClub, searchQuery, season, provider]);
 
   useEffect(() => {
     const canonicalId = selectedPlayer?.player?.id;
@@ -372,7 +350,8 @@ const InternalPlayerProfilePage: React.FC = () => {
         setOverviewLoading(true);
         setOverviewError(null);
         const result = await playerdataApi.getPlayerOverview(canonicalId, {
-          season: SEASON,
+          season,
+          provider,
         });
         if (active) setOverview(result.data ?? null);
       } catch (err) {
@@ -388,7 +367,7 @@ const InternalPlayerProfilePage: React.FC = () => {
     };
     void load();
     return () => { active = false; };
-  }, [selectedPlayer]);
+  }, [selectedPlayer, season, provider]);
 
   const handleSelectClub = (club: Club) => {
     setSelectedClub(selectedClub?.id === club.id ? null : club);

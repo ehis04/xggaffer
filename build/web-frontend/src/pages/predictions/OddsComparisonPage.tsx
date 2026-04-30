@@ -10,16 +10,15 @@ import type {
   PredictionResponse,
 } from '../../types/prediction';
 import { FreshnessBadge } from '../../common/components/FreshnessBadge';
+import {
+  formatSeasonDisplay,
+  getCurrentFootballSeason,
+  PREDICTION_LEAGUE_OPTIONS,
+} from '../../utils/footballSeason';
 import styles from './css/OddsComparisonPage.module.css';
 
 
-const LEAGUE_OPTIONS = [
-  { value: 'EPL', label: 'Premier League' },
-  { value: 'La_Liga', label: 'La Liga' },
-  { value: 'Bundesliga', label: 'Bundesliga' },
-  { value: 'Serie_A', label: 'Serie A' },
-  { value: 'Ligue_1', label: 'Ligue 1' },
-];
+const LEAGUE_OPTIONS = PREDICTION_LEAGUE_OPTIONS;
 
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
 
@@ -29,7 +28,7 @@ const ODDS_REFRESH_MESSAGE = 'Odds data not yet available — check back after 0
 const PREDICTION_PREFETCH_CONCURRENCY = 6;
 
 function fixturePredictionKey(fixture: OddsFixtureItem, league: string): string {
-  return `${league}::${fixture.home_team}::${fixture.away_team}::${new Date(fixture.commence_time).toISOString().slice(0, 10)}`;
+  return `${league}::${fixture.season}::${fixture.home_team}::${fixture.away_team}::${new Date(fixture.commence_time).toISOString().slice(0, 10)}`;
 }
 
 function fmt(n: number) {
@@ -57,7 +56,7 @@ function AccuracyChart({ stats }: { stats: OddsAccuracyResponse }) {
   return (
     <div className={styles.chartSection}>
       <div className={styles.chartHeader}>
-        <span className={styles.chartTitle}>Season accuracy breakdown — {season}/26</span>
+        <span className={styles.chartTitle}>Season accuracy breakdown — {formatSeasonDisplay(season)}</span>
         <span className={styles.chartSubtitle}>{total_evaluated} games evaluated</span>
       </div>
       <div className={styles.chartBars}>
@@ -101,11 +100,13 @@ function AccuracyChart({ stats }: { stats: OddsAccuracyResponse }) {
 function FixtureRow({
   fixture,
   league,
+  seasonFallback,
   showResultColumn,
   prefetchedPrediction,
 }: {
   fixture: OddsFixtureItem;
   league: string;
+  seasonFallback: string;
   showResultColumn: boolean;
   prefetchedPrediction: PredictionResponse | null;
 }) {
@@ -133,7 +134,7 @@ function FixtureRow({
         home_team: fixture.home_team,
         away_team: fixture.away_team,
         league,
-        season: '2025',
+        season: fixture.season || seasonFallback,
       });
       setPred(res);
     } catch {
@@ -141,7 +142,7 @@ function FixtureRow({
     } finally {
       setPredLoading(false);
     }
-  }, [fixture.home_team, fixture.away_team, league, pred, predLoading]);
+  }, [fixture.home_team, fixture.away_team, fixture.season, league, pred, predLoading, seasonFallback]);
 
   const dateStr = new Date(fixture.commence_time).toLocaleDateString(undefined, {
     day: 'numeric', month: 'short', year: 'numeric',
@@ -221,7 +222,7 @@ function FixtureRow({
       <td className={styles.td}>
         <Link
           className={styles.analysisLink}
-          to={`/match/lookup?home=${encodeURIComponent(fixture.home_team)}&away=${encodeURIComponent(fixture.away_team)}&league=${encodeURIComponent(league)}&date=${encodeURIComponent(new Date(fixture.commence_time).toISOString().slice(0, 10))}`}
+          to={`/match/lookup?home=${encodeURIComponent(fixture.home_team)}&away=${encodeURIComponent(fixture.away_team)}&league=${encodeURIComponent(league)}&season=${encodeURIComponent(fixture.season || seasonFallback)}&date=${encodeURIComponent(new Date(fixture.commence_time).toISOString().slice(0, 10))}`}
         >
           View analysis →
         </Link>
@@ -258,7 +259,8 @@ function FixtureRow({
 }
 
 export default function OddsComparisonPage() {
-  const [league, setLeague] = useState('EPL');
+  const currentSeason = getCurrentFootballSeason();
+  const [league, setLeague] = useState(LEAGUE_OPTIONS[0].value);
   const [view, setView] = useState<'past' | 'future'>('future');
   const [teamA, setTeamA] = useState('');
   const [teamB, setTeamB] = useState('');
@@ -284,8 +286,8 @@ export default function OddsComparisonPage() {
   });
 
   const { data: accuracyEnvelope } = useQuery({
-    queryKey: queryKeys.predictions.odds.accuracy(league),
-    queryFn: () => getOddsAccuracy(league),
+    queryKey: queryKeys.predictions.odds.accuracy(league, currentSeason),
+    queryFn: () => getOddsAccuracy(league, currentSeason),
     staleTime: STALE_TIME_STANDARD,
     enabled: Boolean(league),
   });
@@ -294,6 +296,8 @@ export default function OddsComparisonPage() {
   const freshness = fixturesEnvelope?.freshness ?? null;
   const fixturesData = fixturesEnvelope?.data ?? null;
   const fixtures = fixturesData?.fixtures ?? [];
+  const fixturesSeason = fixturesData?.season || currentSeason;
+  const seasonLabel = formatSeasonDisplay(fixturesSeason);
   const dataNull = !fixturesLoading && !fixturesErrored && fixturesEnvelope !== undefined && fixturesEnvelope.data === null;
 
   const showResultColumn = view === 'past';
@@ -330,7 +334,7 @@ export default function OddsComparisonPage() {
               home_team: fixture.home_team,
               away_team: fixture.away_team,
               league,
-              season: '2025',
+              season: fixture.season || fixturesSeason,
             });
 
             if (cancelled) return;
@@ -355,7 +359,7 @@ export default function OddsComparisonPage() {
     return () => {
       cancelled = true;
     };
-  }, [fixtures, league, view]);
+  }, [fixtures, fixturesSeason, league, view]);
 
   const totalPages = Math.max(1, Math.ceil(fixtures.length / pageSize));
   const safePage = Math.min(page, totalPages);
@@ -364,7 +368,7 @@ export default function OddsComparisonPage() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Odds &amp; Market Comparison — 2025/26</h1>
+        <h1 className={styles.title}>Odds &amp; Market Comparison — {seasonLabel}</h1>
         <p className={styles.subtitle}>
           Browse bookmaker odds and model predictions for{' '}
           {view === 'past' ? 'completed' : 'upcoming'} fixtures.
@@ -431,7 +435,9 @@ export default function OddsComparisonPage() {
 
       {accuracyStats && (
         <div className={styles.accuracyBox}>
-          <span className={styles.accuracyBoxLabel}>2025/26 accuracy</span>
+          <span className={styles.accuracyBoxLabel}>
+            {formatSeasonDisplay(accuracyStats.season || fixturesSeason)} accuracy
+          </span>
           <span className={styles.accuracyBoxStat}>
             <span className={styles.accuracyBoxValue}>{accuracyStats.model_wins}</span>
             <span className={styles.accuracyBoxName}>Model wins</span>
@@ -500,6 +506,7 @@ export default function OddsComparisonPage() {
                     key={fixturePredictionKey(f, league)}
                     fixture={f}
                     league={league}
+                    seasonFallback={fixturesSeason}
                     showResultColumn={showResultColumn}
                     prefetchedPrediction={prefetchedPredictions[fixturePredictionKey(f, league)] ?? null}
                   />

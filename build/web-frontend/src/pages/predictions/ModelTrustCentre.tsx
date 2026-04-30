@@ -10,17 +10,21 @@ import BiggestMissesPanel from '../../components/widgets/BiggestMissesPanel';
 import ConfidenceAccuracyChart from '../../components/widgets/ConfidenceAccuracyChart';
 import { fetchModelTrustWidget } from '../../services/api/widgetApi';
 import type { ModelTrustWidgetPayload } from '../../services/api/widgetApi';
+import {
+  formatSeasonDisplay,
+  getCurrentFootballSeason,
+  PREDICTION_LEAGUE_OPTIONS,
+} from '../../utils/footballSeason';
 import styles from './css/ModelTrustCentre.module.css';
 
 const DEFAULT_LEAGUE_FILTER = '';
 
 const LEAGUE_OPTIONS = [
   { value: '', label: 'All leagues' },
-  { value: 'EPL', label: 'Premier League' },
-  { value: 'La_Liga', label: 'La Liga' },
-  { value: 'Bundesliga', label: 'Bundesliga' },
-  { value: 'Serie_A', label: 'Serie A' },
-  { value: 'Ligue_1', label: 'Ligue 1' },
+  ...PREDICTION_LEAGUE_OPTIONS.map((option) => ({
+    value: option.value,
+    label: option.label,
+  })),
 ] as const;
 
 function resolveLeagueFilterFromUrl(searchParams: URLSearchParams): string {
@@ -76,6 +80,9 @@ export default function ModelTrustCentre() {
   const trustData = payload?.data ?? null;
   const freshness = payload?.freshness ?? null;
   const selectedLeagueLabel = LEAGUE_OPTIONS.find(option => option.value === leagueFilter)?.label;
+  const seasonLabel = formatSeasonDisplay(
+    (payload?.summary?.season as string | undefined) ?? getCurrentFootballSeason(),
+  );
   const coldStartNote = (payload?.summary?.cold_start_note as string | undefined)
     ?? 'Prediction review data will appear once match results are logged.';
 
@@ -180,7 +187,7 @@ export default function ModelTrustCentre() {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th className={styles.th}>25/26 Season</th>
+                    <th className={styles.th}>{seasonLabel} Season</th>
                     <th className={styles.th}>Predictions</th>
                     <th className={styles.th}>Accuracy</th>
                   </tr>

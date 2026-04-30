@@ -92,7 +92,6 @@ class ClubPlayer(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['club', 'squad_number'],
-                condition=models.Q(squad_number__isnull=False),
                 name='unique_squad_number_per_club'
             )
         ]

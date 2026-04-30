@@ -12,6 +12,14 @@ vi.mock('../../../services/api/livefootballApi', () => ({
   },
 }));
 
+vi.mock('../../../services/api/predictionsApi', () => ({
+  getOddsFixtures: vi.fn().mockResolvedValue({
+    data: {
+      fixtures: [],
+    },
+  }),
+}));
+
 vi.mock('../../widgets/MatchPredictionCard', () => ({
   default: ({ homeTeam, awayTeam }: { homeTeam: string; awayTeam: string }) => (
     <div data-testid="prediction-card">{homeTeam} vs {awayTeam}</div>

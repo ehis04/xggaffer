@@ -124,7 +124,6 @@ class ClubJoinRequest(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['club', 'user'],
-                condition=models.Q(status='pending'),
                 name='unique_pending_join_request_per_user_club'
             )
         ]
@@ -315,7 +314,6 @@ class ClubInvitation(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['club', 'invited_user', 'invited_role'],
-                condition=models.Q(status='pending'),
                 name='unique_pending_invitation_per_user_club_role'
             )
         ]

@@ -5,7 +5,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import communityApi from "../../services/api/communityApi";
 import type { NotificationItem } from "../../services/api/communityApi";
 
-const http = "http://localhost:5173/";
 const MAX_NOTIFICATIONS_TO_SHOW = 8;
 
 export const SocialUserButtons = () => {

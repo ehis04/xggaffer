@@ -27,6 +27,10 @@ import type {
   WidgetFreshness,
 } from '../../services/api/widgetApi';
 import type { OddsConsensus } from '../../types/prediction';
+import {
+  getCurrentFootballSeason,
+  getFootballSeasonForDate,
+} from '../../utils/footballSeason';
 import styles from './css/MatchIntelligenceHub.module.css';
 import ZoneHeatmap from '../../components/widgets/ZoneHeatmap';
 import StyleProfileCard from '../../components/widgets/StyleProfileCard';
@@ -34,7 +38,6 @@ import { fetchTacticalWidget } from '../../services/api/widgetApi';
 import type { TacticalWidgetPayload } from '../../services/api/widgetApi';
 
 const DEFAULT_LEAGUE = 'EPL';
-const DEFAULT_SEASON = String(new Date().getUTCFullYear() - 1);
 const COVERAGE_NOTICE = 'Tactical analysis powered by StatsBomb Open Data. Full profile available for La Liga teams only.' as const;
 
 function normalizeTeamName(name: string): string {
@@ -158,7 +161,7 @@ export default function MatchIntelligenceHub() {
   const awayTeam = searchParams.get('away') ?? '';
   const leagueCode = searchParams.get('league') ?? DEFAULT_LEAGUE;
   const fixtureDate = searchParams.get('date') ?? '';
-  const season = searchParams.get('season') ?? DEFAULT_SEASON;
+  const season = searchParams.get('season') ?? getFootballSeasonForDate(fixtureDate, getCurrentFootballSeason());
 
   const fixtureResolved = Boolean(homeTeam && awayTeam);
 
