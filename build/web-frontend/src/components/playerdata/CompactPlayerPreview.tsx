@@ -48,35 +48,6 @@ const getFirstPresentValue = (source: unknown, paths: string[][]): string | null
   return null;
 };
 
-const formatLastSyncedAt = (value?: string | null): string => {
-  if (!value) {
-    return 'Never synced';
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return 'Last sync unavailable';
-  }
-
-  return `Last synced ${date.toLocaleString('en-IE', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })}`;
-};
-
-const getPlayerLabel = (player: ClubPlayer): string => {
-  if (player.display_name?.trim()) {
-    return player.display_name.trim();
-  }
-
-  if (player.full_name?.trim()) {
-    return player.full_name.trim();
-  }
-
-  return `${player.first_name} ${player.last_name}`.trim() || `Player #${player.id}`;
-};
-
 const buildContextLine = (summary?: PlayerSeasonSummary | null): string | null => {
   if (!summary) {
     return null;
@@ -112,7 +83,7 @@ const CompactPlayerPreview: React.FC<CompactPlayerPreviewProps> = ({
   error = null,
   canonicalPlayerId = null,
   onOpenReadPage = null,
-  emptyMessage = 'Select a player to preview useful summary information.',
+  emptyMessage = 'Select a player to view their stats.',
   className,
 }) => {
   if (!player) {
@@ -130,77 +101,16 @@ const CompactPlayerPreview: React.FC<CompactPlayerPreviewProps> = ({
         gap: '1rem',
       }}
     >
-      <div
-        style={{
-          display: 'grid',
-          gap: '0.5rem',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            gap: '0.75rem',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-          }}
-        >
-          <div>
-            <h4 style={{ margin: 0 }}>{getPlayerLabel(player)}</h4>
-            <p style={{ margin: '0.35rem 0 0 0', opacity: 0.82 }}>
-              {player.primary_position || 'Position not set'}
-              {player.squad_number ? ` · #${player.squad_number}` : ''}
-              {player.is_public ? ' · Public' : ' · Private'}
-              {player.is_active ? ' · Active' : ' · Inactive'}
-            </p>
-          </div>
-
-          <span
-            style={{
-              padding: '0.35rem 0.65rem',
-              borderRadius: '999px',
-              border: '1px solid rgba(255,255,255,0.12)',
-              fontSize: '0.85rem',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {player.has_provider_identity ? 'Provider-linked' : 'Local-only'}
-          </span>
-        </div>
-
-        <div
-          style={{
-            display: 'grid',
-            gap: '0.45rem',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          }}
-        >
-          <span>
-            <strong>Canonical ID</strong> {canonicalPlayerId ?? '—'}
-          </span>
-          <span>
-            <strong>Sync</strong> {formatLastSyncedAt(player.last_synced_at)}
-          </span>
-        </div>
-
-        {(player.secondary_positions?.length ?? 0) > 0 ? (
-          <div>
-            <strong>Secondary positions</strong> {player.secondary_positions.join(', ')}
-          </div>
-        ) : null}
-      </div>
-
       {!canonicalPlayerId ? (
         <div
           style={{
             border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: '12px',
             padding: '0.9rem',
+            opacity: 0.72,
           }}
         >
-          {player.has_provider_identity
-            ? 'This player is linked, but this row does not expose a canonical player ID yet, so a deterministic preview cannot be loaded.'
-            : 'This player is local-only, so deterministic summary data is not available yet.'}
+          No stats data available for this player yet.
         </div>
       ) : isLoading ? (
         <div
@@ -210,7 +120,7 @@ const CompactPlayerPreview: React.FC<CompactPlayerPreviewProps> = ({
             padding: '0.9rem',
           }}
         >
-          Loading compact preview…
+          Loading…
         </div>
       ) : error ? (
         <div
@@ -233,12 +143,9 @@ const CompactPlayerPreview: React.FC<CompactPlayerPreviewProps> = ({
             gap: '0.85rem',
           }}
         >
-          <div>
-            <strong>Deterministic season preview</strong>
-            <div style={{ marginTop: '0.35rem', opacity: 0.82 }}>
-              {contextLine || 'Season context unavailable'}
-            </div>
-          </div>
+          {contextLine && (
+            <div style={{ opacity: 0.82 }}>{contextLine}</div>
+          )}
 
           {metricItems.length > 0 ? (
             <div
@@ -263,7 +170,7 @@ const CompactPlayerPreview: React.FC<CompactPlayerPreviewProps> = ({
               ))}
             </div>
           ) : (
-            <div>No compact season metrics are available for this player yet.</div>
+            <div>No season stats available for this player yet.</div>
           )}
 
           {onOpenReadPage ? (
@@ -279,7 +186,7 @@ const CompactPlayerPreview: React.FC<CompactPlayerPreviewProps> = ({
                   cursor: 'pointer',
                 }}
               >
-                Open Internal Read Page
+                View full profile
               </button>
             </div>
           ) : null}

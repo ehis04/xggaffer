@@ -188,6 +188,7 @@ class TestCompositeHandler:
             assert result.partial is True
             assert "match_error" in result.engine_data
 
+@pytest.mark.django_db
 class TestOddsHandler:
     def test_success(self):
         from apps.predictions.services.odds_handler import OddsHandler
@@ -242,7 +243,7 @@ class TestOddsHandler:
 
         assert result.intent == IntentClass.ODDS_COMPARISON
         assert result.partial is True
-        assert "No live odds are available" in result.error
+        assert "No stored odds found" in result.error
         assert "support" in result.engine_data
 
     def test_source_failure_returns_partial_response(self):

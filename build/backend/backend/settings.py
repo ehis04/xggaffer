@@ -506,11 +506,6 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(minute=30, hour="*/6"),
         "options": {"expires": 3600, "queue": "queue_publication"},
     },
-    "update-community-interest-profiles": {
-        "task": "apps.community.tasks.update_user_interest_profiles_task",
-        "schedule": crontab(minute=0, hour="*/1"),
-        "options": {"expires": 3300, "queue": "queue_publication"},
-    },
     "ingest-rss-feeds": {
         # Pull fresh articles from RSS feeds every hour.
         "task": "apps.articles.tasks.ingest_rss_feeds_task",

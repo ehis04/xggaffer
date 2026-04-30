@@ -185,7 +185,7 @@ const PlayersTab = ({ ctx }: Props) => {
   useEffect(() => {
     if (!selectedPlayer || !canonicalId) {
       setSummary(null);
-      setSummaryErr(selectedPlayer && !canonicalId ? 'No canonical link — use manual stats below.' : null);
+      setSummaryErr(null);
       setSummaryLoading(false);
       return;
     }
@@ -507,14 +507,15 @@ const PlayersTab = ({ ctx }: Props) => {
                   onOpenReadPage={canonicalId && !summaryLoading
                     ? () => navigate(buildProfileUrl(canonicalId, clubId, selectedPlayer.id, summaryFilters))
                     : null}
-                  emptyMessage="No canonical link — add stats manually below."
                 />
               </div>
 
-              <ManualStatsPanel
-                clubId={clubId} player={selectedPlayer} currentStats={manualStats}
-                canManage={canManage} onUpdate={setManualStats}
-              />
+              {canManage && (
+                <ManualStatsPanel
+                  clubId={clubId} player={selectedPlayer} currentStats={manualStats}
+                  canManage={canManage} onUpdate={setManualStats}
+                />
+              )}
 
               {injuries.length > 0 && (
                 <div className={styles.panel}>

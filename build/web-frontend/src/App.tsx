@@ -133,7 +133,6 @@ function App() {
 
                   {/* --- Coaching & Clubs --- */}
                   <Route path="/coaching" element={<CoachingBase />} />
-                  <Route path="/coaching/clubs/create" element={<CreateClubPage />} />
                   <Route path="/clubs" element={<MyClubsPage />} />
                   <Route path="/clubs/create" element={<CreateClubPage />} />
                   <Route path="/clubs/browse" element={<BrowseClubsPage />} />

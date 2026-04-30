@@ -115,7 +115,7 @@ class TestHandleChatQuery:
         assert result["query_type"] == "ODDS_COMPARISON"
         assert "engine_data" in result["structured_data"]
         assert result["structured_data"]["engine_data"]["support"]["resources"]
-        assert "benchmark" in result["structured_data"]["engine_data"]
+        assert "home_team" in result["structured_data"]["engine_data"]
         assert result["structured_data"]["engine_data"]["support"]["warning"]
 
     def test_odds_handler_failure_still_returns_safe_payload(self):
@@ -216,7 +216,7 @@ class TestChatView:
             format="json",
         )
         assert response.status_code == 200
-        assert "prose" in response.data
+        assert "prose" in response.data["data"]
 
     def test_empty_query_400(self, client):
         response = client.post(

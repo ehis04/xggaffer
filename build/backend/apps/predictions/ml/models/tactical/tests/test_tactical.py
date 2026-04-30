@@ -318,6 +318,7 @@ class TestFeatureService:
         assert "cluster" in rolling.columns
 
 
+@pytest.mark.django_db
 class TestAPIContract:
 
     def test_tactical_endpoint_happy_path(self, client):
@@ -325,12 +326,12 @@ class TestAPIContract:
         assert response.status_code in (200, 404)
         if response.status_code == 200:
             data = response.json()
-            assert "team" in data
-            assert "model_version" in data
-            assert data["team"]["team"] == "Barcelona"
-            assert "style_cluster" in data["team"]
-            assert "style_label" in data["team"]
-            assert len(data["team"]["zone_success_rates"]) == ZONE_COUNT
+            assert "team" in data["data"]
+            assert "model_version" in data["data"]
+            assert data["data"]["team"]["team"] == "Barcelona"
+            assert "style_cluster" in data["data"]["team"]
+            assert "style_label" in data["data"]["team"]
+            assert len(data["data"]["team"]["zone_success_rates"]) == ZONE_COUNT
 
     def test_missing_team_param_returns_400(self, client):
         response = client.get("/api/predictions/tactical/")
@@ -348,11 +349,11 @@ class TestAPIContract:
         assert response.status_code in (200, 404)
         if response.status_code == 200:
             data = response.json()
-            assert "opponent" in data
-            assert "style_similarity" in data
-            assert "matchup_type" in data
-            assert 0.0 <= data["style_similarity"] <= 1.0
-            assert data["matchup_type"] in {"mirror", "contrast", "neutral"}
+            assert "opponent" in data["data"]
+            assert "style_similarity" in data["data"]
+            assert "matchup_type" in data["data"]
+            assert 0.0 <= data["data"]["style_similarity"] <= 1.0
+            assert data["data"]["matchup_type"] in {"mirror", "contrast", "neutral"}
 
     def test_teams_listing_endpoint(self, client):
         response = client.get("/api/predictions/tactical/teams/")

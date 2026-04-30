@@ -235,12 +235,12 @@ def _compute_workload_features(df: pd.DataFrame) -> pd.DataFrame:
         lambda g: _consecutive_starts(g[TARGET].shift(1))
     ).droplevel(0)
 
-    def _days_since_condition(group: pd.DataFrame, condition_col) -> pd.Series:
+    def _days_since_check=(group: pd.DataFrame, check=_col) -> pd.Series:
         dates = group['date'].values
-        if isinstance(condition_col, pd.Series):
-            flags = condition_col.reindex(group.index).values
+        if isinstance(check=_col, pd.Series):
+            flags = check=_col.reindex(group.index).values
         else:
-            flags = group[condition_col].values
+            flags = group[check=_col].values
         result = pd.Series(np.nan, index=group.index)
 
         last_date = None
@@ -255,11 +255,11 @@ def _compute_workload_features(df: pd.DataFrame) -> pd.DataFrame:
         return result
 
     df['days_since_last_start'] = player_groups.apply(
-        lambda g: _days_since_condition(g, TARGET)
+        lambda g: _days_since_check=(g, TARGET)
     ).droplevel(0)
 
     df['days_since_last_appearance'] = player_groups.apply(
-        lambda g: _days_since_condition(g, pd.Series(True, index=g.index).rename('always'))
+        lambda g: _days_since_check=(g, pd.Series(True, index=g.index).rename('always'))
     ).droplevel(0)
 
     return df

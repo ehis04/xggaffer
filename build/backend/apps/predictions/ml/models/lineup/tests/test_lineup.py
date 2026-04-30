@@ -234,6 +234,7 @@ class TestModelBehaviour:
         pd.testing.assert_series_equal(probs1['p_start'], probs2['p_start'])
 
 
+@pytest.mark.django_db
 class TestAPIEndpoints:
 
     @pytest.fixture(autouse=True)
@@ -260,10 +261,10 @@ class TestAPIEndpoints:
         )
         response = PredictLineupView.as_view()(request)
         assert response.status_code == 200
-        assert response.data['team'] == 'Arsenal'
-        assert len(response.data['predicted_xi']) == 11
-        assert 'formation' in response.data
-        assert 'rotation_risks' in response.data
+        assert response.data['data']['team'] == 'Arsenal'
+        assert len(response.data['data']['predicted_xi']) == 11
+        assert 'formation' in response.data['data']
+        assert 'rotation_risks' in response.data['data']
 
     def test_api_lineup_invalid_team(self):
         from django.test import RequestFactory

@@ -230,7 +230,7 @@ class TestChatImageSupport(TestCase):
         self.client = APIClient()
 
     @patch("apps.predictions.services.chat_service.LLMNarrator")
-    @patch("apps.predictions.services.chat_service.QueryRouter")
+    @patch("apps.predictions.services.query_router.QueryRouter")
     @patch("apps.predictions.services.chat_service.HANDLER_MAP")
     @patch("apps.predictions.services.payload_builder.build_payload", return_value={})
     def test_image_content_block_passed_to_narrator(
@@ -266,7 +266,7 @@ class TestChatImageSupport(TestCase):
         self.assertEqual(call_kwargs.kwargs.get("image_b64"), "abc123")
 
     @patch("apps.predictions.services.chat_service.LLMNarrator")
-    @patch("apps.predictions.services.chat_service.QueryRouter")
+    @patch("apps.predictions.services.query_router.QueryRouter")
     @patch("apps.predictions.services.chat_service.HANDLER_MAP")
     @patch("apps.predictions.services.payload_builder.build_payload", return_value={})
     def test_chat_endpoint_text_only_unchanged(

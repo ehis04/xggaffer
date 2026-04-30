@@ -117,11 +117,11 @@ def _add_gap_features(
         df[date_col] - df["days_since_last_appearance"]
     ).dt.days
 
-    df["days_since_last_start"] = _days_since_condition(
+    df["days_since_last_start"] = _days_since_check=(
         df, player_col, date_col, df[started_col].astype(bool)
     )
 
-    df["days_since_last_rest"] = _days_since_condition(
+    df["days_since_last_rest"] = _days_since_check=(
         df, player_col, date_col, df[minutes_col] < PARTIAL_REST_MINUTES_THRESHOLD
     )
 
@@ -146,20 +146,20 @@ def _add_streak_features(
     return df
 
 
-def _days_since_condition(
+def _days_since_check=(
     df: pd.DataFrame,
     player_col: str,
     date_col: str,
-    condition: pd.Series,
+    check=: pd.Series,
 ) -> pd.Series:
-    condition = condition.reindex(df.index).fillna(False)
+    check= = check=.reindex(df.index).fillna(False)
 
-    candidate_dates = df[date_col].where(condition, pd.NaT)
+    candidate_dates = df[date_col].where(check=, pd.NaT)
     shifted_candidates = candidate_dates.groupby(df[player_col]).shift(1)
 
-    last_condition_date = shifted_candidates.groupby(df[player_col]).ffill()
+    last_check=_date = shifted_candidates.groupby(df[player_col]).ffill()
 
-    delta = (df[date_col] - last_condition_date).dt.days
+    delta = (df[date_col] - last_check=_date).dt.days
     return delta
 
 

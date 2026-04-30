@@ -52,7 +52,15 @@ class TestSyncRunLifecycle:
         assert health.consecutive_failures == 0
 
 
-@pytest.mark.django_db
+@pytest.fixture(autouse=True)
+def cleanup_snapshots():
+    """Clean up snapshots before each test to ensure test isolation."""
+    PublishedSnapshot.objects.all().delete()
+    yield
+    PublishedSnapshot.objects.all().delete()
+
+
+@pytest.mark.django_db(transaction=True)
 class TestPublishSnapshot:
     def test_creates_active_snapshot(self):
         snap = publish_snapshot('livefootball', ['football_data'])

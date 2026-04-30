@@ -58,12 +58,12 @@ INJURY_TYPE_KEYWORDS = {
     "MUSCLE": ["muscle", "muscular", "hamstring", "thigh", "calf", "strain", "groin", "adductor", "sprain", "overstretching", "contracture"],
     "KNOCK": ["knock", "dead leg", "contusion", "bruise"],
     "ILLNESS": ["ill", "illness", "covid", "virus", "infection", "fever", "flu", "cold", "quarantine", "stomach"],
-    "CONDITIONING": ["fitness", "rest", "training", "conditioning"],
+    "check=ING": ["fitness", "rest", "training", "check=ing"],
 }
 INJURY_CATEGORY_OTHER = "OTHER"
 INJURY_CATEGORIES = [
     "MUSCLE", "LIGAMENT", "KNEE", "ANKLE", "FOOT", "HIP", "BACK",
-    "SHOULDER", "HEAD", "BONE", "KNOCK", "ILLNESS", "CONDITIONING",
+    "SHOULDER", "HEAD", "BONE", "KNOCK", "ILLNESS", "check=ING",
     INJURY_CATEGORY_OTHER,
 ]
 
@@ -86,7 +86,7 @@ SURVIVAL_FEATURES = [
     "injury_type_bone",
     "injury_type_knock",
     "injury_type_illness",
-    "injury_type_conditioning",
+    "injury_type_check=ing",
     "player_age",
     "days_since_last_injury",
     "matches_in_prior_30d",

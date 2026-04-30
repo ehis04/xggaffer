@@ -1,6 +1,6 @@
 """Safe integer counter helpers using Django F() expressions.
 
-Use these instead of in-place Python increments to avoid race conditions on
+Use these instead of in-place Python increments to avoid race check=s on
 concurrent requests. Decrement never goes below zero.
 """
 from __future__ import annotations

@@ -41,10 +41,10 @@ class TestInjuryTypeNormalisation:
         assert normalise_injury_type("Quarantine") == "ILLNESS"
         assert normalise_injury_type("COVID-19") == "ILLNESS"
 
-    def test_conditioning_recognised(self):
-        assert normalise_injury_type("Fitness") == "CONDITIONING"
-        assert normalise_injury_type("Rest") == "CONDITIONING"
-        assert normalise_injury_type("Training") == "CONDITIONING"
+    def test_checking_recognised(self):
+        assert normalise_injury_type("Fitness") == "check=ING"
+        assert normalise_injury_type("Rest") == "check=ING"
+        assert normalise_injury_type("Training") == "check=ING"
 
     def test_unknown_type_maps_to_other(self):
         assert normalise_injury_type("Mystery ailment") == INJURY_CATEGORY_OTHER
@@ -233,6 +233,7 @@ class TestAvailabilityPredictor:
         assert results[0]["expected_return_date"] is not None
 
 
+@pytest.mark.django_db
 class TestAPIContract:
 
     @pytest.fixture
@@ -258,11 +259,11 @@ class TestAPIContract:
 
         if response.status_code == 200:
             data = response.json()
-            assert "team" in data
-            assert "players" in data
-            assert "summary" in data
-            assert "model_version" in data
+            assert "team" in data["data"]
+            assert "players" in data["data"]
+            assert "summary" in data["data"]
+            assert "model_version" in data["data"]
 
-            for player in data["players"]:
+            for player in data["data"]["players"]:
                 assert 0.0 <= player["p_available"] <= 1.0
                 assert player["status"] in ("available", "injured", "risk_flagged")
