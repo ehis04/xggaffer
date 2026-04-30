@@ -47,6 +47,12 @@ backend_check:
     POSTGRES_PASSWORD: postgres
     POSTGRES_HOST_AUTH_METHOD: trust
 
+    DB_NAME: app_test
+    DB_USER: postgres
+    DB_PASSWORD: postgres
+    DB_HOST: postgres
+    DB_PORT: "5432"
+
     DATABASE_URL: "postgres://postgres:postgres@postgres:5432/app_test"
     REDIS_URL: "redis://redis:6379/0"
     SECRET_KEY: "ci-development-test-secret-key"
@@ -60,5 +66,6 @@ backend_check:
     - pip install -r requirements.txt
   script:
     - python manage.py check
+    - python manage.py makemigrations --check --dry-run
     - python manage.py migrate --noinput
     - python manage.py test
