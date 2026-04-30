@@ -27,3 +27,9 @@
 .lastUpdated {
   opacity: 0.75;
 }
+
+.static {
+  background: var(--color-background, #f8fafc);
+  color: var(--color-muted, #94a3b8);
+  border: 1px solid var(--color-border, #e2e8f0);
+}

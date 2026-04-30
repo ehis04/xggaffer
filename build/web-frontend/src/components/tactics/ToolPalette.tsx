@@ -1,5 +1,6 @@
 import React from 'react';
 import type { TacticsActiveTool } from '../../types/tactics';
+import styles from './ToolPalette.module.css';
 
 interface ToolOption {
   value: TacticsActiveTool;
@@ -25,35 +26,12 @@ const ToolPalette: React.FC<ToolPaletteProps> = ({
   onSelectTool,
 }) => {
   return (
-    <section
-      aria-label="Drawing tools"
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '10px',
-        alignItems: 'center',
-        padding: '14px 16px',
-        marginBottom: '16px',
-        border: '1px solid #d1d5db',
-        borderRadius: '14px',
-      }}
-    >
-      <span
-        style={{
-          fontWeight: 700,
-          minWidth: 'fit-content',
-        }}
-      >
+    <section aria-label="Drawing tools" className={styles.palette}>
+      <span className={styles.label}>
         Tools
       </span>
 
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '8px',
-        }}
-      >
+      <div className={styles.toolRow}>
         {TOOL_OPTIONS.map((tool) => {
           const isActive = tool.value === activeTool;
 
@@ -63,15 +41,7 @@ const ToolPalette: React.FC<ToolPaletteProps> = ({
               type="button"
               onClick={() => onSelectTool(tool.value)}
               aria-pressed={isActive}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '999px',
-                border: isActive ? '1px solid #111827' : '1px solid #9ca3af',
-                background: isActive ? '#111827' : '#ffffff',
-                color: isActive ? '#ffffff' : '#111827',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
+              className={isActive ? `${styles.toolButton} ${styles.toolButtonActive}` : styles.toolButton}
             >
               {tool.label}
             </button>

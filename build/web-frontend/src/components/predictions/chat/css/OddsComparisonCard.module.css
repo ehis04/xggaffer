@@ -2,11 +2,281 @@
   margin-top: 0.5rem;
   padding: 0.9rem;
   border-radius: 0.75rem;
-  background: var(--color-surface-raised, #f1f5f9);
-  border: 1px solid var(--color-border, #e2e8f0);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
+}
+
+.partialNote {
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.errorNote {
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.5rem;
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  font-size: 0.82rem;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.fixtureTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+}
+
+.metaItem {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding-top: 0.1rem;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.probabilityGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.probabilityRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.7rem;
+  border-radius: 0.6rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.outcomeLabel {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.outcomeValue {
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+}
+
+.sectionMeta {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+}
+
+.summaryBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.8rem;
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.statusBadge {
+  align-self: flex-start;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.statusAgree {
+  background: rgba(74, 222, 128, 0.12);
+  color: #4ade80;
+}
+
+.statusDisagree {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fbbf24;
+}
+
+.summaryText {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.5;
+  font-size: 0.86rem;
+}
+
+.comparisonGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.comparisonItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.comparisonLabel {
+  font-size: 0.74rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.comparisonValue {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: white;
+}
+
+.bookmakerTable {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.bookmakerCard {
+  padding: 0.7rem;
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.bookmakerRow {
+  display: grid;
+  grid-template-columns: minmax(120px, 1.6fr) repeat(3, minmax(48px, 0.7fr));
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.bookmakerHeader {
+  padding: 0 0.1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.bookmakerName {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: white;
+  word-break: break-word;
+}
+
+.bookmakerOdds {
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.85);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.bookmakerMeta {
+  margin: 0.45rem 0 0;
+  font-size: 0.74rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.benchmarkStrip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.benchmarkItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.75rem;
+  border-radius: 0.6rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.benchmarkLabel {
+  font-size: 0.74rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.benchmarkValue {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: white;
+}
+
+.fallbackText {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.82rem;
+  font-style: italic;
+}
+
+.wellbeingBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  border-radius: 0.7rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.wellbeingWarning {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.wellbeingList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.wellbeingResource {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.resourceLabel {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: white;
 }
 
 .partialNote {
@@ -285,6 +555,7 @@
 }
 
 @media (max-width: 720px) {
+
   .probabilityGrid,
   .comparisonGrid,
   .benchmarkStrip {

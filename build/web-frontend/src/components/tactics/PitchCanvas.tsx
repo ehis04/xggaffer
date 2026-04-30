@@ -11,6 +11,7 @@ import type {
   TacticsBoardItem,
   TacticsDraftItem,
   TacticsLineItem,
+  TacticsPitchOrientation,
   TacticsRenderableArrowItem,
   TacticsRenderableBallItem,
   TacticsRenderableItem,
@@ -38,6 +39,7 @@ type CanvasSceneItem = TacticsBoardItem | TacticsRenderableItem;
 
 interface PitchCanvasProps {
   frame: TacticsBoardFrame;
+  pitchOrientation?: TacticsPitchOrientation;
   renderItems?: TacticsRenderableItem[];
   isPlaybackMode?: boolean;
   activeTool?: TacticsActiveTool;
@@ -139,6 +141,7 @@ const getSceneItemId = (item: CanvasSceneItem): number | null => {
 
 const PitchCanvas: React.FC<PitchCanvasProps> = ({
   frame,
+  pitchOrientation = 'vertical',
   renderItems,
   isPlaybackMode = false,
   activeTool = 'select',
@@ -294,6 +297,35 @@ const PitchCanvas: React.FC<PitchCanvasProps> = ({
     return point.matrixTransform(screenCtm.inverse());
   };
 
+  const getPitchPointFromPointerEvent = (
+    event: ReactPointerEvent<SVGSVGElement | SVGGElement | SVGRectElement>
+  ) => {
+    const svgPoint = getLocalSvgPoint(event);
+
+    if (svgPoint) {
+      return svgToPitch(svgPoint.x, svgPoint.y);
+    }
+
+    // Fallback path for environments where SVG matrix methods are unavailable.
+    const svg = internalSvgRef.current;
+    if (!svg) {
+      return { x: 0, y: 0 };
+    }
+
+    const rect = svg.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) {
+      return { x: 0, y: 0 };
+    }
+
+    const normalizedX = (event.clientX - rect.left) / rect.width;
+    const normalizedY = (event.clientY - rect.top) / rect.height;
+
+    const svgX = normalizedX * PITCH_VIEWBOX_WIDTH;
+    const svgY = normalizedY * PITCH_VIEWBOX_HEIGHT;
+
+    return svgToPitch(svgX, svgY);
+  };
+
   const handleMarkerPointerDown =
     (item: TacticsBoardItem) => (event: ReactPointerEvent<SVGGElement>) => {
       if (isPlaybackMode) {
@@ -343,21 +375,19 @@ const PitchCanvas: React.FC<PitchCanvasProps> = ({
       return;
     }
 
+    if (activeTool === 'ball' || activeTool === 'text') {
+      const pitchPoint = getPitchPointFromPointerEvent(event);
+      onCreatePointItem?.(activeTool, pitchPoint.x, pitchPoint.y);
+      return;
+    }
+
     event.preventDefault();
 
     if (dragState) {
       return;
     }
 
-    const svgPoint = getLocalSvgPoint(event);
-    const pitchPoint = svgPoint
-      ? svgToPitch(svgPoint.x, svgPoint.y)
-      : { x: 0, y: 0 };
-
-    if (activeTool === 'ball' || activeTool === 'text') {
-      onCreatePointItem?.(activeTool, pitchPoint.x, pitchPoint.y);
-      return;
-    }
+    const pitchPoint = getPitchPointFromPointerEvent(event);
 
     if (isDirectionalTool(activeTool)) {
       if (draftItem && draftItem.tool === activeTool) {
@@ -422,12 +452,7 @@ const PitchCanvas: React.FC<PitchCanvasProps> = ({
       draftItem &&
       draftItem.tool === 'zone'
     ) {
-      const svgPoint = getLocalSvgPoint(event);
-      if (!svgPoint) {
-        return;
-      }
-
-      const nextPitchPoint = svgToPitch(svgPoint.x, svgPoint.y);
+      const nextPitchPoint = getPitchPointFromPointerEvent(event);
       onUpdateZoneDraft?.(nextPitchPoint.x, nextPitchPoint.y);
       return;
     }
@@ -437,12 +462,7 @@ const PitchCanvas: React.FC<PitchCanvasProps> = ({
       draftItem &&
       (draftItem.tool === 'arrow' || draftItem.tool === 'line')
     ) {
-      const svgPoint = getLocalSvgPoint(event);
-      if (!svgPoint) {
-        return;
-      }
-
-      const nextPitchPoint = svgToPitch(svgPoint.x, svgPoint.y);
+      const nextPitchPoint = getPitchPointFromPointerEvent(event);
       onUpdateDirectionalDraft?.(nextPitchPoint.x, nextPitchPoint.y);
     }
   };
@@ -649,7 +669,7 @@ const PitchCanvas: React.FC<PitchCanvasProps> = ({
       }}
       preserveAspectRatio="xMidYMid meet"
     >
-      <PitchMarkings />
+      <PitchMarkings orientation={pitchOrientation} />
 
       <rect
         x={0}

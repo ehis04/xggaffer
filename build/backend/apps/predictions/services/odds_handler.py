@@ -16,6 +16,7 @@ from apps.predictions.services.odds.exceptions import (
 )
 from apps.predictions.services.odds.service import OddsComparisonService
 from apps.predictions.services.prediction_helper import build_match_prediction_payload
+from apps.predictions.services.source_policy import source_coverage_metadata
 from common.utils import current_football_season
 
 _logger = logging.getLogger(__name__)
@@ -236,6 +237,11 @@ class OddsHandler(EngineHandler):
             "comparison": comparison_payload,
             "benchmark": benchmark_payload,
             "support": self._build_support_payload(),
+            "source_coverage": source_coverage_metadata(
+                intent=IntentClass.ODDS_COMPARISON.value,
+                used_sources=[fixture["source"], "native_stats_api"],
+                required_sources=[fixture["source"], "native_stats_api"],
+            ),
         }
 
         return QueryPayload(

@@ -49,7 +49,9 @@ def train_lineup_model(
         df = build_lineup_dataset(
             leagues=leagues or DEFAULT_LEAGUES,
             seasons=seasons or DEFAULT_SEASONS,
-            save=False,
+            # Keep the on-disk feature cache in sync with training data so
+            # widget endpoints read the latest league/season coverage.
+            save=True,
         )
 
     feature_cols = get_feature_columns(df)

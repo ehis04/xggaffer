@@ -8,6 +8,7 @@ import type {
     ArticleSite,
     ArticleTopic,
     UserArticleProfile,
+    UserArticleProfileUpdatePayload,
 } from '../../types/articles';
 
 export interface PaginatedArticles {
@@ -26,7 +27,19 @@ const articlesApi = {
         if (params?.site) query.site = String(params.site);
         if (params?.author) query.author = String(params.author);
         if (params?.min_quality) query.min_quality = String(params.min_quality);
+        if (params?.sort) query.sort = String(params.sort);
         return apiClient.get('/articles/feed/', query);
+    },
+
+    getFavouritesFeed: (params?: ArticleFeedParams): Promise<PaginatedArticles> => {
+        const query: Record<string, string> = {};
+        if (params?.page) query.page = String(params.page);
+        if (params?.q) query.q = String(params.q);
+        if (params?.topic) query.topic = String(params.topic);
+        if (params?.site) query.site = String(params.site);
+        if (params?.author) query.author = String(params.author);
+        if (params?.sort) query.sort = String(params.sort);
+        return apiClient.get('/articles/favourites/feed/', query);
     },
 
     getArticle: (id: number): Promise<ArticleDetail> =>
@@ -39,10 +52,9 @@ const articlesApi = {
         apiClient.delete(`/articles/${id}/rate/`),
 
     submitFeedback: (params: {
-        target_type: 'ARTICLE' | 'AUTHOR' | 'SITE';
+        target_type: 'article' | 'author' | 'site';
         target_id: number;
-        feedback_type: 'LIKE' | 'DISLIKE';
-        article_id?: number;
+        feedback_type: 'like' | 'dislike';
     }): Promise<{ status: string }> =>
         apiClient.post('/articles/feedback/', params),
 
@@ -51,6 +63,9 @@ const articlesApi = {
             completed,
             time_spent_seconds: timeSpentSeconds,
         }),
+
+    toggleFavorite: (id: number): Promise<{ status: string; is_favorited: boolean }> =>
+        apiClient.post(`/articles/${id}/favorite/`, {}),
 
     getTopics: (): Promise<ArticleTopic[]> =>
         apiClient.get('/articles/topics/'),
@@ -64,7 +79,7 @@ const articlesApi = {
     getProfile: (): Promise<UserArticleProfile> =>
         apiClient.get('/articles/profile/'),
 
-    updateProfile: (data: Partial<UserArticleProfile>): Promise<UserArticleProfile> =>
+    updateProfile: (data: UserArticleProfileUpdatePayload): Promise<UserArticleProfile> =>
         apiClient.patch('/articles/profile/', data),
 };
 

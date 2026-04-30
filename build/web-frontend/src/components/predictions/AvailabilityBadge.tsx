@@ -1,6 +1,13 @@
 import React from 'react';
 import styles from './css/AvailabilityBadge.module.css';
 
+// Maps the internal risk level ('low' risk = fit) to display text in fitness terms.
+const FITNESS_DISPLAY: Record<string, string> = {
+  low: 'Fit',
+  medium: 'Doubt',
+  high: 'Out',
+};
+
 const RISK_THRESHOLDS = { LOW: 0.33, MEDIUM: 0.66 } as const;
 
 const deriveLabelFromScore = (score: number): string => {
@@ -35,7 +42,7 @@ const AvailabilityBadge: React.FC<AvailabilityBadgeProps> = ({
 
   return (
     <span className={`${styles.badge} ${styles[labelClass]}`}>
-      {resolved.charAt(0).toUpperCase() + resolved.slice(1)}
+      {FITNESS_DISPLAY[labelClass]}
     </span>
   );
 };

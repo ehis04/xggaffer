@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import PitchCanvas from '../PitchCanvas';
 import type { TacticsBoardFrame, TacticsBoardItem, TacticsDraftItem } from '../../../types/tactics';
+import { PITCH_PADDING, PITCH_VIEWBOX_HEIGHT, PITCH_VIEWBOX_WIDTH } from '../../../utils/pitchCoords';
 
 const createPlayerItem = (overrides: Partial<TacticsBoardItem> = {}): TacticsBoardItem => ({
   id: 1,
@@ -219,6 +220,23 @@ describe('PitchCanvas', () => {
     expect(onCreatePointItem.mock.calls[0][0]).toBe('ball');
   });
 
+  it('calls onCreatePointItem for text mode on horizontal orientation', () => {
+    const onCreatePointItem = vi.fn();
+
+    render(
+      <PitchCanvas
+        frame={createFrame([])}
+        pitchOrientation="horizontal"
+        activeTool="text"
+        onCreatePointItem={onCreatePointItem}
+      />
+    );
+
+    fireEvent.pointerDown(screen.getByRole('img'));
+    expect(onCreatePointItem).toHaveBeenCalledTimes(1);
+    expect(onCreatePointItem.mock.calls[0][0]).toBe('text');
+  });
+
   it('renders a directional draft preview while an arrow draft exists', () => {
     const draftItem: TacticsDraftItem = {
       tool: 'arrow',
@@ -257,5 +275,43 @@ describe('PitchCanvas', () => {
     );
 
     expect(screen.getByLabelText('Zone annotation')).toBeInTheDocument();
+  });
+
+  it('renders vertical halfway line for horizontal pitch orientation', () => {
+    render(
+      <PitchCanvas
+        frame={createFrame([])}
+        pitchOrientation="horizontal"
+      />
+    );
+
+    const markings = screen.getByLabelText('Pitch markings');
+    const halfwayLine = markings.querySelector('line');
+
+    expect(halfwayLine).not.toBeNull();
+    expect(halfwayLine?.getAttribute('x1')).toBe(halfwayLine?.getAttribute('x2'));
+    expect(halfwayLine?.getAttribute('y1')).toBe(String(PITCH_PADDING));
+    expect(halfwayLine?.getAttribute('y2')).toBe(
+      String(PITCH_VIEWBOX_HEIGHT - PITCH_PADDING)
+    );
+  });
+
+  it('renders horizontal halfway line for vertical pitch orientation', () => {
+    render(
+      <PitchCanvas
+        frame={createFrame([])}
+        pitchOrientation="vertical"
+      />
+    );
+
+    const markings = screen.getByLabelText('Pitch markings');
+    const halfwayLine = markings.querySelector('line');
+
+    expect(halfwayLine).not.toBeNull();
+    expect(halfwayLine?.getAttribute('x1')).toBe(String(PITCH_PADDING));
+    expect(halfwayLine?.getAttribute('x2')).toBe(
+      String(PITCH_VIEWBOX_WIDTH - PITCH_PADDING)
+    );
+    expect(halfwayLine?.getAttribute('y1')).toBe(halfwayLine?.getAttribute('y2'));
   });
 });

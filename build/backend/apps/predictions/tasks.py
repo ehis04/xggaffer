@@ -157,6 +157,30 @@ def rebuild_predictions_publication_task(self):
     except Exception as exc:
         _logger.error('rebuild_predictions_publication_task failed: %s', exc)
 
+@shared_task(name='apps.predictions.tasks.refresh_elo_ratings_task', bind=True)
+def refresh_elo_ratings_task(self):
+    from apps.predictions.ml.engines.compute_elo import compute, DEFAULT_OUTPUT
+    from apps.predictions.ml.engines.elo import DEFAULT_K_FACTOR, DEFAULT_HOME_ADVANTAGE
+    from apps.predictions.ml.features.rolling import ALL_LEAGUES, ALL_SEASONS
+    from apps.predictions.models import populate_elo_from_csv
+
+    try:
+        _logger.info('refresh_elo_ratings_task: computing ELO for %d leagues x %d seasons', len(ALL_LEAGUES), len(ALL_SEASONS))
+        compute(
+            leagues=ALL_LEAGUES,
+            seasons=ALL_SEASONS,
+            k_factor=DEFAULT_K_FACTOR,
+            home_advantage=DEFAULT_HOME_ADVANTAGE,
+            output_path=str(DEFAULT_OUTPUT),
+        )
+        _logger.info('refresh_elo_ratings_task: ELO CSV written, syncing to DB')
+        stats = populate_elo_from_csv(str(DEFAULT_OUTPUT))
+        _logger.info('refresh_elo_ratings_task: DB sync complete — %s', stats)
+    except Exception as exc:
+        _logger.error('refresh_elo_ratings_task failed: %s', exc, exc_info=True)
+        raise
+
+
 @shared_task(name='apps.predictions.tasks.compute_odds_accuracy_task', bind=True)
 def compute_odds_accuracy_task(self):
     from django.core.management import call_command
@@ -191,6 +215,10 @@ def refresh_upcoming_fixture_odds_task(self, sport_keys=None, max_fixtures=None)
             result.get('snapshots_created', 0),
             result.get('requests_used', 0),
         )
+        from common.cache_keys import clear_surface_cache
+        cleared = clear_surface_cache("odds")
+        _logger.info('refresh_upcoming_fixture_odds_task: odds cache cleared, deleted=%s', cleared)
+
         return result
     except Exception as exc:
         _logger.error('refresh_upcoming_fixture_odds_task failed: %s', exc, exc_info=True)
@@ -236,3 +264,123 @@ def refresh_fixture_odds_snapshot_task(self, fixture_identity: dict):
     except Exception as exc:
         _logger.error('refresh_fixture_odds_snapshot_task failed: %s', exc, exc_info=True)
         raise
+
+import logging
+from datetime import timedelta
+
+from celery import shared_task
+from django.utils import timezone
+
+_logger = logging.getLogger(__name__)
+
+POST_MATCH_DELAY_HOURS = 3
+RESOLUTION_BATCH_SIZE = 100
+FINAL_MATCH_STATUSES = {"final", "finished", "ft", "full_time", "full-time"}
+
+
+def _derive_outcome(home_score: int | None, away_score: int | None) -> str | None:
+    if home_score is None or away_score is None:
+        return None
+    if home_score > away_score:
+        return "H"
+    if away_score > home_score:
+        return "A"
+    return "D"
+
+
+def _find_fixture(home_team: str, away_team: str, league_code: str, CompetitionFixture):
+    """
+    Locate a finished fixture for these teams.
+
+    Three passes in order of confidence:
+      1. Exact team name match + competition code filter
+      2. Exact team name match, no competition filter (handles league code mismatches)
+      3. icontains on both names (handles Understat short names vs full fixture names,
+         e.g. 'Leeds' → 'Leeds United')
+
+    In each pass we take the most recently finished fixture so that stale test records
+    made against historical matchups still resolve correctly.
+    """
+    from apps.predictions.utils.league_codes import to_competition_code
+    from django.db.models import Q
+
+    competition_code = to_competition_code(league_code)
+    finished_filter = Q(
+        status__in=[s.upper() for s in FINAL_MATCH_STATUSES]
+    ) | Q(
+        status__in=list(FINAL_MATCH_STATUSES)
+    )
+
+    base_finished = CompetitionFixture.objects.filter(finished_filter)
+
+    # Pass 1: exact names + competition code
+    if competition_code:
+        fixture = base_finished.filter(
+            home_team_name=home_team,
+            away_team_name=away_team,
+            competition__code=competition_code,
+        ).order_by("-kickoff_at").first()
+        if fixture:
+            return fixture
+
+    # Pass 2: exact names, any competition
+    fixture = base_finished.filter(
+        home_team_name=home_team,
+        away_team_name=away_team,
+    ).order_by("-kickoff_at").first()
+    if fixture:
+        return fixture
+
+    # Pass 3: icontains — Understat short names vs football-data.org full names
+    fixture = base_finished.filter(
+        home_team_name__icontains=home_team,
+        away_team_name__icontains=away_team,
+    ).order_by("-kickoff_at").first()
+    return fixture
+
+
+@shared_task(name="apps.predictions.tasks.resolve_prediction_results", bind=True, max_retries=3)
+def resolve_prediction_results(self) -> int:
+    from apps.predictions.models import PredictionRecord
+    from apps.livefootball.models import CompetitionFixture
+
+    cutoff = timezone.now() - timedelta(hours=POST_MATCH_DELAY_HOURS)
+
+    unresolved = list(
+        PredictionRecord.objects.filter(
+            actual_result__isnull=True,
+            predicted_at__lt=cutoff,
+        )[:RESOLUTION_BATCH_SIZE]
+    )
+
+    resolved_count = 0
+
+    for record in unresolved:
+        try:
+            fixture = _find_fixture(
+                record.home_team, record.away_team, record.league_code, CompetitionFixture
+            )
+
+            if fixture is None:
+                continue
+
+            actual = _derive_outcome(fixture.home_score, fixture.away_score)
+            if actual is None:
+                continue
+
+            PredictionRecord.objects.filter(pk=record.pk).update(
+                actual_result=actual,
+                resolved_at=timezone.now(),
+                correct=(actual == record.predicted_outcome),
+            )
+            resolved_count += 1
+
+        except Exception as exc:
+            _logger.exception(
+                "Resolution failed for PredictionRecord pk=%s: %s", record.pk, exc
+            )
+            continue
+
+    _logger.info("resolve_prediction_results: resolved %d records", resolved_count)
+    return resolved_count
+

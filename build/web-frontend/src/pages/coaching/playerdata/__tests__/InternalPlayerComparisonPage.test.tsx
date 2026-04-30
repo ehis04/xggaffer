@@ -3,6 +3,14 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import InternalPlayerComparisonPage from '../InternalPlayerComparisonPage';
 
+vi.mock('../../../../components/Navigation/SideBar', () => ({
+  Sidebar: () => <nav aria-label="Sidebar" />,
+}));
+
+vi.mock('../../../../components/Social/SocialUserButtons', () => ({
+  SocialUserButtons: () => <div data-testid="social-user-buttons" />,
+}));
+
 const { getPlayerOverviewComparisonMock, listEnrichedPlayersMock, browseClubsMock } = vi.hoisted(() => ({
   getPlayerOverviewComparisonMock: vi.fn<(...args: any[]) => Promise<any>>(),
   listEnrichedPlayersMock: vi.fn<(...args: any[]) => Promise<any>>(),
@@ -28,24 +36,24 @@ describe('InternalPlayerComparisonPage', () => {
     vi.clearAllMocks();
 
     browseClubsMock.mockResolvedValue([
-      { id: 11, name: 'Arsenal', club_type: 'system_professional' },
       { id: 22, name: 'Manchester United', club_type: 'system_professional' },
+      { id: 33, name: 'Real Madrid CF', club_type: 'system_professional' },
     ]);
 
     listEnrichedPlayersMock.mockImplementation(({ club_id }: { club_id?: number }) => {
-      if (club_id === 11) {
+      if (club_id === 33) {
         return Promise.resolve({
           data: {
             results: [
               {
                 player: {
                   id: 21,
-                  display_name: 'Martin Ødegaard',
-                  full_name: 'Martin Ødegaard',
+                  display_name: 'Jude Bellingham',
+                  full_name: 'Jude Bellingham',
                   position: 'AM',
-                  nationality: 'Norway',
+                  nationality: 'England',
                 },
-                club: { id: 11, name: 'Arsenal' },
+                club: { id: 33, name: 'Real Madrid CF' },
               },
             ],
           },
@@ -84,12 +92,12 @@ describe('InternalPlayerComparisonPage', () => {
         player_a: {
           player: {
             id: 21,
-            display_name: 'Martin Ødegaard',
+            display_name: 'Jude Bellingham',
             primary_position: 'AM',
           },
           club: {
-            id: 11,
-            name: 'Arsenal',
+            id: 33,
+            name: 'Real Madrid CF',
           },
           context: {
             competition_id: 1,
@@ -158,9 +166,9 @@ describe('InternalPlayerComparisonPage', () => {
       </MemoryRouter>
     );
 
-    const arsenalButtons = await screen.findAllByRole('button', { name: 'Arsenal' });
-    fireEvent.click(arsenalButtons[0]);
-    fireEvent.click(await screen.findByRole('button', { name: /Martin Ødegaard/i }));
+    const madridButtons = await screen.findAllByRole('button', { name: 'Real Madrid CF' });
+    fireEvent.click(madridButtons[0]);
+    fireEvent.click(await screen.findByRole('button', { name: /Jude Bellingham/i }));
 
     const unitedButtons = await screen.findAllByRole('button', { name: 'Manchester United' });
     fireEvent.click(unitedButtons[0]);
@@ -175,7 +183,7 @@ describe('InternalPlayerComparisonPage', () => {
       );
     }, { timeout: 10000 });
 
-    expect(await screen.findAllByText('Martin Ødegaard')).not.toHaveLength(0);
+    expect(await screen.findAllByText('Jude Bellingham')).not.toHaveLength(0);
     expect(screen.getAllByText('Bruno Fernandes')).not.toHaveLength(0);
     expect(screen.getByText('Chance Creation')).toBeInTheDocument();
   }, 15000);

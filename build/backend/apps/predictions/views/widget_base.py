@@ -17,7 +17,7 @@ SUPPORTED_WIDGET_INTENTS = [
     "model-trust",
 ]
 
-PUBLIC_WIDGET_INTENTS = {"match-prediction", "projected-table"}
+PUBLIC_WIDGET_INTENTS = {"match-prediction", "scoreline", "projected-table", "tactical-summary"}
 
 
 class WidgetBaseView(APIView):

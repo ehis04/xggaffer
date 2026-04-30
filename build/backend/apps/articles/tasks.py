@@ -1,3 +1,9 @@
+"""
+Celery tasks for article ingestion and recommendations
+
+Runs scheduled RSS ingestion and article recommendation generation without blocking API requests
+"""
+
 from __future__ import annotations
 
 import logging
@@ -7,9 +13,9 @@ from celery import shared_task
 _logger = logging.getLogger(__name__)
 
 
+# Pull configured RSS feeds and persist new articles
 @shared_task(name='apps.articles.tasks.ingest_rss_feeds_task', bind=True, max_retries=2)
 def ingest_rss_feeds_task(self):
-    """Pull all configured RSS feeds and persist new articles."""
     try:
         from apps.articles.services.rss_ingester import ingest_rss_feeds
         new_count = ingest_rss_feeds()
@@ -20,12 +26,9 @@ def ingest_rss_feeds_task(self):
         raise self.retry(exc=exc, countdown=300)
 
 
+# Regenerate article recommendations for active users who have none for today
 @shared_task(name='apps.articles.tasks.generate_recommendations_task', bind=True, max_retries=1)
 def generate_recommendations_task(self):
-    """
-    Regenerate article recommendations for all active users who have
-    not had recommendations generated today.
-    """
     try:
         from django.contrib.auth import get_user_model
         from django.utils import timezone

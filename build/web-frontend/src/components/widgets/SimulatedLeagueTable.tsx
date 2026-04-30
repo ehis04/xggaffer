@@ -93,7 +93,7 @@ export default function SimulatedLeagueTable({
                   </td>
                   <td className={`${styles.td} ${styles.rangeCol}`}>
                     {hasRange
-                      ? `${team.projected_points_p10!.toFixed(1)} – ${team.projected_points_p90!.toFixed(1)}`
+                      ? `${team.projected_points_p10} – ${team.projected_points_p90}`
                       : '—'}
                   </td>
                   <td className={styles.td}>{pct(team.title_prob)}</td>

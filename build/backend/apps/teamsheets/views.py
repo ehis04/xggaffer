@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Case, IntegerField, Q, Value, When
 from django.db.models.functions import Coalesce
@@ -187,6 +188,19 @@ class TeamsheetViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         club_pk = self.kwargs.get('club_pk')
+        
+        # Check teamsheet creation limit
+        create_limit = getattr(settings, 'TEAMSHEET_CREATE_LIMIT_PER_USER', 10)
+        user_teamsheet_count = Teamsheet.objects.filter(
+            club_id=club_pk,
+            created_by=self.request.user,
+            is_trashed=False,
+        ).count()
+        if user_teamsheet_count >= create_limit:
+            raise ValidationError({
+                'detail': f'You have reached the maximum limit of {create_limit} teamsheets. Please delete some teamsheets before creating new ones.'
+            })
+        
         serializer.save(club_id=club_pk, created_by=self.request.user)
 
     def perform_destroy(self, instance):

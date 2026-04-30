@@ -109,6 +109,41 @@ class UnderstatSyncServiceTests(TestCase):
         self.assertEqual(jobs.count(), 2)
         self.assertTrue(all(job.status == ProviderSyncStatus.SUCCESS for job in jobs))
 
+    def test_explicit_external_team_id_accepts_common_url_slug_alias(self):
+        client = Mock()
+        client.get_team_season_payload.return_value = {
+            "team_external_id": "Real_Madrid",
+            "league": "La_liga",
+            "stats": [
+                {
+                    "result": "w",
+                    "scored": "2",
+                    "missed": "0",
+                    "xG": "1.90",
+                    "xGA": "0.40",
+                    "npxG": "1.70",
+                }
+            ],
+        }
+
+        service = UnderstatSyncService(client=client)
+
+        service.sync_understat_club_season(
+            club=self.club,
+            season_label="2025",
+            competition_code="La_liga",
+            external_team_id="real-madrid",
+        )
+
+        client.get_team_season_payload.assert_called_once_with("Real_Madrid", "2025")
+        self.assertTrue(
+            ClubExternalIdentity.objects.filter(
+                club=self.club,
+                provider=ExternalProvider.UNDERSTAT,
+                external_id="Real_Madrid",
+            ).exists()
+        )
+
     def test_existing_provider_linked_player_sync_creates_player_enrichment_and_respects_mappings(self):
         ClubExternalIdentity.objects.create(
             club=self.club,
@@ -326,3 +361,56 @@ class UnderstatSyncServiceTests(TestCase):
         self.assertEqual(job.status, ProviderSyncStatus.FAILED)
         self.assertEqual(job.error_count, 1)
         self.assertIn("boom", job.raw_error_summary)
+
+    def test_resolve_understat_league_club_matches_official_suffix_names(self):
+        self.club.name = "Manchester United FC"
+        self.club.save(update_fields=["name"])
+
+        service = UnderstatSyncService(client=Mock())
+        resolved = service._resolve_understat_league_club(
+            {
+                "external_team_id": "",
+                "provider_display_name": "Manchester United",
+            }
+        )
+
+        self.assertIsNotNone(resolved)
+        self.assertEqual(resolved.id, self.club.id)
+
+    def test_resolve_understat_league_club_returns_none_for_ambiguous_mapping(self):
+        self.club.name = "Paris Saint-Germain FC"
+        self.club.save(update_fields=["name"])
+
+        Club.objects.create(
+            name="Paris Saint Germain FC",
+            description="Duplicate test club",
+            creator=self.user,
+        )
+
+        service = UnderstatSyncService(client=Mock())
+        resolved = service._resolve_understat_league_club(
+            {
+                "external_team_id": "",
+                "provider_display_name": "Paris Saint-Germain",
+            }
+        )
+
+        self.assertIsNone(resolved)
+
+    def test_extract_understat_league_team_entries_uses_slug_external_ids(self):
+        service = UnderstatSyncService(client=Mock())
+
+        payload = {
+            "teams": {
+                "89": {
+                    "id": "89",
+                    "title": "Manchester United",
+                }
+            }
+        }
+
+        entries = service._extract_understat_league_team_entries(payload)
+
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0]["provider_display_name"], "Manchester United")
+        self.assertEqual(entries[0]["external_team_id"], "Manchester_United")

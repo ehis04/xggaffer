@@ -1,0 +1,204 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    color: var(--primary-text);
+}
+
+.feedbackState {
+    display: grid;
+    gap: 12px;
+    padding: 20px;
+    border: 1px solid var(--brand-green-border);
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(35, 57, 43, 0.98), rgba(25, 43, 35, 0.98));
+    color: var(--primary-text);
+}
+
+.feedbackTitle {
+    margin: 0;
+}
+
+.feedbackText {
+    margin: 0;
+    color: var(--secondary-text);
+}
+
+.heroCard {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 20px;
+    border-radius: 18px;
+    border: 1px solid var(--brand-green-border);
+    background:
+        radial-gradient(circle at top right, rgba(52, 211, 153, 0.12), transparent 28%),
+        linear-gradient(180deg, rgba(35, 57, 43, 0.98), rgba(25, 43, 35, 0.98));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.heroCopy {
+    display: grid;
+    gap: 10px;
+    max-width: 760px;
+}
+
+.heroTitle {
+    margin: 0;
+    font-size: clamp(1.65rem, 2vw, 2.1rem);
+    color: var(--primary-text);
+}
+
+.heroText {
+    margin: 0;
+    color: var(--secondary-text);
+    line-height: 1.6;
+}
+
+.heroSupportingText {
+    margin: 0;
+    color: var(--tertiary-text);
+    line-height: 1.55;
+}
+
+.heroActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.heroPill {
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    padding: 7px 11px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--primary-text);
+    font-size: 0.88rem;
+    text-transform: capitalize;
+}
+
+.utilityButton,
+.successButton,
+.dangerButton {
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+}
+
+.utilityButton {
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+}
+
+.utilityButton:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.11);
+}
+
+.successButton {
+    border: 1px solid rgba(167, 243, 208, 0.36);
+    background: linear-gradient(180deg, rgba(22, 101, 52, 0.92), rgba(21, 128, 61, 0.92));
+    color: #ffffff;
+}
+
+.successButton:hover:not(:disabled) {
+    background: linear-gradient(180deg, rgba(21, 128, 61, 0.96), rgba(34, 197, 94, 0.92));
+}
+
+.dangerButton {
+    border: 1px solid rgba(248, 113, 113, 0.4);
+    background: rgba(127, 29, 29, 0.52);
+    color: #ffffff;
+}
+
+.dangerButton:hover:not(:disabled) {
+    background: rgba(153, 27, 27, 0.68);
+}
+
+.utilityButton:active:not(:disabled),
+.successButton:active:not(:disabled),
+.dangerButton:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.utilityButton:disabled,
+.successButton:disabled,
+.dangerButton:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.errorBanner {
+    margin-bottom: 0;
+    padding: 12px 14px;
+    border: 1px solid rgba(248, 113, 113, 0.35);
+    border-radius: 12px;
+    background: rgba(127, 29, 29, 0.28);
+    color: #fecaca;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.readOnlyBlock {
+    pointer-events: auto;
+    opacity: 1;
+}
+
+.readOnlyMuted {
+    pointer-events: none;
+    opacity: 0.72;
+}
+
+.trashBanner {
+    margin-bottom: 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(127, 29, 29, 0.3);
+    border: 1px solid rgba(248, 113, 113, 0.35);
+    color: #fecaca;
+    line-height: 1.55;
+}
+
+.trashBannerMeta {
+    color: #f8fafc;
+}
+
+.editorGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 20px;
+    align-items: start;
+}
+
+.canvasPanel {
+    border: 1px solid var(--brand-green-border);
+    border-radius: 18px;
+    padding: 16px;
+    background: linear-gradient(180deg, rgba(35, 57, 43, 0.96), rgba(25, 43, 35, 0.98));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+@media (max-width: 960px) {
+    .editorGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .heroCard {
+        padding: 16px;
+    }
+
+    .heroActions {
+        justify-content: flex-start;
+    }
+}

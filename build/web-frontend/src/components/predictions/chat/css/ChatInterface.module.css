@@ -3,6 +3,7 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  background: var(--brand-light-green);
 }
 
 .messageList {
@@ -25,17 +26,18 @@
 .chip {
   padding: 0.5rem 1rem;
   border-radius: 1.5rem;
-  border: 1px solid var(--color-primary, #0d9488);
-  background: transparent;
-  color: var(--color-primary, #0d9488);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.8);
   font-size: 0.875rem;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
 .chip:hover:not(:disabled) {
-  background: var(--color-primary, #0d9488);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .chip:disabled {
@@ -46,8 +48,8 @@
 .userMessage {
   align-self: flex-end;
   max-width: 75%;
-  background: var(--color-primary, #0d9488);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
   padding: 0.6rem 1rem;
   border-radius: 1rem 1rem 0.25rem 1rem;
 }
@@ -55,8 +57,8 @@
 .assistantMessage {
   align-self: flex-start;
   max-width: 85%;
-  background: var(--color-surface-raised, #f1f5f9);
-  color: var(--color-text, #1e293b);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.9);
   padding: 0.6rem 1rem;
   border-radius: 1rem 1rem 1rem 0.25rem;
 }
@@ -71,12 +73,12 @@
   display: inline-block;
   margin-top: 0.35rem;
   font-size: 0.7rem;
-  color: var(--color-muted, #94a3b8);
+  color: rgba(255, 255, 255, 0.45);
 }
 
 .loadingRow {
   align-self: flex-start;
-  color: var(--color-muted, #94a3b8);
+  color: rgba(255, 255, 255, 0.45);
   font-style: italic;
   font-size: 0.875rem;
   padding: 0.25rem 0;
@@ -86,5 +88,32 @@
   margin: 0;
   padding: 0.25rem 1rem;
   font-size: 0.8rem;
-  color: var(--color-error, #ef4444);
+  color: #fca5a5;
+}
+
+.msgPinRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.3rem;
+}
+
+.msgPinBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.45);
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.25rem;
+  padding: 0.15rem 0.45rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  line-height: 1.4;
+}
+
+.msgPinBtn:hover {
+  color: white;
+  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.08);
 }

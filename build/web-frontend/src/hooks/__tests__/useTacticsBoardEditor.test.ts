@@ -239,6 +239,7 @@ describe('useTacticsBoardEditor', () => {
     expect(result.current.activeFrame?.items).toHaveLength(2);
     expect(result.current.state.selectedItemId).toBe(201);
     expect(result.current.selectedItem?.item_type).toBe('ball');
+    expect(result.current.state.isDirty).toBe(true);
   });
 
   it('replaces an existing annotation locally after a PATCH response', () => {
@@ -388,7 +389,6 @@ describe('useTacticsBoardEditor', () => {
     expect(result.current.selectedItem?.x).toBe(77);
     expect(result.current.selectedItem?.y).toBe(88);
   });
-});
 
   it('preserves stable_id continuity assumptions when a duplicated frame is inserted', () => {
     const { result } = renderHook(() => useTacticsBoardEditor());
@@ -436,3 +436,4 @@ describe('useTacticsBoardEditor', () => {
     expect(result.current.state.activeFrameIndex).toBe(1);
     expect(result.current.activeFrame?.items[0].stable_id).toBe('stable-player-1');
   });
+});

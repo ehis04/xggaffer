@@ -1,14 +1,15 @@
 import { useNavigate } from "react-router-dom";
-import { authApi } from "../../services/api/auth";
+import { useAuth } from "../../context/useAuth";
 import "./css/SocialUserButtons.css";
 
 export const SocialUserButtons = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const handleLogout = async () => {
     try {
-      await authApi.logout();
-      navigate("/");
+      await logout();
+      navigate("/", { replace: true });
     } catch (error) {
       console.error("Logout failed:", error);
     }

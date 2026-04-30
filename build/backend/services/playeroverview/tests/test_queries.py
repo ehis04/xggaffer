@@ -84,10 +84,12 @@ class PlayerOverviewQueriesTests(SimpleTestCase):
     @patch("services.playeroverview.queries.get_best_available_player_context")
     @patch("services.playeroverview.queries.build_player_provider_coverage_summary")
     @patch("services.playeroverview.queries.build_player_season_summary")
+    @patch("services.playeroverview.queries.compute_league_percentiles", return_value={})
     @patch("services.playeroverview.queries.Player")
     def test_get_player_overview_returns_merged_shape_with_position_ordering(
         self,
         player_model_mock,
+        _compute_league_percentiles_mock,
         build_summary_mock,
         coverage_summary_mock,
         context_mock,
@@ -213,10 +215,12 @@ class PlayerOverviewQueriesTests(SimpleTestCase):
     @patch("services.playeroverview.queries.get_best_available_player_context")
     @patch("services.playeroverview.queries.build_player_provider_coverage_summary")
     @patch("services.playeroverview.queries.build_player_season_summary")
+    @patch("services.playeroverview.queries.compute_league_percentiles", return_value={})
     @patch("services.playeroverview.queries.Player")
     def test_get_player_overview_is_null_safe_when_summary_and_context_are_missing(
         self,
         player_model_mock,
+        _compute_league_percentiles_mock,
         build_summary_mock,
         coverage_summary_mock,
         context_mock,

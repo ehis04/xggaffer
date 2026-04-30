@@ -3,6 +3,7 @@ import type {
   TacticsNonPlayerItem,
   UpdateTacticsBoardItemPayload,
 } from '../../types/tactics';
+import styles from './ObjectProperties.module.css';
 
 interface ObjectPropertiesProps {
   item: TacticsNonPlayerItem;
@@ -71,15 +72,8 @@ const ObjectProperties: React.FC<ObjectPropertiesProps> = ({
 
   if (!hasEditableFields) {
     return (
-      <div
-        style={{
-          marginTop: '12px',
-          padding: '12px',
-          border: '1px solid #d1d5db',
-          borderRadius: '10px',
-        }}
-      >
-        <p style={{ margin: 0 }}>
+      <div className={styles.emptyCard}>
+        <p className={styles.emptyText}>
           This item has no editable properties in Phase D.
         </p>
       </div>
@@ -87,60 +81,39 @@ const ObjectProperties: React.FC<ObjectPropertiesProps> = ({
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{
-        display: 'grid',
-        gap: '12px',
-        marginTop: '12px',
-      }}
-    >
+    <form onSubmit={handleSubmit} className={styles.form}>
       {supportsLabel ? (
-        <label style={{ display: 'grid', gap: '6px' }}>
-          <span style={{ fontWeight: 600 }}>Text label</span>
+        <label className={styles.field}>
+          <span className={styles.label}>Text label</span>
           <input
             type="text"
             value={label}
             onChange={(event) => setLabel(event.target.value)}
             disabled={isSubmitting}
             maxLength={40}
-            style={{
-              padding: '8px 10px',
-              borderRadius: '8px',
-              border: '1px solid #9ca3af',
-            }}
+            className={styles.input}
           />
         </label>
       ) : null}
 
       {supportsRotation ? (
-        <label style={{ display: 'grid', gap: '6px' }}>
-          <span style={{ fontWeight: 600 }}>Rotation</span>
+        <label className={styles.field}>
+          <span className={styles.label}>Rotation</span>
           <input
             type="number"
             value={rotation}
             onChange={(event) => setRotation(event.target.value)}
             disabled={isSubmitting}
             step="1"
-            style={{
-              padding: '8px 10px',
-              borderRadius: '8px',
-              border: '1px solid #9ca3af',
-            }}
+            className={styles.input}
           />
         </label>
       ) : null}
 
       {supportsDimensions ? (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '10px',
-          }}
-        >
-          <label style={{ display: 'grid', gap: '6px' }}>
-            <span style={{ fontWeight: 600 }}>Width</span>
+        <div className={styles.dimensionGrid}>
+          <label className={styles.field}>
+            <span className={styles.label}>Width</span>
             <input
               type="number"
               value={width}
@@ -148,16 +121,12 @@ const ObjectProperties: React.FC<ObjectPropertiesProps> = ({
               disabled={isSubmitting}
               min="0.1"
               step="0.1"
-              style={{
-                padding: '8px 10px',
-                borderRadius: '8px',
-                border: '1px solid #9ca3af',
-              }}
+              className={styles.input}
             />
           </label>
 
-          <label style={{ display: 'grid', gap: '6px' }}>
-            <span style={{ fontWeight: 600 }}>Height</span>
+          <label className={styles.field}>
+            <span className={styles.label}>Height</span>
             <input
               type="number"
               value={height}
@@ -165,11 +134,7 @@ const ObjectProperties: React.FC<ObjectPropertiesProps> = ({
               disabled={isSubmitting}
               min="0.1"
               step="0.1"
-              style={{
-                padding: '8px 10px',
-                borderRadius: '8px',
-                border: '1px solid #9ca3af',
-              }}
+              className={styles.input}
             />
           </label>
         </div>
@@ -178,16 +143,7 @@ const ObjectProperties: React.FC<ObjectPropertiesProps> = ({
       <button
         type="submit"
         disabled={isSubmitting}
-        style={{
-          justifySelf: 'start',
-          padding: '9px 14px',
-          borderRadius: '999px',
-          border: '1px solid #111827',
-          background: '#111827',
-          color: '#ffffff',
-          fontWeight: 600,
-          cursor: isSubmitting ? 'default' : 'pointer',
-        }}
+        className={styles.submitButton}
       >
         {isSubmitting ? 'Updating...' : 'Apply'}
       </button>

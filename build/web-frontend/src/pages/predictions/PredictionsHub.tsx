@@ -1,157 +1,146 @@
-import { useEffect, useState } from 'react';
-import liveFootballApi from '../../services/api/livefootballApi';
-import type { CompetitionFixtureItem, CompetitionListItem } from '../../types/livefootball';
-import MatchPredictionCard from '../../components/widgets/MatchPredictionCard';
-import NullStatePlaceholder from '../../components/widgets/NullStatePlaceholder';
+import { useNavigate } from 'react-router-dom';
 import styles from './css/PredictionsHub.module.css';
 
-const VALID_LEAGUE_CODES = ['PL', 'PD', 'BL1', 'SA', 'FL1'] as const;
-type LeagueCode = typeof VALID_LEAGUE_CODES[number];
-
-const LEAGUE_LABELS: Record<LeagueCode, string> = {
-  PL: 'Premier League',
-  PD: 'La Liga',
-  BL1: 'Bundesliga',
-  SA: 'Serie A',
-  FL1: 'Ligue 1',
-};
-
-const UPSET_THRESHOLD = 0.35;
-const DEFAULT_LEAGUE: LeagueCode = 'PL';
-
-interface FixtureItem {
-  id: number | string;
-  homeTeam: string;
-  awayTeam: string;
-  kickoff: string;
-  leagueCode: string;
+interface Section {
+  icon: string;
+  title: string;
+  description: string;
+  label: string;
+  path?: string;
+  getPath?: () => string;
 }
 
-function useCompetitionFixtures(leagueCode: LeagueCode) {
-  const [fixtures, setFixtures] = useState<FixtureItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+const TACTICAL_TEAM_EXAMPLES = [
+  'Arsenal',
+  'Real Madrid',
+  'Barcelona',
+  'Liverpool',
+  'Atlético Madrid',
+] as const;
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(false);
-    setFixtures([]);
+const TRUST_LEAGUE_EXAMPLES = ['EPL', 'La_Liga', 'Bundesliga', 'Serie_A', 'Ligue_1'] as const;
 
-    liveFootballApi
-      .getCompetitions()
-      .then(competitions => {
-        const comp = (competitions as CompetitionListItem[]).find(c => c.code === leagueCode);
-        if (!comp) throw new Error('Competition not found');
-        return liveFootballApi.getCompetitionFixtures(comp.id, { status: 'SCHEDULED', limit: 20, season: comp.current_season_label });
-      })
-      .then(res => {
-        if (cancelled) return;
-        const items: FixtureItem[] = res.items?.map((f: CompetitionFixtureItem) => ({
-          id: f.id,
-          homeTeam: f.home_team?.name ?? '',
-          awayTeam: f.away_team?.name ?? '',
-          kickoff: f.kickoff_at ?? '',
-          leagueCode,
-        })) ?? [];
-        setFixtures(items);
-      })
-      .catch(() => { if (!cancelled) setError(true); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-
-    return () => { cancelled = true; };
-  }, [leagueCode]);
-
-  return { fixtures, loading, error };
+interface FixtureExample {
+  home: string;
+  away: string;
+  league: string;
+  date: string;
 }
+
+const FIXTURE_EXAMPLES: FixtureExample[] = [
+  { home: 'Arsenal', away: 'Chelsea', league: 'EPL', date: '2026-05-15' },
+  { home: 'Liverpool', away: 'Manchester United', league: 'EPL', date: '2026-05-10' },
+  { home: 'Manchester City', away: 'Liverpool', league: 'EPL', date: '2026-05-20' },
+  { home: 'Real Madrid', away: 'Barcelona', league: 'La_Liga', date: '2026-05-18' },
+  { home: 'Bayern Munich', away: 'Dortmund', league: 'Bundesliga', date: '2026-05-12' },
+  { home: 'PSG', away: 'Marseille', league: 'Ligue_1', date: '2026-05-14' },
+  { home: 'Juventus', away: 'AC Milan', league: 'Serie_A', date: '2026-05-16' },
+] as const;
+
+function randomFrom<T>(items: readonly T[]): T {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+const SECTIONS: Section[] = [
+  {
+    icon: '🔮',
+    title: 'Match Predictions',
+    description: 'Run match outcome predictions powered by Elo ratings and historical data across top leagues.',
+    label: 'Open Predictions',
+    path: '/predictions',
+  },
+  {
+    icon: '📊',
+    title: 'Odds Comparison',
+    description: 'Compare model probabilities with bookmaker odds to spot value and market discrepancies.',
+    label: 'Compare Odds',
+    path: '/predictions/odds',
+  },
+  {
+    icon: '🔍',
+    title: 'Match Intelligence',
+    description: 'Look up pre-match intelligence for any fixture — form, availability, head-to-head, and xG context.',
+    label: 'Look Up Match',
+    getPath: () => {
+      const fixture = randomFrom(FIXTURE_EXAMPLES);
+      return `/match/lookup?home=${encodeURIComponent(fixture.home)}&away=${encodeURIComponent(fixture.away)}&league=${encodeURIComponent(fixture.league)}&date=${encodeURIComponent(fixture.date)}&example=1`;
+    },
+  },
+  {
+    icon: '📈',
+    title: 'Season Projection',
+    description: 'Explore projected league standings, title races, and relegation battles for the current season.',
+    label: 'View Projections',
+    path: '/season/PL',
+  },
+  {
+    icon: '🎯',
+    title: 'Tactical Scouting',
+    description: "Analyse a team's formation tendencies, pressing intensity, and in/out-of-possession shape.",
+    label: 'Scout a Team',
+    getPath: () => {
+      const team = encodeURIComponent(randomFrom(TACTICAL_TEAM_EXAMPLES));
+      return `/tactics/${team}?example=1`;
+    },
+  },
+  {
+    icon: '👥',
+    title: 'Squad Intelligence',
+    description: 'Deep-dive into squad composition, injury risk, and player availability for any team.',
+    label: 'View Squad',
+    getPath: () => {
+      const team = encodeURIComponent(randomFrom(TACTICAL_TEAM_EXAMPLES));
+      return `/squad/${team}?example=1`;
+    },
+  },
+  {
+    icon: '🏅',
+    title: 'Model Trust Centre',
+    description: 'Review model accuracy, calibration bands, and biggest hits and misses over the season.',
+    label: 'Open Trust Centre',
+    getPath: () => {
+      const league = encodeURIComponent(randomFrom(TRUST_LEAGUE_EXAMPLES));
+      return `/trust?league=${league}&example=1`;
+    },
+  },
+];
+
+// NOTE: Tactical Scouting (/tactics/:teamSlug) and Squad Intelligence (/squad/:teamSlug)
+// require a team slug — access them via Match Intelligence where team context is established.
 
 export default function PredictionsHub() {
-  const [league, setLeague] = useState<LeagueCode>(DEFAULT_LEAGUE);
-  const { fixtures, loading, error } = useCompetitionFixtures(league);
+  const navigate = useNavigate();
+  const resolveSectionPath = (section: Section): string =>
+    section.getPath ? section.getPath() : (section.path ?? '/predictions/hub');
 
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Predictions Hub</h1>
-        <p className={styles.subtitle}>
-          Model predictions and market odds for upcoming fixtures across Europe's top leagues.
-        </p>
-      </header>
+    <div className={styles.container}>
+      <section className={styles.hero}>
+        <div>
+          <h1 className={styles.title}>Prediction & Intelligence</h1>
+          <p className={styles.subtitle}>
+            Model-powered match predictions, tactical scouting, squad analysis, and trust metrics — all in one place.
+          </p>
+        </div>
+      </section>
 
-      <div className={styles.filterBar}>
-        <div className={styles.leagueTabs}>
-          {VALID_LEAGUE_CODES.map(code => (
+      <div className={styles.grid}>
+        {SECTIONS.map((section) => (
+          <div key={`${section.title}-${section.path}`} className={styles.card}>
+            <div className={styles.cardIcon}>{section.icon}</div>
+            <h2 className={styles.cardTitle}>{section.title}</h2>
+            <p className={styles.cardDescription}>{section.description}</p>
             <button
-              key={code}
-              className={`${styles.leagueTab} ${league === code ? styles.leagueTabActive : ''}`}
-              onClick={() => setLeague(code)}
+              className={styles.cardButton}
+              type="button"
+              onClick={() => navigate(resolveSectionPath(section))}
             >
-              {LEAGUE_LABELS[code]}
+              {section.label}
+              <span className={styles.cardButtonArrow}>→</span>
             </button>
-          ))}
-        </div>
-      </div>
-
-      {loading && (
-        <div className={styles.skeletonGrid}>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className={styles.skeletonCard} />
-          ))}
-        </div>
-      )}
-
-      {!loading && error && (
-        <NullStatePlaceholder
-          icon="chart"
-          message="Failed to load fixtures. Please try again."
-        />
-      )}
-
-      {!loading && !error && fixtures.length === 0 && (
-        <NullStatePlaceholder
-          icon="chart"
-          message="No fixtures match your filters"
-        />
-      )}
-
-      {!loading && !error && fixtures.length > 0 && (
-        <>
-          <div className={styles.fixtureGrid}>
-            {fixtures.map(f => (
-              <MatchPredictionCard
-                key={f.id}
-                homeTeam={f.homeTeam}
-                awayTeam={f.awayTeam}
-                kickoff={f.kickoff}
-                leagueCode={f.leagueCode}
-                fixtureId={f.id}
-              />
-            ))}
           </div>
-
-          <section className={styles.upsetSection}>
-            <h2 className={styles.upsetTitle}>Upset watch</h2>
-            <p className={styles.upsetSubtitle}>
-              Fixtures where both teams have a probability above {Math.round(UPSET_THRESHOLD * 100)}%.
-            </p>
-            <div className={styles.fixtureGrid}>
-              {fixtures
-                .filter(f => f.homeTeam && f.awayTeam)
-                .map(f => (
-                  <MatchPredictionCard
-                    key={`upset-${f.id}`}
-                    homeTeam={f.homeTeam}
-                    awayTeam={f.awayTeam}
-                    kickoff={f.kickoff}
-                    leagueCode={f.leagueCode}
-                    fixtureId={f.id}
-                  />
-                ))
-              }
-            </div>
-          </section>
-        </>
-      )}
+        ))}
+      </div>
     </div>
   );
 }

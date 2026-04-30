@@ -291,6 +291,7 @@ export interface CreateTacticsBoardFramePayload {
   label?: string;
   duration_ms?: number;
   notes?: string;
+  copy_items_from_frame_index?: number;
 }
 
 export interface UpdateTacticsBoardFramePayload {

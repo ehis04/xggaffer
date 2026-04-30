@@ -9,9 +9,24 @@ from services.providers.understat.exceptions import (
     UnderstatNotFoundError,
     UnderstatRequestError,
 )
+from services.providers.understat.team_slugs import canonicalise_understat_team_slug
 
 
 class UnderstatClientTests(SimpleTestCase):
+    def test_canonicalise_understat_team_slug_accepts_common_inputs(self):
+        cases = {
+            "real-madrid": "Real_Madrid",
+            "real madrid cf": "Real_Madrid",
+            "https://understat.com/team/Real_Madrid/2025": "Real_Madrid",
+            "man utd": "Manchester_United",
+            "FC Bayern Munchen": "Bayern_Munich",
+            "psg": "Paris_Saint_Germain",
+        }
+
+        for raw_value, expected in cases.items():
+            with self.subTest(raw_value=raw_value):
+                self.assertEqual(canonicalise_understat_team_slug(raw_value), expected)
+
     @override_settings(
         UNDERSTAT_BASE_URL="https://understat.example",
         UNDERSTAT_TIMEOUT_SECONDS=9,

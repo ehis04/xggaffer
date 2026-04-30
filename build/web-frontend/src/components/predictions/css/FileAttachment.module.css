@@ -12,7 +12,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--color-muted, #94a3b8);
+  color: rgba(255, 255, 255, 0.45);
   display: flex;
   align-items: center;
   padding: 0.25rem;
@@ -21,7 +21,7 @@
 }
 
 .paperclipBtn:hover {
-  color: var(--color-primary, #0d9488);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .chip {
@@ -29,14 +29,14 @@
   align-items: center;
   gap: 0.375rem;
   padding: 0.2rem 0.5rem 0.2rem 0.75rem;
-  background: var(--color-background, #f8fafc);
-  border: 1px solid var(--color-border, #e2e8f0);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 999px;
   font-size: 0.78rem;
 }
 
 .filename {
-  color: var(--color-text, #1e293b);
+  color: rgba(255, 255, 255, 0.85);
   max-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -47,18 +47,18 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--color-muted, #94a3b8);
+  color: rgba(255, 255, 255, 0.4);
   font-size: 1rem;
   line-height: 1;
   padding: 0;
 }
 
 .clearBtn:hover {
-  color: var(--color-text, #1e293b);
+  color: white;
 }
 
 .errorText {
   font-size: 0.75rem;
-  color: var(--color-error, #ef4444);
+  color: #fca5a5;
   margin: 0;
 }

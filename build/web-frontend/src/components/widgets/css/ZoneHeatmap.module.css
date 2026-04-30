@@ -1,0 +1,260 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pitchCard {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: var(--brand-lightest-green-border);
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.pitchHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.teamLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--tertiary-text);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pitchTitle {
+  margin: 0.2rem 0 0;
+  font-size: 1.2rem;
+  color: var(--primary-text);
+}
+
+.pitchSummary {
+  margin: 0;
+  max-width: 28rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--secondary-text);
+}
+
+.pitchSurface {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  padding: 1rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 18%),
+    repeating-linear-gradient(90deg,
+      rgba(255, 255, 255, 0.04) 0,
+      rgba(255, 255, 255, 0.04) 11.11%,
+      rgba(255, 255, 255, 0.1) 11.11%,
+      rgba(255, 255, 255, 0.1) 22.22%),
+    linear-gradient(180deg, #1e7c3c 0%, #16592a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.halfwayLine,
+.centreCircle,
+.penaltyBoxTop,
+.penaltyBoxBottom {
+  position: absolute;
+  border-color: rgba(255, 255, 255, 0.45);
+  pointer-events: none;
+}
+
+.halfwayLine {
+  top: 50%;
+  left: 0.9rem;
+  right: 0.9rem;
+  border-top: 2px solid rgba(255, 255, 255, 0.45);
+  transform: translateY(-50%);
+}
+
+.centreCircle {
+  left: 50%;
+  top: 50%;
+  width: 5.75rem;
+  height: 5.75rem;
+  border: 2px solid rgba(255, 255, 255, 0.42);
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+}
+
+.penaltyBoxTop,
+.penaltyBoxBottom {
+  left: 22%;
+  right: 22%;
+  height: 18%;
+  border: 2px solid rgba(255, 255, 255, 0.38);
+}
+
+.penaltyBoxTop {
+  top: 0.9rem;
+  border-bottom: none;
+}
+
+.penaltyBoxBottom {
+  bottom: 0.9rem;
+  border-top: none;
+}
+
+.grid {
+  display: grid;
+  gap: 0.65rem;
+  overflow-x: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.22rem;
+  border-radius: 0.95rem;
+  padding: 0.85rem 0.5rem;
+  cursor: default;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s;
+  min-height: 88px;
+  text-align: center;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.cell:hover,
+.cell:focus {
+  opacity: 0.96;
+  outline: none;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+}
+
+.cellLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #ffffff;
+}
+
+.cellSubLabel {
+  font-size: 0.68rem;
+  line-height: 1.2;
+  opacity: 0.88;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.cellRate {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.cellStrength {
+  background: rgba(7, 89, 133, 0.78);
+  color: #eff6ff;
+}
+
+.cellWeakness {
+  background: rgba(127, 29, 29, 0.82);
+  color: #fef2f2;
+}
+
+.cellNeutral {
+  background: rgba(245, 158, 11, 0.85);
+  color: #1f2937;
+}
+
+.legend {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.legendSwatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 0.18rem;
+}
+
+.swatchStrength {
+  background: rgba(7, 89, 133, 0.88);
+}
+
+.swatchNeutral {
+  background: rgba(245, 158, 11, 0.92);
+}
+
+.swatchWeakness {
+  background: rgba(127, 29, 29, 0.9);
+}
+
+.legendLabel {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--secondary-text);
+  margin-right: 0.5rem;
+}
+
+.notes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.95rem 1rem;
+  border-radius: 12px;
+  background: rgba(18, 22, 20, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.noteTitle {
+  margin: 0;
+  color: var(--primary-text);
+  font-size: 0.94rem;
+  font-weight: 800;
+}
+
+.noteText {
+  margin: 0;
+  color: var(--secondary-text);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.noteHighlight {
+  margin: 0.15rem 0 0;
+  color: #6ee7b7;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .pitchCard {
+    padding: 0.85rem;
+  }
+
+  .pitchSurface {
+    padding: 0.75rem;
+  }
+
+  .cell {
+    min-height: 74px;
+    padding: 0.65rem 0.4rem;
+  }
+
+  .cellRate {
+    font-size: 0.94rem;
+  }
+}

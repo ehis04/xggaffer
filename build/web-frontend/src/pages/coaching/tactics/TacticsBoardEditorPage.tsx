@@ -22,6 +22,7 @@ import type {
 import { exportBoardPng } from '../../../utils/exportBoardPng';
 import { interpolateFrames } from '../../../utils/interpolateFrames';
 import { useAuth } from '../../../context/useAuth';
+import styles from './css/TacticsBoardEditorPage.module.css';
 
 const POSITION_EPSILON = 0.001;
 
@@ -354,6 +355,7 @@ const TacticsBoardEditorPage: React.FC = () => {
 
   const isPlaybackActive = playback.status !== 'idle';
   const isBoardTrashed = Boolean(state.board?.is_trashed);
+  const isAnimatedBoard = state.board?.board_type === 'animated';
   const canManageBoardTrash =
     typeof user?.id === 'number' &&
     typeof state.board?.created_by === 'number' &&
@@ -420,7 +422,7 @@ const TacticsBoardEditorPage: React.FC = () => {
     };
 
     void loadBoardDetail();
-  }, [numericBoardId, numericClubId]);
+  }, [numericBoardId, numericClubId, isTrashView]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -483,6 +485,7 @@ const TacticsBoardEditorPage: React.FC = () => {
     activeFrame,
     clearError,
     deleteItemLocal,
+    isBoardTrashed,
     isPlaybackActive,
     numericBoardId,
     numericClubId,
@@ -525,7 +528,11 @@ const TacticsBoardEditorPage: React.FC = () => {
   const canSaveBoard = state.isDirty && !state.isSaving && !isPlaybackActive;
 
   const handleBack = () => {
-    navigate(`/clubs/${numericClubId}/tactics-boards${isTrashView ? '?view=trash' : ''}`);
+    const params = new URLSearchParams({ tab: 'tactics' });
+    if (isTrashView) {
+      params.set('view', 'trash');
+    }
+    navigate(`/clubs/${numericClubId}?${params.toString()}`);
   };
 
   const handleMoveToTrash = async () => {
@@ -648,6 +655,11 @@ const TacticsBoardEditorPage: React.FC = () => {
       return;
     }
 
+    if (!isAnimatedBoard) {
+      saveFailed('Frame controls are available only on animated boards.');
+      return;
+    }
+
     if (guardDirtyFrameTransition('Save current frame changes before adding a frame.')) {
       return;
     }
@@ -670,10 +682,11 @@ const TacticsBoardEditorPage: React.FC = () => {
     try {
       setIsMutatingFrames(true);
 
+      const currentFrameIndex = state.activeFrameIndex;
       const createdFrame = await tacticsFrameApi.createFrame(
         numericClubId,
         numericBoardId,
-        {}
+        { copy_items_from_frame_index: currentFrameIndex }
       );
 
       addFrameLocal(createdFrame, { setActiveFrame: true });
@@ -694,6 +707,11 @@ const TacticsBoardEditorPage: React.FC = () => {
     }
 
     if (guardDirtyFrameTransition('Save current frame changes before duplicating a frame.')) {
+      return;
+    }
+
+    if (!isAnimatedBoard) {
+      saveFailed('Frame controls are available only on animated boards.');
       return;
     }
 
@@ -748,6 +766,11 @@ const TacticsBoardEditorPage: React.FC = () => {
     }
 
     if (guardDirtyFrameTransition('Save current frame changes before deleting a frame.')) {
+      return;
+    }
+
+    if (!isAnimatedBoard) {
+      saveFailed('Frame controls are available only on animated boards.');
       return;
     }
 
@@ -1307,6 +1330,11 @@ const TacticsBoardEditorPage: React.FC = () => {
   }, [isPlaybackActive, isPresentationOpen, state.board?.title]);
 
   const handlePlay = () => {
+    if (!isAnimatedBoard) {
+      saveFailed('Playback is only available on animated boards.');
+      return;
+    }
+
     if (guardDirtyFrameTransition('Save current frame changes before playback.')) {
       return;
     }
@@ -1319,14 +1347,27 @@ const TacticsBoardEditorPage: React.FC = () => {
   };
 
   const handlePause = () => {
+    if (!isAnimatedBoard) {
+      return;
+    }
+
     playback.pause();
   };
 
   const handleStop = () => {
+    if (!isAnimatedBoard) {
+      return;
+    }
+
     playback.stop();
   };
 
   const handleOpenPresentation = () => {
+    if (!isAnimatedBoard) {
+      saveFailed('Presentation mode is only available on animated boards.');
+      return;
+    }
+
     if (guardDirtyFrameTransition('Save current frame changes before presentation mode.')) {
       return;
     }
@@ -1408,51 +1449,51 @@ const TacticsBoardEditorPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div>
-        <h1>Tactics Board Editor</h1>
-        <p>Loading tactics board...</p>
+      <div className={styles.feedbackState}>
+        <h1 className={styles.feedbackTitle}>Tactics Board Editor</h1>
+        <p className={styles.feedbackText}>Loading tactics board...</p>
       </div>
     );
   }
 
   if (pageError) {
     return (
-      <div>
-        <button type="button" onClick={handleBack}>
+      <div className={styles.feedbackState}>
+        <button type="button" onClick={handleBack} className={styles.utilityButton}>
           ← Back to Tactics Boards
         </button>
-        <h1>Tactics Board Editor</h1>
-        <p>Error: {pageError}</p>
+        <h1 className={styles.feedbackTitle}>Tactics Board Editor</h1>
+        <p className={styles.feedbackText}>Error: {pageError}</p>
       </div>
     );
   }
 
   if (!state.board) {
     return (
-      <div>
-        <button type="button" onClick={handleBack}>
+      <div className={styles.feedbackState}>
+        <button type="button" onClick={handleBack} className={styles.utilityButton}>
           ← Back to Tactics Boards
         </button>
-        <h1>Tactics Board Editor</h1>
-        <p>Tactics board not found.</p>
+        <h1 className={styles.feedbackTitle}>Tactics Board Editor</h1>
+        <p className={styles.feedbackText}>Tactics board not found.</p>
       </div>
     );
   }
 
   if (!activeFrame || !displayedFrame) {
     return (
-      <div>
-        <button type="button" onClick={handleBack}>
+      <div className={styles.feedbackState}>
+        <button type="button" onClick={handleBack} className={styles.utilityButton}>
           ← Back to Tactics Boards
         </button>
-        <h1>{state.board.title}</h1>
-        <p>This board does not currently contain a usable frame.</p>
+        <h1 className={styles.feedbackTitle}>{state.board.title}</h1>
+        <p className={styles.feedbackText}>This board does not currently contain a usable frame.</p>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className={styles.page}>
       <BoardToolbar
         title={state.board.title}
         isDirty={state.isDirty}
@@ -1464,7 +1505,8 @@ const TacticsBoardEditorPage: React.FC = () => {
         }
         targetFrameIndex={isPlaybackActive ? playback.targetFrameIndex : null}
         playbackStatus={playback.status}
-        canPlay={playback.canPlay}
+        isAnimatedBoard={isAnimatedBoard}
+        canPlay={isAnimatedBoard && playback.canPlay}
         isPresentationOpen={isPresentationOpen}
         isExportingPng={exportState.status === 'exporting'}
         exportError={exportState.error}
@@ -1487,28 +1529,76 @@ const TacticsBoardEditorPage: React.FC = () => {
         }
       />
 
-      <p style={{ marginTop: 0 }}>
-        {state.board.description || 'No description provided.'}
-      </p>
+      <section className={styles.heroCard}>
+        <div className={styles.heroCopy}>
+          <h1 className={styles.heroTitle}>{state.board.title}</h1>
+          <p className={styles.heroText}>
+            {state.board.description || 'No description provided.'}
+          </p>
+          <p className={styles.heroSupportingText}>
+            {isBoardTrashed
+              ? 'This board is in trash and has been switched into read-only mode.'
+              : isAnimatedBoard
+                ? 'Animated board mode keeps frame progression, playback, and presentation tools available.'
+                : 'Static board mode focuses on a single tactical picture without playback controls.'}
+          </p>
+        </div>
+
+        <div className={styles.heroActions}>
+          <span className={styles.heroPill}>
+            {isAnimatedBoard ? 'Animated board' : 'Static board'}
+          </span>
+          <span className={styles.heroPill}>
+            {state.board.pitch_orientation}
+          </span>
+
+          <button
+            type="button"
+            onClick={handleBack}
+            className={styles.utilityButton}
+          >
+            ← Back
+          </button>
+
+          {canManageBoardTrash && !isBoardTrashed ? (
+            <button
+              type="button"
+              onClick={() => void handleMoveToTrash()}
+              disabled={isBoardActionLoading}
+              className={styles.dangerButton}
+            >
+              {isBoardActionLoading ? 'Moving…' : 'Move to Trash'}
+            </button>
+          ) : null}
+
+          {canManageBoardTrash && isBoardTrashed ? (
+            <>
+              <button
+                type="button"
+                onClick={() => void handleRestoreBoard()}
+                disabled={isBoardActionLoading}
+                className={styles.successButton}
+              >
+                {isBoardActionLoading ? 'Restoring…' : 'Restore'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => void handlePermanentDeleteBoard()}
+                disabled={isBoardActionLoading}
+                className={styles.dangerButton}
+              >
+                {isBoardActionLoading ? 'Deleting…' : 'Delete Permanently'}
+              </button>
+            </>
+          ) : null}
+        </div>
+      </section>
 
       {state.error ? (
-    <div
-        style={{
-        marginBottom: '16px',
-        padding: '12px 14px',
-        border: '1px solid #fca5a5',
-        borderRadius: '12px',
-        background: '#fef2f2',
-        color: '#991b1b',
-        display: 'flex',
-        justifyContent: 'space-between',
-        gap: '12px',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        }}
-    >
+    <div className={styles.errorBanner}>
         <span>{state.error}</span>
-        <button type="button" onClick={() => void handleReloadLatestBoard()}>
+        <button type="button" onClick={() => void handleReloadLatestBoard()} className={styles.utilityButton}>
         Reload latest board
         </button>
     </div>
@@ -1519,6 +1609,7 @@ const TacticsBoardEditorPage: React.FC = () => {
         activeFrameIndex={
           isPlaybackActive ? playback.currentFrameIndex : state.activeFrameIndex
         }
+        allowAnimationActions={isAnimatedBoard}
         isMutating={isMutatingFrames || isPlaybackActive}
         onSelectFrame={handleSelectFrame}
         onAddFrame={handleAddFrame}
@@ -1526,131 +1617,18 @@ const TacticsBoardEditorPage: React.FC = () => {
         onDeleteFrame={handleDeleteFrame}
       />
 
-      <div style={{ pointerEvents: isBoardTrashed ? 'none' : 'auto', opacity: isBoardTrashed ? 0.72 : 1 }}>
+      <div className={isBoardTrashed ? `${styles.readOnlyBlock} ${styles.readOnlyMuted}` : styles.readOnlyBlock}>
         <ToolPalette
           activeTool={activeTool}
           onSelectTool={handleSelectTool}
         />
       </div>
-      
-      <div
-        style={{
-          marginBottom: '16px',
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
-          gap: '16px',
-          flexWrap: 'wrap',
-        }}
-      >
-        <div>
-          <h1
-            style={{
-              margin: 0,
-              fontSize: '1.9rem',
-              fontWeight: 700,
-              color: '#f9fafb',
-            }}
-          >
-            {state.board.title}
-          </h1>
-          <p style={{ margin: '8px 0 0 0', color: '#cbd5e1' }}>
-            {isBoardTrashed
-              ? 'This board is in trash. Restore it before editing.'
-              : 'Edit frames, annotations, and tactical movement for this board.'}
-          </p>
-        </div>
-
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-        <button
-          type="button"
-          onClick={handleBack}
-          style={{
-            padding: '8px 12px',
-            borderRadius: '8px',
-            border: '1px solid #334155',
-            background: '#111827',
-            color: '#f9fafb',
-            cursor: 'pointer',
-          }}
-        >
-          ← Back
-        </button>
-
-        {canManageBoardTrash && !isBoardTrashed ? (
-          <button
-            type="button"
-            onClick={() => void handleMoveToTrash()}
-            disabled={isBoardActionLoading}
-            style={{
-              padding: '8px 12px',
-              borderRadius: '8px',
-              border: 'none',
-              background: 'rgba(239, 68, 68, 0.18)',
-              color: '#fecaca',
-              cursor: isBoardActionLoading ? 'not-allowed' : 'pointer',
-              fontWeight: 600,
-            }}
-          >
-            {isBoardActionLoading ? 'Moving…' : 'Move to Trash'}
-          </button>
-        ) : null}
-
-        {canManageBoardTrash && isBoardTrashed ? (
-          <>
-            <button
-              type="button"
-              onClick={() => void handleRestoreBoard()}
-              disabled={isBoardActionLoading}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '8px',
-                border: 'none',
-                background: 'rgba(34, 197, 94, 0.18)',
-                color: '#bbf7d0',
-                cursor: isBoardActionLoading ? 'not-allowed' : 'pointer',
-                fontWeight: 600,
-              }}
-            >
-              {isBoardActionLoading ? 'Restoring…' : 'Restore'}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => void handlePermanentDeleteBoard()}
-              disabled={isBoardActionLoading}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '8px',
-                border: 'none',
-                background: 'rgba(239, 68, 68, 0.18)',
-                color: '#fecaca',
-                cursor: isBoardActionLoading ? 'not-allowed' : 'pointer',
-                fontWeight: 600,
-              }}
-            >
-              {isBoardActionLoading ? 'Deleting…' : 'Delete Permanently'}
-            </button>
-          </>
-        ) : null}
-      </div>
-      </div>
 
       {isBoardTrashed ? (
-        <div
-          style={{
-            marginBottom: '16px',
-            padding: '12px 14px',
-            borderRadius: '10px',
-            background: 'rgba(239, 68, 68, 0.12)',
-            border: '1px solid rgba(248, 113, 113, 0.35)',
-            color: '#fecaca',
-            lineHeight: 1.55,
-          }}
-        >
+        <div className={styles.trashBanner}>
           This tactics board is currently in trash and has been switched into read-only mode.
           {state.board.trash_expires_at ? (
-            <span style={{ color: '#e5e7eb' }}>
+            <span className={styles.trashBannerMeta}>
               {' '}It will be removed permanently after{' '}
               {new Date(state.board.trash_expires_at).toLocaleDateString('en-IE', {
                 day: 'numeric',
@@ -1663,20 +1641,12 @@ const TacticsBoardEditorPage: React.FC = () => {
         </div>
       ) : null}
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(0, 1fr) 320px',
-            gap: '20px',
-            alignItems: 'start',
-            pointerEvents: isBoardTrashed ? 'none' : 'auto',
-            opacity: isBoardTrashed ? 0.72 : 1,
-          }}
-        >
-        <div>
+        <div className={isBoardTrashed ? `${styles.editorGrid} ${styles.readOnlyMuted}` : styles.editorGrid}>
+        <div className={styles.canvasPanel}>
           <PitchCanvas
             svgElementRef={pitchSvgRef}
             frame={displayedFrame}
+            pitchOrientation={state.board.pitch_orientation}
             renderItems={displayedRenderItems}
             isPlaybackMode={isPlaybackActive}
             activeTool={activeTool}
@@ -1714,6 +1684,7 @@ const TacticsBoardEditorPage: React.FC = () => {
       <PlaybackOverlay
         isOpen={isPresentationOpen}
         boardTitle={state.board.title}
+        pitchOrientation={state.board.pitch_orientation}
         frame={playback.activePair?.sourceFrame ?? activeFrame}
         renderItems={playbackRenderFrame?.items ?? []}
         status={playback.status}

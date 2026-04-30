@@ -1,0 +1,184 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.header {
+  padding: 1.25rem 2rem 0.75rem;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-text, #1e293b);
+  margin: 0 0 0.1rem;
+}
+
+.subtitle {
+  font-size: 0.82rem;
+  color: var(--color-muted, #94a3b8);
+  margin: 0;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.fixtureSelector {
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.selectorLabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-muted, #94a3b8);
+  white-space: nowrap;
+}
+
+.select {
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.85rem;
+  color: var(--color-text, #1e293b);
+  background: var(--color-surface, #ffffff);
+  flex: 1;
+  max-width: 400px;
+}
+
+.block {
+  padding: 1.25rem 2rem;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.blockHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.blockTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-muted, #94a3b8);
+  margin: 0;
+}
+
+.toggleBtn {
+  font-size: 0.8rem;
+  color: var(--color-primary, #0d9488);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  align-self: flex-start;
+}
+
+.scheduleList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.scheduleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.85rem;
+  padding: 0.375rem 0;
+  flex-wrap: wrap;
+}
+
+.scheduleRowActive {
+  font-weight: 600;
+  color: var(--color-primary, #0d9488);
+}
+
+.scheduleDate {
+  min-width: 100px;
+  color: var(--color-muted, #94a3b8);
+  font-size: 0.8rem;
+}
+
+.scheduleOpponent {
+  flex: 1;
+  color: var(--color-text, #1e293b);
+}
+
+.scheduleLeague {
+  font-size: 0.72rem;
+  color: var(--color-muted, #94a3b8);
+  background: var(--color-background, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+}
+
+.congestionBadge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-warning-text, #854d0e);
+  background: var(--color-warning-bg, #fef9c3);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  white-space: nowrap;
+}
+
+.xiMatchup {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.xiTeam {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.xiTeamName {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text, #1e293b);
+  margin: 0;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .header,
+  .block,
+  .fixtureSelector {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .xiMatchup {
+    flex-direction: column;
+  }
+
+  .select {
+    max-width: 100%;
+  }
+
+  .fixtureSelector {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -12,6 +12,7 @@ import type {
   LeagueMetaItem,
 } from '../../../types/livefootball';
 import styles from './css/LeaguesPage.module.css';
+import { FreshnessBadge } from '../../../common/components/FreshnessBadge';
 
 const normalizeError = (error: unknown): string => {
   if (error instanceof Error) {
@@ -207,6 +208,7 @@ const LeaguesPage: React.FC = () => {
             Browse current and historical tables across the five supported leagues.
           </p>
         </div>
+        <FreshnessBadge freshness={metaEnvelope?.freshness} />
 
         <div className={styles.actions}>
           <Link to={predictHref} className={styles.compareButton}>

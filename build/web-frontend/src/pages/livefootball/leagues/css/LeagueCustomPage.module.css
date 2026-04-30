@@ -8,16 +8,16 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 1rem;
   background: rgba(255, 255, 255, 0.04);
-  padding: 1rem;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .builderHeader {
   display: flex;
   justify-content: space-between;
-  gap: 0.9rem;
+  gap: 1rem;
   align-items: flex-start;
   flex-wrap: wrap;
 }
@@ -25,167 +25,315 @@
 .builderTitle {
   margin: 0;
   font-size: 1.15rem;
-  font-weight: 700;
+  font-weight: 800;
   color: #f4f7fb;
+  letter-spacing: -0.01em;
 }
 
 .builderText {
-  margin: 0.35rem 0 0;
-  color: #b6c2d1;
+  margin: 0.5rem 0 0;
+  color: #a8b4c0;
+  font-size: 0.9rem;
   line-height: 1.5;
 }
 
-.fixtureList {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.8rem;
-}
+/* ─── Team picker ─── */
 
-.fixtureCard {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 0.95rem;
-  padding: 0.9rem;
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: center;
-  flex-wrap: wrap;
-  transition: border-color 0.15s, background 0.15s;
-}
-
-.fixtureCardOpen {
-  background: rgba(255, 255, 255, 0.03);
-  cursor: default;
-}
-
-.fixtureCardLocked {
-  background: rgba(59, 130, 246, 0.08);
-  border-color: rgba(59, 130, 246, 0.3);
-}
-
-.fixtureTeams {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  min-width: 0;
-}
-
-.fixtureName {
-  color: #eef3f8;
-  font-weight: 700;
-}
-
-.fixtureMeta {
+.teamPickerPrompt {
+  margin: 0;
   color: #9fb0c3;
-  font-size: 0.88rem;
+  font-size: 0.92rem;
 }
 
-.scoreRow {
+.teamHeader {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.scoreInput {
-  width: 4.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 0.75rem;
-  background: #121923;
+.teamHeaderLabel {
+  color: #d4dce8;
+  font-size: 0.95rem;
+  flex: 1 1 auto;
+}
+
+.teamHeaderLabel strong {
   color: #f4f7fb;
-  padding: 0.7rem 0.85rem;
 }
 
-.scoreDivider {
-  color: #d9e2ee;
-  font-weight: 700;
-}
-
-.fixturePredicted {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.35);
-  font-style: italic;
-}
-
-.lockButton {
-  padding: 0.45rem 0.9rem;
+.changeTeamButton {
+  flex-shrink: 0;
+  padding: 0.35rem 0.85rem;
   border-radius: 0.65rem;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 0.82rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: #b9c4d2;
+  font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
+}
+
+.changeTeamButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #eef3f8;
+}
+
+/* 4-column grid for 20 teams */
+.teamGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.65rem;
+}
+
+@media (max-width: 900px) {
+  .teamGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .teamGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.teamCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 0.5rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: #d4dce8;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  line-height: 1.2;
+}
+
+.teamCard:hover {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.35);
+  color: #eef3f8;
+}
+
+.teamBadge {
+  width: 2.25rem;
+  height: 2.25rem;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.teamCardName {
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* ─── Opponent grid ─── */
+
+.opponentGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+@media (max-width: 900px) {
+  .opponentGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .opponentGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.opponentCard {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.opponentCardActive {
+  background: rgba(59, 130, 246, 0.07);
+  border-color: rgba(59, 130, 246, 0.28);
+}
+
+.opponentHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.opponentBadge {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.opponentName {
+  color: #eef3f8;
+  font-weight: 700;
+  font-size: 0.82rem;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
-.lockButton:hover {
+.fixtureRow {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.fixtureLabel {
+  flex-shrink: 0;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 0.35rem;
   background: rgba(59, 130, 246, 0.18);
-  border-color: rgba(59, 130, 246, 0.4);
-  color: #fff;
+  color: #93c5fd;
+  font-size: 0.7rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.01em;
 }
 
-.unlockButton {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
+.fixtureLabelAway {
+  background: rgba(168, 85, 247, 0.18);
+  color: #c4b5fd;
+}
+
+.scoreInput {
+  width: 2.8rem;
+  min-width: 0;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 1rem;
+  border-radius: 0.55rem;
+  background: rgba(0, 0, 0, 0.35);
+  color: #f4f7fb;
+  padding: 0.3rem 0.4rem;
+  font-size: 0.85rem;
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+.scoreInput::-webkit-inner-spin-button,
+.scoreInput::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.scoreInput:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.scoreDivider {
+  color: #6b7a90;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.clearButton {
+  flex-shrink: 0;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.85rem;
   line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
   transition: background 0.15s, color 0.15s;
+  margin-left: auto;
 }
 
-.unlockButton:hover {
+.clearButton:hover {
   background: rgba(239, 68, 68, 0.18);
   border-color: rgba(239, 68, 68, 0.35);
   color: #fca5a5;
 }
 
+.noFixtures {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.78rem;
+  font-style: italic;
+}
+
+/* ─── Actions ─── */
+
 .actions {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.65rem;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .primaryButton,
 .secondaryButton {
-  min-height: 2.75rem;
-  padding: 0 1rem;
-  border-radius: 0.85rem;
+  min-height: 2.65rem;
+  padding: 0 1.1rem;
+  border-radius: 0.8rem;
   font-weight: 700;
   cursor: pointer;
+  font-size: 0.91rem;
+  transition: all 0.2s ease;
 }
 
 .primaryButton {
   border: 0;
-  background: #e9eef5;
-  color: #111827;
+  background: #3b82f6;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.primaryButton:hover:not(:disabled) {
+  background: #2563eb;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  transform: translateY(-1px);
 }
 
 .secondaryButton {
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.04);
+  color: #d4dce8;
+}
+
+.secondaryButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
   color: #eef3f8;
 }
 
 .primaryButton:disabled,
 .secondaryButton:disabled {
-  opacity: 0.55;
+  opacity: 0.40;
   cursor: not-allowed;
 }
 
-.helperText {
-  margin: 0;
-  color: #9fb0c3;
-  font-size: 0.9rem;
-}
+/* ─── Empty / misc ─── */
 
 .emptyState {
   padding: 1rem;
@@ -193,7 +341,10 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.03);
   color: #b9c4d2;
+  font-size: 0.92rem;
 }
+
+/* ─── Saved scenarios ─── */
 
 .savedList {
   display: grid;
@@ -241,9 +392,21 @@
   width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 0.75rem;
-  background: #121923;
+  background: rgba(0, 0, 0, 0.3);
   color: #f4f7fb;
   padding: 0.8rem 0.9rem;
+  font-size: 0.92rem;
+}
+
+.textInput::placeholder,
+.textArea::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.textInput:focus,
+.textArea:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.45);
 }
 
 .textArea {

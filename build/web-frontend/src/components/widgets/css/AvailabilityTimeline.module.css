@@ -1,0 +1,78 @@
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.summaryRow {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.summaryChip {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.summaryChip[data-variant="available"] {
+  background: var(--color-confidence-high-bg, #dcfce7);
+  color: var(--color-confidence-high-text, #166534);
+}
+
+.summaryChip[data-variant="at_risk"] {
+  background: var(--color-confidence-medium-bg, #fef9c3);
+  color: var(--color-confidence-medium-text, #854d0e);
+}
+
+.summaryChip[data-variant="unavailable"] {
+  background: var(--color-confidence-low-bg, #fee2e2);
+  color: var(--color-confidence-low-text, #991b1b);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.groupLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.groupLabel_available { color: var(--color-confidence-high-text, #166534); }
+.groupLabel_at_risk   { color: var(--color-confidence-medium-text, #854d0e); }
+.groupLabel_unavailable { color: var(--color-confidence-low-text, #991b1b); }
+
+.playerRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+}
+
+.playerName {
+  flex: 1;
+  min-width: 120px;
+  font-weight: 500;
+  color: var(--color-text, #1e293b);
+}
+
+.probPct {
+  font-size: 0.78rem;
+  color: var(--color-muted, #94a3b8);
+}
+
+.returnDate {
+  font-size: 0.75rem;
+  font-style: italic;
+  color: var(--color-muted, #94a3b8);
+}

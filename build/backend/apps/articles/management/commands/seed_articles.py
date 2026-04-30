@@ -1,13 +1,24 @@
+"""
+Seeds initial article recommendation content for local development
+
+Creates starter topics, sites, authors, and articles used to test the article browsing and recommendation features
+"""
+
+import datetime
+import random
+
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.utils.text import slugify
-from apps.articles.models import *
-import random
-import datetime
 
+from apps.articles.models import *
+
+
+# Command for seeding starter article recommendation data
 class Command(BaseCommand):
     help = "Seed initial articles, authors, sites and topics"
 
+    # Create the starter topics, sites, authors, and articles
     def handle(self, *args, **kwargs):
         self.stdout.write("Seeding database...")
 
@@ -123,6 +134,7 @@ class Command(BaseCommand):
             if created:
                 self.stdout.write(f'  ✓ Created site: {s["name"]}')
 
+        # Resolve source aliases to canonical seeded site records
         def get_site_by_name(name):
             canonical_name = site_aliases.get(name, name)
             if canonical_name in sites:
@@ -263,7 +275,7 @@ class Command(BaseCommand):
                 'summary': 'Summary of the latest changes to the Laws of the Game.',
                 'site': 'Sky Sports',
                 'authors': ['Amy Lawrence'],
-                'topics': ['Laws of the Game', 'Refereeing'],
+                'topics': ['Laws of the Game', 'Refereing'],
                 'quality_score': 83.0,
                 'word_count': 1100,
                 'read_time_minutes': 5,

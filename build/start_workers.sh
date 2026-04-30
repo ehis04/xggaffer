@@ -53,6 +53,14 @@ fi
 [[ -f "$BACKEND_DIR/manage.py" ]] || die "manage.py not found at $BACKEND_DIR"
 command -v celery >/dev/null 2>&1    || die "celery not found — activate your virtualenv first"
 
+if command -v python >/dev/null 2>&1; then
+    PYTHON_BIN="python"
+elif command -v python3 >/dev/null 2>&1; then
+    PYTHON_BIN="python3"
+else
+    die "Neither python nor python3 found in PATH"
+fi
+
 mkdir -p "$LOG_DIR"
 
 # Kill any leftover workers from a previous run
@@ -69,16 +77,19 @@ fi
 # ── migrations & checks ──────────────────────────────────────────────────────
 
 log "Running migrations..."
-(cd "$BACKEND_DIR" && python manage.py migrate --run-syncdb 2>&1) || die "migrate failed"
+(cd "$BACKEND_DIR" && "$PYTHON_BIN" manage.py migrate --run-syncdb 2>&1) || die "migrate failed"
 
 log "Checking Django system..."
-(cd "$BACKEND_DIR" && python manage.py check 2>&1) || die "system check failed"
+(cd "$BACKEND_DIR" && "$PYTHON_BIN" manage.py check 2>&1) || die "system check failed"
 
 # ── function to launch a background worker ───────────────────────────────────
 
 start_worker() {
     local name="$1"; local queues="$2"; local concurrency="$3"
     local logfile="$LOG_DIR/${name}.log"
+
+    # Include global site-packages for packages like feedparser not in venv
+    export PYTHONPATH="${HOME}/.local/lib/python3.10/site-packages:${PYTHONPATH:-}"
 
     log "  Starting worker: ${name}  queues=[${queues}]  concurrency=${concurrency}"
     touch "$logfile"
@@ -149,7 +160,7 @@ _needs_startup_sync() {
 if _needs_startup_sync; then
     log "Startup data sync — UTC $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
     date -u +%s > "$STARTUP_SYNC_STAMP"
-    (cd "$BACKEND_DIR" && python manage.py fetch_odds 2>&1) \
+    (cd "$BACKEND_DIR" && "$PYTHON_BIN" manage.py fetch_odds 2>&1) \
         && log "  ✓ Odds refreshed" \
         || warn "  ⚠ fetch_odds failed — Beat scheduler will retry on next cycle"
 else
@@ -164,7 +175,7 @@ log "Bootstrapping publication snapshots (runs inline, may take a minute)..."
 run_bootstrap() {
     local label="$1"; shift
     log "  → $label"
-    if ! (cd "$BACKEND_DIR" && python manage.py "$@" 2>&1); then
+    if ! (cd "$BACKEND_DIR" && "$PYTHON_BIN" manage.py "$@" 2>&1); then
         warn "  ⚠ $label failed — workers will still run, publications will self-heal on next cycle"
     fi
 }

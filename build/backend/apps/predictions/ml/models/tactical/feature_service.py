@@ -22,26 +22,35 @@ DEFAULT_ROLLING_WINDOW = 10
 _team_season_cache: Optional[pd.DataFrame] = None
 _team_match_cache: Optional[pd.DataFrame] = None
 _team_match_clusters_cache: Optional[pd.DataFrame] = None
+_team_season_mtime: float | None = None
+_team_match_mtime: float | None = None
+_team_match_clusters_mtime: float | None = None
 
 
 def _load_team_season_profiles() -> pd.DataFrame:
-    global _team_season_cache
-    if _team_season_cache is None:
+    global _team_season_cache, _team_season_mtime
+    current_mtime = TEAM_SEASON_PROFILES_PATH.stat().st_mtime
+    if _team_season_cache is None or _team_season_mtime != current_mtime:
         _team_season_cache = pd.read_csv(TEAM_SEASON_PROFILES_PATH)
+        _team_season_mtime = current_mtime
     return _team_season_cache
 
 
 def _load_team_match_profiles() -> pd.DataFrame:
-    global _team_match_cache
-    if _team_match_cache is None:
+    global _team_match_cache, _team_match_mtime
+    current_mtime = ZONE_PROFILES_PATH.stat().st_mtime
+    if _team_match_cache is None or _team_match_mtime != current_mtime:
         _team_match_cache = pd.read_csv(ZONE_PROFILES_PATH)
+        _team_match_mtime = current_mtime
     return _team_match_cache
 
 
 def _load_team_match_clusters() -> pd.DataFrame:
-    global _team_match_clusters_cache
-    if _team_match_clusters_cache is None:
+    global _team_match_clusters_cache, _team_match_clusters_mtime
+    current_mtime = TEAM_MATCH_CLUSTERS_PATH.stat().st_mtime
+    if _team_match_clusters_cache is None or _team_match_clusters_mtime != current_mtime:
         _team_match_clusters_cache = pd.read_csv(TEAM_MATCH_CLUSTERS_PATH)
+        _team_match_clusters_mtime = current_mtime
     return _team_match_clusters_cache
 
 
@@ -140,9 +149,13 @@ def get_zone_volume_dict(profile: pd.Series) -> dict[int, float]:
 
 def reset_caches() -> None:
     global _team_season_cache, _team_match_cache, _team_match_clusters_cache
+    global _team_season_mtime, _team_match_mtime, _team_match_clusters_mtime
     _team_season_cache = None
     _team_match_cache = None
     _team_match_clusters_cache = None
+    _team_season_mtime = None
+    _team_match_mtime = None
+    _team_match_clusters_mtime = None
 
 
 def main() -> None:

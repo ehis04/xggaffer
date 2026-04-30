@@ -274,6 +274,25 @@ class TacticsBoardViewSetTests(TestCase):
         self.assertEqual(len(response.data['frames']), 1)
         self.assertEqual(response.data['frames'][0]['frame_index'], 0)
 
+    def test_create_board_accepts_animated_board_type(self):
+        self.client.force_authenticate(user=self.owner)
+
+        response = self.client.post(
+            f'/api/clubs/{self.club.id}/tactics-boards/',
+            {
+                'title': 'Animated Plan',
+                'description': 'Movement-focused animation board.',
+                'board_type': 'animated',
+                'pitch_orientation': 'horizontal',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['board_type'], 'animated')
+        self.assertEqual(response.data['pitch_orientation'], 'horizontal')
+        self.assertEqual(len(response.data['frames']), 1)
+
     def test_list_only_returns_boards_for_the_scoped_club(self):
         board_a = create_board_with_initial_frame(
             club=self.club,

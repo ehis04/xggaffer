@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ProfileCard } from '../../components/BoxSections/ProfileCard';
@@ -44,8 +44,8 @@ const splitDenseParagraph = (value: string): string[] => {
   }
 
   const pieces = normalized
-    .split(/(?<=[.!?])\s+(?=(\[)?[A-Z])/)
-    .map((part) => part.trim())
+    .split(/(?<=[.!?])\s+(?=(?:\[)?[A-Z])/)
+    .map((part) => (typeof part === 'string' ? part.trim() : ''))
     .filter((part) => part.length > 0);
 
   if (pieces.length <= 1) {
@@ -60,6 +60,7 @@ const ArticleDetailPage = () => {
   const { articleId } = useParams<{ articleId: string }>();
   const numericId = Number(articleId);
   const [isLowResImage, setIsLowResImage] = useState(false);
+  const [heroMaxWidth, setHeroMaxWidth] = useState<number | null>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['article-detail', numericId],
@@ -147,9 +148,25 @@ const ArticleDetailPage = () => {
                   src={data.image_url}
                   alt=""
                   loading="eager"
+                  style={
+                    isLowResImage && heroMaxWidth
+                      ? ({ '--hero-max-width': `${heroMaxWidth}px` } as CSSProperties)
+                      : undefined
+                  }
                   onLoad={(event) => {
                     const img = event.currentTarget;
-                    setIsLowResImage(img.naturalWidth < 900 || img.naturalHeight < 500);
+                    const devicePixelRatio = Math.max(window.devicePixelRatio || 1, 1);
+                    const effectiveWidth = Math.floor(img.naturalWidth / devicePixelRatio);
+                    const effectiveHeight = Math.floor(img.naturalHeight / devicePixelRatio);
+                    const needsConstraint = effectiveWidth < 760 || effectiveHeight < 420;
+
+                    setIsLowResImage(needsConstraint);
+
+                    if (needsConstraint) {
+                      setHeroMaxWidth(Math.max(420, Math.min(760, effectiveWidth)));
+                    } else {
+                      setHeroMaxWidth(null);
+                    }
                   }}
                 />
               )}

@@ -3,12 +3,15 @@ from .views import (
     AvailableLineupTeamsView,
     AvailableTacticalTeamsView,
     AvailableTeamsView,
+    AvailabilityWidgetView,
     ChatQueryView,
     EloHistoryView,
     EloRankingView,
+    LineupWidgetView,
     MatchPredictionWidgetView,
     ModelInfoView,
     OddsAccuracyView,
+    ModelTrustWidgetView,
     OddsComparisonView,
     OddsFixtureListView,
     OddsTeamsView,
@@ -20,6 +23,7 @@ from .views import (
     ScorelineWidgetView,
     SimulationView,
     TacticalAnalysisView,
+    TacticalSummaryWidgetView,
     WhatIfSimulationView,
 )
 
@@ -51,4 +55,8 @@ urlpatterns = [
     path('widget/match-prediction/', MatchPredictionWidgetView.as_view(), name='widget-match-prediction'),
     path('widget/scoreline/', ScorelineWidgetView.as_view(), name='widget-scoreline'),
     path('widget/projected-table/', ProjectedTableWidgetView.as_view(), name='widget-projected-table'),
+    path('widget/availability/', AvailabilityWidgetView.as_view(), name='widget-availability'),
+    path('widget/predicted-lineup/', LineupWidgetView.as_view(), name='widget-predicted-lineup'),
+    path('widget/tactical-summary/', TacticalSummaryWidgetView.as_view(), name='widget-tactical-summary'),
+    path('widget/model-trust/', ModelTrustWidgetView.as_view(), name='widget-model-trust'),
 ]

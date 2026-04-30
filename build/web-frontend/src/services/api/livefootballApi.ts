@@ -204,21 +204,21 @@ export const liveFootballApi = {
             `${LIVEFOOTBALL_BASE}/players/search/`,
             buildPlayerSearchParams(params)
         ),
-        
-getLeaguesMeta: () =>
-    apiClient.get<ApiEnvelope<LeaguesMetaResponse>>(`${LIVEFOOTBALL_BASE}/leagues/meta/`),
 
-getLeagueExpectedTable: (competitionId: number, params?: LeagueProjectionParams) =>
-    apiClient.get<ApiEnvelope<LeagueExpectedTableResponse>>(
-        `${LIVEFOOTBALL_BASE}/leagues/${competitionId}/expected-table/`,
-        buildLeagueProjectionParams(params)
-    ),
+    getLeaguesMeta: () =>
+        apiClient.get<ApiEnvelope<LeaguesMetaResponse>>(`${LIVEFOOTBALL_BASE}/leagues/meta/`),
 
-getLeagueComparison: (competitionId: number, params?: LeagueProjectionParams) =>
-    apiClient.get<ApiEnvelope<LeagueCompareResponse>>(
-        `${LIVEFOOTBALL_BASE}/leagues/${competitionId}/compare/`,
-        buildLeagueProjectionParams(params)
-    ),
+    getLeagueExpectedTable: (competitionId: number, params?: LeagueProjectionParams) =>
+        apiClient.get<ApiEnvelope<LeagueExpectedTableResponse>>(
+            `${LIVEFOOTBALL_BASE}/leagues/${competitionId}/expected-table/`,
+            buildLeagueProjectionParams(params)
+        ),
+
+    getLeagueComparison: (competitionId: number, params?: LeagueProjectionParams) =>
+        apiClient.get<ApiEnvelope<LeagueCompareResponse>>(
+            `${LIVEFOOTBALL_BASE}/leagues/${competitionId}/compare/`,
+            buildLeagueProjectionParams(params)
+        ),
 
     runLeagueScenario: (
         competitionId: number,

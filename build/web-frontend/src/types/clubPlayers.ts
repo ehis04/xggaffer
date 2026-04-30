@@ -28,6 +28,7 @@ export interface ClubPlayer {
 
   availability_status?: PlayerAvailabilityStatus;
   current_injury?: ClubPlayerInjury | null;
+  fitness_score?: number;
 
   is_linked_to_player?: boolean;
   canonical_player_id?: number | null;

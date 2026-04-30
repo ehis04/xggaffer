@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom/vitest';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -9,11 +10,13 @@ import type { OddsFixtureItem, PredictionResponse } from '../../../types/predict
 const mockGetOddsFixtures = vi.fn();
 const mockGetOddsTeams = vi.fn();
 const mockPredictMatch = vi.fn();
+const mockGetOddsAccuracy = vi.fn();
 
 vi.mock('../../../services/api/predictionsApi', () => ({
   getOddsFixtures: (...args: unknown[]) => mockGetOddsFixtures(...args),
   getOddsTeams: (...args: unknown[]) => mockGetOddsTeams(...args),
   predictMatch: (...args: unknown[]) => mockPredictMatch(...args),
+  getOddsAccuracy: (...args: unknown[]) => mockGetOddsAccuracy(...args),
 }));
 
 const renderPage = () => {
@@ -79,6 +82,7 @@ describe('OddsComparisonPage', () => {
     mockGetOddsFixtures.mockReset();
     mockGetOddsTeams.mockReset();
     mockPredictMatch.mockReset();
+    mockGetOddsAccuracy.mockReset();
 
     mockGetOddsTeams.mockResolvedValue({
       data: { league: 'EPL', teams: ['Arsenal', 'Chelsea'] },
@@ -94,6 +98,21 @@ describe('OddsComparisonPage', () => {
         view: 'future' as const,
         count: 0,
         fixtures: [],
+      },
+      freshness: { status: 'fresh' },
+      version: '1.0',
+      warnings: [],
+      generated_at: new Date().toISOString(),
+    });
+    mockGetOddsAccuracy.mockResolvedValue({
+      data: {
+        league: 'EPL',
+        season: '2025',
+        model_wins: 145,
+        market_wins: 120,
+        ties: 4,
+        total_evaluated: 269,
+        computed_at: new Date().toISOString(),
       },
       freshness: { status: 'fresh' },
       version: '1.0',
@@ -165,6 +184,14 @@ describe('OddsComparisonPage', () => {
 
     expect(await screen.findByText('Home')).toBeInTheDocument();
     expect(screen.getByText('61.0% / 24.0% / 15.0%')).toBeInTheDocument();
+  });
+
+  it('renders model vs market accuracy summary', async () => {
+    renderPage();
+
+    expect(await screen.findByText(/2025\/26 accuracy/i)).toBeInTheDocument();
+    expect(screen.getByText('145')).toBeInTheDocument();
+    expect(screen.getByText('120')).toBeInTheDocument();
   });
 
   it('shows a loading state while the request is in flight', async () => {

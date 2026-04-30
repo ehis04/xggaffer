@@ -116,13 +116,44 @@ export default function ChatInterface({
           </div>
         )}
 
-        {messages.map(msg => {
+        {messages.map((msg, idx) => {
           const chatData = msg.envelope?.data ?? null;
+          const sourceCoverage = (chatData?.structured_data?.engine_data as Record<string, unknown> | undefined)?.source_coverage as
+            | { used_sources?: string[]; coverage_status?: string }
+            | undefined;
           return (
             <div
               key={msg.id}
               className={msg.role === 'user' ? styles.userMessage : styles.assistantMessage}
             >
+              {msg.role === 'assistant' && onPin && (
+                <div className={styles.msgPinRow}>
+                  <button
+                    className={styles.msgPinBtn}
+                    aria-label="Pin this response"
+                    title="Pin question and response"
+                    onClick={() => {
+                      const question = messages[idx - 1]?.content ?? '';
+                      onPin({
+                        id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                        label: question
+                          ? question.slice(0, 60) + (question.length > 60 ? '\u2026' : '')
+                          : chatData?.query_type ?? 'Pinned response',
+                        query_type: chatData?.query_type ?? 'RESPONSE',
+                        data: (chatData?.structured_data?.engine_data as Record<string, unknown>) ?? {},
+                        question,
+                        prose: msg.content,
+                        pinned_at: new Date().toISOString(),
+                      });
+                    }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6h2v-6h5v-2l-2-2z" />
+                    </svg>
+                    Pin
+                  </button>
+                </div>
+              )}
               <p className={styles.messageText}>{msg.content}</p>
               {msg.role === 'assistant' && msg.envelope && (
                 <>
@@ -137,8 +168,12 @@ export default function ChatInterface({
                       partial={chatData.structured_data.partial}
                       error={chatData.structured_data.error}
                       onExampleClick={handleSubmit}
-                      onPin={onPin}
                     />
+                  )}
+                  {sourceCoverage?.used_sources && sourceCoverage.used_sources.length > 0 && (
+                    <span className={styles.fallbackBadge}>
+                      Sources: {sourceCoverage.used_sources.join(', ')} ({sourceCoverage.coverage_status ?? 'partial'})
+                    </span>
                   )}
                 </>
               )}

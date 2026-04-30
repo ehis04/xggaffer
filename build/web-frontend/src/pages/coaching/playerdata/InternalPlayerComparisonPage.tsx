@@ -15,6 +15,21 @@ import styles from "./css/InternalPlayerComparisonPage.module.css";
 const SEASON = '2025';
 const PROVIDER = "understat";
 
+const ALLOWED_COMPARE_CLUBS = new Set([
+  "manchester united",
+  "real madrid cf",
+  "paris saint-germain fc",
+  "fc bayern munchen",
+  "juventus fc",
+]);
+
+const normaliseClubName = (name: string): string =>
+  name
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
 const ComparisonMetricGroup: React.FC<{
   group: PlayerOverviewComparisonMetricGroup;
 }> = ({ group }) => {
@@ -223,7 +238,13 @@ const InternalPlayerComparisonPage: React.FC = () => {
     clubsApi
       .browse()
       .then((clubs) =>
-        setProClubs(clubs.filter((c) => c.club_type === "system_professional")),
+        setProClubs(
+          clubs.filter(
+            (c) =>
+              c.club_type === "system_professional" &&
+              ALLOWED_COMPARE_CLUBS.has(normaliseClubName(c.name)),
+          ),
+        ),
       )
       .catch(() => {})
       .finally(() => setClubsLoading(false));

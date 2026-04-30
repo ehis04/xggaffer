@@ -1,4 +1,5 @@
 from django.conf import settings
+from rest_framework import permissions as drf_permissions
 from rest_framework.permissions import BasePermission
 
 from apps.users.models import Role, UserRole
@@ -7,6 +8,71 @@ from .models import Club, ClubMembership, ClubResource
 
 def should_bypass_permissions():
     return getattr(settings, 'BYPASS_PERMISSIONS', False)
+
+
+def _get_club_from_view(view) -> 'Club | None':
+    club_pk = view.kwargs.get('club_pk')
+    if not club_pk:
+        return None
+    try:
+        return Club.objects.get(pk=club_pk)
+    except Club.DoesNotExist:
+        return None
+
+
+class BypassablePermission(BasePermission):
+    def should_bypass(self):
+        return should_bypass_permissions()
+
+
+class IsAuthenticatedOrBypass(BypassablePermission):
+    def has_permission(self, request, view):
+        if self.should_bypass():
+            return True
+        return bool(request.user and request.user.is_authenticated)
+
+
+class IsClubMemberOrPublicRead(BypassablePermission):
+    def has_permission(self, request, view):
+        if self.should_bypass():
+            return True
+        if request.method in drf_permissions.SAFE_METHODS:
+            return True
+        return bool(request.user and request.user.is_authenticated)
+
+    def has_object_permission(self, request, view, obj):
+        if self.should_bypass():
+            return True
+        club = obj if isinstance(obj, Club) else getattr(obj, 'club', None)
+        if request.method in drf_permissions.SAFE_METHODS:
+            if club and club.visibility == Club.Visibility.PUBLIC:
+                return True
+            if not request.user or not request.user.is_authenticated:
+                return False
+            return ClubMembership.objects.filter(
+                user=request.user, club=club, is_active=True,
+            ).exists()
+        membership = ClubMembership.objects.filter(
+            user=request.user, club=club, is_active=True,
+        ).first()
+        return membership is not None and membership.can_edit_club()
+
+
+class CanManageClubContent(BypassablePermission):
+    def has_permission(self, request, view):
+        if self.should_bypass():
+            return True
+        if request.method in drf_permissions.SAFE_METHODS:
+            return True
+        if not request.user or not request.user.is_authenticated:
+            return False
+        club_pk = view.kwargs.get('club_pk')
+        if not club_pk:
+            return True
+        membership = ClubMembership.objects.filter(
+            user=request.user, club_id=club_pk, is_active=True,
+        ).first()
+        return membership is not None and membership.can_create_content()
 
 
 def get_user_profile(user):
@@ -87,7 +153,10 @@ def user_can_request_player_membership(user):
     if should_bypass_permissions():
         return True
 
-    return bool(user and user.is_authenticated)
+    if not user or not user.is_authenticated:
+        return False
+
+    return user_has_platform_role(user, Role.PLAYER)
 
 
 def user_can_review_join_requests(user, club):
@@ -192,6 +261,17 @@ class CanCreateClub(BasePermission):
             )
             return False
 
+        # Check club creation limit
+        create_limit = getattr(settings, 'CLUB_CREATE_LIMIT_PER_USER', 10)
+        user_club_count = ClubMembership.objects.filter(
+            user=user,
+            role__in=[ClubMembership.Role.OWNER, ClubMembership.Role.ADMIN],
+            is_active=True,
+        ).count()
+        if user_club_count >= create_limit:
+            self.message = f'You have reached the maximum limit of {create_limit} clubs. Please delete or leave some clubs before creating new ones.'
+            return False
+
         return True
 
 
@@ -222,20 +302,11 @@ class CanManageClubPlayerIdentity(BasePermission):
 class CanAccessClubScheduling(BasePermission):
     message = 'You do not have permission to access or manage scheduling for this club.'
 
-    def _get_club(self, view):
-        club_pk = view.kwargs.get('club_pk')
-        if not club_pk:
-            return None
-        try:
-            return Club.objects.get(pk=club_pk)
-        except Club.DoesNotExist:
-            return None
-
     def has_permission(self, request, view):
         if should_bypass_permissions():
             return True
 
-        club = self._get_club(view)
+        club = _get_club_from_view(view)
         if club is None:
             return False
 
@@ -400,15 +471,6 @@ def user_can_view_club_visible_resource_status(user, resource):
 class CanAccessClubResources(BasePermission):
     message = 'You must be an active club member to access club resources.'
 
-    def _get_club(self, view):
-        club_pk = view.kwargs.get('club_pk')
-        if not club_pk:
-            return None
-        try:
-            return Club.objects.get(pk=club_pk)
-        except Club.DoesNotExist:
-            return None
-
     def has_permission(self, request, view):
         if should_bypass_permissions():
             return True
@@ -416,7 +478,7 @@ class CanAccessClubResources(BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
 
-        club = self._get_club(view)
+        club = _get_club_from_view(view)
         if club is None:
             return False
 
@@ -436,15 +498,6 @@ class CanAccessClubResources(BasePermission):
 class CanManageClubResources(BasePermission):
     message = 'Only owner/admin/coach members can manage club resources.'
 
-    def _get_club(self, view):
-        club_pk = view.kwargs.get('club_pk')
-        if not club_pk:
-            return None
-        try:
-            return Club.objects.get(pk=club_pk)
-        except Club.DoesNotExist:
-            return None
-
     def has_permission(self, request, view):
         if should_bypass_permissions():
             return True
@@ -452,7 +505,7 @@ class CanManageClubResources(BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
 
-        club = self._get_club(view)
+        club = _get_club_from_view(view)
         if club is None:
             return False
 
@@ -479,13 +532,8 @@ class CanViewClubResourceEngagementDashboard(BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
 
-        club_pk = view.kwargs.get('club_pk')
-        if not club_pk:
-            return False
-
-        try:
-            club = Club.objects.get(pk=club_pk)
-        except Club.DoesNotExist:
+        club = _get_club_from_view(view)
+        if club is None:
             return False
 
         return user_can_view_club_resource_engagement_dashboard(request.user, club)

@@ -1,0 +1,184 @@
+.wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.referenceRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0.85rem;
+}
+
+.referenceItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 1.4rem;
+}
+
+.referenceItemLeft {
+  justify-content: flex-start;
+}
+
+.referenceItemCenter {
+  justify-content: center;
+}
+
+.referenceItemRight {
+  justify-content: flex-end;
+}
+
+.referenceItemGhost {
+  visibility: hidden;
+}
+
+.referenceSwatch {
+  width: 1.5rem;
+  border-top-width: 2px;
+  border-top-style: dashed;
+  display: inline-block;
+}
+
+.referenceSwatchRandom {
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+.referenceSwatchModel {
+  border-color: rgba(52, 211, 153, 0.8);
+}
+
+.referenceSwatchMarket {
+  border-color: rgba(251, 191, 36, 0.85);
+}
+
+.referenceText {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--primary-text);
+  white-space: nowrap;
+  text-align: right;
+}
+
+.chartArea {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-width: 0;
+  margin-top: 1.9rem;
+}
+
+.refLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+}
+
+.refLine:nth-of-type(2) {
+  border-color: rgba(52, 211, 153, 0.6);
+}
+
+.refLine:nth-of-type(3) {
+  border-color: rgba(251, 191, 36, 0.6);
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.25rem;
+  width: 100%;
+  padding: 0 0.5rem;
+}
+
+.barGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 160px;
+}
+
+.accuracyLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary-text);
+}
+
+.barTrack {
+  width: 100%;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.25rem 0.25rem 0 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+
+.bar {
+  width: 100%;
+  border-radius: 0.25rem 0.25rem 0 0;
+  transition: height 0.3s ease;
+}
+
+.high {
+  background: rgba(74, 222, 128, 0.55);
+}
+
+.medium {
+  background: rgba(250, 204, 21, 0.55);
+}
+
+.low {
+  background: rgba(248, 113, 113, 0.55);
+}
+
+.sampleSize {
+  font-size: 0.7rem;
+  color: var(--secondary-text);
+}
+
+.bandLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--secondary-text);
+}
+
+.refLineMarket {
+  border-color: rgba(251, 191, 36, 0.6);
+  border-style: dashed;
+}
+
+@media (max-width: 640px) {
+  .referenceRow {
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+    margin-bottom: 0.7rem;
+  }
+
+  .referenceItemCenter,
+  .referenceItemRight {
+    justify-content: flex-start;
+  }
+
+  .referenceItemGhost {
+    display: none;
+  }
+
+  .chartArea {
+    margin-top: 1.35rem;
+  }
+
+  .bars {
+    gap: 0.75rem;
+    padding: 0;
+  }
+}

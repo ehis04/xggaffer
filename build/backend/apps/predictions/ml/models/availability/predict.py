@@ -252,6 +252,16 @@ class AvailabilityPredictor:
         return injury_start + timedelta(days=calendar_days)
 
 
+_predictor_cache: AvailabilityPredictor | None = None
+
+
+def get_shared_predictor() -> AvailabilityPredictor:
+    global _predictor_cache
+    if _predictor_cache is None:
+        _predictor_cache = AvailabilityPredictor()
+    return _predictor_cache
+
+
 def _smoke_test() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
     predictor = AvailabilityPredictor()

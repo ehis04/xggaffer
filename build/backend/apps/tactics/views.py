@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import models
 from django.db.models import Prefetch
@@ -55,12 +56,6 @@ class TacticsContextMixin:
             pk=board_pk,
             club_id=self.kwargs.get('club_pk'),
             is_trashed=False,
-        )
-
-        return get_object_or_404(
-            TacticsBoard.objects.select_related('club', 'created_by', 'linked_teamsheet'),
-            pk=board_pk,
-            club_id=self.kwargs.get('club_pk'),
         )
 
     def get_frame(self):
@@ -210,6 +205,18 @@ class TacticsBoardViewSet(TacticsContextMixin, viewsets.ModelViewSet):
 
         club = self.get_club()
         board_data = dict(serializer.validated_data)
+
+        # Check tactics board creation limit
+        create_limit = getattr(settings, 'TACTICS_BOARD_CREATE_LIMIT_PER_USER', 10)
+        user_board_count = TacticsBoard.objects.filter(
+            club_id=club.pk,
+            created_by=request.user,
+            is_trashed=False,
+        ).count()
+        if user_board_count >= create_limit:
+            raise ValidationError({
+                'detail': f'You have reached the maximum limit of {create_limit} tactics boards. Please delete some tactics boards before creating new ones.'
+            })
 
         try:
             board = create_board_with_initial_frame(

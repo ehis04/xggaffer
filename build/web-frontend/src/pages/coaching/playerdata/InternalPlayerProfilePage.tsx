@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Sidebar } from '../../../components/Navigation/SideBar';
 import { SocialUserButtons } from '../../../components/Social/SocialUserButtons';
 import { clubsApi } from '../../../services/api';
@@ -14,6 +14,26 @@ import type {
 import styles from './css/InternalPlayerProfilePage.module.css';
 
 const SEASON = '2025';
+
+const ALLOWED_PLAYERDATA_CLUBS = new Set([
+  'manchester united',
+  'manchester united fc',
+  'paris saint german',
+  'paris saint germain',
+  'paris saint germain fc',
+  'real madrid cf',
+  'fc bayern munchen',
+  'juventus fc',
+]);
+
+const normalizeClubName = (name: string): string =>
+  name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 const getMetricValue = (
   metric: { formatted_value?: string | null; value?: number | null },
@@ -266,6 +286,7 @@ const PlayerRadar: React.FC<{ metricGroups: PlayerOverviewMetricGroup[] }> = ({ 
 };
 
 const InternalPlayerProfilePage: React.FC = () => {
+  const [searchParams] = useSearchParams();
   const [proClubs, setProClubs]         = useState<Club[]>([]);
   const [clubsLoading, setClubsLoading] = useState(true);
 
@@ -281,11 +302,29 @@ const InternalPlayerProfilePage: React.FC = () => {
   const [overviewError, setOverviewError]   = useState<string | null>(null);
   const [showAdvancedGroups, setShowAdvancedGroups] = useState(false);
 
+  // Auto-select player from URL params
+  useEffect(() => {
+    const playerIdParam = searchParams.get('playerId');
+    if (playerIdParam && players.length > 0) {
+      const playerId = Number(playerIdParam);
+      const found = players.find(p => p.player?.id === playerId);
+      if (found) {
+        setSelectedPlayer(found);
+      }
+    }
+  }, [searchParams, players]);
+
   useEffect(() => {
     const load = async () => {
       try {
         const clubs = await clubsApi.browse();
-        setProClubs(clubs.filter((c) => c.club_type === 'system_professional'));
+        setProClubs(
+          clubs.filter(
+            (c) =>
+              c.club_type === 'system_professional' &&
+              ALLOWED_PLAYERDATA_CLUBS.has(normalizeClubName(c.name)),
+          ),
+        );
       } catch {
       } finally {
         setClubsLoading(false);

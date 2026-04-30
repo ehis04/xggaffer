@@ -154,16 +154,14 @@ def assemble_xi(
             selected.append(row.to_dict())
             used_player_ids.add(row['player_id'])
 
-    result = pd.DataFrame(selected)
-
-    if 'p_start' in result.columns:
-        result = result.sort_values('p_start', ascending=False)
-
-    return result
+    return pd.DataFrame(selected)
 
 
 def _guess_category_from_history(sub_df: pd.DataFrame) -> pd.Series:
     return pd.Series('MID', index=sub_df.index)
+
+
+_predictor_cache: LineupPredictor | None = None
 
 
 def predict_match_lineups(
@@ -171,8 +169,11 @@ def predict_match_lineups(
     predictor: LineupPredictor | None = None,
     formation: str | None = None,
 ) -> dict[str, pd.DataFrame]:
+    global _predictor_cache
     if predictor is None:
-        predictor = LineupPredictor()
+        if _predictor_cache is None:
+            _predictor_cache = LineupPredictor()
+        predictor = _predictor_cache
 
     results = {}
 

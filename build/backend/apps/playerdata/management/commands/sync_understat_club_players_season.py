@@ -38,7 +38,7 @@ class Command(BaseCommand):
             "--external-team-id",
             type=str,
             default="",
-            help="Optional explicit Understat team id/slug override.",
+            help="Optional explicit Understat team slug override, e.g. Real_Madrid. Common aliases like real-madrid are accepted.",
         )
 
     def handle(self, *args, **options):

@@ -54,7 +54,6 @@ class TacticsBoardWriteSerializer(serializers.ModelSerializer):
             'id',
             'club',
             'created_by',
-            'board_type',
             'created_at',
             'updated_at',
         ]
