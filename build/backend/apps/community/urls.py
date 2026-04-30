@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import CreateNewPostView, ExplorePostsView, MarkPostViewedView, BulkMarkPostViewedView, CreateNewCommentView, GetPostView, CommentPostView, LikeCommentView, LikePostView, UserPostView, GetCommentView, FollowingPostsView, HashtagPostsView, NotificationsListView, NotificationMarkReadView, UserPostsListView, UserCommentView
+from .views import CreateNewPostView, ExplorePostsView, MarkPostViewedView, BulkMarkPostViewedView, CreateNewCommentView, GetPostView, CommentPostView, LikeCommentView, LikePostView, ReportPostView, UserPostView, GetCommentView, FollowingPostsView, HashtagPostsView, NotificationsListView, NotificationMarkReadView, UserPostsListView, UserCommentView
 
 urlpatterns = [
     path('create/post/', CreateNewPostView.as_view(), name='create-post'),
@@ -13,6 +13,7 @@ urlpatterns = [
     path('post/<int:post_id>/create/comment/', CreateNewCommentView.as_view(), name='create-comment'),
     path('posts/<int:post_id>/comments/', CommentPostView.as_view(), name='post-comment'),
     path('posts/<int:post_id>/like/', LikePostView.as_view(), name='like_post'), 
+    path('posts/<int:post_id>/report/', ReportPostView.as_view(), name='report-post'),
     path('comment/<int:comment_id>/like/', LikeCommentView.as_view(), name='like-comment'),
     path('my-post/<int:post_id>/', UserPostView.as_view(), name='user-post'),
     path('comment/<int:comment_id>/', GetCommentView.as_view(), name='get-comment'),
