@@ -565,6 +565,15 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
+ENABLE_CELERY_BEAT_SCHEDULE = config(
+    "ENABLE_CELERY_BEAT_SCHEDULE",
+    default=True,
+    cast=bool,
+)
+
+if not ENABLE_CELERY_BEAT_SCHEDULE:
+    CELERY_BEAT_SCHEDULE = {}
+
 # ---------------------------------------------------------------------------
 # Data pipeline provider policy
 # ---------------------------------------------------------------------------

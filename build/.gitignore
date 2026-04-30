@@ -73,7 +73,22 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+
 .env.production.local
+.env.staging
+.env.production
+
+build/backend/.env
+build/backend/.env.local
+build/backend/.env.docker.local
+build/backend/.env.staging
+build/backend/.env.production
+
+build/web-frontend/.env
+build/web-frontend/.env.local
+build/web-frontend/.env.docker.local
+build/web-frontend/.env.staging
+build/web-frontend/.env.production
 
 # Local secrets and download artifacts
 cookies.txt
