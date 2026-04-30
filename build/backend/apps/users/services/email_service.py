@@ -1,10 +1,14 @@
 import resend
 from django.conf import settings
 from django.template.loader import render_to_string
+import logging
 
+# Sends account verification and password reset emails through Resend
+
+logger = logging.getLogger(__name__)
 resend.api_key = settings.RESEND_API_KEY
 
-
+# Generates an email verification token and sends the user a verification link
 def send_verification_email(user):
     token = user.generate_verification_token()
     verification_url = f"{settings.FRONTEND_URL}/verify-email/confirm?token={token}"
@@ -30,7 +34,7 @@ def send_verification_email(user):
         print(f"Failed to send verification email to {user.email}: {e}")
         return False
 
-
+# Generates an email verification token and sends the user a verification link
 def send_password_reset_email(user, reset_token):
     reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
     
@@ -52,5 +56,5 @@ def send_password_reset_email(user, reset_token):
         })
         return True
     except Exception as e:
-        print(f"Failed to send password reset email to {user.email}: {e}")
+        logger.exception(f"Failed to send password reset email to {user.email}: {e}")
         return False

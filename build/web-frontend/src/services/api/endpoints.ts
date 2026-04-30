@@ -27,6 +27,7 @@ export const COMMUNITY = {
   CREATE_POST:            '/community/create/post/',
   POST:                   (postId: number) => `/community/post/${postId}/`,
   DELETE_POST:            (postId: number) => `/community/my-post/${postId}/`,
+  DELETE_COMMENT:         (commentId: number) => `/community/my-comment/${commentId}/`,
   LIKE_POST:              (postId: number) => `/community/posts/${postId}/like/`,
   POST_COMMENTS:          (postId: number) => `/community/posts/${postId}/comments/`,
   CREATE_COMMENT:         (postId: number) => `/community/post/${postId}/create/comment/`,

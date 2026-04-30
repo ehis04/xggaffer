@@ -12,10 +12,11 @@ from apps.referee.progressTracking.services import (
     get_active_item_id,
 )
 
+# Returns the course sections and item progress for a specific law
 
 class CourseDetailView(APIView):
     permission_classes = [IsAuthenticated, IsReferee]
-
+    # Gets the selected law, calculates the user's progress, and returns the nested course content
     def get(self, request, law_number: int):
         up  = request.user.profile
         law = get_object_or_404(Law, law_number=law_number)

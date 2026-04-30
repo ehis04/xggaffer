@@ -10,7 +10,6 @@ import type {
 import styles from "./css/MyClubsPage.module.css";
 import { Sidebar } from "../../../components/Navigation/SideBar";
 import { SocialUserButtons } from "../../../components/Social/SocialUserButtons";
-import { ClubsNavBar } from "../../../components/Navigation/ClubsNavBar";
 import { MiniClubCard } from "../../../components/Clubs/MiniClubCard";
 
 const collectRoleValues = (value: unknown): string[] => {
@@ -444,7 +443,6 @@ const MyClubsPage: React.FC = () => {
             <span className={styles.clubPageHeaderTitle}>Clubs</span>
           </div>
           <div className={styles.clubPageHeaderMiddle}>
-            <ClubsNavBar />
           </div>
           <div className={styles.clubPageHeaderRight}>
             <SocialUserButtons />

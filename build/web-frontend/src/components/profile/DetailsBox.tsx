@@ -18,8 +18,7 @@ const formatJoinDate = (dateStr?: string) => {
 };
 
 const visibilityLabel = (v?: string) => {
-  if (v === "PRIVATE") return "Private";
-  if (v === "FOLLOWERS") return "Followers";
+  if (v === "PR" || v === "PRIVATE") return "Private";
   return "Public";
 };
 
