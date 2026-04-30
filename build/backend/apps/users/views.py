@@ -3,12 +3,45 @@ from rest_framework import status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from .serializers import *
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import UserProfile, Follow, UserRole
 from rest_framework.generics import CreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListAPIView
 from .services.cookie_service import set_auth_cookies
+
+ROLE_CODE_BY_KEY = {
+    "C": "C",
+    "COACH": "C",
+    "P": "P",
+    "PLAYER": "P",
+    "R": "R",
+    "REFEREE": "R",
+    "F": "F",
+    "FAN": "F",
+}
+
+
+def normalise_role(role):
+    if not role:
+        return role
+    return ROLE_CODE_BY_KEY.get(str(role).upper(), role)
+
+
+def role_aliases(role):
+    normalised_role = normalise_role(role)
+    if not normalised_role:
+        return []
+
+    aliases = [
+        key for key, value in ROLE_CODE_BY_KEY.items()
+        if value == normalised_role
+    ]
+    if normalised_role not in aliases:
+        aliases.append(normalised_role)
+    return aliases
+
 
 role_required_message = "Role is required"
 # Handles new user registration and automatically logs the user in
@@ -58,6 +91,7 @@ class UserCreateProfileView(CreateAPIView):
 # Retrieves and updates the user's own profile
 class UserProfileView(RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
 
     def get_object(self):
         return get_object_or_404(UserProfile, user=self.request.user)
@@ -251,6 +285,13 @@ class UserRoleView(APIView):
 
     # Reads the role from the request body first and falls back to query parameters for clients that do not support DELETE bodies
     def _get_role_from_request(self, request):
+        """
+        Read the role value from the request body first, then fall back to
+        query params. This handles HTTP clients that strip DELETE bodies.
+        """
+        role = request.data.get("role") or request.query_params.get("role")
+        return normalise_role(role)
+
         return request.data.get("role") or request.query_params.get("role")
     
     # Returns all roles currently assigned to the authenticated user's profile
@@ -283,9 +324,17 @@ class UserRoleView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        role_obj, created = UserRole.objects.get_or_create(
-            user_profile=profile, role=role
-        )
+        role_obj = UserRole.objects.filter(
+            user_profile=profile,
+            role__in=role_aliases(role),
+        ).first()
+        created = role_obj is None
+
+        if created:
+            role_obj = UserRole.objects.create(user_profile=profile, role=role)
+        elif role_obj.role != role:
+            role_obj.role = role
+            role_obj.save(update_fields=['role'])
 
         if created and not profile.active_role:
             profile.active_role = role
@@ -319,11 +368,11 @@ class UserRoleView(APIView):
             )
 
         deleted_count, _ = UserRole.objects.filter(
-            user_profile=profile, role=role
+            user_profile=profile, role__in=role_aliases(role)
         ).delete()
 
         if deleted_count > 0:
-            if profile.active_role == role:
+            if profile.active_role in role_aliases(role):
                 profile.active_role = None
                 profile.save(update_fields=['active_role', 'updated_at'])
             return Response(
@@ -373,7 +422,7 @@ class ActiveUserRoleView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        requested_role = request.data.get("role")
+        requested_role = normalise_role(request.data.get("role"))
 
         if requested_role in (None, ""):
             profile.active_role = None
@@ -385,7 +434,7 @@ class ActiveUserRoleView(APIView):
             })
 
         if not UserRole.objects.filter(
-            user_profile=profile, role=requested_role
+            user_profile=profile, role__in=role_aliases(requested_role)
         ).exists():
             return Response(
                 {"error": "Role is not assigned to your account"},
@@ -404,6 +453,7 @@ class ActiveUserRoleView(APIView):
 class UserProfileViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = UserProfileSerializer
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
     lookup_field = 'user__username'
     lookup_url_kwarg = 'username'
 
@@ -574,16 +624,24 @@ class UserRoleViewSet(viewsets.ViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        role = request.data.get("role")
+        role = normalise_role(request.data.get("role"))
         if not role:
             return Response(
                 {"error": role_required_message},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        role_obj, created = UserRole.objects.get_or_create(
-            user_profile=profile, role=role
-        )
+        role_obj = UserRole.objects.filter(
+            user_profile=profile,
+            role__in=role_aliases(role),
+        ).first()
+        created = role_obj is None
+
+        if created:
+            role_obj = UserRole.objects.create(user_profile=profile, role=role)
+        elif role_obj.role != role:
+            role_obj.role = role
+            role_obj.save(update_fields=['role'])
 
         if created and not profile.active_role:
             profile.active_role = role
@@ -608,7 +666,9 @@ class UserRoleViewSet(viewsets.ViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        role = request.data.get("role") or request.query_params.get("role")
+        role = normalise_role(
+            request.data.get("role") or request.query_params.get("role")
+        )
         if not role:
             return Response(
                 {"error": role_required_message},
@@ -616,11 +676,11 @@ class UserRoleViewSet(viewsets.ViewSet):
             )
 
         deleted_count, _ = UserRole.objects.filter(
-            user_profile=profile, role=role
+            user_profile=profile, role__in=role_aliases(role)
         ).delete()
 
         if deleted_count > 0:
-            if profile.active_role == role:
+            if profile.active_role in role_aliases(role):
                 profile.active_role = None
                 profile.save(update_fields=['active_role', 'updated_at'])
             return Response(
@@ -631,3 +691,4 @@ class UserRoleViewSet(viewsets.ViewSet):
             {"error": "Role not found"},
             status=status.HTTP_404_NOT_FOUND,
         )
+

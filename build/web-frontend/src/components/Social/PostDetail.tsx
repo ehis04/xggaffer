@@ -50,6 +50,7 @@ export const PostDetail = () => {
           author: {
             id: postData.author.id,
             username: postData.author.username,
+            profile_image: postData.author.profile_image,
           },
           text_body: postData.text_body,
           created_at: postData.created_at,
@@ -225,6 +226,7 @@ export const PostDetail = () => {
                   {userData && (
                     <ProfileButton
                       username={userData.username}
+                      profileImage={userData.profile_image ?? undefined}
                       size="medium"
                       onClick={handleProfileClick}
                     />

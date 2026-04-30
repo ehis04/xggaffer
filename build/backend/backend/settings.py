@@ -9,6 +9,7 @@ import xgboost as xgb
 from datetime import timedelta
 from pathlib import Path
 
+import cloudinary
 from celery.schedules import crontab
 from decouple import config
 
@@ -245,6 +246,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 CLOUDINARY_CLOUD_NAME = config("CLOUDINARY_CLOUD_NAME", default="")
 CLOUDINARY_API_KEY = config("CLOUDINARY_API_KEY", default="")
 CLOUDINARY_API_SECRET = config("CLOUDINARY_API_SECRET", default="")
+
+if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET,
+        secure=True,
+    )
 
 # Club resources can fall back to local media storage unless Cloudinary is enabled.
 CLUB_RESOURCES_USE_CLOUDINARY = config(

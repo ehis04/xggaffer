@@ -42,7 +42,8 @@ export interface UserData {
   followers_count: number;
   following_count: number;
   gender: string;
-  profile_image?: string;
+  date_of_birth?: string | null;
+  profile_image?: string | null;
   roles: UserRole[];
   visibility: string;
   created_at: string;
@@ -297,6 +298,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {userData && (
             <ProfileButton
               username={userData.username}
+              profileImage={userData.profile_image ?? undefined}
               size="small"
               showLabel={isHovered}
               onClick={handleProfileClick}

@@ -67,9 +67,21 @@ class CommentListSerializer(serializers.ModelSerializer):
 
 # Serializes the minimal author fields needed inside post responses
 class PostAuthorSerializer(serializers.ModelSerializer):
+    profile_image = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'username']
+        fields = ['id', 'username', 'profile_image']
+
+    def get_profile_image(self, obj):
+        profile = getattr(obj, 'profile', None)
+        if not profile or not profile.profile_picture:
+            return None
+
+        try:
+            return profile.profile_picture.url
+        except Exception:
+            return str(profile.profile_picture) or None
 
 # Serializes posts for the explore feed
 class ExplorePostSerializer(serializers.ModelSerializer):

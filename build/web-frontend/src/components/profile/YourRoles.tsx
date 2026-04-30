@@ -2,10 +2,10 @@ import type { ProfileData } from "./types/ProfileTypes";
 import "./css/YourRoles.css";
 
 const ALL_ROLES = [
-  { key: "COACH",   label: "Coach" },
-  { key: "REFEREE", label: "Referee" },
-  { key: "PLAYER",  label: "Player" },
-  { key: "FAN",     label: "Fan" },
+  { key: "C", label: "Coach" },
+  { key: "R", label: "Referee" },
+  { key: "P", label: "Player" },
+  { key: "F", label: "Fan" },
 ] as const;
 
 type RoleKey = typeof ALL_ROLES[number]["key"];
