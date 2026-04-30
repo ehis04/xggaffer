@@ -56,7 +56,7 @@ const LiveFootballBasePage: React.FC = () => {
           {isPending && (
             <OverviewDataState
               title="Loading Live Football overview"
-              description="Pulling the homepage data from the aggregated overview endpoint."
+              description="Live Football Data is Loading."
             />
           )}
 

@@ -82,8 +82,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </svg>
       ),
       label: "Home",
-      onClick: () => console.log("Home clicked"),
-      link: "",
+      onClick: () => navigate("/home"),
+      link: "/home",
     },
     {
       id: "social",

@@ -11,6 +11,7 @@ import type {
   PlayerOverviewComparisonMetricGroup,
 } from "../../../types/playerdata";
 import { formatSeasonDisplay, getCurrentFootballSeason } from "../../../utils/footballSeason";
+import { dedupeEnrichedPlayers, getEnrichedPlayerListKey } from "./playerListUtils";
 import styles from "./css/InternalPlayerComparisonPage.module.css";
 
 const ComparisonMetricGroup: React.FC<{
@@ -157,7 +158,7 @@ const PlayerPicker: React.FC<PlayerPickerProps> = ({
                 .join(" · ");
               return (
                 <button
-                  key={item.player.id}
+                  key={getEnrichedPlayerListKey(item)}
                   type="button"
                   className={styles["icp-player-row"]}
                   onClick={() => onSelectPlayer(item)}
@@ -219,12 +220,18 @@ const InternalPlayerComparisonPage: React.FC = () => {
   const [comparisonLoading, setComparisonLoading] = useState(false);
   const [comparisonError, setComparisonError] = useState<string | null>(null);
 
+  // Filter to only show these specific clubs (matching exact names from database)
+  const ALLOWED_CLUBS = ['Manchester United FC', 'Paris Saint-Germain FC', 'FC Bayern München', 'Real Madrid CF', 'Juventus FC'];
+
   useEffect(() => {
     clubsApi
       .browse()
       .then((clubs) =>
         setProClubs(
-          clubs.filter((club) => club.club_type === "system_professional"),
+          clubs.filter((club) => 
+            club.club_type === "system_professional" && 
+            ALLOWED_CLUBS.includes(club.name)
+          ),
         ),
       )
       .catch(() => {})
@@ -238,6 +245,7 @@ const InternalPlayerComparisonPage: React.FC = () => {
       .catch(() => {});
   }, [playerAIdFromUrl, season, provider]);
 
+  // Load players when a club is selected OR when there's a search query
   useEffect(() => {
     if (!clubA && !searchA.trim()) {
       setPlayersA([]);
@@ -251,12 +259,13 @@ const InternalPlayerComparisonPage: React.FC = () => {
       season,
       provider,
       limit: 60,
-    }).then((r) => { if (active) setPlayersA(r.data?.results ?? []); })
+    }).then((r) => { if (active) setPlayersA(dedupeEnrichedPlayers(r.data?.results ?? [])); })
       .catch(() => { if (active) setPlayersA([]); })
       .finally(() => { if (active) setLoadingA(false); });
     return () => { active = false; };
   }, [clubA, searchA, season, provider]);
 
+  // Load players when a club is selected OR when there's a search query
   useEffect(() => {
     if (!clubB && !searchB.trim()) {
       setPlayersB([]);
@@ -270,7 +279,7 @@ const InternalPlayerComparisonPage: React.FC = () => {
       season,
       provider,
       limit: 60,
-    }).then((r) => { if (active) setPlayersB(r.data?.results ?? []); })
+    }).then((r) => { if (active) setPlayersB(dedupeEnrichedPlayers(r.data?.results ?? [])); })
       .catch(() => { if (active) setPlayersB([]); })
       .finally(() => { if (active) setLoadingB(false); });
     return () => { active = false; };

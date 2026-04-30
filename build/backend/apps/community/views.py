@@ -22,7 +22,6 @@ from django.utils.dateparse import parse_date
 from django.db.models import Q, F, FloatField, IntegerField, ExpressionWrapper
 from django.db.models.expressions import RawSQL
 from django.db import transaction
-from django.contrib.contenttypes.prefetch import GenericPrefetch
 
 # Create New Post
 class CreateNewPostView(CreateAPIView):
@@ -546,18 +545,7 @@ class NotificationsListView(ListAPIView):
         qs = (
             Notification.objects.filter(user=self.request.user)
             .select_related("triggered_by", "content_type")
-            .prefetch_related(
-                GenericPrefetch(
-                    "content_object",
-                    [
-                        Post.objects.only("id"),
-                        Comment.objects.select_related("post").only(
-                            "id", "post_id", "post__id"
-                        ),
-                        # FollowRequest.objects.only("id"),
-                    ],
-                )
-            )
+            .prefetch_related("content_object")
             .order_by("-created_at")
         )
         unread_only = self.request.query_params.get("unread_only", "").lower()

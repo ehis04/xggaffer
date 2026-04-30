@@ -12,6 +12,7 @@ import type {
   PlayerOverviewMetricGroup,
 } from '../../../types/playerdata';
 import { getCurrentFootballSeason } from '../../../utils/footballSeason';
+import { dedupeEnrichedPlayers, getEnrichedPlayerListKey } from './playerListUtils';
 import styles from './css/InternalPlayerProfilePage.module.css';
 
 const getMetricValue = (
@@ -295,12 +296,18 @@ const InternalPlayerProfilePage: React.FC = () => {
     }
   }, [searchParams, players]);
 
+  // Filter to only show these specific clubs (matching exact names from database)
+  const ALLOWED_CLUBS = ['Manchester United FC', 'Paris Saint-Germain FC', 'FC Bayern München', 'Real Madrid CF', 'Juventus FC'];
+
   useEffect(() => {
     const load = async () => {
       try {
         const clubs = await clubsApi.browse();
         setProClubs(
-          clubs.filter((club) => club.club_type === 'system_professional'),
+          clubs.filter((club) => 
+            club.club_type === 'system_professional' && 
+            ALLOWED_CLUBS.includes(club.name)
+          ),
         );
       } catch {
         setProClubs([]);
@@ -312,6 +319,7 @@ const InternalPlayerProfilePage: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // Load players when a club is selected OR when there's a search query
     if (!selectedClub && !searchQuery.trim()) {
       setPlayers([]);
       return;
@@ -321,13 +329,14 @@ const InternalPlayerProfilePage: React.FC = () => {
       try {
         setPlayersLoading(true);
         const result = await playerdataApi.listEnrichedPlayers({
+          // Search across all allowed clubs when no club is selected
           club_id: selectedClub?.id,
           search: searchQuery.trim() || undefined,
           season,
           provider,
           limit: 80,
         });
-        if (active) setPlayers(result.data?.results ?? []);
+        if (active) setPlayers(dedupeEnrichedPlayers(result.data?.results ?? []));
       } catch {
         if (active) setPlayers([]);
       } finally {
@@ -490,7 +499,7 @@ const InternalPlayerProfilePage: React.FC = () => {
                 const isActive = selectedPlayer?.player?.id === item.player.id;
                 return (
                   <button
-                    key={item.player.id}
+                    key={getEnrichedPlayerListKey(item)}
                     type="button"
                     className={`${styles['ipp-player-row']} ${isActive ? styles['ipp-player-row--active'] : ''}`}
                     onClick={() => setSelectedPlayer(item)}
