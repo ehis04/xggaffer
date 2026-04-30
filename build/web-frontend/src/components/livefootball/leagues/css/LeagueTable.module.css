@@ -1,138 +1,155 @@
 .section {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 0;
 }
 
 .title {
-  margin: 0;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #f4f7fb;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0 0 10px;
+  display: none;
 }
 
 .emptyState {
-  padding: 1.1rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  color: #b6c2d1;
+  padding: 20px 0;
+  text-align: center;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.28);
 }
 
 .scrollWrap {
   overflow-x: auto;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 1rem;
-  background: #0f1620;
+  border-radius: 8px;
 }
 
 .table {
   width: 100%;
-  min-width: 820px;
-  border-collapse: separate;
-  border-spacing: 0;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .headerCell {
-  position: relative;
-  z-index: 1;
-  background: #131c27;
-  color: #d9e2ee;
-  text-align: left;
-  font-size: 0.82rem;
-  font-weight: 700;
-  padding: 0.9rem 0.8rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 7px 10px;
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.30);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   white-space: nowrap;
-}
-
-.bodyCell {
-  background: #0f1620;
-  color: #eef3f8;
-  padding: 0.85rem 0.8rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .stickyPos {
   position: sticky;
   left: 0;
-  z-index: 3;
-  min-width: 64px;
+  z-index: 2;
+  width: 36px;
+  text-align: center;
+  background: inherit;
 }
 
 .stickyTeam {
   position: sticky;
-  left: 64px;
-  z-index: 3;
-  min-width: 230px;
+  left: 36px;
+  z-index: 2;
+  text-align: left;
+  min-width: 140px;
+  background: inherit;
 }
 
 thead .stickyPos,
 thead .stickyTeam {
-  background: #131c27;
+  background: rgba(255, 255, 255, 0.02);
 }
 
-tbody .stickyPos,
-tbody .stickyTeam {
-  background: #0f1620;
+.bodyCell {
+  padding: 8px 10px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.12s;
 }
 
-.topFourRow .bodyCell,
-.topFourRow .stickyPos,
-.topFourRow .stickyTeam {
-  background: rgba(27, 94, 32, 0.16);
+tbody tr:last-child .bodyCell {
+  border-bottom: none;
 }
 
-.bottomThreeRow .bodyCell,
-.bottomThreeRow .stickyPos,
-.bottomThreeRow .stickyTeam {
-  background: rgba(139, 28, 28, 0.16);
+tbody tr:hover .bodyCell {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+tbody tr .stickyPos,
+tbody tr .stickyTeam {
+  background: var(--brand-light-green, #0d1a12);
+}
+tbody tr:hover .stickyPos,
+tbody tr:hover .stickyTeam {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.topFourRow .bodyCell {
+  border-left: none;
+}
+.topFourRow .stickyPos {
+  border-left: 2px solid #22c55e;
+}
+
+.bottomThreeRow .stickyPos {
+  border-left: 2px solid #ef4444;
 }
 
 .teamCell {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
-  min-width: 0;
+  gap: 8px;
+  text-align: left;
 }
 
 .crest {
-  width: 1.4rem;
-  height: 1.4rem;
+  width: 20px;
+  height: 20px;
   object-fit: contain;
   flex-shrink: 0;
+  border-radius: 2px;
 }
 
 .crestPlaceholder {
-  width: 1.4rem;
-  height: 1.4rem;
-  border-radius: 999px;
-  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.12);
-  color: #f4f7fb;
-  font-size: 0.72rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
   flex-shrink: 0;
 }
 
-.teamName,
 .teamLink {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.teamLink {
-  color: #f4f7fb;
+  color: rgba(255, 255, 255, 0.82);
   text-decoration: none;
+  font-weight: 500;
+  font-size: 0.82rem;
+  transition: color 0.14s;
+}
+.teamLink:hover {
+  color: #4ade80;
 }
 
-.teamLink:hover {
-  text-decoration: underline;
+.teamName {
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 500;
+  font-size: 0.82rem;
 }
 
 .pointsCell {
   font-weight: 700;
+  color: rgba(255, 255, 255, 0.90);
 }

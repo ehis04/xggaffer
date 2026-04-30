@@ -1,21 +1,70 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  min-width: 150px;
+  gap: 5px;
+  min-width: 160px;
 }
 
 .label {
-  font-size: 0.85rem;
+  font-size: 0.65rem;
   font-weight: 600;
-  color: #d7deea;
+  color: rgba(255, 255, 255, 0.32);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.arrowButton {
+  width: 28px;
+  height: 32px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.14s, color 0.14s;
+}
+.arrowButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.85);
+}
+.arrowButton:disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
 }
 
 .select {
-  min-width: 0;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 0.75rem;
-  background: #121923;
-  color: #f4f7fb;
-  padding: 0.7rem 0.9rem;
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 7px;
+  padding: 0.46rem 0.75rem;
+  color: rgba(255, 255, 255, 0.80);
+  font-size: 0.82rem;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.select:focus {
+  border-color: rgba(34, 197, 94, 0.38);
+  background: rgba(255, 255, 255, 0.07);
+}
+.select:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
