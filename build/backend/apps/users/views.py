@@ -28,13 +28,7 @@ class UserRegisterView(APIView):
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
 
-        user_data = {
-            'id': user.id,
-            'email': user.email,
-            'username': user.username,
-            'first_name': user.first_name,
-            'last_name': user.last_name
-        }
+        user_data = UserSerializer(user).data
 
         response = Response({
             'user': user_data,

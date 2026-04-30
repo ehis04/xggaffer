@@ -33,8 +33,8 @@ export const ForgotPasswordPage = () => {
   };
 
   return (
-    <div className="forgotPasswordPage">
-      <div className="forgotPasswordNav">
+    <div className="landingPage">
+      <div className="landingNav">
         <LandingNavbar />
       </div>
       <div className="forgotPasswordContainer">

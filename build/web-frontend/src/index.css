@@ -12,8 +12,3 @@ body {
   margin: 0;
   background: var(--brand-light-green);
 }
-
-#root,
-.app {
-  min-height: 100vh;
-}

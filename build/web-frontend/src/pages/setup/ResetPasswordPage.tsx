@@ -43,7 +43,6 @@ export const ResetPasswordPage = () => {
     setError('');
     setIsLoading(true);
 
-    // Form validation
     if (formData.newPassword.length < 8) {
       setError('Password must be at least 8 characters long');
       setIsLoading(false);
@@ -73,8 +72,8 @@ export const ResetPasswordPage = () => {
 
   if (!token) {
     return (
-      <div className="resetPasswordPage">
-        <div className="resetPasswordNav">
+      <div className="landingPage">
+        <div className="landingNav">
           <LandingNavbar />
         </div>
         <div className="resetPasswordContainer">
