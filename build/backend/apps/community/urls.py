@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import CreateNewPostView, ExplorePostsView, MarkPostViewedView, BulkMarkPostViewedView, CreateNewCommentView, GetPostView, CommentPostView, LikeCommentView, LikePostView, UserPostView, GetCommentView, FollowingPostsView, HashtagPostsView, NotificationsListView, UserPostsListView
+from .views import CreateNewPostView, ExplorePostsView, MarkPostViewedView, BulkMarkPostViewedView, CreateNewCommentView, GetPostView, CommentPostView, LikeCommentView, LikePostView, UserPostView, GetCommentView, FollowingPostsView, HashtagPostsView, NotificationsListView, NotificationMarkReadView, UserPostsListView
 
 urlpatterns = [
     path('create/post/', CreateNewPostView.as_view(), name='create-post'),
@@ -17,5 +17,6 @@ urlpatterns = [
     path('my-post/<int:post_id>/', UserPostView.as_view(), name='user-post'),
     path('comment/<int:comment_id>/', GetCommentView.as_view(), name='get-comment'),
     path('notifications/', NotificationsListView.as_view(), name='notifications-list'),
+    path('notifications/<int:notification_id>/mark-read/', NotificationMarkReadView.as_view(), name='notification-mark-read'),
     path("posts/user/<str:username>/", UserPostsListView.as_view(), name="user-posts"),
 ]

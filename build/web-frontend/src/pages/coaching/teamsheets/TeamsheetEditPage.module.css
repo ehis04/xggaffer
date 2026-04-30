@@ -1,0 +1,509 @@
+.teamsheetEditContainer {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--brand-light-green, #0d1a12);
+  font-family: 'Geist', 'Inter', system-ui, sans-serif;
+}
+
+.teamsheetEditSidebarSection {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.teamsheetEditMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-left: 80px;
+}
+
+.teamsheetEditHeader {
+  height: 56px;
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.teamsheetEditHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--primary-text, rgba(255, 255, 255, 0.9));
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.teamsheetEditHeaderRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.teamsheetEditContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.teamsheetEditBreadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.teamsheetEditBreadcrumbSep {
+  color: rgba(255, 255, 255, 0.20);
+}
+
+.teamsheetEditBreadcrumbCurrent {
+  color: rgba(255, 255, 255, 0.60);
+}
+
+.teamsheetEditActionBar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.teamsheetEditCancelButton {
+  padding: 0.5rem 1.1rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.teamsheetEditCancelButton:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.teamsheetEditSaveButton {
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  background: #22c55e;
+  border: none;
+  color: #061208;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s;
+  letter-spacing: 0.01em;
+}
+.teamsheetEditSaveButton:hover:not(:disabled) {
+  background: #16a34a;
+}
+.teamsheetEditSaveButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.teamsheetEditError {
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.10);
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  color: #fca5a5;
+  font-size: 0.85rem;
+}
+
+.teamsheetEditHeroCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 24px;
+}
+
+.teamsheetEditHeroHome {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.teamsheetEditHeroAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: #22c55e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #061208;
+  flex-shrink: 0;
+  letter-spacing: -0.02em;
+}
+
+.teamsheetEditHeroTeamName {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  margin: 0 0 2px;
+}
+
+.teamsheetEditHeroTeamSub {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.38);
+  font-weight: 400;
+}
+
+.teamsheetEditHeroVs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.teamsheetEditHeroDate {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.40);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+}
+
+.teamsheetEditHeroVsLabel {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1;
+}
+
+.teamsheetEditHeroCompetition {
+  font-size: 0.70rem;
+  color: rgba(255, 255, 255, 0.30);
+  font-weight: 400;
+}
+
+.teamsheetEditHeroAway {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  justify-content: flex-end;
+}
+
+.teamsheetEditHeroAwayAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.65);
+  flex-shrink: 0;
+  letter-spacing: -0.02em;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.teamsheetEditHeroAwayName {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  margin: 0 0 2px;
+  text-align: right;
+}
+
+.teamsheetEditHeroAwaySub {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.38);
+  font-weight: 400;
+  text-align: right;
+}
+
+.teamsheetEditStatRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.teamsheetEditStatPill {
+  flex: 1;
+  min-width: 100px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.teamsheetEditStatLabel {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.teamsheetEditStatValue {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.teamsheetEditFormGrid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+.teamsheetEditSection {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.teamsheetEditSectionTitle {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.38);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.teamsheetEditFormGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.teamsheetEditFormRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.teamsheetEditLabel {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.teamsheetEditInput,
+.teamsheetEditTextarea {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.85rem;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.18s, background 0.18s;
+  outline: none;
+}
+
+.teamsheetEditInput:focus,
+.teamsheetEditTextarea:focus {
+  border-color: rgba(34, 197, 94, 0.45);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.teamsheetEditInput::placeholder,
+.teamsheetEditTextarea::placeholder {
+  color: rgba(255, 255, 255, 0.22);
+}
+
+.teamsheetEditInput[type='date']::-webkit-calendar-picker-indicator {
+  filter: invert(0.6);
+  cursor: pointer;
+}
+
+.teamsheetEditTextarea {
+  resize: vertical;
+  min-height: 90px;
+  line-height: 1.55;
+}
+
+.teamsheetEditCheckboxRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  cursor: pointer;
+}
+
+.teamsheetEditCheckbox {
+  width: 16px;
+  height: 16px;
+  accent-color: #22c55e;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.teamsheetEditCheckboxLabel {
+  font-size: 0.83rem;
+  color: rgba(255, 255, 255, 0.70);
+  cursor: pointer;
+  user-select: none;
+}
+
+.teamsheetEditSidePanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.teamsheetEditInfoCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.teamsheetEditInfoTitle {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.teamsheetEditInfoRow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.teamsheetEditInfoRowLabel {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.30);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.teamsheetEditInfoRowValue {
+  font-size: 0.83rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.teamsheetEditInfoDivider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 0;
+  border: none;
+}
+
+.teamsheetEditDangerCard {
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.14);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.teamsheetEditDangerTitle {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(239, 68, 68, 0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.teamsheetEditDangerButton {
+  width: 100%;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.10);
+  border: 1px solid rgba(239, 68, 68, 0.20);
+  color: #f87171;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.18s;
+}
+.teamsheetEditDangerButton:hover {
+  background: rgba(239, 68, 68, 0.18);
+}
+
+.teamsheetEditStateWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: rgba(255, 255, 255, 0.40);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .teamsheetEditFormGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .teamsheetEditHeroCard {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .teamsheetEditHeroHome,
+  .teamsheetEditHeroAway {
+    justify-content: center;
+  }
+
+  .teamsheetEditStatRow {
+    flex-wrap: wrap;
+  }
+
+  .teamsheetEditStatPill {
+    min-width: 130px;
+  }
+}

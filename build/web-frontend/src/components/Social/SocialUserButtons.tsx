@@ -1,6 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
 import "./css/SocialUserButtons.css";
+import { useEffect, useMemo, useRef, useState } from "react";
+import communityApi from "../../services/api/communityApi";
+import type { NotificationItem } from "../../services/api/communityApi";
+
+const http = "http://localhost:5173/";
+const MAX_NOTIFICATIONS_TO_SHOW = 8;
 
 export const SocialUserButtons = () => {
   const navigate = useNavigate();
@@ -14,10 +20,133 @@ export const SocialUserButtons = () => {
       console.error("Logout failed:", error);
     }
   };
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
+  const [notificationsError, setNotificationsError] = useState<string | null>(null);
+  const [hasFetchedNotifications, setHasFetchedNotifications] = useState(false);
+  const notificationsRef = useRef<HTMLDivElement | null>(null);
+
+  const unreadCount = useMemo(
+    () => notifications.filter((notification) => !notification.is_read).length,
+    [notifications]
+  );
+
+  const orderedNotifications = useMemo(() => {
+    const sorted = [...notifications].sort((a, b) => {
+      if (a.is_read !== b.is_read) {
+        return a.is_read ? 1 : -1;
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+    return sorted.slice(0, MAX_NOTIFICATIONS_TO_SHOW);
+  }, [notifications]);
+
+  useEffect(() => {
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (
+        notificationsRef.current &&
+        event.target instanceof Node &&
+        !notificationsRef.current.contains(event.target)
+      ) {
+        setIsNotificationsOpen(false);
+      }
+    };
+
+    if (isNotificationsOpen) {
+      document.addEventListener("mousedown", closeOnOutsideClick);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", closeOnOutsideClick);
+    };
+  }, [isNotificationsOpen]);
+
+  useEffect(() => {
+    if (!isNotificationsOpen || hasFetchedNotifications) return;
+
+    const fetchNotifications = async () => {
+      setIsLoadingNotifications(true);
+      setNotificationsError(null);
+      try {
+        const response = await communityApi.getNotifications({ pageSize: 25 });
+        setNotifications(response.results ?? []);
+        setHasFetchedNotifications(true);
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Unable to load notifications right now.";
+        setNotificationsError(message);
+      } finally {
+        setIsLoadingNotifications(false);
+      }
+    };
+
+    void fetchNotifications();
+  }, [hasFetchedNotifications, isNotificationsOpen]);
+
+  const getNotificationMessage = (notification: NotificationItem) => {
+    const actor = notification.triggered_by?.username ?? "Someone";
+    switch (notification.notification_type) {
+      case "L":
+        return `@${actor} liked your post`;
+      case "C":
+        return `@${actor} commented on your post`;
+      case "RY":
+        return `@${actor} replied to your comment`;
+      case "M":
+        return `@${actor} mentioned you`;
+      case "NF":
+        return `@${actor} followed you`;
+      case "FR":
+        return `@${actor} sent you a follow request`;
+      case "FA":
+        return `@${actor} accepted your follow request`;
+      case "R":
+        return `@${actor} reposted your content`;
+      default:
+        return `@${actor} sent you a notification`;
+    }
+  };
+
+  const handleNotificationClick = async (notificationId: number) => {
+    const targetNotification = notifications.find((item) => item.id === notificationId);
+    if (!targetNotification || targetNotification.is_read) {
+      return;
+    }
+
+    setNotifications((current) =>
+      current.map((item) =>
+        item.id === notificationId ? { ...item, is_read: true } : item
+      )
+    );
+
+    try {
+      await communityApi.markNotificationAsRead(notificationId);
+    } catch {
+      setNotifications((current) =>
+        current.map((item) =>
+          item.id === notificationId ? { ...item, is_read: false } : item
+        )
+      );
+    }
+  };
+
   return (
     <div className="socialuserbuttons">
-      <div className="notifications-button">
-        <button style={{ background: "none", border: "none", cursor: "pointer" }}>
+      <div className="notifications-button" ref={notificationsRef}>
+        <button
+          type="button"
+          className="social-action-button"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            setIsNotificationsOpen((current) => !current);
+          }}
+          aria-expanded={isNotificationsOpen}
+          aria-label="Toggle notifications"
+        >
           <svg
             className="social-button-icon"
             xmlns="http://www.w3.org/2000/svg"
@@ -28,7 +157,48 @@ export const SocialUserButtons = () => {
           >
             <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2M8 1.918l-.797.161A4 4 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4 4 0 0 0-3.203-3.92zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0A5 5 0 0 1 13 6c0 .88.32 4.2 1.22 6" />
           </svg>
+          {unreadCount > 0 && (
+            <span className="notifications-badge" aria-label={`${unreadCount} unread notifications`}>
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
         </button>
+        {isNotificationsOpen && (
+          <div className="notifications-dropdown" role="menu" aria-label="Notifications">
+            <div className="notifications-dropdown-header">Notifications</div>
+            {isLoadingNotifications && (
+              <div className="notifications-dropdown-state">Loading notifications...</div>
+            )}
+            {!isLoadingNotifications && notificationsError && (
+              <div className="notifications-dropdown-state notifications-dropdown-error">
+                {notificationsError}
+              </div>
+            )}
+            {!isLoadingNotifications &&
+              !notificationsError &&
+              notifications.length === 0 && (
+                <div className="notifications-dropdown-state">No notifications yet.</div>
+              )}
+            {!isLoadingNotifications && !notificationsError && orderedNotifications.length > 0 && (
+              <ul className="notifications-list">
+                {orderedNotifications.map((notification) => (
+                  <li
+                    key={notification.id}
+                    className={`notifications-list-item ${notification.is_read ? "" : "is-unread"}`}
+                    onClick={() => void handleNotificationClick(notification.id)}
+                  >
+                    <p className="notifications-list-item-title">
+                      {getNotificationMessage(notification)}
+                    </p>
+                    <span className="notifications-list-item-time">
+                      {new Date(notification.created_at).toLocaleString()}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
       <div className="chat-button">
         <button style={{ background: "none", border: "none", cursor: "pointer" }}>

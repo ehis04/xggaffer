@@ -1,0 +1,179 @@
+/* ─── LeagueTable.module.css ─────────────────────────────────────────────────
+   Prefix: lflt-
+   Full-width standings table with coloured zone rows, GD sign colouring,
+   and per-character form chips (W/D/L).
+────────────────────────────────────────────────────────────────────────── */
+
+/* ── Root panel ──────────────────────────────────────────────────────────── */
+.lflt-root {
+  background: var(--brand-lightest-green-border);
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 12px;
+  padding: 20px 20px 18px;
+}
+
+/* ── Panel header ────────────────────────────────────────────────────────── */
+.lflt-panel-header {
+  margin-bottom: 16px;
+}
+
+.lflt-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--primary-text);
+  margin: 0 0 4px;
+  letter-spacing: -0.3px;
+}
+
+.lflt-competition-meta {
+  font-size: 12px;
+  color: var(--tertiary-text);
+  margin: 0;
+}
+
+/* ── Table wrapper ───────────────────────────────────────────────────────── */
+.lflt-table-wrapper {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand-lightest-green-border) transparent;
+}
+
+.lflt-table-wrapper::-webkit-scrollbar { height: 4px; }
+.lflt-table-wrapper::-webkit-scrollbar-thumb {
+  background: var(--brand-lightest-green-border);
+  border-radius: 4px;
+}
+
+/* ── Table base ──────────────────────────────────────────────────────────── */
+.lflt-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+/* ── Header row ──────────────────────────────────────────────────────────── */
+.lflt-thead-row {
+  border-bottom: 1px solid var(--brand-lightest-green-border);
+}
+
+.lflt-th {
+  padding: 6px 10px;
+  text-align: center;
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--tertiary-text);
+  white-space: nowrap;
+}
+
+.lflt-th--pos  { width: 32px; }
+.lflt-th--team { text-align: left; }
+.lflt-th--pts  { color: var(--hover-lightest-green); }
+
+/* ── Body rows ───────────────────────────────────────────────────────────── */
+.lflt-row {
+  border-bottom: 1px solid color-mix(in srgb, var(--brand-lightest-green-border) 60%, transparent);
+  transition: background 0.12s;
+}
+
+.lflt-row:last-child { border-bottom: none; }
+
+.lflt-row:hover {
+  background: color-mix(in srgb, var(--hover-lightest-green) 4%, transparent);
+}
+
+/* Zone hints */
+.lflt-row--top {
+  border-left: 2px solid color-mix(in srgb, var(--hover-lightest-green) 50%, transparent);
+}
+
+.lflt-row--bottom {
+  border-left: 2px solid rgba(248, 113, 113, 0.4);
+}
+
+/* ── Cells ───────────────────────────────────────────────────────────────── */
+.lflt-td {
+  padding: 9px 10px;
+  text-align: center;
+  color: var(--secondary-text);
+  white-space: nowrap;
+}
+
+.lflt-td--pos {
+  font-size: 12px;
+  color: var(--tertiary-text);
+  font-weight: 600;
+}
+
+.lflt-td--team {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.lflt-td--pts {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--primary-text);
+}
+
+.lflt-td--pos-gd { color: var(--hover-lightest-green); }
+.lflt-td--neg-gd { color: #f87171; }
+
+/* ── Team name within cell ───────────────────────────────────────────────── */
+.lflt-team-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary-text);
+}
+
+.lflt-team-full {
+  font-size: 10px;
+  color: var(--tertiary-text);
+}
+
+/* ── Form chips ──────────────────────────────────────────────────────────── */
+.lflt-form-row {
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+}
+
+.lflt-form-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.lflt-form-w { background: color-mix(in srgb, var(--hover-lightest-green) 20%, transparent); color: var(--hover-lightest-green); }
+.lflt-form-d { background: rgba(255,255,255,0.07); color: var(--tertiary-text); }
+.lflt-form-l { background: rgba(248,113,113,0.15); color: #f87171; }
+
+.lflt-form-empty { color: var(--tertiary-text); }
+
+/* ── State variants ──────────────────────────────────────────────────────── */
+.lflt-state {
+  font-size: 13px;
+  color: var(--tertiary-text);
+  padding: 20px 0;
+  text-align: center;
+}
+
+.lflt-state-error {
+  font-size: 13px;
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 8px;
+  padding: 12px 16px;
+}

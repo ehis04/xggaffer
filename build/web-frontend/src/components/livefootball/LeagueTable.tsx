@@ -1,25 +1,46 @@
+/**
+ * LeagueTable.tsx
+ *
+ * Renders a standings table for a given competition season.
+ * Supports optional form column and row-count capping via maxRows.
+ *
+ * CSS: LeagueTable.module.css  (prefix: lflt-)
+ */
+
 import React from 'react';
 import type {
   CompetitionTableResponse,
   LeagueTableRow,
 } from '../../types/livefootball';
+import styles from './css/LeagueTable.module.css';
 
-const formatForm = (value?: string | null): string => {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed : '—';
-};
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const getTeamLabel = (row: LeagueTableRow): string => {
-  if (row.team.short_name?.trim()) {
-    return row.team.short_name;
-  }
+const formatForm = (value?: string | null): string => value?.trim() || '—';
 
-  if (row.team.tla?.trim()) {
-    return row.team.tla;
-  }
+const getTeamLabel = (row: LeagueTableRow): string =>
+  row.team.short_name?.trim() || row.team.tla?.trim() || row.team.name;
 
-  return row.team.name;
-};
+/** Colour each form character independently — W green, D grey, L red */
+const FormChips: React.FC<{ form: string }> = ({ form }) => (
+  <>
+    {form.split('').map((char, idx) => {
+      const mod =
+        char === 'W' ? styles['lflt-form-w']
+        : char === 'L' ? styles['lflt-form-l']
+        : styles['lflt-form-d'];
+      return (
+        // index-as-key is fine here: form string is a fixed-length display value
+        // eslint-disable-next-line react/no-array-index-key
+        <span key={idx} className={`${styles['lflt-form-chip']} ${mod}`}>
+          {char}
+        </span>
+      );
+    })}
+  </>
+);
+
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface LeagueTableProps {
   table: CompetitionTableResponse | null;
@@ -32,6 +53,8 @@ export interface LeagueTableProps {
   showForm?: boolean;
 }
 
+// ─── Component ────────────────────────────────────────────────────────────────
+
 const LeagueTable: React.FC<LeagueTableProps> = ({
   table,
   isLoading = false,
@@ -42,42 +65,45 @@ const LeagueTable: React.FC<LeagueTableProps> = ({
   maxRows,
   showForm = true,
 }) => {
+  // ── State variants ──
   if (isLoading) {
     return (
-      <section className={className}>
-        <h2>{title}</h2>
-        <div>Loading table…</div>
+      <section className={`${styles['lflt-root']} ${className ?? ''}`}>
+        <h2 className={styles['lflt-title']}>{title}</h2>
+        <div className={styles['lflt-state']}>Loading table…</div>
       </section>
     );
   }
 
   if (error) {
     return (
-      <section className={className}>
-        <h2>{title}</h2>
-        <div role="alert">{error}</div>
+      <section className={`${styles['lflt-root']} ${className ?? ''}`}>
+        <h2 className={styles['lflt-title']}>{title}</h2>
+        <div className={styles['lflt-state-error']} role="alert">{error}</div>
       </section>
     );
   }
 
   if (!table || table.rows.length === 0) {
     return (
-      <section className={className}>
-        <h2>{title}</h2>
-        <div>{emptyMessage}</div>
+      <section className={`${styles['lflt-root']} ${className ?? ''}`}>
+        <h2 className={styles['lflt-title']}>{title}</h2>
+        <div className={styles['lflt-state']}>{emptyMessage}</div>
       </section>
     );
   }
 
-  const rows = typeof maxRows === 'number' && maxRows > 0
-    ? table.rows.slice(0, maxRows)
-    : table.rows;
+  const rows =
+    typeof maxRows === 'number' && maxRows > 0
+      ? table.rows.slice(0, maxRows)
+      : table.rows;
 
   return (
-    <section className={className}>
-      <div>
-        <h2>{title}</h2>
-        <p>
+    <section className={`${styles['lflt-root']} ${className ?? ''}`}>
+      {/* Panel header */}
+      <div className={styles['lflt-panel-header']}>
+        <h2 className={styles['lflt-title']}>{title}</h2>
+        <p className={styles['lflt-competition-meta']}>
           {table.competition.name}
           {table.competition.area_name ? ` · ${table.competition.area_name}` : ''}
           {table.season_label ? ` · ${table.season_label}` : ''}
@@ -85,47 +111,65 @@ const LeagueTable: React.FC<LeagueTableProps> = ({
         </p>
       </div>
 
-      <div style={{ overflowX: 'auto' }}>
-        <table>
+      {/* Table */}
+      <div className={styles['lflt-table-wrapper']}>
+        <table className={styles['lflt-table']}>
           <thead>
-            <tr>
-              <th scope="col">Pos</th>
-              <th scope="col">Team</th>
-              <th scope="col">P</th>
-              <th scope="col">W</th>
-              <th scope="col">D</th>
-              <th scope="col">L</th>
-              <th scope="col">GD</th>
-              <th scope="col">Pts</th>
-              {showForm ? <th scope="col">Form</th> : null}
+            <tr className={styles['lflt-thead-row']}>
+              <th className={`${styles['lflt-th']} ${styles['lflt-th--pos']}`} scope="col">#</th>
+              <th className={`${styles['lflt-th']} ${styles['lflt-th--team']}`} scope="col">Team</th>
+              <th className={styles['lflt-th']} scope="col">P</th>
+              <th className={styles['lflt-th']} scope="col">W</th>
+              <th className={styles['lflt-th']} scope="col">D</th>
+              <th className={styles['lflt-th']} scope="col">L</th>
+              <th className={styles['lflt-th']} scope="col">GD</th>
+              <th className={`${styles['lflt-th']} ${styles['lflt-th--pts']}`} scope="col">Pts</th>
+              {showForm && <th className={styles['lflt-th']} scope="col">Form</th>}
             </tr>
           </thead>
 
           <tbody>
-            {rows.map((row) => (
-              <tr key={`${row.position}-${row.team.id ?? row.team.external_id ?? row.team.name}`}>
-                <td>{row.position}</td>
-                <td>
-                  <div>
-                    <strong>{getTeamLabel(row)}</strong>
-                  </div>
-                  {row.team.name !== getTeamLabel(row) ? (
-                    <div>
-                      <small>{row.team.name}</small>
-                    </div>
-                  ) : null}
-                </td>
-                <td>{row.played}</td>
-                <td>{row.won}</td>
-                <td>{row.drawn}</td>
-                <td>{row.lost}</td>
-                <td>{row.goal_difference}</td>
-                <td>
-                  <strong>{row.points}</strong>
-                </td>
-                {showForm ? <td>{formatForm(row.form)}</td> : null}
-              </tr>
-            ))}
+            {rows.map((row, idx) => {
+              const teamKey = `${row.position}-${row.team.id ?? row.team.external_id ?? row.team.name}`;
+              const isTop = idx < 4;       // rough CL zone hint
+              const isBottom = idx >= rows.length - 3;
+              return (
+                <tr
+                  key={teamKey}
+                  className={`${styles['lflt-row']} ${isTop ? styles['lflt-row--top'] : ''} ${isBottom ? styles['lflt-row--bottom'] : ''}`}
+                >
+                  <td className={`${styles['lflt-td']} ${styles['lflt-td--pos']}`}>
+                    {row.position}
+                  </td>
+                  <td className={`${styles['lflt-td']} ${styles['lflt-td--team']}`}>
+                    <span className={styles['lflt-team-name']}>{getTeamLabel(row)}</span>
+                    {row.team.name !== getTeamLabel(row) && (
+                      <span className={styles['lflt-team-full']}>{row.team.name}</span>
+                    )}
+                  </td>
+                  <td className={styles['lflt-td']}>{row.played}</td>
+                  <td className={styles['lflt-td']}>{row.won}</td>
+                  <td className={styles['lflt-td']}>{row.drawn}</td>
+                  <td className={styles['lflt-td']}>{row.lost}</td>
+                  <td className={`${styles['lflt-td']} ${row.goal_difference > 0 ? styles['lflt-td--pos-gd'] : row.goal_difference < 0 ? styles['lflt-td--neg-gd'] : ''}`}>
+                    {row.goal_difference > 0 ? `+${row.goal_difference}` : row.goal_difference}
+                  </td>
+                  <td className={`${styles['lflt-td']} ${styles['lflt-td--pts']}`}>
+                    {row.points}
+                  </td>
+                  {showForm && (
+                    <td className={styles['lflt-td']}>
+                      <div className={styles['lflt-form-row']}>
+                        {formatForm(row.form) === '—'
+                          ? <span className={styles['lflt-form-empty']}>—</span>
+                          : <FormChips form={formatForm(row.form)} />
+                        }
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

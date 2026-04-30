@@ -154,3 +154,6 @@ data/
 *.joblib
 *.pkl
 *.csv
+# Include predictions ML data package
+!backend/apps/predictions/ml/data/
+!backend/apps/predictions/ml/data/**

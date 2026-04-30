@@ -8,54 +8,6 @@ interface FormationPickerProps {
   onSelect: (formation: FormationWithTemplate) => void;
 }
 
-const FormationPicker: React.FC<FormationPickerProps> = ({
-  formations,
-  selectedFormation,
-  onSelect,
-}) => {
-  const renderMiniPitch = (formation: FormationWithTemplate) => {
-    const width = 80;
-    const height = 100;
-
-    return (
-      <svg viewBox={`0 0 ${width} ${height}`} className={styles.miniPitch}>
-        <rect x="0" y="0" width={width} height={height} fill="#2d5a3d" rx="4" />
-        <line x1="0" y1={height / 2} x2={width} y2={height / 2} stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
-        <circle cx={width / 2} cy={height / 2} r="8" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
-        
-        {formation.positions.map((pos, idx) => (
-          <circle
-            key={idx}
-            cx={(pos.x / 100) * width}
-            cy={((100 - pos.y) / 100) * height}
-            r="4"
-            fill={getPositionColor(pos.position)}
-          />
-        ))}
-      </svg>
-    );
-  };
-
-  return (
-    <div className={styles.container}>
-      <label className={styles.label}>Select Formation</label>
-      <div className={styles.grid}>
-        {formations.map((formation) => (
-          <button
-            key={formation.value}
-            type="button"
-            className={`${styles.card} ${selectedFormation === formation.value ? styles.selected : ''}`}
-            onClick={() => onSelect(formation)}
-          >
-            {renderMiniPitch(formation)}
-            <span className={styles.formationName}>{formation.label}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 const getPositionColor = (position: string): string => {
   if (position === 'GK') return '#f59e0b';
   if (['CB', 'RB', 'LB', 'RWB', 'LWB'].includes(position)) return '#3b82f6';
@@ -64,4 +16,67 @@ const getPositionColor = (position: string): string => {
   return '#6b7280';
 };
 
+const FormationPickerMiniPitch: React.FC<{ formation: FormationWithTemplate }> = ({
+  formation,
+}) => {
+  const w = 64;
+  const h = 80;
+  return (
+    <svg
+      viewBox={`0 0 ${w} ${h}`}
+      className={styles.FormationPickerMiniPitch}
+    >
+      <rect width={w} height={h} fill="#173820" rx="3" />
+      <rect x="0" y="0" width={w / 2} height={h} fill="rgba(0,0,0,0.08)" />
+      <line
+        x1="0" y1={h / 2} x2={w} y2={h / 2}
+        stroke="rgba(255,255,255,0.25)" strokeWidth="0.5"
+      />
+      <circle
+        cx={w / 2} cy={h / 2} r="8"
+        fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="0.5"
+      />
+      <rect
+        x="1" y="1" width={w - 2} height={h - 2}
+        fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="0.7" rx="2"
+      />
+      {formation.positions.map((pos, i) => (
+        <circle
+          key={i}
+          cx={(pos.x / 100) * w}
+          cy={((100 - pos.y) / 100) * h}
+          r="3.5"
+          fill={getPositionColor(pos.position)}
+        />
+      ))}
+    </svg>
+  );
+};
+
+const FormationPicker: React.FC<FormationPickerProps> = ({
+  formations,
+  selectedFormation,
+  onSelect,
+}) => {
+  return (
+    <div className={styles.FormationPickerContainer}>
+      <div className={styles.FormationPickerTabStrip}>
+        {formations.map(f => (
+          <button
+            key={f.value}
+            type="button"
+            className={`${styles.FormationPickerTab} ${
+              selectedFormation === f.value ? styles.FormationPickerTabActive : ''
+            }`}
+            onClick={() => onSelect(f)}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export default FormationPicker;
+export { FormationPickerMiniPitch };

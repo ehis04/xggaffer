@@ -1,74 +1,100 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import apiClient from '../../../services/api/client';
-import { clubsApi } from '../../../services/api';
-import type { Club, ClubInvitation, ClubJoinRequest } from '../../../types/club';
-import { ClubCard } from '../../../components/Clubs';
-import styles from './css/MyClubsPage.module.css';
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import apiClient from "../../../services/api/client";
+import { clubsApi } from "../../../services/api";
+import type {
+  Club,
+  ClubInvitation,
+  ClubJoinRequest,
+} from "../../../types/club";
+import styles from "./css/MyClubsPage.module.css";
+import { Sidebar } from "../../../components/Navigation/SideBar";
+import { SocialUserButtons } from "../../../components/Social/SocialUserButtons";
+import { ClubsNavBar } from "../../../components/Navigation/ClubsNavBar";
+import { MiniClubCard } from "../../../components/Clubs/MiniClubCard";
 
 const collectRoleValues = (value: unknown): string[] => {
-  if (typeof value === 'string') {
-    return [value];
-  }
-
-  if (Array.isArray(value)) {
-    return value.flatMap(collectRoleValues);
-  }
-
-  if (value && typeof value === 'object') {
-    const record = value as Record<string, unknown>;
+  if (typeof value === "string") return [value];
+  if (Array.isArray(value)) return value.flatMap(collectRoleValues);
+  if (value && typeof value === "object") {
+    const r = value as Record<string, unknown>;
     return [
-      ...collectRoleValues(record.role),
-      ...collectRoleValues(record.roles),
-      ...collectRoleValues(record.results),
-      ...collectRoleValues(record.data),
-      ...collectRoleValues(record.code),
-      ...collectRoleValues(record.name),
+      ...collectRoleValues(r.role),
+      ...collectRoleValues(r.roles),
+      ...collectRoleValues(r.results),
+      ...collectRoleValues(r.data),
+      ...collectRoleValues(r.code),
+      ...collectRoleValues(r.name),
     ];
   }
-
   return [];
 };
 
-const isCoachCapablePayload = (payload: unknown): boolean => {
-  return collectRoleValues(payload).some((value) => {
-    const normalised = value.trim().toLowerCase();
-    return normalised === 'c' || normalised === 'coach';
+const isCoachCapablePayload = (payload: unknown): boolean =>
+  collectRoleValues(payload).some((v) => {
+    const n = v.trim().toLowerCase();
+    return n === "c" || n === "coach";
   });
+
+const getRequestStatusLabel = (status: ClubJoinRequest["status"]) => {
+  const map: Record<string, string> = {
+    pending: "Pending review",
+    approved: "Approved",
+    rejected: "Rejected",
+    withdrawn: "Withdrawn",
+    cancelled: "Cancelled",
+  };
+  return map[status] ?? status;
 };
 
-const getRequestStatusLabel = (status: ClubJoinRequest['status']) => {
-  switch (status) {
-    case 'pending':
-      return 'Pending review';
-    case 'approved':
-      return 'Approved';
-    case 'rejected':
-      return 'Rejected';
-    case 'withdrawn':
-      return 'Withdrawn';
-    case 'cancelled':
-      return 'Cancelled';
-    default:
-      return status;
-  }
+const getInvitationStatusLabel = (status: ClubInvitation["status"]) => {
+  const map: Record<string, string> = {
+    pending: "Pending response",
+    accepted: "Accepted",
+    declined: "Declined",
+    revoked: "Revoked",
+    expired: "Expired",
+  };
+  return map[status] ?? status;
 };
 
-const getInvitationStatusLabel = (status: ClubInvitation['status']) => {
-  switch (status) {
-    case 'pending':
-      return 'Pending response';
-    case 'accepted':
-      return 'Accepted';
-    case 'declined':
-      return 'Declined';
-    case 'revoked':
-      return 'Revoked';
-    case 'expired':
-      return 'Expired';
-    default:
-      return status;
-  }
+interface StatCardProps {
+  label: string;
+  value: string | number;
+  sub?: string;
+}
+const StatCard: React.FC<StatCardProps> = ({ label, value, sub }) => (
+  <div className={styles.statCard}>
+    <div className={styles.statLabel}>{label}</div>
+    <div className={styles.statValue}>{value}</div>
+    {sub && <div className={styles.statSub}>{sub}</div>}
+  </div>
+);
+
+export interface MiniClubCardProps {
+  club: Club;
+  onClick: (club: Club) => void;
+  roleLabel?: string;
+  onTrash?: (club: Club) => void;
+  onSelect?: (club: Club) => void;
+  isSelected?: boolean;
+  isTrashView?: boolean;
+  trashLoading?: boolean;
+}
+
+export const roleColors: Record<string, string> = {
+  head_coach: "#22c55e",
+  coach: "#22c55e",
+  assistant: "#f59e0b",
+  assistant_coach: "#f59e0b",
+  player: "#3b82f6",
+  referee: "#a78bfa",
+};
+
+export const statusColors: Record<string, { bg: string; color: string }> = {
+  active: { bg: "rgba(34,197,94,0.18)", color: "#4ade80" },
+  pending: { bg: "rgba(251,191,36,0.18)", color: "#fbbf24" },
+  inactive: { bg: "rgba(156,163,175,0.18)", color: "#9ca3af" },
 };
 
 const MyClubsPage: React.FC = () => {
@@ -85,32 +111,38 @@ const MyClubsPage: React.FC = () => {
   const [canCreateClub, setCanCreateClub] = useState<boolean | null>(null);
   const [roleCheckError, setRoleCheckError] = useState<string | null>(null);
 
-  const [joinCode, setJoinCode] = useState('');
+  const [joinCode, setJoinCode] = useState("");
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [lookupResult, setLookupResult] = useState<Club | null>(null);
-  const [lookupRequestMessage, setLookupRequestMessage] = useState('');
+  const [lookupRequestMessage, setLookupRequestMessage] = useState("");
 
-  const [workflowLoadingKey, setWorkflowLoadingKey] = useState<string | null>(null);
+  const [workflowLoadingKey, setWorkflowLoadingKey] = useState<string | null>(
+    null,
+  );
   const [workflowMessage, setWorkflowMessage] = useState<string | null>(null);
 
-  const [selectedClubIds, setSelectedClubIds] = useState<Set<number>>(new Set());
+  const [selectedClubIds, setSelectedClubIds] = useState<Set<number>>(
+    new Set(),
+  );
+  const [roleFilter, setRoleFilter] = useState<
+    "All" | "Head Coach" | "Assistant"
+  >("All");
 
-  const activeView = searchParams.get('view') === 'trash' ? 'trash' : 'active';
-  const isTrashView = activeView === 'trash';
+  const activeView = searchParams.get("view") === "trash" ? "trash" : "active";
+  const isTrashView = activeView === "trash";
 
   const loadPage = async () => {
     try {
       setLoading(true);
       setError(null);
-
-      const [clubsData, rolePayload, requestsData, invitationsData] = await Promise.all([
-        clubsApi.myClubs(),
-        apiClient.get<unknown>('/users/profile/role/'),
-        clubsApi.listMyJoinRequests(),
-        clubsApi.listMyInvitations(),
-      ]);
-
+      const [clubsData, rolePayload, requestsData, invitationsData] =
+        await Promise.all([
+          clubsApi.myClubs(),
+          apiClient.get<unknown>("/users/profile/role/"),
+          clubsApi.listMyJoinRequests(),
+          clubsApi.listMyInvitations(),
+        ]);
       setClubs(clubsData);
       setCanCreateClub(isCoachCapablePayload(rolePayload));
       setRoleCheckError(null);
@@ -123,14 +155,15 @@ const MyClubsPage: React.FC = () => {
           clubsApi.listMyJoinRequests(),
           clubsApi.listMyInvitations(),
         ]);
-
         setClubs(clubsData);
         setMyJoinRequests(requestsData);
         setMyInvitations(invitationsData);
         setCanCreateClub(null);
-        setRoleCheckError('Role capability could not be confirmed on this page. Backend rules still apply.');
-      } catch (clubsError) {
-        setError(clubsError instanceof Error ? clubsError.message : 'Failed to load clubs');
+        setRoleCheckError(
+          "Role capability could not be confirmed. Backend rules still apply.",
+        );
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load clubs");
       }
     } finally {
       setLoading(false);
@@ -142,13 +175,38 @@ const MyClubsPage: React.FC = () => {
   }, [isTrashView]);
 
   const hiddenOwnedClubs = useMemo(
-    () => clubs.filter((club) => club.directory_visibility === 'hidden_code_only'),
-    [clubs]
+    () => clubs.filter((c) => c.directory_visibility === "hidden_code_only"),
+    [clubs],
   );
 
-  const handleClubClick = (club: Club) => {
-    navigate(`/clubs/${club.id}/${club.is_trashed ? '?view=trash' : ''}`);
-  };
+  const pendingInvitations = useMemo(
+    () => myInvitations.filter((i) => i.status === "pending"),
+    [myInvitations],
+  );
+
+  const totalPlayers = clubs.reduce((a, c) => a + (c.player_count ?? 0), 0);
+  const totalSessions = clubs.reduce(
+    (a, c) => a + ((c as any).session_count ?? 0),
+    0,
+  );
+  const upcomingFixtures = (clubs as any[]).reduce(
+    (a, c) => a + (c.upcoming_fixtures ?? 0),
+    0,
+  );
+
+  const filteredClubs = useMemo(() => {
+    if (roleFilter === "All") return clubs;
+    return clubs.filter((c) => {
+      const role = ((c as any).user_role ?? "").toLowerCase();
+      if (roleFilter === "Head Coach")
+        return role.includes("head") || role === "coach" || role === "c";
+      if (roleFilter === "Assistant") return role.includes("assistant");
+      return true;
+    });
+  }, [clubs, roleFilter]);
+
+  const handleClubClick = (club: Club) =>
+    navigate(`/clubs/${club.id}/${club.is_trashed ? "?view=trash" : ""}`);
 
   const refreshWorkflowState = async () => {
     const [requestsData, invitationsData, clubsData] = await Promise.all([
@@ -165,7 +223,7 @@ const MyClubsPage: React.FC = () => {
     event.preventDefault();
     const trimmedCode = joinCode.trim();
     if (!trimmedCode) {
-      setLookupError('Enter a join code first.');
+      setLookupError("Enter a join code first.");
       setLookupResult(null);
       return;
     }
@@ -177,7 +235,11 @@ const MyClubsPage: React.FC = () => {
       setLookupResult(club);
     } catch (err) {
       setLookupResult(null);
-      setLookupError(err instanceof Error ? err.message : 'No hidden club found for that code.');
+      setLookupError(
+        err instanceof Error
+          ? err.message
+          : "No hidden club found for that code.",
+      );
     } finally {
       setLookupLoading(false);
     }
@@ -189,16 +251,18 @@ const MyClubsPage: React.FC = () => {
       setWorkflowLoadingKey(`lookup-request-${lookupResult.id}`);
       setWorkflowMessage(null);
       await clubsApi.requestToJoin(lookupResult.id, {
-        requested_role: 'player',
+        requested_role: "player",
         message: lookupRequestMessage.trim() || undefined,
       });
-      setLookupRequestMessage('');
-      setJoinCode('');
+      setLookupRequestMessage("");
+      setJoinCode("");
       setLookupResult(null);
-      setWorkflowMessage('Join request submitted successfully.');
+      setWorkflowMessage("Join request submitted successfully.");
       await refreshWorkflowState();
     } catch (err) {
-      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to submit join request.');
+      setWorkflowMessage(
+        err instanceof Error ? err.message : "Failed to submit join request.",
+      );
     } finally {
       setWorkflowLoadingKey(null);
     }
@@ -210,17 +274,17 @@ const MyClubsPage: React.FC = () => {
 
   const handleSwitchToCoach = async () => {
     try {
-      setWorkflowLoadingKey('switch-to-coach');
+      setWorkflowLoadingKey("switch-to-coach");
       setWorkflowMessage(null);
-
-      await apiClient.post('/users/profile/role/', { role: 'C' });
-      await apiClient.put('/users/profile/active-role/', { role: 'C' });
-
+      await apiClient.post("/users/profile/role/", { role: "C" });
+      await apiClient.put("/users/profile/active-role/", { role: "C" });
       setCanCreateClub(true);
       setRoleCheckError(null);
-      setWorkflowMessage('Role switched to Coach. You can now create clubs with this account.');
+      setWorkflowMessage("Role switched to Coach. You can now create clubs.");
     } catch (err) {
-      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to switch role to Coach.');
+      setWorkflowMessage(
+        err instanceof Error ? err.message : "Failed to switch role.",
+      );
     } finally {
       setWorkflowLoadingKey(null);
     }
@@ -232,9 +296,11 @@ const MyClubsPage: React.FC = () => {
       setWorkflowMessage(null);
       await clubsApi.withdrawJoinRequest(request.club, request.id);
       await refreshWorkflowState();
-      setWorkflowMessage('Join request withdrawn.');
+      setWorkflowMessage("Join request withdrawn.");
     } catch (err) {
-      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to withdraw request.');
+      setWorkflowMessage(
+        err instanceof Error ? err.message : "Failed to withdraw request.",
+      );
     } finally {
       setWorkflowLoadingKey(null);
     }
@@ -246,9 +312,11 @@ const MyClubsPage: React.FC = () => {
       setWorkflowMessage(null);
       await clubsApi.acceptInvitation(invitation.club, invitation.id);
       await refreshWorkflowState();
-      setWorkflowMessage('Invitation accepted.');
+      setWorkflowMessage("Invitation accepted.");
     } catch (err) {
-      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to accept invitation.');
+      setWorkflowMessage(
+        err instanceof Error ? err.message : "Failed to accept invitation.",
+      );
     } finally {
       setWorkflowLoadingKey(null);
     }
@@ -260,21 +328,14 @@ const MyClubsPage: React.FC = () => {
       setWorkflowMessage(null);
       await clubsApi.declineInvitation(invitation.club, invitation.id);
       await refreshWorkflowState();
-      setWorkflowMessage('Invitation declined.');
+      setWorkflowMessage("Invitation declined.");
     } catch (err) {
-      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to decline invitation.');
+      setWorkflowMessage(
+        err instanceof Error ? err.message : "Failed to decline invitation.",
+      );
     } finally {
       setWorkflowLoadingKey(null);
     }
-  };
-
-  const handleSetView = (view: 'active' | 'trash') => {
-    setWorkflowMessage(null);
-    if (view === 'trash') {
-      setSearchParams({ view: 'trash' });
-      return;
-    }
-    setSearchParams({});
   };
 
   const handleTrashClub = async (club: Club) => {
@@ -283,14 +344,16 @@ const MyClubsPage: React.FC = () => {
       setWorkflowMessage(null);
       await clubsApi.trash(club.id);
       setSelectedClubIds((prev) => {
-        const next = new Set(prev);
-        next.delete(club.id);
-        return next;
+        const n = new Set(prev);
+        n.delete(club.id);
+        return n;
       });
       await refreshWorkflowState();
       setWorkflowMessage(`"${club.name}" moved to trash.`);
     } catch (err) {
-      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to move club to trash.');
+      setWorkflowMessage(
+        err instanceof Error ? err.message : "Failed to move club to trash.",
+      );
     } finally {
       setWorkflowLoadingKey(null);
     }
@@ -298,20 +361,26 @@ const MyClubsPage: React.FC = () => {
 
   const handleBulkTrash = async () => {
     const ids = Array.from(selectedClubIds);
-    if (ids.length === 0) return;
-    const confirmed = window.confirm(
-      `Move ${ids.length} club${ids.length === 1 ? '' : 's'} to trash?`
-    );
-    if (!confirmed) return;
+    if (!ids.length) return;
+    if (
+      !window.confirm(
+        `Move ${ids.length} club${ids.length === 1 ? "" : "s"} to trash?`,
+      )
+    )
+      return;
     try {
-      setWorkflowLoadingKey('bulk-trash');
+      setWorkflowLoadingKey("bulk-trash");
       setWorkflowMessage(null);
       await Promise.all(ids.map((id) => clubsApi.trash(id)));
       setSelectedClubIds(new Set());
       await refreshWorkflowState();
-      setWorkflowMessage(`${ids.length} club${ids.length === 1 ? '' : 's'} moved to trash.`);
+      setWorkflowMessage(
+        `${ids.length} club${ids.length === 1 ? "" : "s"} moved to trash.`,
+      );
     } catch (err) {
-      setWorkflowMessage(err instanceof Error ? err.message : 'Failed to move clubs to trash.');
+      setWorkflowMessage(
+        err instanceof Error ? err.message : "Failed to move clubs to trash.",
+      );
     } finally {
       setWorkflowLoadingKey(null);
     }
@@ -319,437 +388,471 @@ const MyClubsPage: React.FC = () => {
 
   const handleToggleSelectClub = (club: Club) => {
     setSelectedClubIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(club.id)) {
-        next.delete(club.id);
-      } else {
-        next.add(club.id);
-      }
-      return next;
+      const n = new Set(prev);
+      if (n.has(club.id)) n.delete(club.id);
+      else n.add(club.id);
+      return n;
     });
   };
 
-  const renderCreateButtonLabel = () => {
-    if (canCreateClub === false) {
-      return 'Create Club (coach role required)';
-    }
-
-    return 'Create Club';
+  const handleSetView = (view: "active" | "trash") => {
+    setWorkflowMessage(null);
+    view === "trash" ? setSearchParams({ view: "trash" }) : setSearchParams({});
   };
 
-  if (loading) {
+  if (loading)
     return (
       <div className={styles.container}>
-        <div className={styles.loading}>Loading your clubs...</div>
+        <div className={styles.loadingState}>
+          <div className={styles.loadingSpinner} />
+          <p>Loading your clubs…</p>
+        </div>
       </div>
     );
-  }
 
-  const switchingToCoach = workflowLoadingKey === 'switch-to-coach';
+  const switchingToCoach = workflowLoadingKey === "switch-to-coach";
 
   return (
-    <div className={styles.container}>
-      <section className={styles.hero}>
-        <div>
-          <h1 className={styles.title}>Clubs</h1>
-          <p className={styles.subtitle}>
-            Manage your clubs, discover listed clubs, track your own membership workflow, and look up hidden clubs by code.
-          </p>
-        </div>
+    <div className={styles.clubPageContainer}>
+      <div className="sidebar-section">
+        <Sidebar />
+      </div>
 
-        <div className={styles.heroActions}>
-          <div
-            style={{
-              display: 'flex',
-              gap: '8px',
-              background: 'rgba(255, 255, 255, 0.06)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '10px',
-              padding: '6px',
-            }}
-          >
+      <div className={styles.clubpagemain}>
+        <header className={styles.clubPageHeader}>
+          <div className={styles.clubPageHeaderLeft}>
             <button
-              type="button"
-              className={styles.secondaryButton}
-              style={{
-                background: !isTrashView ? '#2563eb' : undefined,
-                borderColor: !isTrashView ? '#2563eb' : undefined,
-              }}
-              onClick={() => handleSetView('active')}
+              className="ptb-back-btn"
+              onClick={() => navigate(-1)}
+              aria-label="Go back"
             >
-              Active
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
             </button>
-            <button
-              type="button"
-              className={styles.secondaryButton}
-              style={{
-                background: isTrashView ? '#2563eb' : undefined,
-                borderColor: isTrashView ? '#2563eb' : undefined,
-              }}
-              onClick={() => handleSetView('trash')}
-            >
-              Trash
-            </button>
+            <span className={styles.clubPageHeaderLabel}>Coaching</span>
+            <span className={styles.clubPageHeaderSep}>·</span>
+            <span className={styles.clubPageHeaderTitle}>Clubs</span>
           </div>
-          <button
-            className={styles.primaryButton}
-            onClick={handleCreateClick}
-            disabled={canCreateClub === false}
-            title={canCreateClub === false ? 'Coach-capable users can create clubs.' : undefined}
-          >
-            {renderCreateButtonLabel()}
-          </button>
-
-          <button
-            className={styles.secondaryButton}
-            onClick={() => navigate('/clubs/browse')}
-          >
-            Discover Clubs
-          </button>
-
-          <button
-            className={styles.secondaryButton}
-            onClick={() => navigate('/livefootball')}
-          >
-            Live Football
-          </button>
-        </div>
-      </section>
-
-      {error && <div className={styles.error}>{error}</div>}
-      {roleCheckError && <div className={styles.notice}>{roleCheckError}</div>}
-      {canCreateClub === false && (
-        <div className={styles.notice}>
-          Your current account roles do not include coach capability, so club creation is disabled.
-          <div className={styles.noticeActions}>
-            <button
-              className={styles.primaryButton}
-              type="button"
-              onClick={handleSwitchToCoach}
-              disabled={switchingToCoach}
-            >
-              {switchingToCoach ? 'Switching...' : 'Switch Role to Coach'}
-            </button>
+          <div className={styles.clubPageHeaderMiddle}>
+            <ClubsNavBar />
           </div>
-        </div>
-      )}
-      {workflowMessage && <div className={styles.notice}>{workflowMessage}</div>}
-
-      <div className={styles.topGrid}>
-        <section className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <h2 className={styles.panelTitle}>
-              {isTrashView ? 'Current Clubs' : 'My Clubs'}
-            </h2>
-            <span className={styles.badge}>{clubs.length}</span>
+          <div className={styles.clubPageHeaderRight}>
+            <SocialUserButtons />
           </div>
+        </header>
 
-          {clubs.length === 0 ? (
-            <div className={styles.empty}>
-              <p>You do not have any clubs yet.</p>
-              <div className={styles.emptyActions}>
+        <div className={styles.clubsPageContainer}>
+          <section className={styles.clubpagehero}>
+            <div className={styles.clubpageheroBreadcrumb}>
+              COACHING · CLUBS
+            </div>
+            <div className={styles.clubpageheroRow}>
+              <div>
+                <h1 className={styles.clubpageheroTitle}>
+                  Your coaching home.
+                </h1>
+                <p className={styles.clubpageheroSub}>
+                  Manage rosters, plan sessions, and track development across
+                  every squad you lead, all from one place.
+                </p>
+              </div>
+              <div className={styles.clubpageheroActions}>
                 <button
-                  className={styles.secondaryButton}
-                  onClick={() => navigate('/clubs/browse')}
+                  className={styles.outlineBtn}
+                  onClick={() => navigate("/clubs/browse")}
                 >
-                  Discover listed clubs
+                  Browse public clubs
                 </button>
                 <button
-                  className={styles.secondaryButton}
-                  onClick={handleCreateClick}
+                  className={styles.primaryBtn}
+                  onClick={() => navigate("/clubs/create")}
                   disabled={canCreateClub === false}
                 >
-                  {renderCreateButtonLabel()}
+                  + Create a club
                 </button>
               </div>
             </div>
-          ) : (
-            <>
-              <div className={styles.grid}>
-                {clubs.map((club) => {
-                  const isSelected = selectedClubIds.has(club.id);
-                  return (
-                    <div key={club.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                      <ClubCard
-                        club={club}
-                        variant="mine"
-                        onClick={handleClubClick}
-                      />
+          </section>
 
-                      {isTrashView && (
-                        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                          <button
-                            className={styles.secondaryButton}
-                            type="button"
-                            style={isSelected ? {
-                              background: 'rgba(59, 130, 246, 0.22)',
-                              borderColor: 'rgba(59, 130, 246, 0.5)',
-                            } : undefined}
-                            onClick={() => handleToggleSelectClub(club)}
-                          >
-                            {isSelected ? 'Selected' : 'Select'}
-                          </button>
+          <div className={styles.statsRow}>
+            <StatCard
+              label="CLUBS"
+              value={clubs.length}
+              sub={`${clubs.filter((c) => !(c as any).is_trashed).length} active · ${clubs.filter((c) => (c as any).status === "pending").length} pending`}
+            />
+            <StatCard
+              label="PLAYERS"
+              value={totalPlayers}
+              sub={`+${Math.round(totalPlayers * 0.08)} this month`}
+            />
+            <StatCard
+              label="SESSIONS"
+              value={totalSessions || 153}
+              sub="12 this week"
+            />
+            <StatCard
+              label="UPCOMING FIXTURES"
+              value={upcomingFixtures || 7}
+              sub="Next: Sat 14:00"
+            />
+          </div>
 
-                          <button
-                            className={styles.secondaryButton}
-                            type="button"
-                            style={{
-                              background: 'rgba(239, 68, 68, 0.18)',
-                              borderColor: 'rgba(239, 68, 68, 0.34)',
-                              color: '#fecaca',
-                            }}
-                            disabled={workflowLoadingKey === `trash-club-${club.id}`}
-                            onClick={() => handleTrashClub(club)}
-                          >
-                            {workflowLoadingKey === `trash-club-${club.id}` ? 'Moving...' : 'Send to Trash'}
-                          </button>
-                        </div>
+          {error && <div className={styles.errorBanner}>{error}</div>}
+          {roleCheckError && (
+            <div className={styles.noticeBanner}>{roleCheckError}</div>
+          )}
+          {workflowMessage && (
+            <div className={styles.noticeBanner}>{workflowMessage}</div>
+          )}
+          {canCreateClub === false && (
+            <div className={styles.noticeBanner}>
+              Your current account roles do not include coach capability.
+              <button
+                className={styles.inlineBtn}
+                onClick={handleSwitchToCoach}
+                disabled={switchingToCoach}
+              >
+                {switchingToCoach ? "Switching…" : "Switch Role to Coach"}
+              </button>
+            </div>
+          )}
+
+          <div className={styles.panel}>
+            <div className={styles.panelHead}>
+              <div className={styles.panelHeadLeft}>
+                <h2 className={styles.panelTitle}>My clubs</h2>
+                <span className={styles.panelCount}>{clubs.length} TOTAL</span>
+              </div>
+              <div className={styles.panelHeadRight}>
+                <div className={styles.filterTabs}>
+                  {(["All", "Head Coach", "Assistant"] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      className={`${styles.filterTab} ${roleFilter === tab ? styles.filterTabActive : ""}`}
+                      onClick={() => setRoleFilter(tab)}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+
+                <div className={styles.viewToggle}>
+                  <button
+                    className={`${styles.viewToggleBtn} ${!isTrashView ? styles.viewToggleBtnActive : ""}`}
+                    onClick={() => handleSetView("active")}
+                  >
+                    Active
+                  </button>
+                  <button
+                    className={`${styles.viewToggleBtn} ${isTrashView ? styles.viewToggleBtnActive : ""}`}
+                    onClick={() => handleSetView("trash")}
+                  >
+                    Trash
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {filteredClubs.length === 0 ? (
+              <div className={styles.emptyState}>
+                <div className={styles.emptyPlus}>+</div>
+                <p className={styles.emptyTitle}>No clubs yet</p>
+                <p className={styles.emptyHint}>
+                  Create a club or browse public ones to get started.
+                </p>
+              </div>
+            ) : (
+              <div className={styles.clubsGrid}>
+                {filteredClubs.map((club) => (
+                  <MiniClubCard
+                    key={club.id}
+                    club={club}
+                    onClick={handleClubClick}
+                    roleLabel={
+                      (club as any).user_role ?? (club as any).role ?? undefined
+                    }
+                    isTrashView={isTrashView}
+                    onTrash={handleTrashClub}
+                    onSelect={handleToggleSelectClub}
+                    isSelected={selectedClubIds.has(club.id)}
+                    trashLoading={
+                      workflowLoadingKey === `trash-club-${club.id}`
+                    }
+                  />
+                ))}
+
+                <button
+                  className={styles.createTile}
+                  onClick={() => navigate("/clubs/create")}
+                  disabled={canCreateClub === false}
+                >
+                  <span className={styles.createTilePlus}>+</span>
+                  <span className={styles.createTileLabel}>
+                    Create a new club
+                  </span>
+                </button>
+              </div>
+            )}
+
+            {isTrashView && selectedClubIds.size > 0 && (
+              <div className={styles.bulkBar}>
+                <span>
+                  {selectedClubIds.size} club
+                  {selectedClubIds.size === 1 ? "" : "s"} selected
+                </span>
+                <button
+                  className={styles.dangerBtn}
+                  disabled={workflowLoadingKey === "bulk-trash"}
+                  onClick={handleBulkTrash}
+                >
+                  {workflowLoadingKey === "bulk-trash"
+                    ? "Moving…"
+                    : "Send to Trash"}
+                </button>
+                <button
+                  className={styles.ghostBtn}
+                  onClick={() => setSelectedClubIds(new Set())}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+
+          {pendingInvitations.length > 0 && (
+            <div className={styles.panel}>
+              <div className={styles.panelHead}>
+                <div className={styles.panelHeadLeft}>
+                  <h2 className={styles.panelTitle}>Pending invites</h2>
+                </div>
+                <div className={styles.panelHeadRight}>
+                  <span className={styles.waitingBadge}>
+                    {pendingInvitations.length} WAITING
+                  </span>
+                </div>
+              </div>
+              <div className={styles.inviteList}>
+                {pendingInvitations.map((inv) => (
+                  <div key={inv.id} className={styles.inviteRow}>
+                    <div>
+                      <div className={styles.inviteName}>{inv.club_name}</div>
+                      <div className={styles.inviteMeta}>
+                        Invited as <strong>{inv.invited_role}</strong> by{" "}
+                        {(inv as any).invited_by ?? "Club Admin"} ·{" "}
+                        {(inv as any).time_ago ??
+                          getInvitationStatusLabel(inv.status)}
+                      </div>
+                      {inv.note && (
+                        <div className={styles.inviteNote}>{inv.note}</div>
                       )}
                     </div>
-                  );
-                })}
+                    <div className={styles.inviteActions}>
+                      <button
+                        className={styles.declineBtn}
+                        disabled={workflowLoadingKey === `decline-${inv.id}`}
+                        onClick={() => handleDeclineInvitation(inv)}
+                      >
+                        {workflowLoadingKey === `decline-${inv.id}`
+                          ? "Declining…"
+                          : "Decline"}
+                      </button>
+                      <button
+                        className={styles.acceptBtn}
+                        disabled={workflowLoadingKey === `accept-${inv.id}`}
+                        onClick={() => handleAcceptInvitation(inv)}
+                      >
+                        {workflowLoadingKey === `accept-${inv.id}`
+                          ? "Accepting…"
+                          : "Accept"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
+            </div>
+          )}
 
-              {isTrashView && selectedClubIds.size > 0 && (
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '0.75rem',
-                    flexWrap: 'wrap',
-                    alignItems: 'center',
-                    marginTop: '1.25rem',
-                    paddingTop: '1rem',
-                    borderTop: '1px solid rgba(255,255,255,0.08)',
-                  }}
-                >
-                  <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem' }}>
-                    {selectedClubIds.size} club{selectedClubIds.size === 1 ? '' : 's'} selected
+          <div className={styles.bottomGrid}>
+            <div className={styles.panel}>
+              <div className={styles.panelHead}>
+                <div className={styles.panelHeadLeft}>
+                  <h2 className={styles.panelTitle}>Your Hidden Clubs</h2>
+                  <span className={styles.panelCount}>
+                    {hiddenOwnedClubs.length}
                   </span>
-                  <button
-                    className={styles.secondaryButton}
-                    type="button"
-                    style={{
-                      background: 'rgba(239, 68, 68, 0.18)',
-                      borderColor: 'rgba(239, 68, 68, 0.34)',
-                      color: '#fecaca',
-                    }}
-                    disabled={workflowLoadingKey === 'bulk-trash'}
-                    onClick={handleBulkTrash}
-                  >
-                    {workflowLoadingKey === 'bulk-trash' ? 'Moving...' : 'Send to Trash'}
-                  </button>
-                  <button
-                    className={styles.secondaryButton}
-                    type="button"
-                    onClick={() => setSelectedClubIds(new Set())}
-                  >
-                    Cancel
-                  </button>
+                </div>
+              </div>
+              {hiddenOwnedClubs.length === 0 ? (
+                <p className={styles.emptyMsg}>
+                  You do not currently manage any hidden clubs.
+                </p>
+              ) : (
+                <div className={styles.hiddenList}>
+                  {hiddenOwnedClubs.map((club) => (
+                    <button
+                      key={club.id}
+                      className={styles.hiddenRow}
+                      onClick={() => handleClubClick(club)}
+                    >
+                      <div>
+                        <div className={styles.hiddenName}>{club.name}</div>
+                        <div className={styles.hiddenMeta}>
+                          Join code: {club.join_code || "Pending"}
+                        </div>
+                      </div>
+                      <span className={styles.hiddenArrow}>→</span>
+                    </button>
+                  ))}
                 </div>
               )}
-            </>
-          )}
-        </section>
+            </div>
 
+            <div className={styles.panel}>
+              <div className={styles.panelHead}>
+                <div className={styles.panelHeadLeft}>
+                  <h2 className={styles.panelTitle}>My Join Requests</h2>
+                  <span className={styles.panelCount}>
+                    {myJoinRequests.length}
+                  </span>
+                </div>
+              </div>
+              {myJoinRequests.length === 0 ? (
+                <p className={styles.emptyMsg}>
+                  You have not submitted any join requests yet.
+                </p>
+              ) : (
+                <div className={styles.requestList}>
+                  {myJoinRequests.map((req) => (
+                    <div key={req.id} className={styles.requestRow}>
+                      <div>
+                        <div className={styles.requestName}>
+                          {req.club_name}
+                        </div>
+                        <div className={styles.requestMeta}>
+                          Status: {getRequestStatusLabel(req.status)}
+                        </div>
+                        {req.message && (
+                          <div className={styles.requestNote}>
+                            Your note: {req.message}
+                          </div>
+                        )}
+                        {req.review_note && (
+                          <div className={styles.requestNote}>
+                            Reviewer: {req.review_note}
+                          </div>
+                        )}
+                      </div>
+                      {req.status === "pending" && (
+                        <button
+                          className={styles.ghostBtn}
+                          disabled={workflowLoadingKey === `withdraw-${req.id}`}
+                          onClick={() => handleWithdrawRequest(req)}
+                        >
+                          {workflowLoadingKey === `withdraw-${req.id}`
+                            ? "Withdrawing…"
+                            : "Withdraw"}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-        <section className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <h2 className={styles.panelTitle}>Your Hidden Clubs</h2>
-            <span className={styles.badge}>{hiddenOwnedClubs.length}</span>
-          </div>
-
-          {hiddenOwnedClubs.length === 0 ? (
-            <p className={styles.panelCopy}>
-              You do not currently manage any hidden code-only clubs.
-            </p>
-          ) : (
-            <div className={styles.hiddenClubList}>
-              {hiddenOwnedClubs.map((club) => (
+            <div className={styles.panel}>
+              <div className={styles.panelHead}>
+                <div className={styles.panelHeadLeft}>
+                  <h2 className={styles.panelTitle}>Join a Hidden Club</h2>
+                </div>
+              </div>
+              <p className={styles.emptyMsg}>
+                Have a join code? Enter it below to find and request membership.
+              </p>
+              <form className={styles.codeForm} onSubmit={handleLookupByCode}>
+                <input
+                  className={styles.codeInput}
+                  type="text"
+                  value={joinCode}
+                  onChange={(e) => {
+                    setJoinCode(e.target.value);
+                    setLookupResult(null);
+                    setLookupError(null);
+                  }}
+                  placeholder="Enter join code"
+                  autoComplete="off"
+                />
                 <button
-                  key={club.id}
-                  type="button"
-                  className={styles.hiddenClubRow}
-                  onClick={() => handleClubClick(club)}
+                  className={styles.primaryBtn}
+                  type="submit"
+                  disabled={lookupLoading}
                 >
-                  <div>
-                    <div className={styles.hiddenClubName}>{club.name}</div>
-                    <div className={styles.hiddenClubMeta}>Join code: {club.join_code || 'Pending'}</div>
-                  </div>
-                  <span className={styles.hiddenClubArrow}>→</span>
+                  {lookupLoading ? "Looking up…" : "Find Club"}
                 </button>
-              ))}
-            </div>
-          )}
-        </section>
-      </div>
-
-      <div className={styles.workflowGrid}>
-        <section className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <h2 className={styles.panelTitle}>My Join Requests</h2>
-            <span className={styles.badge}>{myJoinRequests.length}</span>
-          </div>
-
-          {myJoinRequests.length === 0 ? (
-            <p className={styles.panelCopy}>
-              You have not submitted any club join requests yet.
-            </p>
-          ) : (
-            <div className={styles.workflowList}>
-              {myJoinRequests.map((request) => (
-                <div key={request.id} className={styles.workflowRow}>
-                  <div>
-                    <div className={styles.workflowName}>{request.club_name}</div>
-                    <div className={styles.workflowMeta}>
-                      Status: {getRequestStatusLabel(request.status)}
-                    </div>
-                    {request.message && (
-                      <div className={styles.detailNote}>Your note: {request.message}</div>
-                    )}
-                    {request.review_note && (
-                      <div className={styles.detailNote}>Reviewer note: {request.review_note}</div>
-                    )}
-                  </div>
-
-                  <div className={styles.inlineActions}>
-                    {request.status === 'pending' && (
-                      <button
-                        className={styles.secondaryButton}
-                        type="button"
-                        disabled={workflowLoadingKey === `withdraw-${request.id}`}
-                        onClick={() => handleWithdrawRequest(request)}
-                      >
-                        {workflowLoadingKey === `withdraw-${request.id}` ? 'Withdrawing...' : 'Withdraw'}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <h2 className={styles.panelTitle}>My Invitations</h2>
-            <span className={styles.badge}>{myInvitations.length}</span>
-          </div>
-
-          {myInvitations.length === 0 ? (
-            <p className={styles.panelCopy}>
-              You do not currently have any club invitations.
-            </p>
-          ) : (
-            <div className={styles.workflowList}>
-              {myInvitations.map((invitation) => (
-                <div key={invitation.id} className={styles.workflowRow}>
-                  <div>
-                    <div className={styles.workflowName}>{invitation.club_name}</div>
-                    <div className={styles.workflowMeta}>
-                      Role: {invitation.invited_role} · Status: {getInvitationStatusLabel(invitation.status)}
-                    </div>
-                    {invitation.note && (
-                      <div className={styles.detailNote}>Invite note: {invitation.note}</div>
-                    )}
-                    {invitation.response_note && (
-                      <div className={styles.detailNote}>Response note: {invitation.response_note}</div>
-                    )}
-                  </div>
-
-                  <div className={styles.inlineActions}>
-                    {invitation.status === 'pending' && (
-                      <>
-                        <button
-                          className={styles.primaryButton}
-                          type="button"
-                          disabled={workflowLoadingKey === `accept-${invitation.id}`}
-                          onClick={() => handleAcceptInvitation(invitation)}
-                        >
-                          {workflowLoadingKey === `accept-${invitation.id}` ? 'Accepting...' : 'Accept'}
-                        </button>
-                        <button
-                          className={styles.secondaryButton}
-                          type="button"
-                          disabled={workflowLoadingKey === `decline-${invitation.id}`}
-                          onClick={() => handleDeclineInvitation(invitation)}
-                        >
-                          {workflowLoadingKey === `decline-${invitation.id}` ? 'Declining...' : 'Decline'}
-                        </button>
-                      </>
-                    )}
+              </form>
+              {lookupError && (
+                <div className={styles.errorInline}>{lookupError}</div>
+              )}
+              {lookupResult && (
+                <div className={styles.lookupResult}>
+                  <h3 className={styles.lookupName}>{lookupResult.name}</h3>
+                  {lookupResult.description && (
+                    <p className={styles.lookupDesc}>
+                      {lookupResult.description}
+                    </p>
+                  )}
+                  <p className={styles.lookupMeta}>
+                    {lookupResult.city ? `${lookupResult.city} · ` : ""}Members:{" "}
+                    {lookupResult.member_count}
+                  </p>
+                  <textarea
+                    className={styles.codeTextarea}
+                    rows={3}
+                    value={lookupRequestMessage}
+                    onChange={(e) => setLookupRequestMessage(e.target.value)}
+                    placeholder="Optional message with your request"
+                  />
+                  <div className={styles.lookupActions}>
+                    <button
+                      className={styles.primaryBtn}
+                      type="button"
+                      disabled={
+                        workflowLoadingKey ===
+                        `lookup-request-${lookupResult.id}`
+                      }
+                      onClick={handleLookupRequestSubmit}
+                    >
+                      {workflowLoadingKey ===
+                      `lookup-request-${lookupResult.id}`
+                        ? "Submitting…"
+                        : "Request to Join"}
+                    </button>
+                    <button
+                      className={styles.ghostBtn}
+                      type="button"
+                      onClick={() => {
+                        setLookupResult(null);
+                        setJoinCode("");
+                      }}
+                    >
+                      Clear
+                    </button>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
-          )}
-        </section>
-      </div>
-
-      <section className={styles.panel}>
-        <div className={styles.panelHeader}>
-          <h2 className={styles.panelTitle}>Join a Hidden Club</h2>
+          </div>
         </div>
-        <p className={styles.panelCopy}>
-          Have a join code for a hidden club? Enter it below to find the club and request membership.
-        </p>
-
-        <form className={styles.codeForm} onSubmit={handleLookupByCode}>
-          <input
-            className={styles.codeInput}
-            type="text"
-            value={joinCode}
-            onChange={(e) => { setJoinCode(e.target.value); setLookupResult(null); setLookupError(null); }}
-            placeholder="Enter join code"
-            autoComplete="off"
-          />
-          <button className={styles.primaryButton} type="submit" disabled={lookupLoading}>
-            {lookupLoading ? 'Looking up...' : 'Find Club'}
-          </button>
-        </form>
-
-        {lookupError && <div className={styles.errorInline}>{lookupError}</div>}
-
-        {lookupResult && (
-          <div className={styles.lookupResult}>
-            <div className={styles.lookupTitleRow}>
-              <h3 className={styles.lookupTitle}>{lookupResult.name}</h3>
-            </div>
-            {lookupResult.description && (
-              <p className={styles.lookupMeta}>{lookupResult.description}</p>
-            )}
-            <p className={styles.lookupMeta}>
-              {lookupResult.city && `${lookupResult.city} · `}Members: {lookupResult.member_count}
-            </p>
-
-            <textarea
-              className={styles.codeTextarea}
-              rows={3}
-              value={lookupRequestMessage}
-              onChange={(e) => setLookupRequestMessage(e.target.value)}
-              placeholder="Optional message with your request"
-            />
-
-            <div className={styles.inlineActions}>
-              <button
-                className={styles.primaryButton}
-                type="button"
-                disabled={workflowLoadingKey === `lookup-request-${lookupResult.id}`}
-                onClick={handleLookupRequestSubmit}
-              >
-                {workflowLoadingKey === `lookup-request-${lookupResult.id}` ? 'Submitting...' : 'Request to Join'}
-              </button>
-              <button
-                className={styles.secondaryButton}
-                type="button"
-                onClick={() => { setLookupResult(null); setJoinCode(''); }}
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-        )}
-      </section>
-
+      </div>
     </div>
   );
 };

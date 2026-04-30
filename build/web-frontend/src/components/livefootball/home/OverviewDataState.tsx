@@ -1,5 +1,16 @@
+/**
+ * OverviewDataState.tsx
+ *
+ * Generic loading / error / empty state block used by LiveFootballBasePage
+ * while the overview is fetching or when it fails.
+ *
+ * CSS: LiveFootballBasePage.module.css  (prefix: lfb-)
+ */
+
 import React from 'react';
 import styles from '../../../pages/livefootball/css/LiveFootballBasePage.module.css';
+
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 interface OverviewDataStateProps {
   title: string;
@@ -7,21 +18,23 @@ interface OverviewDataStateProps {
   variant?: 'neutral' | 'error' | 'empty';
 }
 
+// ─── Component ────────────────────────────────────────────────────────────────
+
 const OverviewDataState: React.FC<OverviewDataStateProps> = ({
   title,
   description,
   variant = 'neutral',
 }) => {
-  const surfaceClassName =
+  const surfaceClass =
     variant === 'error'
-      ? `${styles.sectionSurface} ${styles.sectionSurfaceError}`
-      : styles.sectionSurface;
+      ? `${styles['lfb-section-surface']} ${styles['lfb-section-surface-error']}`
+      : styles['lfb-section-surface'];
 
   return (
-    <section className={surfaceClassName}>
-      <div className={styles.sectionHeadingGroup}>
-        <h2 className={styles.sectionTitle}>{title}</h2>
-        <p className={styles.sectionSubtitle}>{description}</p>
+    <section className={surfaceClass}>
+      <div className={styles['lfb-section-heading-group']}>
+        <h2 className={styles['lfb-section-title']}>{title}</h2>
+        <p className={styles['lfb-section-subtitle']}>{description}</p>
       </div>
     </section>
   );

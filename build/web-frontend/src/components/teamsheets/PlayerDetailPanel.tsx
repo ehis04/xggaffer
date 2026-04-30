@@ -24,89 +24,99 @@ const PlayerDetailPanel: React.FC<PlayerDetailPanelProps> = ({
   onRemove,
 }) => {
   return (
-    <div className={styles.panel}>
-      <div className={styles.header}>
-        <h3 className={styles.title}>Player Details</h3>
-        <button className={styles.closeButton} onClick={onClose}>
+    <div className={styles.playerDetailPanelRoot}>
+      <div className={styles.playerDetailPanelHeader}>
+        <h3 className={styles.playerDetailPanelTitle}>Player Details</h3>
+        <button className={styles.playerDetailPanelCloseButton} onClick={onClose}>
           ×
         </button>
       </div>
 
-      <div className={styles.content}>
-        <div className={styles.playerInfo}>
+      <div className={styles.playerDetailPanelContent}>
+        <div className={styles.playerDetailPanelPlayerInfo}>
           {player.display_photo_url ? (
             <img
               src={player.display_photo_url}
               alt={player.display_name}
-              className={styles.photo}
+              className={styles.playerDetailPanelPhoto}
             />
           ) : (
             <div
-              className={styles.photoPlaceholder}
+              className={styles.playerDetailPanelPhotoPlaceholder}
               style={{ backgroundColor: getPositionColor(player.position_label) }}
             >
               {player.display_number || player.slot_number}
             </div>
           )}
 
-          <div className={styles.details}>
-            <span className={styles.name}>
+          <div className={styles.playerDetailPanelDetails}>
+            <span className={styles.playerDetailPanelName}>
               {player.display_name || `Player ${player.slot_number}`}
             </span>
-            <span className={styles.number}>
-              #{player.display_number || '-'}
+            <span className={styles.playerDetailPanelNumber}>
+              #{player.display_number || '—'}
             </span>
           </div>
         </div>
 
-        <div className={styles.stats}>
-          <div className={styles.statItem}>
-            <span className={styles.statLabel}>Position</span>
+        <div className={styles.playerDetailPanelStats}>
+          <div className={styles.playerDetailPanelStatItem}>
+            <span className={styles.playerDetailPanelStatLabel}>Position</span>
             <span
-              className={styles.statValue}
+              className={styles.playerDetailPanelStatValue}
               style={{ color: getPositionColor(player.position_label) }}
             >
               {player.position_label}
             </span>
           </div>
 
-          <div className={styles.statItem}>
-            <span className={styles.statLabel}>Slot</span>
-            <span className={styles.statValue}>{player.slot_number}</span>
+          <div className={styles.playerDetailPanelStatItem}>
+            <span className={styles.playerDetailPanelStatLabel}>Slot</span>
+            <span className={styles.playerDetailPanelStatValue}>
+              {player.slot_number}
+            </span>
           </div>
 
-          <div className={styles.statItem}>
-            <span className={styles.statLabel}>Status</span>
-            <span className={styles.statValue}>
+          <div className={styles.playerDetailPanelStatItem}>
+            <span className={styles.playerDetailPanelStatLabel}>Status</span>
+            <span className={styles.playerDetailPanelStatValue}>
               {player.is_substitute ? 'Substitute' : 'Starter'}
             </span>
           </div>
 
-          <div className={styles.statItem}>
-            <span className={styles.statLabel}>Type</span>
-            <span className={styles.statValue}>
+          <div className={styles.playerDetailPanelStatItem}>
+            <span className={styles.playerDetailPanelStatLabel}>Type</span>
+            <span className={styles.playerDetailPanelStatValue}>
               {player.is_linked ? 'Club Player' : 'Custom'}
             </span>
           </div>
         </div>
 
-        <div className={styles.position}>
-          <span className={styles.posLabel}>Position on Pitch</span>
-          <div className={styles.coords}>
+        <div className={styles.playerDetailPanelPosition}>
+          <span className={styles.playerDetailPanelPosLabel}>
+            Position on Pitch
+          </span>
+          <div className={styles.playerDetailPanelCoords}>
             <span>X: {player.position_x.toFixed(1)}</span>
             <span>Y: {player.position_y.toFixed(1)}</span>
           </div>
         </div>
 
         {(onSwap || onRemove) && (
-          <div className={styles.actions}>
+          <div className={styles.playerDetailPanelActions}>
             {onSwap && (
-              <button className={styles.actionButton} onClick={onSwap}>
-                Swap Position
+              <button
+                className={styles.playerDetailPanelActionButton}
+                onClick={onSwap}
+              >
+                Swap
               </button>
             )}
             {onRemove && (
-              <button className={`${styles.actionButton} ${styles.danger}`} onClick={onRemove}>
+              <button
+                className={`${styles.playerDetailPanelActionButton} ${styles.playerDetailPanelDanger}`}
+                onClick={onRemove}
+              >
                 Remove
               </button>
             )}

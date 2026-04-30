@@ -72,6 +72,7 @@ import Leagues from "./pages/livefootball/leagues/LeaguesPage";
 import LeagueComparePage from "./pages/livefootball/leagues/LeagueComparePage";
 import LeagueCustomPage from "./pages/livefootball/leagues/LeagueCustomPage";
 import LeaguePredictPage from "./pages/livefootball/leagues/LeaguePredictPage";
+import { ClubDetailsPage } from "./pages/coaching/clubs/ClubDetails";
 
 function App() {
   return (

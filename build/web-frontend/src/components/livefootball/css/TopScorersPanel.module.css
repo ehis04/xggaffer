@@ -1,0 +1,170 @@
+/* ─── TopScorersPanel.module.css ─────────────────────────────────────────────
+   Prefix: lftsp-
+   Ranked scorer list — flex rows, accent rank badge for #1,
+   goals column highlighted in brand green.
+────────────────────────────────────────────────────────────────────────── */
+
+/* ── Root panel ──────────────────────────────────────────────────────────── */
+.lftsp-root {
+  background: var(--brand-lightest-green-border);
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 12px;
+  padding: 20px 20px 18px;
+}
+
+/* ── Panel header ────────────────────────────────────────────────────────── */
+.lftsp-panel-header {
+  margin-bottom: 16px;
+}
+
+.lftsp-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--primary-text);
+  margin: 0 0 4px;
+  letter-spacing: -0.3px;
+}
+
+.lftsp-competition-meta {
+  font-size: 12px;
+  color: var(--tertiary-text);
+  margin: 0;
+}
+
+/* ── Scorer list ─────────────────────────────────────────────────────────── */
+.lftsp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ── Scorer row ──────────────────────────────────────────────────────────── */
+.lftsp-row {
+  display: grid;
+  /* rank | player-info | team | goals | (pens) */
+  grid-template-columns: 28px 1fr auto 36px;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  transition: background 0.12s;
+}
+
+/* When showPenalties=true a 5th column appears — handled by inline grid */
+.lftsp-row:has(.lftsp-pens) {
+  grid-template-columns: 28px 1fr auto 36px 36px;
+}
+
+.lftsp-row:hover {
+  background: color-mix(in srgb, var(--hover-lightest-green) 5%, transparent);
+}
+
+.lftsp-row--first {
+  background: color-mix(in srgb, var(--hover-lightest-green) 7%, transparent);
+}
+
+/* ── Rank badge ──────────────────────────────────────────────────────────── */
+.lftsp-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--tertiary-text);
+  background: var(--brand-light-green);
+}
+
+.lftsp-rank--first {
+  background: color-mix(in srgb, var(--hover-lightest-green) 20%, transparent);
+  color: var(--hover-lightest-green);
+}
+
+/* ── Player info ─────────────────────────────────────────────────────────── */
+.lftsp-player-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.lftsp-player-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lftsp-player-raw {
+  font-size: 10px;
+  color: var(--tertiary-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Team ────────────────────────────────────────────────────────────────── */
+.lftsp-team {
+  font-size: 12px;
+  color: var(--tertiary-text);
+  white-space: nowrap;
+}
+
+/* ── Goals ───────────────────────────────────────────────────────────────── */
+.lftsp-goals {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--hover-lightest-green);
+  text-align: right;
+}
+
+/* ── Penalties ───────────────────────────────────────────────────────────── */
+.lftsp-pens {
+  font-size: 12px;
+  color: var(--tertiary-text);
+  text-align: right;
+}
+
+/* ── Column label footer ─────────────────────────────────────────────────── */
+.lftsp-col-labels {
+  display: grid;
+  grid-template-columns: 28px 1fr auto 36px;
+  gap: 8px;
+  padding: 6px 10px 0;
+  margin-top: 4px;
+  border-top: 1px solid var(--brand-lightest-green-border);
+}
+
+.lftsp-col-labels span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--tertiary-text);
+  text-align: right;
+}
+
+.lftsp-col-labels span:nth-child(2) { text-align: left; }
+
+/* ── State variants ──────────────────────────────────────────────────────── */
+.lftsp-state {
+  font-size: 13px;
+  color: var(--tertiary-text);
+  padding: 20px 0;
+  text-align: center;
+}
+
+.lftsp-state-error {
+  font-size: 13px;
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 8px;
+  padding: 12px 16px;
+}

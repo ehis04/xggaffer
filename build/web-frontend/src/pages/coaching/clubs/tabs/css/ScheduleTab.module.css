@@ -241,18 +241,19 @@
   gap: 6px;
 }
 
-/* ── Forms ───────────────────────────────────────────────────────────────── */
 
 .formGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  padding: 10px;
 }
 
 .formGroup {
   display: flex;
   flex-direction: column;
   gap: 5px;
+  margin: 10px;
 }
 
 .label {
@@ -276,6 +277,11 @@
   outline: none;
   transition: border-color 0.15s ease;
   font-family: inherit;
+  height: 40px;
+}
+
+option {
+  color: black;
 }
 
 .input:focus,

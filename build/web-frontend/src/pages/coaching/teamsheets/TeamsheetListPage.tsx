@@ -5,13 +5,16 @@ import type { TeamsheetListItem } from '../../../types/teamsheet';
 import { getTeamsheetStatus } from '../../../utils/teamsheetStatus';
 import styles from './css/TeamsheetListPage.module.css';
 import { useAuth } from '../../../context/useAuth';
+import { Sidebar } from '../../../components/Navigation/SideBar';
+import { SocialUserButtons } from '../../../components/Social/SocialUserButtons';
+import { CoachingNavBar } from '../../../components/Navigation/CoachingNavBar';
 
 const TeamsheetListPage: React.FC = () => {
   const { clubId } = useParams<{ clubId: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
-const currentUserId = typeof user?.id === 'number' ? user.id : null;
+  const currentUserId = typeof user?.id === 'number' ? user.id : null;
 
   const [teamsheets, setTeamsheets] = useState<TeamsheetListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +27,6 @@ const currentUserId = typeof user?.id === 'number' ? user.id : null;
 
   const fetchTeamsheets = useCallback(async () => {
     if (!clubId) return;
-
     try {
       setLoading(true);
       setError(null);
@@ -39,35 +41,19 @@ const currentUserId = typeof user?.id === 'number' ? user.id : null;
     }
   }, [clubId, isTrashView]);
 
-  useEffect(() => {
-    void fetchTeamsheets();
-  }, [fetchTeamsheets]);
+  useEffect(() => { void fetchTeamsheets(); }, [fetchTeamsheets]);
 
-  const templates = useMemo(
-    () => teamsheets.filter((teamsheet) => teamsheet.is_template),
-    [teamsheets]
-  );
-
-  const matches = useMemo(
-    () => teamsheets.filter((teamsheet) => !teamsheet.is_template),
-    [teamsheets]
-  );
+  const templates = useMemo(() => teamsheets.filter((t) => t.is_template), [teamsheets]);
+  const matches   = useMemo(() => teamsheets.filter((t) => !t.is_template), [teamsheets]);
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'No date';
-    return new Date(dateStr).toLocaleDateString('en-IE', {
-      day: 'numeric',
-      month: 'short',
-    });
+    return new Date(dateStr).toLocaleDateString('en-IE', { day: 'numeric', month: 'short' });
   };
 
   const formatExpiry = (dateStr: string | null) => {
     if (!dateStr) return null;
-    return new Date(dateStr).toLocaleDateString('en-IE', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
+    return new Date(dateStr).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
   const openTeamsheet = (teamsheet: TeamsheetListItem) => {
@@ -77,66 +63,40 @@ const currentUserId = typeof user?.id === 'number' ? user.id : null;
 
   const setView = (view: 'active' | 'trash') => {
     setActionError(null);
-    if (view === 'trash') {
-      setSearchParams({ view: 'trash' });
-      return;
-    }
-    setSearchParams({});
+    view === 'trash' ? setSearchParams({ view: 'trash' }) : setSearchParams({});
   };
 
   const handleMoveToTrash = async (teamsheetId: number) => {
-    if (!clubId) return;
-
-    const confirmed = window.confirm('Move this teamsheet to trash?');
-    if (!confirmed) return;
-
+    if (!clubId || !window.confirm('Move this teamsheet to trash?')) return;
     try {
-      setActionLoadingId(teamsheetId);
-      setActionError(null);
+      setActionLoadingId(teamsheetId); setActionError(null);
       await teamsheetApi.trash(Number(clubId), teamsheetId);
       await fetchTeamsheets();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Failed to move teamsheet to trash.');
-    } finally {
-      setActionLoadingId(null);
-    }
+    } finally { setActionLoadingId(null); }
   };
 
   const handleRestore = async (teamsheetId: number) => {
     if (!clubId) return;
-
     try {
-      setActionLoadingId(teamsheetId);
-      setActionError(null);
+      setActionLoadingId(teamsheetId); setActionError(null);
       await teamsheetApi.restore(Number(clubId), teamsheetId);
       await fetchTeamsheets();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Failed to restore teamsheet.');
-    } finally {
-      setActionLoadingId(null);
-    }
+    } finally { setActionLoadingId(null); }
   };
 
   const handlePermanentDelete = async (teamsheetId: number) => {
-    if (!clubId) return;
-
-    const confirmed = window.confirm(
-      'Delete this teamsheet permanently? This cannot be undone.'
-    );
-    if (!confirmed) return;
-
+    if (!clubId || !window.confirm('Delete this teamsheet permanently? This cannot be undone.')) return;
     try {
-      setActionLoadingId(teamsheetId);
-      setActionError(null);
+      setActionLoadingId(teamsheetId); setActionError(null);
       await teamsheetApi.permanentDelete(Number(clubId), teamsheetId);
       await fetchTeamsheets();
     } catch (err) {
-      setActionError(
-        err instanceof Error ? err.message : 'Failed to permanently delete teamsheet.'
-      );
-    } finally {
-      setActionLoadingId(null);
-    }
+      setActionError(err instanceof Error ? err.message : 'Failed to permanently delete teamsheet.');
+    } finally { setActionLoadingId(null); }
   };
 
   const renderCard = (teamsheet: TeamsheetListItem) => {
@@ -147,81 +107,69 @@ const currentUserId = typeof user?.id === 'number' ? user.id : null;
     return (
       <article
         key={teamsheet.id}
-        className={styles.card}
+        className={styles.TSLCard}
         onClick={() => openTeamsheet(teamsheet)}
         role="button"
         tabIndex={0}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            openTeamsheet(teamsheet);
-          }
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTeamsheet(teamsheet); }
         }}
       >
-        <div className={styles.cardHeader}>
-          <span className={styles.formation}>{teamsheet.formation_display}</span>
+        <div className={styles.TSLCardTop}>
+          <span className={styles.TSLFormation}>{teamsheet.formation_display}</span>
           {teamsheet.is_template ? (
-            <span className={styles.templateBadge}>Template</span>
+            <span className={styles.TSLTemplateBadge}>Template</span>
           ) : teamsheet.match_date ? (
-            <span className={styles.date}>{formatDate(teamsheet.match_date)}</span>
+            <span className={styles.TSLDate}>{formatDate(teamsheet.match_date)}</span>
           ) : null}
         </div>
 
-        <h3 className={styles.cardTitle}>{teamsheet.title}</h3>
-
+        <h3 className={styles.TSLCardTitle}>{teamsheet.title}</h3>
         {teamsheet.opponent && (
-          <p className={styles.opponent}>vs {teamsheet.opponent}</p>
+          <p className={styles.TSLOpponent}>vs {teamsheet.opponent}</p>
         )}
 
-        <div className={styles.cardMeta}>
-          <span className={styles[status.key]}>{status.label}</span>
+        <div className={styles.TSLCardMeta}>
+          <span className={`${styles.TSLStatus} ${styles[`TSLStatus_${status.key}`] ?? ''}`}>
+            {status.label}
+          </span>
         </div>
 
         {teamsheet.is_trashed && teamsheet.trash_expires_at && (
-          <p className={styles.trashNotice}>
+          <p className={styles.TSLTrashNotice}>
             In trash until {formatExpiry(teamsheet.trash_expires_at)}
           </p>
         )}
 
-        <div className={styles.cardActions}>
+        <div className={styles.TSLCardActions} onClick={(e) => e.stopPropagation()}>
           {!teamsheet.is_trashed ? (
-            canManageTrash ? (
+            canManageTrash && (
               <button
                 type="button"
-                className={styles.ghostButton}
+                className={styles.TSLGhostBtn}
                 disabled={isBusy}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  void handleMoveToTrash(teamsheet.id);
-                }}
+                onClick={() => void handleMoveToTrash(teamsheet.id)}
               >
-                {isBusy ? 'Moving...' : 'Move to Trash'}
+                {isBusy ? 'Moving…' : 'Move to Trash'}
               </button>
-            ) : null
+            )
           ) : canManageTrash ? (
             <>
               <button
                 type="button"
-                className={styles.restoreButton}
+                className={styles.TSLRestoreBtn}
                 disabled={isBusy}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  void handleRestore(teamsheet.id);
-                }}
+                onClick={() => void handleRestore(teamsheet.id)}
               >
-                {isBusy ? 'Restoring...' : 'Restore'}
+                {isBusy ? 'Restoring…' : 'Restore'}
               </button>
-
               <button
                 type="button"
-                className={styles.dangerButton}
+                className={styles.TSLDangerBtn}
                 disabled={isBusy}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  void handlePermanentDelete(teamsheet.id);
-                }}
+                onClick={() => void handlePermanentDelete(teamsheet.id)}
               >
-                {isBusy ? 'Deleting...' : 'Delete Permanently'}
+                {isBusy ? 'Deleting…' : 'Delete Permanently'}
               </button>
             </>
           ) : null}
@@ -230,97 +178,95 @@ const currentUserId = typeof user?.id === 'number' ? user.id : null;
     );
   };
 
-  if (loading) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.loading}>Loading teamsheets...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.error}>{error}</div>
-      </div>
-    );
-  }
-
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Teamsheets</h1>
-          <p className={styles.sectionCopy}>
-            {isTrashView
-              ? 'Restore deleted teamsheets or remove them permanently.'
-              : 'Create and manage active match teamsheets and templates.'}
-          </p>
-        </div>
+    <div className={styles.TSLShell}>
+      <div className="sidebar-section"><Sidebar /></div>
 
-        <div className={styles.headerActions}>
-          <div className={styles.tabs}>
-            <button
-              type="button"
-              className={`${styles.tab} ${!isTrashView ? styles.tabActive : ''}`}
-              onClick={() => setView('active')}
-            >
-              Active
-            </button>
-            <button
-              type="button"
-              className={`${styles.tab} ${isTrashView ? styles.tabActive : ''}`}
-              onClick={() => setView('trash')}
-            >
-              Trash
-            </button>
+      <div className={styles.TSLMain}>
+
+        <header className={styles.TSLHeader}>
+          <div className={styles.TSLHeaderLeft}>
+            <span className={styles.TSLHeaderLabel}>Coaching</span>
+            <span className={styles.TSLHeaderSep}>·</span>
+            <span className={styles.TSLHeaderTitle}>Teamsheets</span>
+          </div>
+          <div className={styles.TSLHeaderMiddle}><CoachingNavBar /></div>
+          <div className={styles.TSLHeaderRight}><SocialUserButtons /></div>
+        </header>
+
+        <div className={styles.TSLContent}>
+
+          <div className={styles.TSLPageHead}>
+            <div>
+              <h1 className={styles.TSLPageTitle}>Teamsheets</h1>
+              <p className={styles.TSLPageSub}>
+                {isTrashView
+                  ? 'Restore deleted teamsheets or remove them permanently.'
+                  : 'Create and manage active match teamsheets and templates.'}
+              </p>
+            </div>
+            <div className={styles.TSLPageHeadRight}>
+              <div className={styles.TSLTabs}>
+                <button
+                  type="button"
+                  className={`${styles.TSLTab} ${!isTrashView ? styles.TSLTabActive : ''}`}
+                  onClick={() => setView('active')}
+                >Active</button>
+                <button
+                  type="button"
+                  className={`${styles.TSLTab} ${isTrashView ? styles.TSLTabActive : ''}`}
+                  onClick={() => setView('trash')}
+                >Trash</button>
+              </div>
+              {!isTrashView && (
+                <Link to={`/clubs/${clubId}/teamsheets/new`} className={styles.TSLCreateBtn}>
+                  + New Teamsheet
+                </Link>
+              )}
+            </div>
           </div>
 
-          {!isTrashView && (
-            <Link to={`/clubs/${clubId}/teamsheets/new`} className={styles.createButton}>
-              + New Teamsheet
-            </Link>
+          {error       && <div className={styles.TSLError}>{error}</div>}
+          {actionError && <div className={styles.TSLError}>{actionError}</div>}
+
+          {loading ? (
+            <div className={styles.TSLLoading}>Loading teamsheets…</div>
+          ) : isTrashView ? (
+            <section className={styles.TSLSection}>
+              <h2 className={styles.TSLSectionTitle}>Trashed Teamsheets</h2>
+              {teamsheets.length === 0 ? (
+                <div className={styles.TSLEmpty}><p>No teamsheets in trash.</p></div>
+              ) : (
+                <div className={styles.TSLGrid}>{teamsheets.map(renderCard)}</div>
+              )}
+            </section>
+          ) : (
+            <>
+              {templates.length > 0 && (
+                <section className={styles.TSLSection}>
+                  <h2 className={styles.TSLSectionTitle}>Templates</h2>
+                  <div className={styles.TSLGrid}>{templates.map(renderCard)}</div>
+                </section>
+              )}
+
+              <section className={styles.TSLSection}>
+                <h2 className={styles.TSLSectionTitle}>Match Teamsheets</h2>
+                {matches.length === 0 ? (
+                  <div className={styles.TSLEmpty}>
+                    <p>No match teamsheets yet.</p>
+                    <Link to={`/clubs/${clubId}/teamsheets/new`} className={styles.TSLEmptyLink}>
+                      Create your first teamsheet →
+                    </Link>
+                  </div>
+                ) : (
+                  <div className={styles.TSLGrid}>{matches.map(renderCard)}</div>
+                )}
+              </section>
+            </>
           )}
+
         </div>
       </div>
-
-      {actionError && <div className={styles.error}>{actionError}</div>}
-
-      {isTrashView ? (
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>Trashed Teamsheets</h2>
-          {teamsheets.length === 0 ? (
-            <div className={styles.empty}>
-              <p>No teamsheets in trash.</p>
-            </div>
-          ) : (
-            <div className={styles.grid}>{teamsheets.map(renderCard)}</div>
-          )}
-        </section>
-      ) : (
-        <>
-          {templates.length > 0 && (
-            <section className={styles.section}>
-              <h2 className={styles.sectionTitle}>Templates</h2>
-              <div className={styles.grid}>{templates.map(renderCard)}</div>
-            </section>
-          )}
-
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>Match Teamsheets</h2>
-            {matches.length === 0 ? (
-              <div className={styles.empty}>
-                <p>No match teamsheets yet.</p>
-                <Link to={`/clubs/${clubId}/teamsheets/new`} className={styles.emptyLink}>
-                  Create your first teamsheet
-                </Link>
-              </div>
-            ) : (
-              <div className={styles.grid}>{matches.map(renderCard)}</div>
-            )}
-          </section>
-        </>
-      )}
     </div>
   );
 };
