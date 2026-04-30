@@ -1,4 +1,5 @@
 import apiClient from './client';
+import { COMMUNITY } from './endpoints';
 
 export interface Author {
   id: number;
@@ -138,7 +139,10 @@ export const communityApi = {
     apiClient.post<Post>('/community/create/post/', data),
 
   deletePost: (postId: number) =>
-    apiClient.delete<void>(`/community/my-post/${postId}/`),
+    apiClient.delete<void>(COMMUNITY.DELETE_POST(postId)),
+
+  deleteComment: (commentId: number) =>
+    apiClient.delete<void>(COMMUNITY.DELETE_COMMENT(commentId)),
 
   likePost: (postId: number) =>
     apiClient.post<{ liked: boolean; no_of_likes: number }>(

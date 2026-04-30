@@ -10,7 +10,7 @@ import { ProfileButton } from "../Buttons/ProfileButton";
 import type { UserData } from "../Navigation/SideBar";
 import { getUserProfile } from "../Navigation/functions/getUserProfile";
 import { COMMUNITY } from "../../services/api/endpoints";
-import type { PaginatedResponse } from "../../services/api/communityApi";
+import communityApi, { type PaginatedResponse } from "../../services/api/communityApi";
 
 export const PostDetail = () => {
   const { postId } = useParams<{ postId: string }>();
@@ -116,6 +116,41 @@ export const PostDetail = () => {
     }
   };
 
+  const handleDelete = async (postToDelete: PostData) => {
+    try {
+      if (postToDelete.type === "post") {
+        await communityApi.deletePost(postToDelete.id);
+        navigate("/social");
+        return;
+      }
+
+      await communityApi.deleteComment(postToDelete.id);
+      const removedIds = new Set<number>([postToDelete.id]);
+      comments.forEach((comment) => {
+        if (comment.parent_id === postToDelete.id) {
+          removedIds.add(comment.id);
+        }
+      });
+
+      setComments((currentComments) =>
+        currentComments.filter((comment) => !removedIds.has(comment.id))
+      );
+      setPost((currentPost) =>
+        currentPost
+          ? {
+              ...currentPost,
+              no_of_comments: Math.max(0, currentPost.no_of_comments - removedIds.size),
+            }
+          : currentPost
+      );
+      if (replyingToId && removedIds.has(replyingToId)) {
+        setReplyingToId(null);
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
+  };
+
   const handleComment = (id: number) => {
     setReplyingToId(id === post?.id ? null : id);
     setTimeout(() => textareaRef.current?.focus(), 50);
@@ -181,6 +216,7 @@ export const PostDetail = () => {
               onComment={handleComment}
               onProfileClick={handleProfileClick}
               onPostClick={handlePostClick}
+              onDelete={handleDelete}
             />
 
             <div className="pd-composer">
@@ -262,6 +298,7 @@ export const PostDetail = () => {
                         onComment={handleComment}
                         onProfileClick={handleProfileClick}
                         showReplyLine={replies.length > 0}
+                        onDelete={handleDelete}
                       />
                       {replies.map((reply) => (
                         <Post
@@ -271,6 +308,7 @@ export const PostDetail = () => {
                           onComment={handleComment}
                           onProfileClick={handleProfileClick}
                           depth={1}
+                          onDelete={handleDelete}
                         />
                       ))}
                     </div>

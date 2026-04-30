@@ -2,6 +2,7 @@ import { useState } from "react";
 import "./css/Post.css";
 import { ProfileButton } from "../Buttons/ProfileButton";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/useAuth";
 
 // This component is for comments, posts, replies. It is using the general name post to refer to everything
 
@@ -38,6 +39,7 @@ export interface PostProps {
   onReply?: (id: number) => void;
   onProfileClick?: (username: string) => void;
   onPostClick?: (postId: number) => void;
+  onDelete?: (post: PostData) => void | Promise<void>;
   showReplyLine?: boolean;
   depth?: number;
 }
@@ -48,16 +50,25 @@ export const Post: React.FC<PostProps> = ({
   onComment,
   onProfileClick,
   onPostClick,
+  onDelete,
   showReplyLine = false,
   depth = 0,
 }) => {
   const [isLiked, setIsLiked] = useState(post.is_liked || false);
   const [likeCount, setLikeCount] = useState(post.no_of_likes);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const isComment = post.type === "comment";
   const commentCount = isComment ? post.no_of_replies : post.no_of_comments;
+  const canDelete = Boolean(
+    onDelete &&
+      user?.username &&
+      post.author.username &&
+      user.username === post.author.username
+  );
 
   const formatTime = (dateString: string): string => {
     const now = new Date();
@@ -101,6 +112,18 @@ export const Post: React.FC<PostProps> = ({
     if (post.type == "post") {
       navigate(`/social/post/${post.id}`);
     }
+  };
+
+  const handleMoreClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsMenuOpen((open) => !open);
+  };
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsMenuOpen(false);
+    if (!onDelete) return;
+    await onDelete(post);
   };
 
   const renderTextWithLinks = (text: string) => {
@@ -152,13 +175,35 @@ export const Post: React.FC<PostProps> = ({
             </span>
           </div>
 
-          <button className="post-more-btn" aria-label="More options">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="12" cy="5" r="2" />
-              <circle cx="12" cy="12" r="2" />
-              <circle cx="12" cy="19" r="2" />
-            </svg>
-          </button>
+          {canDelete && (
+            <div className="post-more-menu">
+              <button
+                className="post-more-btn"
+                aria-label="More options"
+                aria-haspopup="menu"
+                aria-expanded={isMenuOpen}
+                onClick={handleMoreClick}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="5" r="2" />
+                  <circle cx="12" cy="12" r="2" />
+                  <circle cx="12" cy="19" r="2" />
+                </svg>
+              </button>
+
+              {isMenuOpen && (
+                <div className="post-dropdown" role="menu">
+                  <button
+                    className="post-dropdown-item danger"
+                    role="menuitem"
+                    onClick={handleDelete}
+                  >
+                    Delete {isComment ? "comment" : "post"}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="post-text">{renderTextWithLinks(post.text_body)}</div>
