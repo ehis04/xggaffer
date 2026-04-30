@@ -17,7 +17,6 @@ import type {
   SavedLeagueScenarioDetail,
   SavedLeagueScenarioListItem,
 } from "../../../types/livefootball";
-import pageStyles from "./css/LeagueComparePage.module.css";
 import styles from "./css/LeagueCustomPage.module.css";
 import { Sidebar } from "../../../components/Navigation/SideBar";
 import { SocialUserButtons } from "../../../components/Social/SocialUserButtons";
@@ -692,7 +691,7 @@ const LeagueCustomPage: React.FC = () => {
   );
 
   return (
-    <div className={pageStyles.page}>
+    <div className={styles.page}>
       <div className={styles.Sidebar}>
         <Sidebar />
       </div>
@@ -706,31 +705,31 @@ const LeagueCustomPage: React.FC = () => {
           </div>
         </header>
         <div className={styles.Body}>
-          <div className={pageStyles.header}>
-            <div className={pageStyles.titleBlock}>
-              <h1 className={pageStyles.title}>Custom league scenario</h1>
-              <p className={pageStyles.subtitle}>
+          <div className={styles.header}>
+            <div className={styles.titleBlock}>
+              <h1 className={styles.title}>Custom league scenario</h1>
+              <p className={styles.subtitle}>
                 Lock hypothetical scorelines for remaining fixtures and rerun
                 the expected table without saving the scenario yet.
               </p>
             </div>
 
-            <div className={pageStyles.actions}>
+            <div className={styles.actions}>
               <Link
                 to={
                   selectedLeague && selectedSeason
                     ? `/livefootball/leagues/predict?competition=${selectedLeague.id}&season=${selectedSeason}&mode=${selectedMode ?? "current_expected"}`
                     : "/livefootball/leagues/predict"
                 }
-                className={pageStyles.secondaryLink}
+                className={styles.secondaryLink}
               >
                 Open prediction page
               </Link>
             </div>
           </div>
 
-          <section className={pageStyles.filtersCard}>
-            <div className={pageStyles.filtersRow}>
+          <section className={styles.filtersCard}>
+            <div className={styles.filtersRow}>
               <LeagueSelector
                 leagues={leagues}
                 value={selectedLeague?.id ?? null}
@@ -755,10 +754,10 @@ const LeagueCustomPage: React.FC = () => {
               ) : null}
             </div>
 
-            <div className={pageStyles.modeBlock}>
-              <span className={pageStyles.modeLabel}>Prediction mode</span>
+            <div className={styles.modeBlock}>
+              <span className={styles.modeLabel}>Prediction mode</span>
 
-              <div className={pageStyles.modeButtons}>
+              <div className={styles.modeButtons}>
                 {MODE_ORDER.map((mode) => {
                   const isSupported =
                     selectedLeague?.supported_modes.includes(mode) ?? false;
@@ -769,7 +768,7 @@ const LeagueCustomPage: React.FC = () => {
                     <button
                       key={mode}
                       type="button"
-                      className={`${pageStyles.modeButton} ${selectedMode === mode ? pageStyles.modeButtonActive : ""}`}
+                      className={styles.modeBtn}
                       onClick={() => handleModeChange(mode)}
                       disabled={disabled}
                       title={
@@ -788,29 +787,29 @@ const LeagueCustomPage: React.FC = () => {
           </section>
 
           {metaLoading ? (
-            <section className={pageStyles.stateCard}>
-              <h2 className={pageStyles.stateTitle}>Loading scenario tools</h2>
-              <p className={pageStyles.stateText}>
+            <section className={styles.stateCard}>
+              <h2 className={styles.stateTitle}>Loading scenario tools</h2>
+              <p className={styles.stateText}>
                 Fetching leagues and available seasons.
               </p>
             </section>
           ) : null}
 
           {!metaLoading && metaError ? (
-            <section className={pageStyles.stateCard}>
-              <h2 className={pageStyles.stateTitle}>
+            <section className={styles.stateCard}>
+              <h2 className={styles.stateTitle}>
                 Scenario tools unavailable
               </h2>
-              <p className={pageStyles.stateText}>{metaError}</p>
+              <p className={styles.stateText}>{metaError}</p>
             </section>
           ) : null}
 
           {!metaLoading && !metaError && !filtersReady ? (
-            <section className={pageStyles.stateCard}>
-              <h2 className={pageStyles.stateTitle}>
+            <section className={styles.stateCard}>
+              <h2 className={styles.stateTitle}>
                 No scenario options available
               </h2>
-              <p className={pageStyles.stateText}>
+              <p className={styles.stateText}>
                 No supported league, season, and mode combination is currently
                 available.
               </p>
@@ -1070,20 +1069,20 @@ const LeagueCustomPage: React.FC = () => {
               </section>
 
               {scenarioLoading ? (
-                <section className={pageStyles.stateCard}>
-                  <h2 className={pageStyles.stateTitle}>Running scenario</h2>
-                  <p className={pageStyles.stateText}>
+                <section className={styles.stateCard}>
+                  <h2 className={styles.stateTitle}>Running scenario</h2>
+                  <p className={styles.stateText}>
                     Recomputing the expected table.
                   </p>
                 </section>
               ) : null}
 
               {!scenarioLoading && scenarioError ? (
-                <section className={pageStyles.stateCard}>
-                  <h2 className={pageStyles.stateTitle}>
+                <section className={styles.stateCard}>
+                  <h2 className={styles.stateTitle}>
                     Could not run scenario
                   </h2>
-                  <p className={pageStyles.stateText}>{scenarioError}</p>
+                  <p className={styles.stateText}>{scenarioError}</p>
                 </section>
               ) : null}
 
