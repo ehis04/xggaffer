@@ -83,6 +83,21 @@ const getMyStatusLabel = (s: ClubResourceMyStatus | undefined): string => {
   if (s.my_view_summary.opened) return 'Opened';
   return 'Not opened';
 };
+const getVisibleEngagementCounts = (resource: ClubResource, status: ClubResourceMyStatus | undefined) => {
+  if (status?.can_view_club_status) {
+    return {
+      opened: status.opened_count,
+      completed: status.completed_count,
+    };
+  }
+  if (resource.engagement_visibility === 'club_visible') {
+    return {
+      opened: resource.opened_count,
+      completed: resource.completed_count,
+    };
+  }
+  return null;
+};
 
 const asRecord = (v: unknown): UnknownRecord => (v && typeof v === 'object' && !Array.isArray(v)) ? (v as UnknownRecord) : {};
 const asArray = <T,>(v: unknown): T[] => Array.isArray(v) ? (v as T[]) : [];
@@ -249,6 +264,9 @@ export const ClubResourcesSection = ({ club, isMember, canManageResources }: Clu
       const access = await clubsApi.getResourceAccess(club.id, resource.id);
       if (resource.can_inline_view) {
         setViewerResource(resource); setViewerUrl(access.access_url); setViewerPage(1); setViewerPageCount(0);
+        await clubsApi.sendResourceHeartbeat(club.id, resource.id, { active_seconds_delta: 0, page_reached: 1 });
+        const s = await clubsApi.getMyResourceStatus(club.id, resource.id);
+        setResourceStatuses((c) => ({ ...c, [resource.id]: s }));
       } else {
         await clubsApi.sendResourceHeartbeat(club.id, resource.id, { active_seconds_delta: 0, page_reached: null });
         const s = await clubsApi.getMyResourceStatus(club.id, resource.id);
@@ -388,11 +406,11 @@ export const ClubResourcesSection = ({ club, isMember, canManageResources }: Clu
           <form className={styles.clubResourceForm} onSubmit={handleUploadSubmit}>
             <div className={styles.clubResourceFormGrid}>
               <div className={styles.clubResourceFormField}>
-                <label className={styles.clubResourceLabel} htmlFor={uploadTitleInputId}>TITLE</label>
+                <label className={styles.clubResourceLabel} htmlFor={uploadTitleInputId}>Title</label>
                 <input id={uploadTitleInputId} className={styles.clubResourceInput} type="text" value={uploadTitle} onChange={(e) => setUploadTitle(e.target.value)} placeholder="e.g. Matchday analysis pack" />
               </div>
               <div className={styles.clubResourceFormField}>
-                <label className={styles.clubResourceLabel} htmlFor={uploadVisibilitySelectId}>VISIBILITY</label>
+                <label className={styles.clubResourceLabel} htmlFor={uploadVisibilitySelectId}>Visibility</label>
                 <select id={uploadVisibilitySelectId} className={styles.clubResourceSelect} value={uploadVisibility} onChange={(e) => setUploadVisibility(e.target.value as ClubResourceEngagementVisibility)}>
                   <option value="staff_only">Staff only</option>
                   <option value="club_visible">Club visible</option>
@@ -400,11 +418,11 @@ export const ClubResourcesSection = ({ club, isMember, canManageResources }: Clu
               </div>
             </div>
             <div className={styles.clubResourceFormField}>
-              <label className={styles.clubResourceLabel} htmlFor={uploadDescriptionInputId}>DESCRIPTION</label>
+              <label className={styles.clubResourceLabel} htmlFor={uploadDescriptionInputId}>Description</label>
               <textarea id={uploadDescriptionInputId} className={styles.clubResourceTextarea} rows={3} value={uploadDescription} onChange={(e) => setUploadDescription(e.target.value)} placeholder="Optional context for players and staff." />
             </div>
             <div className={styles.clubResourceFormField}>
-              <label className={styles.clubResourceLabel} htmlFor={uploadFileInputId}>FILE</label>
+              <label className={styles.clubResourceLabel} htmlFor={uploadFileInputId}>File</label>
               <input ref={fileInputRef} id={uploadFileInputId} className={styles.clubResourceFileInput} type="file" accept={ACCEPTED_RESOURCE_TYPES} onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)} />
               <p className={styles.clubResourceHelperText}>Supported: PDF, DOCX, PPTX, XLSX, CSV, PNG, JPG, JPEG, WEBP.</p>
             </div>
@@ -429,6 +447,7 @@ export const ClubResourcesSection = ({ club, isMember, canManageResources }: Clu
             {visibleResources.map((resource) => {
               const myStatus = resourceStatuses[resource.id];
               const statusLabel = getMyStatusLabel(myStatus);
+              const visibleEngagementCounts = getVisibleEngagementCounts(resource, myStatus);
               const isEngagementOpen = selectedEngagementResourceId === resource.id;
 
               return (
@@ -463,6 +482,18 @@ export const ClubResourcesSection = ({ club, isMember, canManageResources }: Clu
                         {statusLabel}
                       </span>
                     </div>
+                    {visibleEngagementCounts && (
+                      <>
+                        <div className={styles.clubResourceMetaItem}>
+                          <span className={styles.clubResourceMetaLabel}>Opened:</span>
+                          <span className={styles.clubResourceMetaValue}>{visibleEngagementCounts.opened}</span>
+                        </div>
+                        <div className={styles.clubResourceMetaItem}>
+                          <span className={styles.clubResourceMetaLabel}>Completed:</span>
+                          <span className={styles.clubResourceMetaValue}>{visibleEngagementCounts.completed}</span>
+                        </div>
+                      </>
+                    )}
                     <div className={styles.clubResourceMetaItem}>
                       <span className={styles.clubResourceMetaLabel}>Uploaded</span>
                       <span className={styles.clubResourceMetaValue}>{formatDateTime(resource.created_at) ?? '—'}</span>

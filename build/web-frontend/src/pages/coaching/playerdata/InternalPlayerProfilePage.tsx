@@ -303,6 +303,7 @@ const InternalPlayerProfilePage: React.FC = () => {
           clubs.filter((club) => club.club_type === 'system_professional'),
         );
       } catch {
+        setProClubs([]);
       } finally {
         setClubsLoading(false);
       }

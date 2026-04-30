@@ -21,7 +21,7 @@ export function FreshnessBadge({ freshness }: FreshnessBadgeProps) {
   if (freshness?.staleness_status === STATIC_DATASET_STATUS) {
     return (
       <span className={`${styles.badge} ${styles.static}`}>
-        StatsBomb Historical Data 
+        Static dataset
       </span>
     );
   }

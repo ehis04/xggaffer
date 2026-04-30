@@ -1,5 +1,6 @@
 from django.db import migrations, models
 from django.db.models import Count
+from django.db.models import Q
 from django.utils import timezone
 
 
@@ -50,6 +51,7 @@ class Migration(migrations.Migration):
             model_name='publishedsnapshot',
             constraint=models.UniqueConstraint(
                 fields=('surface',),
+                condition=Q(is_active=True),
                 name='uniq_active_snapshot_per_surface',
             ),
         ),

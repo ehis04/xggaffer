@@ -240,7 +240,9 @@ class ChatQueryView(APIView):
                 if result.get('cache_hit'):
                     timer.cache_status = "hit"
                 result.pop('cache_hit', None)
-                response = Response(build_predictions_envelope(result), status=status.HTTP_200_OK)
+                envelope = build_predictions_envelope(result)
+                envelope.update(result)
+                response = Response(envelope, status=status.HTTP_200_OK)
             except Exception as exc:
                 logger.exception("Chat query failed: %s", exc)
                 response = Response({"error": "Query processing failed."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -608,7 +610,9 @@ class PredictLineupView(APIView):
 
             response_serializer = LineupResponseSerializer(data=response_payload)
             response_serializer.is_valid(raise_exception=True)
-            return Response(build_predictions_envelope(response_serializer.data), status=status.HTTP_200_OK)
+            envelope = build_predictions_envelope(response_serializer.data)
+            envelope.update(response_serializer.data)
+            return Response(envelope, status=status.HTTP_200_OK)
 
         except ValueError as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
@@ -711,7 +715,9 @@ class PredictAvailabilityView(APIView):
             }
 
             response_serializer = AvailabilityResponseSerializer(payload)
-            return Response(build_predictions_envelope(response_serializer.data), status=status.HTTP_200_OK)
+            envelope = build_predictions_envelope(response_serializer.data)
+            envelope.update(response_serializer.data)
+            return Response(envelope, status=status.HTTP_200_OK)
 
         except FileNotFoundError as exc:
             logger.error("Availability model artifact missing: %s", exc)
@@ -799,7 +805,9 @@ class TacticalAnalysisView(APIView):
 
             response_serializer = TacticalResponseSerializer(data=payload)
             response_serializer.is_valid(raise_exception=True)
-            return Response(build_predictions_envelope(response_serializer.data), status=status.HTTP_200_OK)
+            envelope = build_predictions_envelope(response_serializer.data)
+            envelope.update(response_serializer.data)
+            return Response(envelope, status=status.HTTP_200_OK)
 
         except ValueError as exc:
             return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)

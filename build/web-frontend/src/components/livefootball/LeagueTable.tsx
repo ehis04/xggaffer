@@ -30,8 +30,6 @@ const FormChips: React.FC<{ form: string }> = ({ form }) => (
         : char === 'L' ? styles['lflt-form-l']
         : styles['lflt-form-d'];
       return (
-        // index-as-key is fine here: form string is a fixed-length display value
-        // eslint-disable-next-line react/no-array-index-key
         <span key={idx} className={`${styles['lflt-form-chip']} ${mod}`}>
           {char}
         </span>

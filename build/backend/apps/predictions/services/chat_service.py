@@ -13,7 +13,7 @@ from apps.predictions.services.intent_types import IntentClass, ParsedQuery
 from apps.predictions.services.lineup_handler import LineupHandler
 from apps.predictions.services.match_handler import MatchHandler
 from apps.predictions.services.narrator import LLMNarrator
-from apps.predictions.services.payload_builder import build_payload
+from apps.predictions.services import payload_builder
 from apps.predictions.services.query_router import QueryRouter
 from apps.predictions.services.score_handler import ScoreHandler
 from apps.predictions.services.simulation_handler import SimulationHandler
@@ -129,7 +129,7 @@ def handle_chat_query(
     t2 = perf_counter()
 
     try:
-        payload = build_payload(parsed_query, handler_result)
+        payload = payload_builder.build_payload(parsed_query, handler_result)
     except Exception as exc:
         _logger.exception("PayloadBuilder failed: %s", exc)
         return FALLBACK_RESPONSE

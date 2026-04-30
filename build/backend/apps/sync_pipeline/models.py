@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 
 from common.constants import DatasetName, FreshnessStatus, ProviderName, PublishStatus, SyncStatus
 
@@ -45,6 +46,7 @@ class PublishedSnapshot(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['surface'],
+                condition=Q(is_active=True),
                 name='uniq_active_snapshot_per_surface',
             ),
         ]

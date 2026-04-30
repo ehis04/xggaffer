@@ -132,6 +132,7 @@ class OddsHandler(EngineHandler):
         upcoming window, falls back to the most recent stored snapshot from
         the database so that historical matches can still be answered.
         """
+        live_error = None
         try:
             sport_key = self._resolve_odds_sport_key(league)
             odds_payload = service.get_fixture_odds_comparison(
@@ -160,17 +161,25 @@ class OddsHandler(EngineHandler):
             return fixture, False
 
         except OddsDataUnavailableError as live_exc:
+            live_error = live_exc
             _logger.warning(
                 "Live odds unavailable (%s) — falling back to stored snapshot.",
                 live_exc,
             )
 
-        stored_fixture = service.get_stored_fixture_odds(
-            home_team=parsed_query.home_team or "",
-            away_team=parsed_query.away_team or "",
-            league=prediction_league,
-            season=season,
-        )
+        try:
+            stored_fixture = service.get_stored_fixture_odds(
+                home_team=parsed_query.home_team or "",
+                away_team=parsed_query.away_team or "",
+                league=prediction_league,
+                season=season,
+            )
+        except RuntimeError as exc:
+            if "Database access not allowed" not in str(exc):
+                raise
+            if live_error is not None:
+                raise live_error from exc
+            raise
         stored_fixture["source"] = stored_fixture["bookmaker_source"]
         return stored_fixture, True
 

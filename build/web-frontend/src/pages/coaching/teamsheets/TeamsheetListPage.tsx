@@ -63,7 +63,11 @@ const TeamsheetListPage: React.FC = () => {
 
   const setView = (view: 'active' | 'trash') => {
     setActionError(null);
-    view === 'trash' ? setSearchParams({ view: 'trash' }) : setSearchParams({});
+    if (view === 'trash') {
+      setSearchParams({ view: 'trash' });
+    } else {
+      setSearchParams({});
+    }
   };
 
   const handleMoveToTrash = async (teamsheetId: number) => {

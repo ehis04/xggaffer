@@ -26,6 +26,7 @@ const OUTCOME_LABEL: Record<string, string> = { H: 'Home win', D: 'Draw', A: 'Aw
 const OUTCOME_TO_PROB: Record<string, 'home' | 'draw' | 'away'> = { H: 'home', D: 'draw', A: 'away' };
 const ODDS_REFRESH_MESSAGE = 'Odds data not yet available — check back after 06:00 UTC';
 const PREDICTION_PREFETCH_CONCURRENCY = 6;
+const EMPTY_FIXTURES: OddsFixtureItem[] = [];
 
 function fixturePredictionKey(fixture: OddsFixtureItem, league: string): string {
   return `${league}::${fixture.season}::${fixture.home_team}::${fixture.away_team}::${new Date(fixture.commence_time).toISOString().slice(0, 10)}`;
@@ -295,7 +296,7 @@ export default function OddsComparisonPage() {
 
   const freshness = fixturesEnvelope?.freshness ?? null;
   const fixturesData = fixturesEnvelope?.data ?? null;
-  const fixtures = fixturesData?.fixtures ?? [];
+  const fixtures = fixturesData?.fixtures ?? EMPTY_FIXTURES;
   const fixturesSeason = fixturesData?.season || currentSeason;
   const seasonLabel = formatSeasonDisplay(fixturesSeason);
   const dataNull = !fixturesLoading && !fixturesErrored && fixturesEnvelope !== undefined && fixturesEnvelope.data === null;

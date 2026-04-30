@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import LiveFootballPage from '../LiveFootballPage';
 import liveFootballApi from '../../../services/api/livefootballApi';
@@ -136,7 +137,11 @@ describe('LiveFootballPage', () => {
   });
 
   it('loads competitions and renders table, fixtures and scorers', async () => {
-    render(<LiveFootballPage />);
+    render(
+      <MemoryRouter>
+        <LiveFootballPage />
+      </MemoryRouter>
+    );
 
     expect(await screen.findByText('Live Football')).toBeInTheDocument();
     expect((await screen.findAllByText('Arsenal')).length).toBeGreaterThan(0);
@@ -158,7 +163,11 @@ describe('LiveFootballPage', () => {
   });
 
   it('re-fetches browse data when the competition changes', async () => {
-    render(<LiveFootballPage />);
+    render(
+      <MemoryRouter>
+        <LiveFootballPage />
+      </MemoryRouter>
+    );
 
     const select = await screen.findByLabelText('Competition');
     fireEvent.change(select, { target: { value: '2' } });

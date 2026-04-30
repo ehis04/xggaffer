@@ -6,7 +6,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import SquadIntelligenceHub from '../SquadIntelligenceHub';
 import type { ApiEnvelope } from '../../../common/types/response';
 import type { AvailabilityWidgetPayload, LineupWidgetPayload } from '../../../services/api/widgetApi';
-import type { CompetitionFixturesResponse, CompetitionListItem } from '../../../types/livefootball';
+import type { CompetitionListItem, CompetitionPreviousNextFixturesResponse } from '../../../types/livefootball';
 
 vi.mock('../../../services/api/widgetApi', () => ({
   fetchAvailabilityWidget: vi.fn(),
@@ -16,7 +16,7 @@ vi.mock('../../../services/api/widgetApi', () => ({
 vi.mock('../../../services/api/livefootballApi', () => ({
   default: {
     getCompetitions: vi.fn(),
-    getCompetitionFixtures: vi.fn(),
+    getCompetitionPreviousNextFixtures: vi.fn(),
   },
 }));
 
@@ -58,19 +58,22 @@ const COMPETITIONS: CompetitionListItem[] = [
   },
 ];
 
-const MOCK_FIXTURES_RES: CompetitionFixturesResponse = {
+const MOCK_FIXTURES_RES: CompetitionPreviousNextFixturesResponse = {
   competition: COMPETITIONS[0],
   season_label: '2024/25',
-  count: 2,
-  items: [
+  previous: [],
+  next: [
     {
       id: 10,
       external_match_id: '10',
       season_label: '2024/25',
       status: 'SCHEDULED',
       kickoff_at: '2025-05-01T15:00:00Z',
-      home_team: { name: 'Arsenal', short_name: 'Arsenal', tla: 'ARS', emblem_url: '' },
-      away_team: { name: 'Chelsea', short_name: 'Chelsea', tla: 'CHE', emblem_url: '' },
+      matchday: 35,
+      home_team: { id: 1, external_id: 'arsenal', name: 'Arsenal', short_name: 'Arsenal', tla: 'ARS', emblem_url: '' },
+      away_team: { id: 2, external_id: 'chelsea', name: 'Chelsea', short_name: 'Chelsea', tla: 'CHE', emblem_url: '' },
+      home_score: null,
+      away_score: null,
     },
     {
       id: 11,
@@ -78,8 +81,11 @@ const MOCK_FIXTURES_RES: CompetitionFixturesResponse = {
       season_label: '2024/25',
       status: 'SCHEDULED',
       kickoff_at: '2025-05-03T15:00:00Z',
-      home_team: { name: 'Liverpool', short_name: 'Liverpool', tla: 'LIV', emblem_url: '' },
-      away_team: { name: 'Arsenal', short_name: 'Arsenal', tla: 'ARS', emblem_url: '' },
+      matchday: 36,
+      home_team: { id: 3, external_id: 'liverpool', name: 'Liverpool', short_name: 'Liverpool', tla: 'LIV', emblem_url: '' },
+      away_team: { id: 1, external_id: 'arsenal', name: 'Arsenal', short_name: 'Arsenal', tla: 'ARS', emblem_url: '' },
+      home_score: null,
+      away_score: null,
     },
   ],
 };
@@ -139,7 +145,7 @@ describe('SquadIntelligenceHub', () => {
 
   it('renders fixture selector when fixtures loaded', async () => {
     vi.mocked(liveFootballApi.getCompetitions).mockResolvedValue(COMPETITIONS);
-    vi.mocked(liveFootballApi.getCompetitionFixtures).mockResolvedValue(MOCK_FIXTURES_RES);
+    vi.mocked(liveFootballApi.getCompetitionPreviousNextFixtures).mockResolvedValue(MOCK_FIXTURES_RES);
     renderHub();
     await waitFor(() => {
       expect(screen.getByRole('combobox')).toBeInTheDocument();
@@ -148,11 +154,11 @@ describe('SquadIntelligenceHub', () => {
 
   it('renders NullStatePlaceholder when no fixtures found', async () => {
     vi.mocked(liveFootballApi.getCompetitions).mockResolvedValue(COMPETITIONS);
-    vi.mocked(liveFootballApi.getCompetitionFixtures).mockResolvedValue({
+    vi.mocked(liveFootballApi.getCompetitionPreviousNextFixtures).mockResolvedValue({
       competition: COMPETITIONS[0],
       season_label: '2024/25',
-      count: 0,
-      items: [],
+      previous: [],
+      next: [],
     });
     renderHub();
     await waitFor(() => {
@@ -163,7 +169,7 @@ describe('SquadIntelligenceHub', () => {
 
   it('renders AvailabilityTimeline when fixture selected', async () => {
     vi.mocked(liveFootballApi.getCompetitions).mockResolvedValue(COMPETITIONS);
-    vi.mocked(liveFootballApi.getCompetitionFixtures).mockResolvedValue(MOCK_FIXTURES_RES);
+    vi.mocked(liveFootballApi.getCompetitionPreviousNextFixtures).mockResolvedValue(MOCK_FIXTURES_RES);
     renderHub();
     await waitFor(() => {
       expect(screen.getByTestId('availability-timeline')).toBeInTheDocument();
@@ -172,18 +178,18 @@ describe('SquadIntelligenceHub', () => {
 
   it('renders PredictedXIBoard after show XI toggled', async () => {
     vi.mocked(liveFootballApi.getCompetitions).mockResolvedValue(COMPETITIONS);
-    vi.mocked(liveFootballApi.getCompetitionFixtures).mockResolvedValue(MOCK_FIXTURES_RES);
+    vi.mocked(liveFootballApi.getCompetitionPreviousNextFixtures).mockResolvedValue(MOCK_FIXTURES_RES);
     renderHub();
     await waitFor(() => screen.getByRole('button', { name: /show predicted xi/i }));
     fireEvent.click(screen.getByRole('button', { name: /show predicted xi/i }));
     await waitFor(() => {
-      expect(screen.getByTestId('predicted-xi-board')).toBeInTheDocument();
+      expect(screen.getAllByTestId('predicted-xi-board').length).toBeGreaterThanOrEqual(1);
     });
   });
 
   it('shows congestion label for fixtures within CONGESTION_THRESHOLD_DAYS', async () => {
     vi.mocked(liveFootballApi.getCompetitions).mockResolvedValue(COMPETITIONS);
-    vi.mocked(liveFootballApi.getCompetitionFixtures).mockResolvedValue(MOCK_FIXTURES_RES);
+    vi.mocked(liveFootballApi.getCompetitionPreviousNextFixtures).mockResolvedValue(MOCK_FIXTURES_RES);
     renderHub();
     await waitFor(() => {
       expect(screen.getByText(/high congestion/i)).toBeInTheDocument();

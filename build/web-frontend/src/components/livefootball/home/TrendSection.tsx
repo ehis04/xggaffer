@@ -100,7 +100,6 @@ const TrendSection: React.FC<Props> = ({
               : null;
 
             return (
-              // eslint-disable-next-line react/no-array-index-key
               <article key={i} className={`${styles['lfb-info-card']} ${styles['lfb-card-fill']}`}>
                 {variant === 'team' ? (
                   <>
@@ -127,7 +126,6 @@ const TrendSection: React.FC<Props> = ({
                         <div className={styles['lfb-form-pill-list']}>
                           {getFormTokens((item as LiveFootballTrendTeamCard).form_label).map(
                             (token, tokenIdx) => (
-                              // eslint-disable-next-line react/no-array-index-key
                               <span key={`${i}-${token}-${tokenIdx}`} className={formPillClass(token)}>
                                 {token}
                               </span>

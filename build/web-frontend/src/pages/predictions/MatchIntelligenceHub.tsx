@@ -39,6 +39,7 @@ import type { TacticalWidgetPayload } from '../../services/api/widgetApi';
 
 const DEFAULT_LEAGUE = 'EPL';
 const COVERAGE_NOTICE = 'Tactical analysis powered by StatsBomb Open Data. Full profile available for La Liga teams only.' as const;
+const LA_LIGA_CODES = new Set(['LL', 'PD', 'LA_LIGA', 'LALIGA', 'ES', 'SPA']);
 
 function normalizeTeamName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -49,6 +50,10 @@ function isPastFixtureDate(dateStr: string): boolean {
   const fixtureEndUtc = Date.parse(`${dateStr}T23:59:59Z`);
   if (Number.isNaN(fixtureEndUtc)) return false;
   return fixtureEndUtc < Date.now();
+}
+
+function isLaLigaLeague(code: string): boolean {
+  return LA_LIGA_CODES.has(code.toUpperCase().replace(/[^A-Z0-9]/g, '_'));
 }
 
 interface BlockState<T> {
@@ -323,6 +328,7 @@ export default function MatchIntelligenceHub() {
   const awayAvailability = awayAvail.data?.data ?? null;
   const homePredictedLineup = homeLineup.data?.data ?? null;
   const awayPredictedLineup = awayLineup.data?.data ?? null;
+  const tacticalAvailable = isLaLigaLeague(leagueCode);
 
   return (
     <div className={styles.page}>
@@ -496,7 +502,11 @@ export default function MatchIntelligenceHub() {
         <section className={styles.block}>
           <h2 className={styles.blockTitle}>Tactical Context</h2>
           <p className={styles.coverageNotice}>{COVERAGE_NOTICE}</p>
-          <TacticalBlock homeTeam={homeTeam} awayTeam={awayTeam} />
+          {tacticalAvailable ? (
+            <TacticalBlock homeTeam={homeTeam} awayTeam={awayTeam} />
+          ) : (
+            <NullStatePlaceholder icon="chart" message="Tactical data not available for this league" />
+          )}
         </section>
 
       </div>

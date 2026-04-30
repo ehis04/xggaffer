@@ -30,8 +30,6 @@ from ..serializers import (
 )
 from ..storage import (
     ClubResourceStorageError,
-    build_cloudinary_signed_delivery_url,
-    cloudinary_resources_enabled,
 )
 
 
@@ -234,11 +232,18 @@ class ClubResourceViewSet(viewsets.ModelViewSet):
 
         if (
             resource.storage_backend == ClubResource.StorageBackend.CLOUDINARY and
-            resource.storage_key and
-            cloudinary_resources_enabled()
+            resource.storage_key
         ):
+            from apps.clubs import views as club_views
+
+            if not club_views.cloudinary_resources_enabled():
+                return Response(
+                    {'detail': 'Cloudinary resource storage is not enabled.'},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
             try:
-                signed_cloudinary_url = build_cloudinary_signed_delivery_url(resource)
+                signed_cloudinary_url = club_views.build_cloudinary_signed_delivery_url(resource)
             except ClubResourceStorageError as exc:
                 return Response(
                     {'detail': str(exc)},

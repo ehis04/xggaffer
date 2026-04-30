@@ -10,6 +10,14 @@ vi.mock('../../../services/api/livefootballApi', () => ({
   getLiveFootballOverview: vi.fn(),
 }));
 
+vi.mock('../../../components/Navigation/SideBar', () => ({
+  Sidebar: () => <aside data-testid="sidebar" />,
+}));
+
+vi.mock('../../../components/Social/SocialUserButtons', () => ({
+  SocialUserButtons: () => <div data-testid="social-user-buttons" />,
+}));
+
 vi.mock('../../../components/livefootball/home/LiveFootballHeroHeader', () => ({
   default: ({ generatedAt }: { generatedAt?: string | null }) => (
     <div data-testid="hero-header">hero-{generatedAt ?? 'none'}</div>

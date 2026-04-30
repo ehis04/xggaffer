@@ -25,6 +25,14 @@ vi.mock('../../../../services/api', () => ({
   clubsApi: mockClubsApi,
 }));
 
+vi.mock('../../../../components/Navigation/SideBar', () => ({
+  Sidebar: () => <aside data-testid="sidebar" />,
+}));
+
+vi.mock('../../../../components/Social/SocialUserButtons', () => ({
+  SocialUserButtons: () => <div data-testid="social-user-buttons" />,
+}));
+
 const approvalClub = {
   id: 1,
   name: 'Approval Club',
