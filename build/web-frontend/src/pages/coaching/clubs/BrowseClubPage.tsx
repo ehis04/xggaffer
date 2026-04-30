@@ -4,7 +4,6 @@ import { clubsApi } from "../../../services/api";
 import type { Club, ClubJoinRequest } from "../../../types/club";
 import styles from "./css/BrowseClubsPage.module.css";
 import { Sidebar } from "../../../components/Navigation/SideBar";
-import { ClubsNavBar } from "../../../components/Navigation/ClubsNavBar";
 import { SocialUserButtons } from "../../../components/Social/SocialUserButtons";
 
 const ALLOWED_BROWSE_CLUBS = [
@@ -330,7 +329,6 @@ const BrowseClubsPage: React.FC = () => {
             <span className={styles.pageHeaderTitle}>Clubs</span>
           </div>
           <div className={styles.pageHeaderMiddle}>
-            <ClubsNavBar />
           </div>
           <div className={styles.pageHeaderRight}>
             <SocialUserButtons />

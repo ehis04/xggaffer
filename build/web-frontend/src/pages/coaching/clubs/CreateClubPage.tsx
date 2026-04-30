@@ -11,7 +11,6 @@ import type {
 import styles from './css/CreateClubPage.module.css';
 import { Sidebar } from '../../../components/Navigation/SideBar';
 import { SocialUserButtons } from '../../../components/Social/SocialUserButtons';
-import { ClubsNavBar } from '../../../components/Navigation/ClubsNavBar';
 
 const isValidEmail = (email: string): boolean =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -301,7 +300,6 @@ const CreateClubPage: React.FC = () => {
             <span className={styles.createClubHeaderTitle}>Clubs</span>
           </div>
           <div className={styles.createClubHeaderMiddle}>
-            <ClubsNavBar />
           </div>
           <div className={styles.createClubHeaderRight}>
             <SocialUserButtons />
