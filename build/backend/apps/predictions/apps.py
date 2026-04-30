@@ -11,6 +11,10 @@ class PredictionsConfig(AppConfig):
     verbose_name = "Predictions"
 
     def ready(self):
+        from django.conf import settings
+        if getattr(settings, "PREDICTIONS_DISABLE_PREWARM", False):
+            return
+
         import threading
 
         def _warm_caches():

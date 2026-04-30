@@ -7,7 +7,15 @@ from django.core.cache import cache
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from django.test import TestCase
+from django.test import TestCase, override_settings
+
+
+TEST_CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "test-cache",
+    }
+}
 
 
 def build_overview_payload() -> dict:
@@ -296,6 +304,7 @@ def build_overview_payload() -> dict:
     }
 
 
+@override_settings(CACHES=TEST_CACHES)
 class LiveFootballOverviewViewTests(TestCase):
     def setUp(self) -> None:
         cache.clear()

@@ -98,12 +98,15 @@ class ClubTrashApiTests(TestCase):
         force_authenticate(request, user=user)
         return view(request, **kwargs)
 
+    def response_items(self, response):
+        return response.data.get('results', response.data) if isinstance(response.data, dict) else response.data
+
     def test_default_list_excludes_trashed_clubs(self):
         view = ClubViewSet.as_view({'get': 'list'})
         response = self.perform(view, self.creator, path='/clubs/')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        returned_ids = {entry['id'] for entry in response.data['results']}
+        returned_ids = {entry['id'] for entry in self.response_items(response)}
         self.assertIn(self.active_club.id, returned_ids)
         self.assertIn(self.public_listed_club.id, returned_ids)
         self.assertNotIn(self.trashed_club.id, returned_ids)
@@ -118,7 +121,7 @@ class ClubTrashApiTests(TestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        returned_ids = {entry['id'] for entry in response.data['results']}
+        returned_ids = {entry['id'] for entry in self.response_items(response)}
         self.assertIn(self.trashed_club.id, returned_ids)
         self.assertNotIn(self.active_club.id, returned_ids)
 

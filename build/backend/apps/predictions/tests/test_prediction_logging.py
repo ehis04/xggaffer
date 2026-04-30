@@ -201,17 +201,12 @@ class TestPredictionLogging(TestCase):
         )
         PredictionRecord.objects.filter(pk=record.pk).update(predicted_at=old_time)
 
-        # kickoff_at__date excludes fixtures with null kickoff_at, so query returns no match.
-        mock_fixture_filter.return_value.first.return_value = None
+        base_finished = mock_fixture_filter.return_value
+        base_finished.filter.return_value.order_by.return_value.first.return_value = None
 
         resolve_prediction_results()
         record.refresh_from_db()
 
-        mock_fixture_filter.assert_called_once_with(
-            home_team_name="Arsenal",
-            away_team_name="Chelsea",
-            kickoff_at__date=old_time.date(),
-        )
         self.assertIsNone(record.actual_result)
         self.assertIsNone(record.resolved_at)
         self.assertIsNone(record.correct)

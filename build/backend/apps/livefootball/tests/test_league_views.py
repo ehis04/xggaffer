@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
@@ -16,6 +17,15 @@ from apps.livefootball.models import (
 )
 
 
+TEST_CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "test-cache",
+    }
+}
+
+
+@override_settings(CACHES=TEST_CACHES)
 class LeagueViewsTests(APITestCase):
     def setUp(self) -> None:
         cache.clear()
