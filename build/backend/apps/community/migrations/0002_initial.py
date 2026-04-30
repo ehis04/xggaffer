@@ -156,7 +156,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='block',
-            constraint=models.CheckConstraint(condition=models.Q(('blocker', models.F('blocked_user')), _negated=True), name='no_self_block'),
+            constraint=models.CheckConstraint(check=models.Q(('blocker', models.F('blocked_user')), _negated=True), name='no_self_block'),
         ),
         migrations.AddIndex(
             model_name='like',

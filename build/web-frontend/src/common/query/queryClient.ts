@@ -11,7 +11,7 @@ export const queryClient = new QueryClient({
             staleTime: STALE_TIME_STANDARD,
             gcTime: GC_TIME_STANDARD,
             retry: RETRY_COUNT,
-            refetchOnWindowFocus: true,
+            refetchOnWindowFocus: false,
         },
     },
 });

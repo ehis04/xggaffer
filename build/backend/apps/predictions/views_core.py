@@ -16,6 +16,7 @@ from common.cache_keys import (
     CACHE_TTL_TEAMS,
     CACHE_TTL_ODDS_FIXTURES,
     CACHE_TTL_ODDS_TEAMS,
+    CACHE_TTL_PREDICT,
 )
 
 from .envelope import build_predictions_envelope
@@ -136,6 +137,20 @@ class PredictMatchView(APIView):
             serializer.is_valid(raise_exception=True)
             data = serializer.validated_data
 
+            cache_key = make_cache_key(
+                "predictions", "predict",
+                home_team=data['home_team'],
+                away_team=data['away_team'],
+                league=data['league'],
+                season=data['season'],
+                top_n=data['top_factors'],
+            )
+            cached = cache.get(cache_key)
+            if cached is not None:
+                timer.cache_status = "hit"
+                timer.status_code = 200
+                return Response(cached, status=status.HTTP_200_OK)
+
             try:
                 response_payload = build_match_prediction_payload(
                     home_team=data['home_team'],
@@ -146,7 +161,9 @@ class PredictMatchView(APIView):
                 )
                 response_serializer = PredictionResponseSerializer(data=response_payload)
                 response_serializer.is_valid(raise_exception=True)
-                response = Response(build_predictions_envelope(response_serializer.data), status=status.HTTP_200_OK)
+                envelope = build_predictions_envelope(response_serializer.data)
+                cache.set(cache_key, envelope, timeout=CACHE_TTL_PREDICT)
+                response = Response(envelope, status=status.HTTP_200_OK)
             except ValueError as exc:
                 response = Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
             except FileNotFoundError as exc:

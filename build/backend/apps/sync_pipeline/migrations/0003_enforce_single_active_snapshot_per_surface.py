@@ -39,7 +39,7 @@ def collapse_duplicate_active_snapshots(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('sync_pipeline', '0002_alter_sourcehealth_provider_alter_syncrun_provider'),
+        ('sync_pipeline', '0001_initial'),
     ]
 
     operations = [

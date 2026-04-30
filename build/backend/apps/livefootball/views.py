@@ -14,6 +14,7 @@ from common.cache_keys import (
     CACHE_TTL_LEAGUES_META,
     CACHE_TTL_EXPECTED_TABLE,
     CACHE_TTL_COMPARE,
+    CACHE_TTL_TEAMS,
 )
 from .publication import get_active_snapshot_version
 
@@ -91,6 +92,14 @@ class CompetitionTableView(LiveFootballProtectedAPIView):
         season_label = request.query_params.get("season")
         snapshot_label = request.query_params.get("snapshot")
 
+        cache_key = make_cache_key(
+            "livefootball", "competition_table",
+            competition_id=competition_id, season=season_label, snapshot=snapshot_label,
+        )
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached, status=status.HTTP_200_OK)
+
         try:
             payload = get_competition_table(
                 competition_id=competition_id,
@@ -104,6 +113,7 @@ class CompetitionTableView(LiveFootballProtectedAPIView):
             )
 
         serializer = CompetitionTableResponseSerializer(payload)
+        cache.set(cache_key, serializer.data, timeout=CACHE_TTL_OVERVIEW)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -113,6 +123,15 @@ class CompetitionFixturesView(LiveFootballProtectedAPIView):
         status_filter = request.query_params.get("status")
         matchday = self._parse_optional_int(request.query_params.get("matchday"), "matchday")
         limit = self._parse_optional_int(request.query_params.get("limit"), "limit")
+
+        cache_key = make_cache_key(
+            "livefootball", "competition_fixtures",
+            competition_id=competition_id, season=season_label,
+            status=status_filter, matchday=matchday, limit=limit,
+        )
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached, status=status.HTTP_200_OK)
 
         try:
             payload = get_competition_fixtures(
@@ -129,6 +148,7 @@ class CompetitionFixturesView(LiveFootballProtectedAPIView):
             )
 
         serializer = CompetitionFixturesResponseSerializer(payload)
+        cache.set(cache_key, serializer.data, timeout=CACHE_TTL_OVERVIEW)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -146,6 +166,15 @@ class CompetitionPreviousNextFixturesView(LiveFootballProtectedAPIView):
             field_name="next_limit",
         )
 
+        cache_key = make_cache_key(
+            "livefootball", "competition_prev_next_fixtures",
+            competition_id=competition_id, season=season_label,
+            previous_limit=previous_limit, next_limit=next_limit,
+        )
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached, status=status.HTTP_200_OK)
+
         try:
             payload = get_competition_previous_next_fixtures(
                 competition_id=competition_id,
@@ -160,6 +189,7 @@ class CompetitionPreviousNextFixturesView(LiveFootballProtectedAPIView):
             )
 
         serializer = CompetitionPreviousNextFixturesResponseSerializer(payload)
+        cache.set(cache_key, serializer.data, timeout=CACHE_TTL_OVERVIEW)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -167,6 +197,14 @@ class CompetitionScorersView(LiveFootballProtectedAPIView):
     def get(self, request, competition_id):
         season_label = request.query_params.get("season")
         limit = self._parse_optional_int(request.query_params.get("limit"), "limit")
+
+        cache_key = make_cache_key(
+            "livefootball", "competition_scorers",
+            competition_id=competition_id, season=season_label, limit=limit,
+        )
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached, status=status.HTTP_200_OK)
 
         try:
             payload = get_competition_scorers(
@@ -181,12 +219,21 @@ class CompetitionScorersView(LiveFootballProtectedAPIView):
             )
 
         serializer = CompetitionScorersResponseSerializer(payload)
+        cache.set(cache_key, serializer.data, timeout=CACHE_TTL_OVERVIEW)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CompetitionTeamsView(LiveFootballProtectedAPIView):
     def get(self, request, competition_id):
         season_label = request.query_params.get("season")
+
+        cache_key = make_cache_key(
+            "livefootball", "competition_teams",
+            competition_id=competition_id, season=season_label,
+        )
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached, status=status.HTTP_200_OK)
 
         try:
             payload = list_competition_teams(
@@ -200,6 +247,7 @@ class CompetitionTeamsView(LiveFootballProtectedAPIView):
             )
 
         serializer = CompetitionTeamsResponseSerializer(payload)
+        cache.set(cache_key, serializer.data, timeout=CACHE_TTL_TEAMS)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
