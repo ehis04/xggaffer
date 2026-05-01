@@ -1,0 +1,630 @@
+.page {
+   display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--brand-light-green);
+}
+
+.base {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  margin-left: 80px;
+}
+
+.Header {
+  height: 56px;
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  border-bottom: 0.5px solid var(--brand-lightest-green-border);
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin: 10px;
+  padding: 1.5rem;
+  border-bottom: 2px solid var(--brand-lightest-green-border);
+}
+
+.Left {
+  display: flex;
+  align-items: center;
+  color: var(--primary-text);
+  text-transform: uppercase;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+}
+
+.Right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+}
+
+.subtitle {
+  color: rgba(255, 255, 255, 0.62);
+  margin: 0.45rem 0 0 0;
+  font-size: 0.96rem;
+  max-width: 760px;
+}
+
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: transparent;
+  border-bottom: 1px solid var(--brand-card-green, #e2e8f0);
+}
+
+.controlField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 150px;
+}
+
+.controlLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-muted, #64748b);
+}
+
+.select {
+  padding: 0.55rem 0.8rem;
+  border-radius: 0.65rem;
+  border: 1px solid var(--color-border, #cbd5e1);
+  background: var(--color-surface, #ffffff);
+  color: var(--color-text, #1e293b);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--color-primary, #2563eb);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* ── State cards ── */
+
+.stateCard {
+  padding: 2rem 1.25rem;
+  border-radius: 0.9rem;
+  background: var(--color-surface-raised, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  text-align: center;
+}
+
+.stateText {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-muted, #64748b);
+}
+
+.errorState {
+  border-color: rgba(220, 38, 38, 0.2);
+  background: rgba(220, 38, 38, 0.04);
+}
+
+.errorState .stateText {
+  color: #dc2626;
+}
+
+/* ── Table ── */
+
+.tableWrapper {
+  overflow-x: auto;
+  border-radius: 0.9rem;
+  border: 1px solid var(--color-border, #e2e8f0);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-muted, #64748b);
+  background: var(--color-surface-raised, #f8fafc);
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  white-space: nowrap;
+}
+
+.oddsHeader {
+  text-align: center;
+}
+
+.td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  vertical-align: middle;
+  color: var(--color-text, #1e293b);
+}
+
+.row:last-child .td {
+  border-bottom: none;
+}
+
+.row:hover .td {
+  background: var(--color-surface-raised, #f8fafc);
+}
+
+/* ── Fixture cell ── */
+
+.fixture {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.team {
+  font-weight: 600;
+}
+
+.vs {
+  font-size: 0.78rem;
+  color: var(--color-muted, #94a3b8);
+}
+
+/* ── Date cell ── */
+
+.dateCell {
+  white-space: nowrap;
+  color: var(--color-muted, #64748b);
+  font-size: 0.85rem;
+}
+
+/* ── Odds cell ── */
+
+.oddsCell {
+  display: flex;
+  gap: 0.35rem;
+  justify-content: center;
+  flex-wrap: nowrap;
+}
+
+.oddsPill {
+  display: inline-block;
+  padding: 0.25rem 0.55rem;
+  border-radius: 0.45rem;
+  background: var(--color-surface, #f1f5f9);
+  border: 1px solid var(--color-border, #e2e8f0);
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text, #1e293b);
+}
+
+/* ── Result cell ── */
+
+.result {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.score {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.outcomeLabel {
+  font-size: 0.78rem;
+  color: var(--color-muted, #64748b);
+}
+
+.noResult {
+  color: var(--color-muted, #94a3b8);
+}
+
+/* ── Prediction cell ── */
+
+.predButton {
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--color-primary, #2563eb);
+  border-radius: 0.55rem;
+  background: transparent;
+  color: var(--color-primary, #2563eb);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+
+.predButton:hover {
+  background: var(--color-primary, #2563eb);
+  color: #fff;
+}
+
+.predLoading {
+  font-size: 0.9rem;
+  color: var(--color-muted, #94a3b8);
+}
+
+.predError {
+  font-size: 0.82rem;
+  color: #dc2626;
+}
+
+.predResult {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.predResult strong {
+  font-size: 0.9rem;
+  color: var(--color-text, #1e293b);
+}
+
+.predProbs {
+  font-size: 0.78rem;
+  color: var(--color-muted, #64748b);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Accuracy column ── */
+
+.accuracyCell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.accuracyCorrect {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #16a34a;
+}
+
+.accuracyWrong {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.accuracyPending {
+  font-size: 0.82rem;
+  color: var(--color-muted, #94a3b8);
+}
+
+/* ── Accuracy stats box ── */
+
+.accuracyBox {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.9rem;
+  background: var(--color-surface-raised, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  flex-wrap: wrap;
+}
+
+.accuracyBoxLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-muted, #64748b);
+  margin-right: 0.5rem;
+}
+
+.accuracyBoxStat {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.accuracyBoxValue {
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text, #1e293b);
+}
+
+.accuracyBoxName {
+  font-size: 0.8rem;
+  color: var(--color-muted, #64748b);
+}
+
+.accuracyBoxDivider {
+  font-size: 0.85rem;
+  color: var(--color-muted, #94a3b8);
+  font-weight: 500;
+}
+
+.accuracyBoxTotal {
+  font-size: 0.8rem;
+  color: var(--color-muted, #94a3b8);
+  margin-left: auto;
+}
+
+/* ── Pagination ── */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+}
+
+.pageBtn {
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: 0.6rem;
+  background: var(--color-surface, #ffffff);
+  color: var(--color-text, #1e293b);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: var(--color-surface-raised, #f8fafc);
+  border-color: var(--color-primary, #2563eb);
+  color: var(--color-primary, #2563eb);
+}
+
+.pageBtn:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.pageInfo {
+  font-size: 0.88rem;
+  color: var(--color-text, #1e293b);
+  font-variant-numeric: tabular-nums;
+}
+
+.pageCount {
+  color: var(--color-muted, #94a3b8);
+}
+
+/* ── Accuracy chart ── */
+
+.chartSection {
+  padding: 1.25rem 1.5rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--color-border, #e2e8f0);
+  background: var(--color-surface-raised, #f8fafc);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chartHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.chartTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text, #1e293b);
+}
+
+.chartSubtitle {
+  font-size: 0.82rem;
+  color: var(--color-muted, #94a3b8);
+}
+
+.chartBars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.leagueChartSection {
+  padding: 1.25rem 1.5rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--color-border, #e2e8f0);
+  background: var(--color-surface-raised, #f8fafc);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.leagueRows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.leagueRow {
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 0.7rem;
+  padding: 0.75rem;
+  background: var(--color-surface, #fff);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.leagueRowHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.leagueName {
+  font-weight: 700;
+  color: var(--color-text, #1e293b);
+  font-size: 0.88rem;
+}
+
+.leagueWinner {
+  font-size: 0.78rem;
+  color: var(--color-muted, #64748b);
+}
+
+.leagueTrackRow {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.leagueBarLabel {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--color-muted, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.leagueBarValue {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text, #1e293b);
+  min-width: 2ch;
+  text-align: right;
+}
+
+.leagueMeta {
+  font-size: 0.76rem;
+  color: var(--color-muted, #94a3b8);
+}
+
+.chartRow {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.chartLabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-muted, #64748b);
+  text-align: right;
+}
+
+.barTrack {
+  height: 20px;
+  border-radius: 0.35rem;
+  background: var(--color-border, #e2e8f0);
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 0.35rem;
+  transition: width 0.5s ease;
+}
+
+.barModel {
+  background: #16a34a;
+}
+
+.barMarket {
+  background: #2563eb;
+}
+
+.barTie {
+  background: #94a3b8;
+}
+
+.chartStat {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text, #1e293b);
+  min-width: 110px;
+}
+
+.chartCount {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--color-muted, #94a3b8);
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 760px) {
+  .page {
+    padding: 1rem;
+  }
+
+  .controls {
+    gap: 0.75rem;
+  }
+
+  .controlField {
+    min-width: 120px;
+    flex: 1;
+  }
+
+  .fixture {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+  }
+
+  .vs {
+    display: none;
+  }
+
+  .oddsCell {
+    gap: 0.2rem;
+  }
+
+  .oddsPill {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.78rem;
+  }
+}
+
+.analysisLink {
+  font-size: 0.78rem;
+  color: var(--color-primary, #0d9488);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.analysisLink:hover {
+  text-decoration: underline;
+}

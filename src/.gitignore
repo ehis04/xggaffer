@@ -1,0 +1,159 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+*.cover
+.hypothesis/
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+.venv/
+.venv*/
+**/.venv*/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Django specific
+*.pot
+*.pyc
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+local_settings.py
+/static/
+
+# Frontend (Node/React)
+node_modules/
+frontend/build/
+frontend/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+yarn-error.log.*
+.pnp
+.pnp.js
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/*
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.production.local
+
+# Local secrets and download artifacts
+cookies.txt
+*.cookies
+*.whl
+*.zip
+*.deb
+
+# IDE personal settings
+*.sublime-workspace
+*.sublime-project
+.claude/
+
+# Migrations pycache
+*/migrations/__pycache__/
+*/migrations/*.pyc
+
+# Celery
+celerybeat-schedule
+backend/celerybeat-schedule
+
+# Hidden/lock files
+.*
+!.gitignore
+!.vscode
+
+# Backend generated folders
+backend/downloaded_files/
+logs/
+
+# Test coverage
+htmlcov/
+.mypy_cache/
+.dmypy.json
+
+# Local development artifacts
+extra_or_junk/
+file_structure.txt
+dmypy.json
+logs/
+
+# Backend artifacts
+backend/*.log
+backend/celerybeat-schedule
+backend/cookies.txt
+backend/viewer-cookies.txt
+backend/*.deb
+
+# Local database backups
+*.bak
+*.backup
+
+# Temporary files
+*.tmp
+*.temp
+.~*
+
+# MacOS specific
+.AppleDouble
+.LSOverride
+
+# Windows specific
+$RECYCLE.BIN/
+
+# IDE plugin files
+*.iml
+.gradle/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Models and data (optional - uncomment if you want to ignore these)
+# models/*.joblib
+# data/raw/
+data/
+*.joblib
+*.pkl
+*.csv
+# Include predictions ML data package
+!backend/apps/predictions/ml/data/
+!backend/apps/predictions/ml/data/**

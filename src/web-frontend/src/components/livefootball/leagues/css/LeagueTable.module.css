@@ -1,0 +1,155 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0 0 10px;
+  display: none;
+}
+
+.emptyState {
+  padding: 20px 0;
+  text-align: center;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.scrollWrap {
+  overflow-x: auto;
+  border-radius: 8px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.headerCell {
+  padding: 7px 10px;
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.30);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.stickyPos {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  width: 36px;
+  text-align: center;
+  background: inherit;
+}
+
+.stickyTeam {
+  position: sticky;
+  left: 36px;
+  z-index: 2;
+  text-align: left;
+  min-width: 140px;
+  background: inherit;
+}
+
+thead .stickyPos,
+thead .stickyTeam {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.bodyCell {
+  padding: 8px 10px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.12s;
+}
+
+tbody tr:last-child .bodyCell {
+  border-bottom: none;
+}
+
+tbody tr:hover .bodyCell {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+tbody tr .stickyPos,
+tbody tr .stickyTeam {
+  background: var(--brand-light-green, #0d1a12);
+}
+tbody tr:hover .stickyPos,
+tbody tr:hover .stickyTeam {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.topFourRow .bodyCell {
+  border-left: none;
+}
+.topFourRow .stickyPos {
+  border-left: 2px solid #22c55e;
+}
+
+.bottomThreeRow .stickyPos {
+  border-left: 2px solid #ef4444;
+}
+
+.teamCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+
+.crest {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+
+.crestPlaceholder {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
+  flex-shrink: 0;
+}
+
+.teamLink {
+  color: rgba(255, 255, 255, 0.82);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.82rem;
+  transition: color 0.14s;
+}
+.teamLink:hover {
+  color: #4ade80;
+}
+
+.teamName {
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 500;
+  font-size: 0.82rem;
+}
+
+.pointsCell {
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.90);
+}

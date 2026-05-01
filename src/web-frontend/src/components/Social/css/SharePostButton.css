@@ -1,0 +1,26 @@
+.share-post-button {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 999px;
+  background: var(--brand-light-green);
+  color: var(--primary-text);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.share-post-button:hover:not(:disabled) {
+  border-color: var(--hover-light-green);
+  background: var(--hover-darkest-green);
+  transform: translateY(-1px);
+}
+
+.share-post-button:disabled {
+  cursor: wait;
+  opacity: 0.75;
+}

@@ -1,0 +1,91 @@
+.FormationPickerContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.FormationPickerLabel {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.32);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.FormationPickerTabStrip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.FormationPickerTab {
+  padding: 0.28rem 0.70rem;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 0.77rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+  font-family: inherit;
+}
+.FormationPickerTab:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.68);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.FormationPickerTabActive {
+  background: rgba(34, 197, 94, 0.13);
+  border-color: rgba(34, 197, 94, 0.38);
+  color: #4ade80;
+}
+
+.FormationPickerGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
+}
+
+.FormationPickerCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 4px 6px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s;
+  font-family: inherit;
+}
+.FormationPickerCard:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.13);
+}
+
+.FormationPickerCardSelected {
+  background: rgba(34, 197, 94, 0.10);
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+.FormationPickerMiniPitch {
+  width: 64px;
+  height: 80px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.FormationPickerCardName {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.60);
+  text-align: center;
+}
+.FormationPickerCardSelected .FormationPickerCardName {
+  color: #4ade80;
+}

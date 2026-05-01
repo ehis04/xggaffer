@@ -1,0 +1,255 @@
+.page {
+  display: grid;
+  grid-template-columns: 220px 1fr 260px;
+  grid-template-rows: auto auto 1fr auto;
+  height: 100vh;
+  overflow: hidden;
+  background: #080f09;
+  color: rgba(255, 255, 255, 0.88);
+  font-family: 'Geist', 'Inter', system-ui, sans-serif;
+}
+
+/* ── BoardToolbar: always first child, spans full width ── */
+.page > *:first-child {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  /* Guarantee it sits in a single contained row */
+  min-height: 0;
+  overflow: visible;
+}
+
+/* ── Hero strip (row 2, full width) ── */
+.heroCard {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+  height: 44px;
+  min-height: 44px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.025);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.heroCopy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.heroTitle {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.88);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
+.heroText {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.30);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Hidden on the compact strip – only show in full hero layouts */
+.heroSupportingText {
+  display: none;
+}
+
+.heroActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.heroPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.14rem 0.52rem;
+  background: rgba(34, 197, 94, 0.10);
+  border: 1px solid rgba(34, 197, 94, 0.22);
+  border-radius: 20px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #4ade80;
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+
+/* ── Full-width error banner (row 2, stacks under hero) ── */
+.errorBanner {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0.36rem 16px;
+  background: rgba(239, 68, 68, 0.10);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.18);
+  font-size: 0.77rem;
+  color: #fca5a5;
+}
+
+/* ── Full-width trash banner (between hero and editor) ── */
+.trashBanner {
+  grid-column: 1 / -1;
+  padding: 0.36rem 16px;
+  background: rgba(251, 191, 36, 0.07);
+  border-bottom: 1px solid rgba(251, 191, 36, 0.14);
+  font-size: 0.73rem;
+  color: #fbbf24;
+  line-height: 1.4;
+}
+
+.trashBannerMeta {
+  opacity: 0.75;
+}
+
+/* ── ToolPalette wrapper: col 1, row 4 ── */
+.readOnlyBlock {
+  grid-column: 1;
+  grid-row: 4;
+  background: #0c1510;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.readOnlyMuted {
+  opacity: 0.42;
+  pointer-events: none;
+  filter: grayscale(0.25);
+}
+
+/* ── Editor grid: col 2-3, rows 3-4 ── */
+.editorGrid {
+  grid-column: 2 / 4;
+  grid-row: 3 / 5;
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── Canvas panel (centre of editorGrid) ── */
+.canvasPanel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow: hidden;
+  background: #0b130c;
+  border-left: 1px solid rgba(255, 255, 255, 0.04);
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* ── Shared button styles ── */
+.utilityButton {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.65rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.70);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+.utilityButton:hover {
+  background: rgba(255, 255, 255, 0.11);
+  color: #fff;
+}
+
+.dangerButton {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.65rem;
+  background: rgba(239, 68, 68, 0.10);
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  border-radius: 6px;
+  color: #fca5a5;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s;
+  white-space: nowrap;
+}
+.dangerButton:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.20);
+}
+.dangerButton:disabled {
+  opacity: 0.40;
+  cursor: not-allowed;
+}
+
+.successButton {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.65rem;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.26);
+  border-radius: 6px;
+  color: #4ade80;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s;
+  white-space: nowrap;
+}
+.successButton:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.22);
+}
+.successButton:disabled {
+  opacity: 0.40;
+  cursor: not-allowed;
+}
+
+/* ── Loading / error feedback states ── */
+.feedbackState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 100vh;
+  background: #080f09;
+  color: rgba(255, 255, 255, 0.60);
+  font-family: 'Geist', 'Inter', system-ui, sans-serif;
+  padding: 24px;
+  text-align: center;
+}
+
+.feedbackTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.82);
+  margin: 0;
+}
+
+.feedbackText {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.38);
+  margin: 0;
+  max-width: 420px;
+  line-height: 1.55;
+}

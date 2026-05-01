@@ -1,0 +1,616 @@
+.ipp-root {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--brand-light-green);
+}
+
+.ipp-sidebar-section {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.ipp-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-left: 80px;
+}
+
+.ipp-header {
+  height: 56px;
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  border-bottom: 0.5px solid var(--brand-lightest-green-border);
+}
+
+.ipp-header-left {
+  display: flex;
+  align-items: center;
+  color: var(--primary-text);
+  text-transform: uppercase;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+}
+
+.ipp-header-mid {}
+
+.ipp-header-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.ipp-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px 24px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ipp-hero {
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--brand-lightest-green-border);
+}
+
+.ipp-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--primary-text);
+  margin: 0 0 6px;
+  letter-spacing: -0.4px;
+}
+
+.ipp-subtitle {
+  font-size: 13px;
+  color: var(--tertiary-text);
+  margin: 0;
+  line-height: 1.55;
+}
+
+.ipp-club-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ipp-club-card {
+  background: var(--brand-lightest-green-border);
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.18s, transform 0.12s;
+}
+
+.ipp-club-card:hover {
+  border-color: var(--hover-lightest-green);
+  transform: translateY(-1px);
+}
+
+.ipp-club-card--active {
+  background: color-mix(in srgb, var(--hover-lightest-green) 12%, transparent);
+  border-color: var(--hover-lightest-green);
+}
+
+.ipp-club-card-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary-text);
+  line-height: 1.2;
+}
+
+.ipp-club-card-league {
+  font-size: 11px;
+  color: var(--tertiary-text);
+  margin-top: 2px;
+}
+
+.ipp-search-bar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.ipp-search-input {
+  flex: 1;
+  background: var(--brand-lightest-green-border);
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 10px;
+  padding: 11px 16px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--primary-text);
+  outline: none;
+  transition: border-color 0.18s;
+}
+
+.ipp-search-input::placeholder {
+  color: var(--tertiary-text);
+}
+
+.ipp-search-input:focus {
+  border-color: var(--hover-lightest-green);
+}
+
+.ipp-clear-btn {
+  background: transparent;
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--tertiary-text);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.ipp-clear-btn:hover {
+  color: var(--primary-text);
+  border-color: var(--hover-lightest-green);
+}
+
+.ipp-player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ipp-player-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--brand-lightest-green-border);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.ipp-player-row:hover {
+  border-color: var(--hover-lightest-green);
+  background: color-mix(in srgb, var(--hover-lightest-green) 6%, var(--brand-lightest-green-border));
+}
+
+.ipp-player-row--active {
+  border-color: var(--hover-lightest-green);
+  background: color-mix(in srgb, var(--hover-lightest-green) 12%, var(--brand-lightest-green-border));
+}
+
+.ipp-player-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary-text);
+}
+
+.ipp-player-meta {
+  font-size: 12px;
+  color: var(--tertiary-text);
+  margin-top: 2px;
+}
+
+.ipp-player-arrow {
+  font-size: 14px;
+  color: var(--tertiary-text);
+  transition: color 0.15s, transform 0.15s;
+}
+
+.ipp-player-row:hover .ipp-player-arrow {
+  color: var(--hover-lightest-green);
+  transform: translateX(3px);
+}
+
+.ipp-panel {
+  background: var(--brand-lightest-green-border);
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 12px;
+  padding: 22px 22px 20px;
+}
+
+.ipp-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.ipp-panel-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ipp-player-full-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--primary-text);
+  margin: 0 0 4px;
+  letter-spacing: -0.3px;
+}
+
+.ipp-player-context {
+  font-size: 13px;
+  color: var(--tertiary-text);
+  margin: 0;
+}
+
+.ipp-summary {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.55;
+  margin: 10px 0 0;
+}
+
+.ipp-compare-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: color-mix(in srgb, var(--hover-lightest-green) 14%, transparent);
+  border: 1px solid var(--hover-lightest-green);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--hover-lightest-green);
+  text-decoration: none;
+  transition: background 0.18s, transform 0.12s;
+}
+
+.ipp-compare-btn:hover {
+  background: color-mix(in srgb, var(--hover-lightest-green) 24%, transparent);
+  transform: translateY(-1px);
+}
+
+.ipp-notice {
+  font-size: 13px;
+  color: var(--tertiary-text);
+  background: color-mix(in srgb, var(--hover-lightest-green) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--hover-lightest-green) 22%, transparent);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 12px;
+}
+
+.ipp-metric-group-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--hover-lightest-green);
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  margin: 0 0 14px;
+}
+
+.ipp-group-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.ipp-metric-count {
+  font-size: 11px;
+  color: var(--tertiary-text);
+}
+
+.ipp-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.ipp-metric-card {
+  background: var(--brand-light-green);
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 10px;
+  padding: 14px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color 0.15s;
+}
+
+.ipp-metric-card:hover {
+  border-color: color-mix(in srgb, var(--hover-lightest-green) 40%, transparent);
+}
+
+.ipp-metric-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--primary-text);
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.ipp-metric-label {
+  font-size: 11px;
+  color: var(--tertiary-text);
+  line-height: 1.3;
+}
+
+.ipp-metric-source {
+  font-size: 10px;
+  color: var(--hover-lightest-green);
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.ipp-percentile-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: var(--tertiary-text);
+  margin-top: 6px;
+}
+
+.ipp-details {
+  margin-top: 10px;
+}
+
+.ipp-details-summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--hover-lightest-green);
+  margin-bottom: 10px;
+}
+
+.ipp-source-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.ipp-source-card {
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--brand-light-green);
+}
+
+.ipp-source-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.ipp-source-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary-text);
+}
+
+.ipp-source-badge {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-radius: 999px;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+}
+
+.ipp-source-badge--ok {
+  color: #22c55e;
+  border-color: rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.ipp-source-badge--off {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.4);
+  background: rgba(248, 113, 113, 0.12);
+}
+
+.ipp-source-meta {
+  font-size: 11px;
+  color: var(--tertiary-text);
+  margin-top: 4px;
+}
+
+.ipp-radar-wrap {
+  display: grid;
+  grid-template-columns: minmax(180px, 260px) minmax(160px, 1fr);
+  align-items: center;
+  gap: 16px;
+}
+
+.ipp-radar-svg {
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+}
+
+.ipp-radar-ring {
+  fill: none;
+  stroke: color-mix(in srgb, var(--hover-lightest-green) 45%, transparent);
+  stroke-width: 1;
+}
+
+.ipp-radar-shape {
+  fill: color-mix(in srgb, var(--hover-lightest-green) 24%, transparent);
+  stroke: var(--hover-lightest-green);
+  stroke-width: 2;
+}
+
+.ipp-radar-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ipp-radar-legend-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--secondary-text);
+}
+
+.ipp-radar-legend-row strong {
+  color: var(--primary-text);
+  font-size: 13px;
+}
+
+.ipp-advanced-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ipp-toggle-btn {
+  background: transparent;
+  border: 1px solid var(--hover-lightest-green);
+  color: var(--hover-lightest-green);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ipp-toggle-btn:hover {
+  background: color-mix(in srgb, var(--hover-lightest-green) 14%, transparent);
+}
+
+.ipp-loading {
+  font-size: 13px;
+  color: var(--tertiary-text);
+  padding: 20px 0;
+  text-align: center;
+}
+
+.ipp-error {
+  font-size: 13px;
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.ipp-empty {
+  font-size: 13px;
+  color: var(--tertiary-text);
+  padding: 20px 0;
+  text-align: center;
+}
+
+/* ── Percentile bar strip on metric cards ──────────────────────────── */
+.ipp-percentile-bar-wrap {
+  position: relative;
+  margin-top: 8px;
+  height: 4px;
+  background: color-mix(in srgb, var(--hover-lightest-green) 18%, transparent);
+  border-radius: 999px;
+  overflow: visible;
+}
+
+.ipp-percentile-bar-fill {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  background: var(--hover-lightest-green);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+  min-width: 4px;
+}
+
+.ipp-percentile-bar-label {
+  position: absolute;
+  right: 0;
+  top: -14px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--hover-lightest-green);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+/* ── Radar spoke lines ─────────────────────────────────────────────── */
+.ipp-radar-spoke {
+  stroke: color-mix(in srgb, var(--hover-lightest-green) 25%, transparent);
+  stroke-width: 1;
+}
+
+.ipp-radar-axis-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 8px;
+  fill: var(--tertiary-text);
+}
+
+/* ── Horizontal bars chart per metric group ────────────────────────── */
+.ipp-bars-wrap {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid color-mix(in srgb, var(--hover-lightest-green) 15%, transparent);
+}
+
+.ipp-bars-svg {
+  width: 100%;
+  max-width: 380px;
+  height: auto;
+  display: block;
+}
+
+.ipp-bars-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px;
+  fill: var(--tertiary-text);
+}
+
+.ipp-bars-bg {
+  fill: color-mix(in srgb, var(--hover-lightest-green) 10%, transparent);
+}
+
+.ipp-bars-fill {
+  fill: var(--hover-lightest-green);
+  opacity: 0.85;
+}
+
+.ipp-bars-pct {
+  font-family: 'Syne', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  fill: var(--hover-lightest-green);
+  dominant-baseline: central;
+}
+
+@media (max-width: 820px) {
+  .ipp-radar-wrap {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .ipp-advanced-header,
+  .ipp-group-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

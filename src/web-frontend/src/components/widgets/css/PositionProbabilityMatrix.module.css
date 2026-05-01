@@ -1,0 +1,65 @@
+.scrollWrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.matrix {
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+
+.cornerCell {
+  padding: 0.25rem 0.5rem;
+}
+
+.colHeader {
+  text-align: center;
+  padding: 0.3rem 0.25rem;
+  font-weight: 600;
+  color: var(--color-muted, #94a3b8);
+  border-bottom: 2px solid var(--color-border, #e2e8f0);
+}
+
+.rowHeader {
+  text-align: left;
+  padding: 0.3rem 0.75rem 0.3rem 0;
+  font-weight: 500;
+  color: var(--color-text, #1e293b);
+  white-space: nowrap;
+}
+
+.teamNameFull {
+  display: inline;
+}
+
+.teamNameShort {
+  display: none;
+}
+
+.cell {
+  text-align: center;
+  padding: 0.3rem 0.25rem;
+  border: 1px solid var(--color-border, #e2e8f0);
+  color: var(--color-text, #1e293b);
+}
+
+.cellHigh {
+  background: var(--color-primary-light, #ccfbf1);
+  color: var(--color-primary, #0d9488);
+}
+
+.cellPeak {
+  background: var(--color-primary, #0d9488);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .teamNameFull {
+    display: none;
+  }
+
+  .teamNameShort {
+    display: inline;
+  }
+}

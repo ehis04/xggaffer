@@ -1,0 +1,200 @@
+/* ─── FixturesPanel.module.css ───────────────────────────────────────────────
+   Prefix: lffp-
+   Two-column layout (previous / upcoming) of fixture cards with
+   prediction chips and live-match highlight treatment.
+────────────────────────────────────────────────────────────────────────── */
+
+/* ── Root panel ──────────────────────────────────────────────────────────── */
+.lffp-root {
+  background: var(--brand-lightest-green-border);
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 12px;
+  padding: 20px 20px 18px;
+}
+
+/* ── Panel header ────────────────────────────────────────────────────────── */
+.lffp-panel-header {
+  margin-bottom: 16px;
+}
+
+.lffp-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--primary-text);
+  margin: 0 0 4px;
+  letter-spacing: -0.3px;
+}
+
+.lffp-competition-meta {
+  font-size: 12px;
+  color: var(--tertiary-text);
+  margin: 0;
+}
+
+/* ── Two-column grid ─────────────────────────────────────────────────────── */
+.lffp-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* ── List section (prev / next) ──────────────────────────────────────────── */
+.lffp-list-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lffp-list-section-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--hover-lightest-green);
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  margin: 0 0 6px;
+}
+
+.lffp-fixture-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Fixture card ────────────────────────────────────────────────────────── */
+.lffp-fixture-card {
+  background: var(--brand-light-green);
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.15s;
+}
+
+.lffp-fixture-card:hover {
+  border-color: color-mix(in srgb, var(--hover-lightest-green) 35%, transparent);
+}
+
+.lffp-fixture-card--live {
+  border-color: var(--hover-lightest-green);
+  background: color-mix(in srgb, var(--hover-lightest-green) 5%, var(--brand-light-green));
+}
+
+/* ── Fixture meta row (status + matchday + chip) ─────────────────────────── */
+.lffp-fixture-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lffp-status-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--tertiary-text);
+  background: var(--brand-lightest-green-border);
+  border-radius: 6px;
+  padding: 3px 7px;
+}
+
+.lffp-status-badge--live {
+  color: var(--hover-lightest-green);
+  background: color-mix(in srgb, var(--hover-lightest-green) 14%, transparent);
+  animation: lffp-live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes lffp-live-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+.lffp-matchday {
+  font-size: 11px;
+  color: var(--tertiary-text);
+  margin-left: auto;
+}
+
+/* ── Fixture body (home · score · away) ──────────────────────────────────── */
+.lffp-fixture-body {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Team block ──────────────────────────────────────────────────────────── */
+.lffp-team {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lffp-team--right {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.lffp-team-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary-text);
+}
+
+.lffp-team-full {
+  font-size: 10px;
+  color: var(--tertiary-text);
+}
+
+/* ── Score / kickoff block ───────────────────────────────────────────────── */
+.lffp-score-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.lffp-score {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--tertiary-text);
+  letter-spacing: -0.3px;
+}
+
+.lffp-score--result {
+  color: var(--primary-text);
+}
+
+.lffp-kickoff {
+  font-size: 10px;
+  color: var(--tertiary-text);
+  white-space: nowrap;
+}
+
+/* ── State variants ──────────────────────────────────────────────────────── */
+.lffp-state {
+  font-size: 13px;
+  color: var(--tertiary-text);
+  padding: 20px 0;
+  text-align: center;
+}
+
+.lffp-state-error {
+  font-size: 13px;
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.lffp-empty {
+  font-size: 12px;
+  color: var(--tertiary-text);
+  padding: 12px 0;
+  text-align: center;
+}
