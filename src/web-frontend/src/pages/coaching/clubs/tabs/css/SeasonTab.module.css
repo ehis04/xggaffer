@@ -1,0 +1,334 @@
+.tabContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.errorNotice {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  color: #fca5a5;
+}
+
+/* ── Layout variants ──────────────────────────────────────────────────────── */
+
+.proLayout,
+.manualLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.twoCol {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.fixtureColumns {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Panels ───────────────────────────────────────────────────────────────── */
+
+.panel {
+  background: var(--brand-lightest-green-border);
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panelTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary-text);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--tertiary-text);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.emptyText {
+  font-size: 0.85rem;
+  color: var(--tertiary-text);
+  margin: 0;
+}
+
+/* ── Record grid ──────────────────────────────────────────────────────────── */
+
+.recordGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 12px;
+}
+
+.recordStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+}
+
+.recordValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-text);
+  line-height: 1;
+}
+
+.recordLabel {
+  font-size: 0.7rem;
+  color: var(--tertiary-text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── League table ─────────────────────────────────────────────────────────── */
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.leagueTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.leagueTable th {
+  text-align: left;
+  padding: 6px 8px;
+  color: var(--tertiary-text);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.leagueTable td {
+  padding: 7px 8px;
+  color: var(--secondary-text);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.leagueTable tr:last-child td { border-bottom: none; }
+
+.highlightedRow td { background: rgba(255, 255, 255, 0.04); }
+
+.teamCell { min-width: 100px; }
+
+.highlightedTeam {
+  color: var(--primary-text);
+  font-weight: 600;
+}
+
+.ptsCell { font-weight: 600; color: var(--primary-text); }
+
+/* ── Fixture list ─────────────────────────────────────────────────────────── */
+
+.fixtureList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fixtureRow {
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.fixtureRow:last-child { border-bottom: none; }
+
+.fixtureDate {
+  font-size: 0.72rem;
+  color: var(--tertiary-text);
+  white-space: nowrap;
+}
+
+.fixtureTeams {
+  font-size: 0.82rem;
+  color: var(--secondary-text);
+}
+
+.fixtureScore {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--primary-text);
+  white-space: nowrap;
+}
+
+/* ── Results log ──────────────────────────────────────────────────────────── */
+
+.resultList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.resultRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.resultRow:last-child { border-bottom: none; }
+
+.outcomeBadge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  min-width: 26px;
+  text-align: center;
+}
+
+.resultInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.resultOpponent {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--primary-text);
+}
+
+.resultScore {
+  font-weight: 700;
+}
+
+.resultMeta {
+  font-size: 0.75rem;
+  color: var(--tertiary-text);
+}
+
+.resultActions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* ── Forms  */
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 10px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 10px;
+  
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--secondary-text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.input,
+.select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: var(--primary-text);
+  font-size: 0.875rem;
+  padding: 8px 10px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.input:focus,
+.select:focus { border-color: rgba(255, 255, 255, 0.25); }
+
+.formActions { display: flex; gap: 10px; }
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
+
+.primaryBtn {
+  background: rgba(59, 130, 246, 0.85);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+}
+
+.primaryBtn:hover:not(:disabled) { background: rgba(59, 130, 246, 1); }
+.primaryBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.ghostBtn {
+  background: none;
+  border: none;
+  color: var(--tertiary-text);
+  font-size: 0.78rem;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.ghostBtn:hover { color: var(--primary-text); background: rgba(255, 255, 255, 0.05); }
+
+.dangerBtn {
+  background: none;
+  border: none;
+  color: #fca5a5;
+  font-size: 0.78rem;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.dangerBtn:hover:not(:disabled) { background: rgba(239, 68, 68, 0.1); }
+.dangerBtn:disabled { opacity: 0.4; cursor: not-allowed; }

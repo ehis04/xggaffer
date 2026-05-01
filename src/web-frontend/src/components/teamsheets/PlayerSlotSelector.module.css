@@ -1,0 +1,116 @@
+.PlayerSlotSelectorContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.PlayerSlotSelectorSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.PlayerSlotSelectorSectionTitle {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.32);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin: 0;
+}
+
+.PlayerSlotSelectorGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.PlayerSlotSelectorCard {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  position: relative;
+}
+.PlayerSlotSelectorCard:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.PlayerSlotSelectorSelected {
+  background: rgba(34, 197, 94, 0.08) !important;
+  border-color: rgba(34, 197, 94, 0.28) !important;
+}
+
+.PlayerSlotSelectorEmpty {
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.PlayerSlotSelectorEmpty:hover {
+  border-color: rgba(34, 197, 94, 0.25);
+  background: rgba(34, 197, 94, 0.04);
+}
+
+.PlayerSlotSelectorPosBadge {
+  padding: 0.15rem 0.42rem;
+  border-radius: 5px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #0a1a0e;
+  flex-shrink: 0;
+  min-width: 30px;
+  text-align: center;
+}
+
+.PlayerSlotSelectorContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.PlayerSlotSelectorEmptyText {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.28);
+  font-style: italic;
+}
+
+.PlayerSlotSelectorPlayerNum {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.PlayerSlotSelectorPlayerName {
+  font-size: 0.80rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.82);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.PlayerSlotSelectorRemoveBtn {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background: rgba(239, 68, 68, 0.10);
+  border: 1px solid rgba(239, 68, 68, 0.18);
+  color: #f87171;
+  font-size: 0.85rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.14s;
+}
+.PlayerSlotSelectorRemoveBtn:hover {
+  background: rgba(239, 68, 68, 0.20);
+}

@@ -1,0 +1,63 @@
+.strip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+}
+
+.teamRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.teamBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.teamBlock:last-child {
+  align-items: flex-end;
+}
+
+.teamName {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text, #1e293b);
+}
+
+.eloValue {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-primary, #0d9488);
+}
+
+.barTrack {
+  display: flex;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.barHome {
+  background: var(--color-primary, #0d9488);
+  transition: width 0.4s ease;
+}
+
+.barAway {
+  background: var(--color-border, #e2e8f0);
+  transition: width 0.4s ease;
+}
+
+.deltaText {
+  font-size: 0.78rem;
+  color: var(--color-muted, #94a3b8);
+  text-align: center;
+  margin: 0;
+}
+
+.badgeRow {
+  display: flex;
+  justify-content: flex-end;
+}
