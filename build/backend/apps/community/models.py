@@ -43,6 +43,7 @@ def function_targets():
     return (
         models.Q(app_label="community", model="post")
         | models.Q(app_label="community", model="comment")
+        | models.Q(app_label="users", model="follow")
         | models.Q(app_label="users", model="followrequest")
     )
 

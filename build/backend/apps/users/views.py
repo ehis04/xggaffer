@@ -7,7 +7,7 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from .serializers import *
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import UserProfile, Follow, UserRole
+from .models import UserProfile, Follow, FollowRequest, FollowRequestStatus, UserRole, Visibility
 from rest_framework.generics import CreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListAPIView
 from .services.cookie_service import set_auth_cookies
 
@@ -146,6 +146,23 @@ class GetProfileView(RetrieveAPIView):
 # Handles following and unfollowing another user by username
 class FollowUserView(APIView):
     permission_classes = [IsAuthenticated]
+
+    def _create_follow_notification(self, *, target_user, actor, notification_type, target):
+        from apps.community.models import Notification
+        from django.contrib.contenttypes.models import ContentType
+
+        if target_user.id == actor.id:
+            return
+
+        content_type = ContentType.objects.get_for_model(target)
+        Notification.objects.update_or_create(
+            user=target_user,
+            triggered_by=actor,
+            notification_type=notification_type,
+            content_type=content_type,
+            object_id=target.id,
+            defaults={"is_read": False},
+        )
     
     # Creates a follow relationship between the current user and the target username
     def post(self, request, username):
@@ -167,19 +184,56 @@ class FollowUserView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        follow, created = Follow.objects.get_or_create(
-            follower=follower_profile,
-            following=following_profile,
-        )
-
-        if created:
+        existing_follow = Follow.objects.filter(
+            follower=follower_profile, following=following_profile
+        ).exists()
+        if existing_follow:
             return Response(
-                {"message": f"You are now following {username}", "following": True},
-                status=status.HTTP_201_CREATED,
+                {"message": f"You are already following {username}", "following": True,
+                 "follow_request_pending": False},
+                status=status.HTTP_200_OK,
             )
+
+        if following_profile.visibility == Visibility.PRIVATE:
+            follow_request, created = FollowRequest.objects.get_or_create(
+                follower=follower_profile,
+                following=following_profile,
+                defaults={"status": FollowRequestStatus.PENDING},
+            )
+            if not created and follow_request.status != FollowRequestStatus.PENDING:
+                follow_request.status = FollowRequestStatus.PENDING
+                follow_request.save(update_fields=["status", "updated_at"])
+
+            from apps.community.models import NotificationType
+
+            self._create_follow_notification(
+                target_user=following_profile.user,
+                actor=request.user,
+                notification_type=NotificationType.FOLLOW_REQUEST,
+                target=follow_request,
+            )
+
+            response_status = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+            return Response(
+                {"message": f"Follow request sent to {username}", "following": False,
+                 "follow_request_pending": True, "follow_request_id": follow_request.id},
+                status=response_status,
+            )
+
+        follow = Follow.objects.create(follower=follower_profile, following=following_profile)
+
+        from apps.community.models import NotificationType
+
+        self._create_follow_notification(
+            target_user=following_profile.user,
+            actor=request.user,
+            notification_type=NotificationType.NEW_FOLLOWER,
+            target=follow,
+        )
         return Response(
-            {"message": f"You are already following {username}", "following": True},
-            status=status.HTTP_200_OK,
+            {"message": f"You are now following {username}", "following": True,
+             "follow_request_pending": False},
+            status=status.HTTP_201_CREATED,
         )
         
     # Deletes the follow relationship between the current user and the target username
@@ -200,6 +254,11 @@ class FollowUserView(APIView):
             follower=follower_profile,
             following=following_profile,
         ).delete()
+        FollowRequest.objects.filter(
+            follower=follower_profile,
+            following=following_profile,
+            status=FollowRequestStatus.PENDING,
+        ).update(status=FollowRequestStatus.DECLINED)
 
         if deleted_count > 0:
             return Response(
@@ -212,6 +271,84 @@ class FollowUserView(APIView):
              "follow_request_pending": False},
             status=status.HTTP_200_OK,
         )
+
+
+class FollowRequestReviewView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def _get_request(self, request, follow_request_id):
+        try:
+            reviewer_profile = request.user.profile
+        except UserProfile.DoesNotExist:
+            return None, Response(
+                {"error": "You have to create a profile before reviewing follow requests."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        follow_request = get_object_or_404(
+            FollowRequest.objects.select_related("follower__user", "following__user"),
+            id=follow_request_id,
+            following=reviewer_profile,
+        )
+        return follow_request, None
+
+    def _mark_request_notification_read(self, request, follow_request):
+        from apps.community.models import Notification, NotificationType
+        from django.contrib.contenttypes.models import ContentType
+
+        Notification.objects.filter(
+            user=request.user,
+            notification_type=NotificationType.FOLLOW_REQUEST,
+            content_type=ContentType.objects.get_for_model(follow_request),
+            object_id=follow_request.id,
+        ).update(is_read=True)
+
+    def post(self, request, follow_request_id, action_name):
+        follow_request, error_response = self._get_request(request, follow_request_id)
+        if error_response:
+            return error_response
+
+        if follow_request.status != FollowRequestStatus.PENDING:
+            return Response(
+                {
+                    "message": "Follow request has already been reviewed.",
+                    "status": follow_request.status,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        if action_name == "accept":
+            Follow.objects.get_or_create(
+                follower=follow_request.follower,
+                following=follow_request.following,
+            )
+            follow_request.status = FollowRequestStatus.ACCEPTED
+            follow_request.save(update_fields=["status", "updated_at"])
+            self._mark_request_notification_read(request, follow_request)
+
+            from apps.community.models import Notification, NotificationType
+
+            Notification.objects.create(
+                user=follow_request.follower.user,
+                triggered_by=request.user,
+                notification_type=NotificationType.FOLLOW_ACCEPTED,
+                content_object=follow_request,
+            )
+            return Response(
+                {"message": "Follow request accepted.", "status": follow_request.status},
+                status=status.HTTP_200_OK,
+            )
+
+        if action_name == "decline":
+            follow_request.status = FollowRequestStatus.DECLINED
+            follow_request.save(update_fields=["status", "updated_at"])
+            self._mark_request_notification_read(request, follow_request)
+            return Response(
+                {"message": "Follow request declined.", "status": follow_request.status},
+                status=status.HTTP_200_OK,
+            )
+
+        return Response({"error": "Unknown follow request action."}, status=status.HTTP_404_NOT_FOUND)
 
 # Lists the profiles that follow a selected user
 class FollowersListView(ListAPIView):
@@ -271,11 +408,16 @@ class CheckFollowStatusView(APIView):
         followed_by = Follow.objects.filter(
             follower=target_profile, following=requester_profile
         ).exists()
+        follow_request_pending = FollowRequest.objects.filter(
+            follower=requester_profile,
+            following=target_profile,
+            status=FollowRequestStatus.PENDING,
+        ).exists()
 
         return Response({
             "is_following": is_following,
             "followed_by": followed_by,
-            "follow_request_pending": False,
+            "follow_request_pending": follow_request_pending,
             "username": username,
         })
 

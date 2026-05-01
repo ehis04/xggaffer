@@ -1460,7 +1460,7 @@ const TacticsBoardEditorPage: React.FC = () => {
     return (
       <div className={styles.feedbackState}>
         <button type="button" onClick={handleBack} className={styles.utilityButton}>
-          ← Back to Tactics Boards
+          ← 
         </button>
         <h1 className={styles.feedbackTitle}>Tactics Board Editor</h1>
         <p className={styles.feedbackText}>Error: {pageError}</p>

@@ -40,6 +40,7 @@ export interface PostProps {
   onProfileClick?: (username: string) => void;
   onPostClick?: (postId: number) => void;
   onDelete?: (post: PostData) => void | Promise<void>;
+  onReport?: (post: PostData) => void | Promise<void>;
   showReplyLine?: boolean;
   depth?: number;
 }
@@ -51,6 +52,7 @@ export const Post: React.FC<PostProps> = ({
   onProfileClick,
   onPostClick,
   onDelete,
+  onReport,
   showReplyLine = false,
   depth = 0,
 }) => {
@@ -68,6 +70,13 @@ export const Post: React.FC<PostProps> = ({
       user?.username &&
       post.author.username &&
       user.username === post.author.username
+  );
+  const canReport = Boolean(
+    onReport &&
+      !isComment &&
+      user?.username &&
+      post.author.username &&
+      user.username !== post.author.username
   );
 
   const formatTime = (dateString: string): string => {
@@ -126,6 +135,13 @@ export const Post: React.FC<PostProps> = ({
     await onDelete(post);
   };
 
+  const handleReport = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsMenuOpen(false);
+    if (!onReport) return;
+    await onReport(post);
+  };
+
   const renderTextWithLinks = (text: string) => {
     const parts = text.split(/(\s+|#\w+|@\w+)/g);
 
@@ -176,7 +192,7 @@ export const Post: React.FC<PostProps> = ({
             </span>
           </div>
 
-          {canDelete && (
+          {(canDelete || canReport) && (
             <div className="post-more-menu">
               <button
                 className="post-more-btn"
@@ -194,13 +210,24 @@ export const Post: React.FC<PostProps> = ({
 
               {isMenuOpen && (
                 <div className="post-dropdown" role="menu">
-                  <button
-                    className="post-dropdown-item danger"
-                    role="menuitem"
-                    onClick={handleDelete}
-                  >
-                    Delete {isComment ? "comment" : "post"}
-                  </button>
+                  {canReport && (
+                    <button
+                      className="post-dropdown-item"
+                      role="menuitem"
+                      onClick={handleReport}
+                    >
+                      Report post
+                    </button>
+                  )}
+                  {canDelete && (
+                    <button
+                      className="post-dropdown-item danger"
+                      role="menuitem"
+                      onClick={handleDelete}
+                    >
+                      Delete {isComment ? "comment" : "post"}
+                    </button>
+                  )}
                 </div>
               )}
             </div>

@@ -16,6 +16,8 @@ import type {
 import liveFootballApi from '../../services/api/livefootballApi';
 import { parseSeasonStartYear } from '../../utils/footballSeason';
 import styles from './css/SquadIntelligenceHub.module.css';
+import { Sidebar } from '../../components/Navigation/SideBar';
+import { SocialUserButtons } from '../../components/Social/SocialUserButtons';
 
 const CONGESTION_THRESHOLD_DAYS = 4;
 const NEXT_FIXTURES_COUNT = 5;
@@ -192,6 +194,19 @@ export default function SquadIntelligenceHub() {
 
   return (
     <div className={styles.page}>
+      <div className={styles.Sidebar}>
+        <Sidebar />
+      </div>
+
+      <div className={styles.base}>
+        <header className={styles.Header}>
+          <div className={styles.Left}>Odds Comparisson</div>
+          <div className={styles.Middle}></div>
+          <div className={styles.Right}>
+            <SocialUserButtons />
+          </div>
+        </header>
+
       <header className={styles.header}>
         <h1 className={styles.title}>{teamName}</h1>
         <p className={styles.subtitle}>Squad Intelligence</p>
@@ -312,6 +327,7 @@ export default function SquadIntelligenceHub() {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }

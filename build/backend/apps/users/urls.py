@@ -38,6 +38,11 @@ urlpatterns = [
     path('profile/<str:username>/follow-status/', CheckFollowStatusView.as_view(), name='follow-status'),
     path('profile/<str:username>/followers/', FollowersListView.as_view(), name='followers-list'),
     path('profile/<str:username>/following/', FollowingListView.as_view(), name='following-list'),
+    path(
+        'follow-requests/<int:follow_request_id>/<str:action_name>/',
+        FollowRequestReviewView.as_view(),
+        name='follow-request-review',
+    ),
 
     path('', include(router.urls)),
 ]
