@@ -2,7 +2,7 @@ from django.contrib import admin
 from django import forms
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from .models import User, UserProfile, UserRole, Follow, Role
+from .models import User, UserProfile, UserRole, Follow, FollowRequest, Role
 
 
 def active_role_choices():
@@ -140,19 +140,21 @@ class UserRoleAdmin(admin.ModelAdmin):
     search_fields = ['user_profile__user__username', 'user_profile__user__email']
     ordering = ['-created_at']
 
-# @admin.register(FollowRequest)
-# class FollowRequestAdmin(admin.ModelAdmin):
-#     list_display = ["follower", "following", "created_at"]
-#     list_filter = ["created_at"]
-#     search_fields = [
-#         "follower__user__username",
-#         "following__user__username",
-#     ]
-#     ordering = ["-created_at"]
-#     raw_id_fields = ["follower", "following"]
+@admin.register(FollowRequest)
+class FollowRequestAdmin(admin.ModelAdmin):
+    list_display = ["follower", "following", "status", "created_at", "updated_at"]
+    list_filter = ["status", "created_at"]
+    search_fields = [
+        "follower__user__username",
+        "follower__user__email",
+        "following__user__username",
+        "following__user__email",
+    ]
+    ordering = ["-created_at"]
+    raw_id_fields = ["follower", "following"]
 
-#     def get_queryset(self, request):
-#         return super().get_queryset(request).select_related("follower__user", "following__user")
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("follower__user", "following__user")
 
 
 @admin.register(Follow)

@@ -57,7 +57,7 @@ export const PostDetail = () => {
           no_of_likes: postData.no_of_likes,
           no_of_comments: postData.no_of_comments,
           visibility: postData.visibility,
-          moderation_status: "OK",
+          moderation_status: postData.moderation_status,
           type: "post",
           is_liked: postData.is_liked ?? false,
         });
@@ -152,6 +152,17 @@ export const PostDetail = () => {
     }
   };
 
+  const handleReport = async (postToReport: PostData) => {
+    try {
+      const result = await communityApi.reportPost(postToReport.id);
+      if (result.moderation_status === "UR") {
+        navigate("/social");
+      }
+    } catch (err) {
+      console.error("Report error:", err);
+    }
+  };
+
   const handleComment = (id: number) => {
     setReplyingToId(id === post?.id ? null : id);
     setTimeout(() => textareaRef.current?.focus(), 50);
@@ -218,6 +229,7 @@ export const PostDetail = () => {
               onProfileClick={handleProfileClick}
               onPostClick={handlePostClick}
               onDelete={handleDelete}
+              onReport={handleReport}
             />
 
             <div className="pd-composer">

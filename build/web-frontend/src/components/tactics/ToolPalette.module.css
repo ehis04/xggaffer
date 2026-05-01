@@ -1,60 +1,57 @@
+/* ToolPalette.module.css */
+
 .palette {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-    padding: 14px 16px;
-    margin-bottom: 16px;
-    border: 1px solid var(--brand-green-border);
-    border-radius: 14px;
-    background: linear-gradient(180deg, rgba(35, 57, 43, 0.98), rgba(25, 43, 35, 0.98));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  background: #0c1510;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .label {
-    font-weight: 700;
-    min-width: fit-content;
-    color: var(--primary-text);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    font-size: 0.78rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .toolRow {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
 }
 
 .toolButton {
-    padding: 8px 12px;
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    background: rgba(255, 255, 255, 0.04);
-    color: var(--secondary-text);
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.12s ease;
+  padding: 0.3rem 0.65rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: all 0.12s ease;
 }
-
 .toolButton:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.28);
-    color: var(--primary-text);
-}
-
-.toolButton:focus-visible {
-    outline: 2px solid #a7f3d0;
-    outline-offset: 2px;
-}
-
-.toolButton:active {
-    transform: translateY(1px);
+  background: rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.88);
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
 .toolButtonActive {
-    border-color: rgba(255, 255, 255, 0.44);
-    background: linear-gradient(180deg, rgba(22, 101, 52, 0.92), rgba(21, 128, 61, 0.92));
-    color: #ffffff;
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.35);
+  color: #4ade80;
+  font-weight: 700;
+}
+.toolButtonActive:hover {
+  background: rgba(34, 197, 94, 0.22);
+  color: #4ade80;
 }

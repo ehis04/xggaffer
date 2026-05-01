@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Post, Comment, HashTag, PostTag, Notification, Like
-from apps.users.models import User
+from apps.users.models import FollowRequest, User
 
 # serializes post data for creating and returning posts
 class PostSerializer(serializers.ModelSerializer):
@@ -151,8 +151,10 @@ class CommentResponseSerializer(serializers.ModelSerializer):
 class NotificationListSerializer(serializers.ModelSerializer):
     triggered_by = PostAuthorSerializer(read_only=True)
     target_kind = serializers.SerializerMethodField()
+    target_id = serializers.IntegerField(source="object_id", read_only=True)
     post_id = serializers.SerializerMethodField()
     comment_id = serializers.SerializerMethodField()
+    follow_request_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Notification
@@ -163,8 +165,10 @@ class NotificationListSerializer(serializers.ModelSerializer):
             "created_at",
             "triggered_by",
             "target_kind",
+            "target_id",
             "post_id",
             "comment_id",
+            "follow_request_status",
         ]
 
     def get_target_kind(self, obj):
@@ -186,5 +190,11 @@ class NotificationListSerializer(serializers.ModelSerializer):
         target = obj.content_object
         if isinstance(target, Comment):
             return target.id
+        return None
+
+    def get_follow_request_status(self, obj):
+        target = obj.content_object
+        if isinstance(target, FollowRequest):
+            return target.status
         return None
 

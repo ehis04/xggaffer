@@ -9,7 +9,7 @@
 }
 
 .post-container:hover {
-  background-color: rgb(225, 225, 225)
+  background-color: rgba(225, 225, 225, 0.268)
 }
 
 .profile-picture {
@@ -120,7 +120,7 @@
   background: transparent;
   border-radius: 6px;
   padding: 9px 10px;
-  color: var(--primary-text);
+  color: black;
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;

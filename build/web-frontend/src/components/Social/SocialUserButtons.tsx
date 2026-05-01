@@ -4,6 +4,7 @@ import "./css/SocialUserButtons.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import communityApi from "../../services/api/communityApi";
 import type { NotificationItem } from "../../services/api/communityApi";
+import usersApi from "../../services/api/usersApi";
 
 const MAX_NOTIFICATIONS_TO_SHOW = 8;
 
@@ -23,6 +24,8 @@ export const SocialUserButtons = () => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const [notificationsError, setNotificationsError] = useState<string | null>(null);
+  const [notificationActionError, setNotificationActionError] = useState<string | null>(null);
+  const [reviewingRequestId, setReviewingRequestId] = useState<number | null>(null);
   const [hasFetchedNotifications, setHasFetchedNotifications] = useState(false);
   const notificationsRef = useRef<HTMLDivElement | null>(null);
 
@@ -132,6 +135,44 @@ export const SocialUserButtons = () => {
     }
   };
 
+  const handleFollowRequestReview = async (
+    notification: NotificationItem,
+    action: "accept" | "decline"
+  ) => {
+    if (!notification.target_id) return;
+
+    setReviewingRequestId(notification.target_id);
+    setNotificationActionError(null);
+
+    try {
+      if (action === "accept") {
+        await usersApi.acceptFollowRequest(notification.target_id);
+      } else {
+        await usersApi.declineFollowRequest(notification.target_id);
+      }
+
+      setNotifications((current) =>
+        current.map((item) =>
+          item.id === notification.id
+            ? {
+                ...item,
+                is_read: true,
+                follow_request_status: action === "accept" ? "A" : "D",
+              }
+            : item
+        )
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : `Unable to ${action} this follow request.`;
+      setNotificationActionError(message);
+    } finally {
+      setReviewingRequestId(null);
+    }
+  };
+
   return (
     <div className="socialuserbuttons">
       <div className="notifications-button" ref={notificationsRef}>
@@ -173,6 +214,11 @@ export const SocialUserButtons = () => {
                 {notificationsError}
               </div>
             )}
+            {!isLoadingNotifications && notificationActionError && (
+              <div className="notifications-dropdown-state notifications-dropdown-error">
+                {notificationActionError}
+              </div>
+            )}
             {!isLoadingNotifications &&
               !notificationsError &&
               notifications.length === 0 && (
@@ -192,6 +238,42 @@ export const SocialUserButtons = () => {
                     <span className="notifications-list-item-time">
                       {new Date(notification.created_at).toLocaleString()}
                     </span>
+                    {notification.notification_type === "FR" &&
+                      notification.follow_request_status === "P" &&
+                      notification.target_id && (
+                        <div
+                          className="notifications-follow-actions"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <button
+                            type="button"
+                            className="notifications-follow-action secondary"
+                            disabled={reviewingRequestId === notification.target_id}
+                            onClick={() =>
+                              void handleFollowRequestReview(notification, "decline")
+                            }
+                          >
+                            Decline
+                          </button>
+                          <button
+                            type="button"
+                            className="notifications-follow-action primary"
+                            disabled={reviewingRequestId === notification.target_id}
+                            onClick={() =>
+                              void handleFollowRequestReview(notification, "accept")
+                            }
+                          >
+                            Accept
+                          </button>
+                        </div>
+                      )}
+                    {notification.notification_type === "FR" &&
+                      notification.follow_request_status &&
+                      notification.follow_request_status !== "P" && (
+                        <span className="notifications-follow-reviewed">
+                          {notification.follow_request_status === "A" ? "Accepted" : "Declined"}
+                        </span>
+                      )}
                   </li>
                 ))}
               </ul>
