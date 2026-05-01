@@ -330,6 +330,16 @@
   flex-wrap: wrap;
 }
 
+.workflowActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.workflowActions .fanBtn {
+  flex: 0 0 auto;
+}
+
 .workflowPanelTitle {
   font-size: 1rem;
   font-weight: 600;
@@ -525,6 +535,32 @@
 .viewBtn:hover {
   background: var(--brand-light-green-border);
   color: var(--primary-text);
+}
+
+.fanBtn {
+  flex: 1;
+  padding: 0.38rem 0.9rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--brand-light-green-border-med);
+  border-radius: 7px;
+  color: var(--primary-text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+}
+.fanBtn:hover:not(:disabled) {
+  background: var(--brand-light-green-border);
+}
+.fanBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.fanBtnActive {
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(34, 197, 94, 0.35);
+  color: var(--hover-light-green);
 }
 
 .requestBtn {

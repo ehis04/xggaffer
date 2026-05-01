@@ -26,6 +26,18 @@ vi.mock('../../widgets/MatchPredictionCard', () => ({
   ),
 }));
 
+vi.mock('../../Navigation/predictionsNavbar', () => ({
+  PredictionsNavbar: () => null,
+}));
+
+vi.mock('../../Navigation/SideBar', () => ({
+  Sidebar: () => null,
+}));
+
+vi.mock('../../Social/SocialUserButtons', () => ({
+  SocialUserButtons: () => null,
+}));
+
 function renderHub() {
   return render(
     <MemoryRouter>

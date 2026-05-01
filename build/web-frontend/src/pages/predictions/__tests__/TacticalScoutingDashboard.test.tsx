@@ -41,6 +41,14 @@ vi.mock('../../../components/widgets/StyleProfileCard', () => ({
   default: () => <div data-testid="style-profile-card" />,
 }));
 
+vi.mock('../../../components/Navigation/SideBar', () => ({
+  Sidebar: () => null,
+}));
+
+vi.mock('../../../components/Social/SocialUserButtons', () => ({
+  SocialUserButtons: () => null,
+}));
+
 import { fetchTacticalWidget } from '../../../services/api/widgetApi';
 
 const FRESH = {

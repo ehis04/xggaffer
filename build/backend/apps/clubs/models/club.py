@@ -174,6 +174,10 @@ class Club(models.Model):
     def can_accept_join_requests(self):
         return self.join_policy == self.JoinPolicy.APPROVAL_REQUIRED
 
+    @property
+    def fan_count(self):
+        return self.fans.count()
+
     def has_minimal_verification_evidence(self):
         has_contact_name = bool(self.verification_contact_name.strip())
         has_contact_role = bool(self.verification_contact_role.strip())

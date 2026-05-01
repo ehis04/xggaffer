@@ -59,8 +59,17 @@ class ClubUnderstatSummaryMixin(serializers.Serializer):
 class ClubSerializer(ClubUnderstatSummaryMixin, serializers.ModelSerializer):
     member_count = serializers.IntegerField(read_only=True)
     player_count = serializers.IntegerField(read_only=True)
+    fan_count = serializers.IntegerField(read_only=True)
+    is_followed = serializers.SerializerMethodField()
     creator_username = serializers.CharField(source="creator.email", read_only=True)
     trashed_by = serializers.IntegerField(source="trashed_by_id", read_only=True)
+
+    def get_is_followed(self, obj):
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        if not user or not getattr(user, "is_authenticated", False):
+            return False
+        return obj.fans.filter(user=user).exists()
 
     class Meta:
         model = Club
@@ -86,6 +95,8 @@ class ClubSerializer(ClubUnderstatSummaryMixin, serializers.ModelSerializer):
             "achievements",
             "member_count",
             "player_count",
+            "fan_count",
+            "is_followed",
             "latest_understat_summary",
             "is_trashed",
             "trashed_at",
@@ -106,7 +117,16 @@ class ClubSerializer(ClubUnderstatSummaryMixin, serializers.ModelSerializer):
 class ClubWriteSerializer(ClubUnderstatSummaryMixin, serializers.ModelSerializer):
     member_count = serializers.IntegerField(read_only=True)
     player_count = serializers.IntegerField(read_only=True)
+    fan_count = serializers.IntegerField(read_only=True)
+    is_followed = serializers.SerializerMethodField()
     creator_username = serializers.CharField(source="creator.email", read_only=True)
+
+    def get_is_followed(self, obj):
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        if not user or not getattr(user, "is_authenticated", False):
+            return False
+        return obj.fans.filter(user=user).exists()
 
     class Meta:
         model = Club
@@ -137,6 +157,8 @@ class ClubWriteSerializer(ClubUnderstatSummaryMixin, serializers.ModelSerializer
             "achievements",
             "member_count",
             "player_count",
+            "fan_count",
+            "is_followed",
             "latest_understat_summary",
             "created_at",
             "updated_at",
@@ -148,6 +170,8 @@ class ClubWriteSerializer(ClubUnderstatSummaryMixin, serializers.ModelSerializer
             "verification_status",
             "member_count",
             "player_count",
+            "fan_count",
+            "is_followed",
             "latest_understat_summary",
             "created_at",
             "updated_at",
@@ -291,8 +315,17 @@ class ClubTrashActionSerializer(serializers.Serializer):
 class ClubListSerializer(ClubUnderstatSummaryMixin, serializers.ModelSerializer):
     member_count = serializers.IntegerField(read_only=True)
     player_count = serializers.IntegerField(read_only=True)
+    fan_count = serializers.IntegerField(read_only=True)
+    is_followed = serializers.SerializerMethodField()
     creator_username = serializers.CharField(source="creator.email", read_only=True)
     trashed_by = serializers.IntegerField(source="trashed_by_id", read_only=True)
+
+    def get_is_followed(self, obj):
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        if not user or not getattr(user, "is_authenticated", False):
+            return False
+        return obj.fans.filter(user=user).exists()
 
     class Meta:
         model = Club
@@ -318,6 +351,8 @@ class ClubListSerializer(ClubUnderstatSummaryMixin, serializers.ModelSerializer)
             "achievements",
             "member_count",
             "player_count",
+            "fan_count",
+            "is_followed",
             "latest_understat_summary",
             "is_trashed",
             "trashed_at",

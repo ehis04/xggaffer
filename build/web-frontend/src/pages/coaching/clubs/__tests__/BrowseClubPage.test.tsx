@@ -9,6 +9,7 @@ const { mockNavigate, mockClubsApi } = vi.hoisted(() => ({
     browse: vi.fn(),
     listMyJoinRequests: vi.fn(),
     requestToJoin: vi.fn(),
+    listPlayers: vi.fn(),
     duplicate: vi.fn(),
   },
 }));
@@ -23,6 +24,11 @@ vi.mock('react-router-dom', async () => {
 
 vi.mock('../../../../services/api', () => ({
   clubsApi: mockClubsApi,
+}));
+
+vi.mock('../../../../utils/featuredClubs', () => ({
+  isFeaturedFanClub: () => true,
+  sortFeaturedFanClubs: (clubs: unknown[]) => clubs,
 }));
 
 vi.mock('../../../../components/Navigation/SideBar', () => ({
@@ -69,6 +75,7 @@ const inviteOnlyClub = {
 describe('BrowseClubsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockClubsApi.listPlayers.mockResolvedValue([]);
   });
 
   it('shows a real request action for approval-required clubs', async () => {
