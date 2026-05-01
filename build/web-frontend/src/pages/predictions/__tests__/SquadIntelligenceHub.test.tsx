@@ -42,6 +42,14 @@ vi.mock('../../../components/widgets/PredictedXIBoard', () => ({
   default: () => <div data-testid="predicted-xi-board" />,
 }));
 
+vi.mock('../../../components/Navigation/SideBar', () => ({
+  Sidebar: () => null,
+}));
+
+vi.mock('../../../components/Social/SocialUserButtons', () => ({
+  SocialUserButtons: () => null,
+}));
+
 import liveFootballApi from '../../../services/api/livefootballApi';
 import { fetchAvailabilityWidget, fetchLineupWidget } from '../../../services/api/widgetApi';
 

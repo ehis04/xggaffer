@@ -16,6 +16,14 @@ vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
 }));
 
+vi.mock('../../../components/Navigation/SideBar', () => ({
+  Sidebar: () => null,
+}));
+
+vi.mock('../../../components/Social/SocialUserButtons', () => ({
+  SocialUserButtons: () => null,
+}));
+
 const MOBILE_WIDTH = 500;
 const DESKTOP_WIDTH = 1024;
 

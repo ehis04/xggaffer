@@ -5,29 +5,10 @@ import type { Club, ClubJoinRequest } from "../../../types/club";
 import styles from "./css/BrowseClubsPage.module.css";
 import { Sidebar } from "../../../components/Navigation/SideBar";
 import { SocialUserButtons } from "../../../components/Social/SocialUserButtons";
-
-const ALLOWED_BROWSE_CLUBS = [
-  'manchester united',
-  'manchester united fc',
-  'paris saint germain',
-  'paris saint germain fc',
-  'real madrid cf',
-  'fc bayern munchen',
-  'juventus fc',
-] as const;
-
-const ALLOWED_BROWSE_CLUB_ORDER = new Map<string, number>(
-  ALLOWED_BROWSE_CLUBS.map((name, idx) => [name, idx])
-);
-
-const normalizeClubName = (name: string): string =>
-  name
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9 ]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+import {
+  isFeaturedFanClub,
+  sortFeaturedFanClubs,
+} from "../../../utils/featuredClubs";
 
 const getRequestStatusLabel = (status: ClubJoinRequest["status"]) => {
   const map: Record<string, string> = {
@@ -52,7 +33,9 @@ interface BrowseClubCardProps {
   club: Club;
   onView: (club: Club) => void;
   onRequestToJoin: (club: Club) => void;
+  onToggleFollow: (club: Club) => void;
   isRequesting: boolean;
+  isFollowing: boolean;
   existingRequest?: ClubJoinRequest;
 }
 
@@ -60,7 +43,9 @@ const BrowseClubCard: React.FC<BrowseClubCardProps> = ({
   club,
   onView,
   onRequestToJoin,
+  onToggleFollow,
   isRequesting,
+  isFollowing,
   existingRequest,
 }) => {
   const initials = club.name.slice(0, 2).toUpperCase();
@@ -121,14 +106,13 @@ const BrowseClubCard: React.FC<BrowseClubCardProps> = ({
         </div>
       </div>
 
-      {tags.length > 0 && (
-        <div className={styles.clubCardTags}>
-          {tags.map((t) => (
-            <span key={t} className={styles.clubCardTag}>{t}</span>
-          ))}
-          <span className={styles.clubCardTag}>{club.player_count} players</span>
-        </div>
-      )}
+      <div className={styles.clubCardTags}>
+        {tags.map((t) => (
+          <span key={t} className={styles.clubCardTag}>{t}</span>
+        ))}
+        <span className={styles.clubCardTag}>{club.player_count} players</span>
+        <span className={styles.clubCardTag}>{club.fan_count ?? 0} fans</span>
+      </div>
 
       {club.description && (
         <p className={styles.clubCardDesc}>
@@ -144,6 +128,13 @@ const BrowseClubCard: React.FC<BrowseClubCardProps> = ({
           onClick={() => onView(club)}
         >
           View
+        </button>
+        <button
+          className={`${styles.fanBtn} ${club.is_followed ? styles.fanBtnActive : ""}`}
+          disabled={isFollowing}
+          onClick={() => onToggleFollow(club)}
+        >
+          {isFollowing ? "Saving..." : club.is_followed ? "Following" : "Follow"}
         </button>
         {hasActiveRequest ? (
           <div className={styles.requestedPill}>
@@ -181,6 +172,7 @@ const BrowseClubsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [requestingClubId, setRequestingClubId] = useState<number | null>(null);
+  const [followingClubId, setFollowingClubId] = useState<number | null>(null);
 
   const [searchInput, setSearchInput] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
@@ -199,7 +191,9 @@ const BrowseClubsPage: React.FC = () => {
         clubsApi.browse(search ? { search } : undefined),
         clubsApi.listMyJoinRequests(),
       ]);
-      const targetClubs = clubsData.filter((club) => (club as any).is_trashed !== true);
+      const targetClubs = clubsData.filter(
+        (club) => (club as any).is_trashed !== true && isFeaturedFanClub(club)
+      );
       const playerLists = await Promise.all(
         targetClubs.map(async (club) => {
           try {
@@ -212,13 +206,11 @@ const BrowseClubsPage: React.FC = () => {
       );
 
       const countByClubId = new Map(playerLists.map((x) => [x.clubId, x.playerCount]));
-      const visibleClubs = targetClubs.map((club) => ({
-        ...club,
-        player_count: countByClubId.get(club.id) ?? club.player_count,
-      })).sort(
-        (a, b) =>
-          (ALLOWED_BROWSE_CLUB_ORDER.get(normalizeClubName(a.name)) ?? Number.MAX_SAFE_INTEGER) -
-          (ALLOWED_BROWSE_CLUB_ORDER.get(normalizeClubName(b.name)) ?? Number.MAX_SAFE_INTEGER)
+      const visibleClubs = sortFeaturedFanClubs(
+        targetClubs.map((club) => ({
+          ...club,
+          player_count: countByClubId.get(club.id) ?? club.player_count,
+        }))
       );
 
       setClubs(visibleClubs);
@@ -288,6 +280,37 @@ const BrowseClubsPage: React.FC = () => {
     }
   };
 
+  const replaceClub = (updatedClub: Club) => {
+    setClubs((items) =>
+      sortFeaturedFanClubs(
+        items.map((club) => (club.id === updatedClub.id ? updatedClub : club))
+      )
+    );
+    setSelectedClub((current) =>
+      current?.id === updatedClub.id ? updatedClub : current
+    );
+  };
+
+  const handleToggleFollow = async (club: Club) => {
+    try {
+      setFollowingClubId(club.id);
+      setWorkflowMessage(null);
+      const updatedClub = club.is_followed
+        ? await clubsApi.unfollow(club.id)
+        : await clubsApi.follow(club.id);
+      replaceClub(updatedClub);
+      setWorkflowMessage(
+        updatedClub.is_followed
+          ? `You're now following ${updatedClub.name}.`
+          : `You're no longer following ${updatedClub.name}.`
+      );
+    } catch (err) {
+      setWorkflowMessage(err instanceof Error ? err.message : "Failed to update club follow.");
+    } finally {
+      setFollowingClubId(null);
+    }
+  };
+
   const handleViewClub = (club: Club) => {
     setSelectedClub(club);
     setRequestMessage("");
@@ -336,10 +359,10 @@ const BrowseClubsPage: React.FC = () => {
 
           <section className={styles.hero}>
             <div className={styles.heroBreadcrumb}>BROWSE</div>
-            <h1 className={styles.heroTitle}>Find a club to join.</h1>
+            <h1 className={styles.heroTitle}>Follow a featured club.</h1>
             <p className={styles.heroSub}>
-              Explore public clubs looking for coaches, assistants, and supporters. Request
-              to join — the club admin will confirm.
+              Choose from Manchester United, Real Madrid, Bayern Munich, PSG, and
+              Juventus. Following a club personalises your home feed.
             </p>
           </section>
 
@@ -407,9 +430,22 @@ const BrowseClubsPage: React.FC = () => {
                   <h2 className={styles.workflowPanelTitle}>{selectedClub.name}</h2>
                   <p className={styles.workflowPanelSub}>Review the membership path for this club before you act.</p>
                 </div>
-                <button className={styles.ghostBtn} onClick={() => setSelectedClub(null)}>
-                  Clear selection
-                </button>
+                <div className={styles.workflowActions}>
+                  <button
+                    className={`${styles.fanBtn} ${selectedClub.is_followed ? styles.fanBtnActive : ""}`}
+                    disabled={followingClubId === selectedClub.id}
+                    onClick={() => handleToggleFollow(selectedClub)}
+                  >
+                    {followingClubId === selectedClub.id
+                      ? "Saving..."
+                      : selectedClub.is_followed
+                      ? "Following"
+                      : "Follow"}
+                  </button>
+                  <button className={styles.ghostBtn} onClick={() => setSelectedClub(null)}>
+                    Clear selection
+                  </button>
+                </div>
               </div>
               <div className={styles.workflowGrid}>
                 <div className={styles.workflowCard}>
@@ -491,7 +527,9 @@ const BrowseClubsPage: React.FC = () => {
                   club={club}
                   onView={handleViewClub}
                   onRequestToJoin={handleRequestToJoin}
+                  onToggleFollow={handleToggleFollow}
                   isRequesting={requestingClubId === club.id}
+                  isFollowing={followingClubId === club.id}
                   existingRequest={latestRequestForClub(club.id)}
                 />
               ))}

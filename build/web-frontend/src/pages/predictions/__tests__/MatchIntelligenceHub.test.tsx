@@ -76,6 +76,14 @@ vi.mock('../../../components/widgets/ScorelineGrid', () => ({
   TopScoresCard: () => <div data-testid="top-scores-card" />,
 }));
 
+vi.mock('../../../components/Navigation/SideBar', () => ({
+  Sidebar: () => null,
+}));
+
+vi.mock('../../../components/Social/SocialUserButtons', () => ({
+  SocialUserButtons: () => null,
+}));
+
 import {
   fetchMatchPredictionWidget,
   fetchScorelineWidget,

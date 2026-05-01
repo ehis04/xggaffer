@@ -24,6 +24,7 @@ from services.providers.understat.sync import sync_understat_club_season
 from ..envelope import build_clubs_envelope
 from ..models import (
     Club,
+    ClubFan,
     ClubMembership,
     ClubPlayer,
     ClubPlayerInjury,
@@ -112,6 +113,62 @@ def _normalise_club_name(value: str) -> str:
     return ' '.join(tokens)
 
 
+FEATURED_FAN_CLUB_KEYS = {
+    'manchester united',
+    'manchester united fc',
+    'real madrid',
+    'real madrid cf',
+    'bayern munich',
+    'fc bayern munchen',
+    'paris saint germain',
+    'paris saint germain fc',
+    'psg',
+    'juventus',
+    'juventus fc',
+}
+
+FEATURED_FAN_CLUB_CANONICAL_KEYS = {
+    'manchester united': 'manchester united',
+    'manchester united fc': 'manchester united',
+    'real madrid': 'real madrid',
+    'real madrid cf': 'real madrid',
+    'bayern munich': 'bayern munich',
+    'fc bayern munchen': 'bayern munich',
+    'paris saint germain': 'psg',
+    'paris saint germain fc': 'psg',
+    'psg': 'psg',
+    'juventus': 'juventus',
+    'juventus fc': 'juventus',
+}
+
+FEATURED_FAN_CLUB_ORDER = {
+    'manchester united': 0,
+    'real madrid': 1,
+    'bayern munich': 2,
+    'psg': 3,
+    'juventus': 4,
+}
+
+
+def _is_featured_fan_club(club: Club) -> bool:
+    return _normalise_club_name(club.name) in FEATURED_FAN_CLUB_KEYS
+
+
+def apply_featured_fan_club_filter(queryset):
+    selected_by_key = {}
+    for club_id, club_name in queryset.order_by('id').values_list('id', 'name'):
+        canonical_key = FEATURED_FAN_CLUB_CANONICAL_KEYS.get(_normalise_club_name(club_name))
+        if canonical_key and canonical_key not in selected_by_key:
+            selected_by_key[canonical_key] = club_id
+
+    club_ids = [
+        selected_by_key[key]
+        for key, _order in sorted(FEATURED_FAN_CLUB_ORDER.items(), key=lambda item: item[1])
+        if key in selected_by_key
+    ]
+    return queryset.filter(id__in=club_ids)
+
+
 def _normalise_person_name(value: str) -> str:
     if not value:
         return ''
@@ -144,6 +201,9 @@ class ClubViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['create', 'duplicate']:
             return [IsAuthenticatedOrBypass(), CanCreateClub()]
+
+        if self.action == 'follow':
+            return [IsAuthenticatedOrBypass()]
 
         if self.action in ['trash', 'restore', 'permanent_delete', 'destroy']:
             return [IsAuthenticatedOrBypass(), CanManageOwnClubTrash()]
@@ -221,6 +281,8 @@ class ClubViewSet(viewsets.ModelViewSet):
                 listed_filter,
                 is_trashed=False,
             )
+            if scope == 'browse':
+                queryset = apply_featured_fan_club_filter(queryset)
             return apply_club_search_filter(queryset, search)
 
         member_club_ids = ClubMembership.objects.filter(
@@ -232,13 +294,15 @@ class ClubViewSet(viewsets.ModelViewSet):
             active_filter = Q(id__in=member_club_ids)
         elif scope == 'browse':
             active_filter = listed_filter & ~Q(id__in=member_club_ids)
+        elif scope == 'followed':
+            active_filter = Q(fans__user=user)
         else:
             active_filter = Q(id__in=member_club_ids) | listed_filter
 
         trash_mode = 'include' if include_trashed else self._get_trash_mode()
 
         if trash_mode == 'only':
-            if scope == 'browse':
+            if scope in {'browse', 'followed'}:
                 queryset = base_queryset.none()
             else:
                 queryset = base_queryset.filter(
@@ -252,7 +316,10 @@ class ClubViewSet(viewsets.ModelViewSet):
             is_trashed=False,
         ).distinct()
 
-        if trash_mode == 'include' and scope != 'browse':
+        if scope == 'browse':
+            active_queryset = apply_featured_fan_club_filter(active_queryset)
+
+        if trash_mode == 'include' and scope not in {'browse', 'followed'}:
             queryset = base_queryset.filter(
                 (active_filter & Q(is_trashed=False)) |
                 Q(creator=user, is_trashed=True)
@@ -953,6 +1020,32 @@ class ClubViewSet(viewsets.ModelViewSet):
             )
 
         instance.move_to_trash(self.request.user)
+
+    @action(detail=True, methods=['post', 'delete'], url_path='follow')
+    def follow(self, request, pk=None):
+        user = request.user
+        if not user.is_authenticated:
+            raise PermissionDenied('You must be signed in to follow clubs.')
+
+        club = self._get_club_for_action(pk, require_trashed=False)
+        is_listed = Club.objects.filter(
+            get_listed_directory_filter(),
+            pk=club.pk,
+        ).exists()
+
+        if not is_listed or not _is_featured_fan_club(club):
+            raise ValidationError('Only featured browse clubs can be followed.')
+
+        if request.method == 'DELETE':
+            ClubFan.objects.filter(user=user, club=club).delete()
+        else:
+            ClubFan.objects.get_or_create(user=user, club=club)
+
+        serializer = ClubSerializer(
+            club,
+            context=self.get_serializer_context(),
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'])
     def duplicate(self, request, pk=None):

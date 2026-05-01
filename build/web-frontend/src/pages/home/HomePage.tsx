@@ -12,6 +12,7 @@ import type { ArticleListItem } from "../../types/articles";
 import type { Club, ClubCalendarFeedItem, ClubSeasonResult } from "../../types/club";
 import type { DashboardData } from "../referee/types/RefereeTypes";
 import type { LawCourse } from "../../components/RefereeDashboard/types/RefereeDashboardTypes";
+import { isFeaturedFanClub, sortFeaturedFanClubs } from "../../utils/featuredClubs";
 import styles from "./css/HomePage.module.css";
 
 interface ClubResultItem extends ClubSeasonResult {
@@ -119,6 +120,20 @@ const HomeArticleImage = ({ src }: { src?: string | null }) => {
   );
 };
 
+const getHomeClubs = async (): Promise<Club[]> => {
+  const followedClubs = (await clubsApi.followed())
+    .filter((club) => !club.is_trashed && isFeaturedFanClub(club));
+
+  if (followedClubs.length > 0) {
+    return sortFeaturedFanClubs(followedClubs);
+  }
+
+  const browseClubs = (await clubsApi.browse())
+    .filter((club) => !club.is_trashed && isFeaturedFanClub(club));
+
+  return sortFeaturedFanClubs(browseClubs).slice(0, 1);
+};
+
 const HomePage = () => {
   const navigate = useNavigate();
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -140,10 +155,10 @@ const HomePage = () => {
     const loadHome = async () => {
       try {
         setLoading(true);
-        const [articleFeed, postFeed, clubList, dashboard] = await Promise.all([
+        const [articleFeed, postFeed, homeClubs, dashboard] = await Promise.all([
           articlesApi.getFeed({ sort: "relevance" }),
           communityApi.explorePosts({ order_by: "recent", page_size: 3 }),
-          clubsApi.myClubs(),
+          getHomeClubs(),
           apiClient.get<DashboardData>(REFEREE.DASHBOARD),
         ]);
 
@@ -151,10 +166,10 @@ const HomePage = () => {
 
         setArticles(articleFeed.results.slice(0, 3));
         setPosts(postFeed.results.slice(0, 3));
-        setClubs(clubList.filter((club) => !club.is_trashed).slice(0, 3));
+        setClubs(homeClubs.slice(0, 3));
         setCourses(dashboard.courses);
 
-        const activeClubs = clubList.filter((club) => !club.is_trashed).slice(0, 4);
+        const activeClubs = homeClubs.slice(0, 4);
         const updates = await Promise.all(
           activeClubs.map(async (club) => {
             const [calendar, results] = await Promise.all([
@@ -352,10 +367,10 @@ const HomePage = () => {
           <div>
             <div className={styles.sectionRow}>
               <div className={styles.sectionIntro}>
-                <h2>Recent Clubs</h2>
+                <h2>Followed Clubs</h2>
               </div>
-              <button type="button" className={styles.linkButton} onClick={() => navigate("/clubs")}>
-                All clubs
+              <button type="button" className={styles.linkButton} onClick={() => navigate("/clubs/browse")}>
+                Browse clubs
               </button>
             </div>
             <div className={styles.clubGrid}>
@@ -368,7 +383,7 @@ const HomePage = () => {
                 >
                   <span>{initials(club.name)}</span>
                   <strong>{club.name}</strong>
-                  <small>{club.member_count} members</small>
+                  <small>{club.fan_count ?? 0} fans</small>
                 </button>
               ))}
             </div>
@@ -409,10 +424,10 @@ const HomePage = () => {
           <div className={styles.sectionRow}>
             <div className={styles.sectionIntro}>
               <h2>Club Updates</h2>
-              <p>From clubs you're part of</p>
+              <p>From clubs you follow</p>
             </div>
-            <button type="button" className={styles.linkButton} onClick={() => navigate("/clubs")}>
-              View clubs
+            <button type="button" className={styles.linkButton} onClick={() => navigate("/clubs/browse")}>
+              Follow clubs
             </button>
           </div>
 

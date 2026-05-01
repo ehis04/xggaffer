@@ -1,5 +1,5 @@
 from .club import Club
-from .membership import ClubMembership, ClubJoinRequest, ClubInvitation
+from .membership import ClubFan, ClubMembership, ClubJoinRequest, ClubInvitation
 from .player import ClubPlayer, ClubExternalIdentity
 from .calendar import Season, PlayerSeasonStats, ClubEvent, Fixture
 from .resources import ClubResource, ClubResourceView
@@ -8,6 +8,7 @@ from .player_tracking import ClubPlayerInjury, ClubPlayerManualStats, ClubSeason
 
 __all__ = [
     'Club',
+    'ClubFan',
     'ClubMembership',
     'ClubJoinRequest',
     'ClubInvitation',

@@ -24,7 +24,7 @@ export type VerificationStatus =
   | 'approved'
   | 'rejected';
 
-export type ClubListScope = 'mine' | 'browse';
+export type ClubListScope = 'mine' | 'browse' | 'followed';
 
 export type ClubJoinRequestStatus =
   | 'pending'
@@ -110,6 +110,8 @@ export interface Club {
   achievements: string;
   member_count: number;
   player_count: number;
+  fan_count?: number;
+  is_followed?: boolean;
   latest_understat_summary?: ClubUnderstatSummary | null;
   is_trashed: boolean;
   trashed_at: string | null;

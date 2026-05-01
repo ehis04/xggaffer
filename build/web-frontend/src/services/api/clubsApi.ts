@@ -155,6 +155,13 @@ export const clubsApi = {
     });
   },
 
+  followed: async (params?: Omit<ClubListParams, 'scope'>) => {
+    return clubsApi.list({
+      scope: 'followed',
+      ...(params ?? {}),
+    });
+  },
+
   lookupByJoinCode: (code: string) =>
     apiClient.get<LookupClubByCodeResponse>('/clubs/lookup-by-code/', {
       code: code.trim(),
@@ -190,6 +197,12 @@ export const clubsApi = {
 
   permanentDelete: (clubId: number) =>
     apiClient.delete<void>(`/clubs/${clubId}/permanent-delete/`),
+
+  follow: (clubId: number) =>
+    apiClient.post<Club>(`/clubs/${clubId}/follow/`, {}),
+
+  unfollow: (clubId: number) =>
+    apiClient.delete<Club>(`/clubs/${clubId}/follow/`),
 
   listTrashItems: (params?: TrashListParams) =>
     apiClient.get<TrashListItem[]>('/clubs/trash/', params as Record<string, string | number | boolean> | undefined),

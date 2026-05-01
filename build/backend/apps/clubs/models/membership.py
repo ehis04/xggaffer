@@ -66,6 +66,32 @@ class ClubMembership(models.Model):
         return self.role != self.Role.PLAYER
 
 
+class ClubFan(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='club_follows'
+    )
+    club = models.ForeignKey(
+        'Club',
+        on_delete=models.CASCADE,
+        related_name='fans'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = 'clubs'
+        unique_together = ['user', 'club']
+        ordering = ['club', 'created_at']
+        indexes = [
+            models.Index(fields=['user', 'created_at']),
+            models.Index(fields=['club', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} follows {self.club.name}"
+
+
 class ClubJoinRequest(models.Model):
     class Status(models.TextChoices):
         PENDING = 'pending', 'Pending'

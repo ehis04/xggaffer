@@ -56,6 +56,14 @@ vi.mock('../../../components/widgets/DegradedBanner', () => ({
   ),
 }));
 
+vi.mock('../../Navigation/SideBar', () => ({
+  Sidebar: () => null,
+}));
+
+vi.mock('../../Social/SocialUserButtons', () => ({
+  SocialUserButtons: () => null,
+}));
+
 import { fetchProjectedTableWidget } from '../../../services/api/widgetApi';
 import type {
   ProjectedTableData,

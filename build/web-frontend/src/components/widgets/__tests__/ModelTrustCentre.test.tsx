@@ -47,6 +47,14 @@ vi.mock('../../../components/widgets/BiggestMissesPanel', () => ({
   default: () => <div data-testid="biggest-misses-panel" />,
 }));
 
+vi.mock('../../Navigation/SideBar', () => ({
+  Sidebar: () => null,
+}));
+
+vi.mock('../../Social/SocialUserButtons', () => ({
+  SocialUserButtons: () => null,
+}));
+
 import {
   fetchModelTrustWidget,
   type ModelTrustData,

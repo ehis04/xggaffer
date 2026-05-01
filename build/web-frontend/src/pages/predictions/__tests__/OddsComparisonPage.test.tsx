@@ -19,6 +19,14 @@ vi.mock('../../../services/api/predictionsApi', () => ({
   getOddsAccuracy: (...args: unknown[]) => mockGetOddsAccuracy(...args),
 }));
 
+vi.mock('../../../components/Navigation/SideBar', () => ({
+  Sidebar: () => null,
+}));
+
+vi.mock('../../../components/Social/SocialUserButtons', () => ({
+  SocialUserButtons: () => null,
+}));
+
 const renderPage = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
