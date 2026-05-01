@@ -18,6 +18,7 @@ import { parseSeasonStartYear } from '../../utils/footballSeason';
 import styles from './css/SquadIntelligenceHub.module.css';
 import { Sidebar } from '../../components/Navigation/SideBar';
 import { SocialUserButtons } from '../../components/Social/SocialUserButtons';
+import { PredictionsNavbar } from '../../components/Navigation/predictionsNavbar';
 
 const CONGESTION_THRESHOLD_DAYS = 4;
 const NEXT_FIXTURES_COUNT = 5;
@@ -201,7 +202,7 @@ export default function SquadIntelligenceHub() {
       <div className={styles.base}>
         <header className={styles.Header}>
           <div className={styles.Left}>Odds Comparisson</div>
-          <div className={styles.Middle}></div>
+          <div className={styles.Middle}><PredictionsNavbar /></div>
           <div className={styles.Right}>
             <SocialUserButtons />
           </div>

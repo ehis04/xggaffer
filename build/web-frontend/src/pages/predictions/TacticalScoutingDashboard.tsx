@@ -11,6 +11,7 @@ import type { TacticalWidgetPayload } from '../../services/api/widgetApi';
 import styles from './css/TacticalScoutingDashboard.module.css';
 import { Sidebar } from '../../components/Navigation/SideBar';
 import { SocialUserButtons } from '../../components/Social/SocialUserButtons';
+import { PredictionsNavbar } from '../../components/Navigation/predictionsNavbar';
 
 export default function TacticalScoutingDashboard() {
   const { teamSlug = '' } = useParams<{ teamSlug: string }>();
@@ -53,7 +54,7 @@ export default function TacticalScoutingDashboard() {
       <div className={styles.base}>
         <header className={styles.Header}>
           <div className={styles.Left}>Odds Comparisson</div>
-          <div className={styles.Middle}></div>
+          <div className={styles.Middle}><PredictionsNavbar /></div>
           <div className={styles.Right}>
             <SocialUserButtons />
           </div>

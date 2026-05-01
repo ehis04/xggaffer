@@ -26,6 +26,7 @@ import {
 import styles from "./css/OddsComparisonPage.module.css";
 import { Sidebar } from "../../components/Navigation/SideBar";
 import { SocialUserButtons } from "../../components/Social/SocialUserButtons";
+import { PredictionsNavbar } from "../../components/Navigation/predictionsNavbar";
 
 const LEAGUE_OPTIONS = PREDICTION_LEAGUE_OPTIONS;
 
@@ -485,7 +486,7 @@ export default function OddsComparisonPage() {
       <div className={styles.base}>
         <header className={styles.Header}>
           <div className={styles.Left}>Odds Comparisson</div>
-          <div className={styles.Middle}></div>
+          <div className={styles.Middle}><PredictionsNavbar/></div>
           <div className={styles.Right}>
             <SocialUserButtons />
           </div>

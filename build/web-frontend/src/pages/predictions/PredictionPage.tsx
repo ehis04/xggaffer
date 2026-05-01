@@ -8,6 +8,7 @@ import SessionExport from '../../components/predictions/SessionExport';
 import styles from './css/PredictionPage.module.css';
 import { Sidebar } from '../../components/Navigation/SideBar';
 import { SocialUserButtons } from '../../components/Social/SocialUserButtons';
+import { PredictionsNavbar } from '../../components/Navigation/predictionsNavbar';
 
 const PREDICTION_STARTER_QUERIES = [
   'Predict Arsenal vs Chelsea this weekend',
@@ -49,7 +50,7 @@ export default function PredictionPage() {
       <div className={styles.base}>
         <header className={styles.Header}>
           <div className={styles.Left}>Predictions Chat</div>
-          <div className={styles.Middle}></div>
+          <div className={styles.Middle}><PredictionsNavbar/></div>
           <div className={styles.Right}>
             <SocialUserButtons />
           </div>
