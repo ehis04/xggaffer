@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { TeamSwitcher } from '../../common/components/TeamSwitcher';
 import { FreshnessBadge } from '../../common/components/FreshnessBadge';
 import { SectionSkeleton } from '../../common/components/SectionSkeleton';
 import { InlineRetry } from '../../common/components/InlineRetry';
@@ -15,6 +16,7 @@ import { SocialUserButtons } from '../../components/Social/SocialUserButtons';
 export default function TacticalScoutingDashboard() {
   const { teamSlug = '' } = useParams<{ teamSlug: string }>();
   const teamName = decodeURIComponent(teamSlug);
+  const navigate = useNavigate();
 
   const [payload, setPayload] = useState<TacticalWidgetPayload | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,6 +65,13 @@ export default function TacticalScoutingDashboard() {
         <h1 className={styles.title}>{teamName}</h1>
         {freshness && <FreshnessBadge freshness={freshness} />}
       </header>
+
+      <div className={styles.content}>
+        <TeamSwitcher
+          currentTeam={teamName}
+          onSelect={team => navigate(`/tactics/${encodeURIComponent(team)}`)}
+        />
+      </div>
 
       {loading && <SectionSkeleton rows={4} />}
 

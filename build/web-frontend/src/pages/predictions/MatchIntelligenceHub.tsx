@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { PREDICTION_LEAGUE_OPTIONS } from '../../utils/footballSeason';
 import { FreshnessBadge } from '../../common/components/FreshnessBadge';
 import { SectionSkeleton } from '../../common/components/SectionSkeleton';
 import { InlineRetry } from '../../common/components/InlineRetry';
@@ -26,7 +27,7 @@ import type {
   LineupWidgetPayload,
   WidgetFreshness,
 } from '../../services/api/widgetApi';
-import type { OddsConsensus } from '../../types/prediction';
+import type { OddsConsensus, OddsFixtureItem } from '../../types/prediction';
 import {
   getCurrentFootballSeason,
   getFootballSeasonForDate,
@@ -163,12 +164,38 @@ function TacticalBlock({ homeTeam, awayTeam }: { homeTeam: string; awayTeam: str
 }
 
 export default function MatchIntelligenceHub() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const homeTeam = searchParams.get('home') ?? '';
   const awayTeam = searchParams.get('away') ?? '';
   const leagueCode = searchParams.get('league') ?? DEFAULT_LEAGUE;
   const fixtureDate = searchParams.get('date') ?? '';
   const season = searchParams.get('season') ?? getFootballSeasonForDate(fixtureDate, getCurrentFootballSeason());
+
+  const [switcherLeague, setSwitcherLeague] = useState(leagueCode);
+  const [switchFixtures, setSwitchFixtures] = useState<OddsFixtureItem[]>([]);
+  const [switchLoading, setSwitchLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSwitchLoading(true);
+    setSwitchFixtures([]);
+    getOddsFixtures(switcherLeague, 'future')
+      .then(env => { if (!cancelled) setSwitchFixtures(env.data?.fixtures ?? []); })
+      .catch(() => { if (!cancelled) setSwitchFixtures([]); })
+      .finally(() => { if (!cancelled) setSwitchLoading(false); });
+    return () => { cancelled = true; };
+  }, [switcherLeague]);
+
+  function handleFixtureSwitch(fixture: OddsFixtureItem) {
+    setSearchParams({
+      home: fixture.home_team,
+      away: fixture.away_team,
+      league: fixture.league,
+      season: fixture.season,
+      date: fixture.commence_time?.slice(0, 10) ?? '',
+      source: 'switch',
+    });
+  }
 
   const fixtureResolved = Boolean(homeTeam && awayTeam);
 
@@ -362,6 +389,35 @@ export default function MatchIntelligenceHub() {
             <SocialUserButtons />
           </div>
         </header>
+
+      <div className={styles.fixtureSwitcher}>
+        <span className={styles.switcherLabel}>Switch fixture</span>
+        <select
+          className={styles.switcherSelect}
+          value={switcherLeague}
+          onChange={e => setSwitcherLeague(e.target.value)}
+        >
+          {PREDICTION_LEAGUE_OPTIONS.map(o => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+        <select
+          className={styles.switcherSelect}
+          value=""
+          disabled={switchLoading || switchFixtures.length === 0}
+          onChange={e => {
+            const f = switchFixtures[Number(e.target.value)];
+            if (f) handleFixtureSwitch(f);
+          }}
+        >
+          <option value="">{switchLoading ? 'Loading…' : 'Select fixture'}</option>
+          {switchFixtures.map((f, i) => (
+            <option key={i} value={i}>
+              {f.home_team} vs {f.away_team} — {f.commence_time?.slice(0, 10) ?? ''}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <header className={styles.header}>
         <h1 className={styles.title}>

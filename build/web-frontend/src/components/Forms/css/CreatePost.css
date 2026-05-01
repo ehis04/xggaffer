@@ -18,12 +18,17 @@
     resize: none;
     border: none;
     background: transparent;
+    color: #ffffff;
     padding: 10px;
     font-size: 13px;
     outline: none;
-    caret-color: #022a15;
+    caret-color: #ffffff;
     line-height: 1.5;
     margin-bottom: 12px;
+}
+
+.create-text-box textarea::placeholder {
+    color: rgba(255, 255, 255, 0.58);
 }
 
 .create-post-notice {

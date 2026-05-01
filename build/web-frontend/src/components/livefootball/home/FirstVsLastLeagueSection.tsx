@@ -28,10 +28,39 @@ const formatSyncedAt = (value?: string | null): string | null => {
   return date.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
 };
 
-const formatFormLabel = (value?: string | null): string => (value || '').trim() || 'No form data';
-
 const formatRecord = (row: LiveFootballLeagueSnapshotRow): string =>
   `${row.won ?? '-'}-${row.drawn ?? '-'}-${row.lost ?? '-'}`;
+
+const hasFormLabel = (value?: string | null): boolean => Boolean((value || '').trim());
+
+const hasTeamName = (row: LiveFootballLeagueSnapshotRow | null): row is LiveFootballLeagueSnapshotRow =>
+  Boolean(row && (row.team.short_name || row.team.name || '').trim());
+
+const hasPopulatedComparisonRow = (
+  row: LiveFootballLeagueSnapshotRow | null,
+): row is LiveFootballLeagueSnapshotRow =>
+  hasTeamName(row)
+  && row.position !== null
+  && row.position !== undefined
+  && row.played !== null
+  && row.played !== undefined
+  && row.points !== null
+  && row.points !== undefined
+  && row.goal_difference !== null
+  && row.goal_difference !== undefined;
+
+const hasSpotlightData = (item: LiveFootballClubSpotlightPlayer): boolean =>
+  Boolean((item.player.short_name || item.player.name || '').trim())
+  && Boolean((item.team_name || '').trim())
+  && Boolean((item.reason_label || '').trim());
+
+const getSpotlightPlayers = (item: LiveFootballFirstVsLastLeagueCard): LiveFootballClubSpotlightPlayer[] =>
+  item.spotlight_players.filter(hasSpotlightData);
+
+const hasVisibleComparison = (item: LiveFootballFirstVsLastLeagueCard): boolean =>
+  Boolean((item.competition.name || '').trim())
+  && hasPopulatedComparisonRow(item.leader)
+  && hasPopulatedComparisonRow(item.bottom);
 
 // ─── ComparisonCard sub-component ────────────────────────────────────────────
 
@@ -76,7 +105,9 @@ const ComparisonCard: React.FC<ComparisonCardProps> = ({ row, variant, label }) 
       <span className={styles['lfb-compare-secondary-pill']}>Record {formatRecord(row)}</span>
       <span className={styles['lfb-compare-secondary-pill']}>GF {row.goals_for ?? '-'}</span>
       <span className={styles['lfb-compare-secondary-pill']}>GA {row.goals_against ?? '-'}</span>
-      <span className={styles['lfb-compare-secondary-pill']}>Form {formatFormLabel(row.form_label)}</span>
+      {hasFormLabel(row.form_label) && (
+        <span className={styles['lfb-compare-secondary-pill']}>Form {row.form_label}</span>
+      )}
     </div>
   </article>
 );
@@ -98,11 +129,9 @@ const SpotlightCard: React.FC<SpotlightCardProps> = ({ item }) => (
       {item.player.shirt_number ? ` • #${item.player.shirt_number}` : ''}
     </div>
     <div className={styles['lfb-spotlight-reason']}>{item.reason_label}</div>
-    <div className={styles['lfb-meta-text']}>
-      {item.minutes_played !== null && item.minutes_played !== undefined
-        ? `${item.minutes_played} minutes played`
-        : 'Minutes not available'}
-    </div>
+    {item.minutes_played !== null && item.minutes_played !== undefined && (
+      <div className={styles['lfb-meta-text']}>{item.minutes_played} minutes played</div>
+    )}
   </article>
 );
 
@@ -114,7 +143,6 @@ interface FirstVsLastLeagueSectionProps {
   actionLabel?: string;
   actionTo?: string;
   items: LiveFootballFirstVsLastLeagueCard[];
-  emptyMessage: string;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -125,37 +153,32 @@ const FirstVsLastLeagueSection: React.FC<FirstVsLastLeagueSectionProps> = ({
   actionLabel,
   actionTo,
   items,
-  emptyMessage,
 }) => {
+  const populatedItems = items.filter(hasVisibleComparison);
   const [index, setIndex]   = useState(0);
   const pausedRef           = useRef(false);
 
   useEffect(() => {
-    if (index > items.length - 1) setIndex(0);
-  }, [items, index]);
+    if (index > populatedItems.length - 1) setIndex(0);
+  }, [populatedItems.length, index]);
 
   useEffect(() => {
-    if (items.length <= 1) return;
+    if (populatedItems.length <= 1) return;
     const interval = window.setInterval(() => {
-      if (!pausedRef.current) setIndex((c) => (c + 1) % items.length);
+      if (!pausedRef.current) setIndex((c) => (c + 1) % populatedItems.length);
     }, 5000);
     return () => window.clearInterval(interval);
-  }, [items]);
+  }, [populatedItems.length]);
 
-  if (items.length === 0) {
-    return (
-      <SectionFrame title={title} subtitle={subtitle} actionLabel={actionLabel} actionTo={actionTo}>
-        <div className={styles['lfb-empty-state']}>{emptyMessage}</div>
-      </SectionFrame>
-    );
-  }
+  if (populatedItems.length === 0) return null;
 
-  const activeItem     = items[index];
+  const activeItem     = populatedItems[index];
+  const spotlightPlayers = getSpotlightPlayers(activeItem);
   const syncedAtLabel  = formatSyncedAt(activeItem.synced_at);
   const localActionTo  = buildLiveFootballLink(activeItem.cta.path, activeItem.cta.query);
 
-  const handlePrev = () => setIndex((c) => (c - 1 + items.length) % items.length);
-  const handleNext = () => setIndex((c) => (c + 1) % items.length);
+  const handlePrev = () => setIndex((c) => (c - 1 + populatedItems.length) % populatedItems.length);
+  const handleNext = () => setIndex((c) => (c + 1) % populatedItems.length);
 
   return (
     <div
@@ -169,7 +192,7 @@ const FirstVsLastLeagueSection: React.FC<FirstVsLastLeagueSectionProps> = ({
         actionTo={actionTo}
         meta={
           <span className={styles['lfb-meta-text']}>
-            League {index + 1} of {items.length}
+            League {index + 1} of {populatedItems.length}
           </span>
         }
       >
@@ -192,35 +215,32 @@ const FirstVsLastLeagueSection: React.FC<FirstVsLastLeagueSectionProps> = ({
                   aria-label="Previous first-v-last league"
                   className={styles['lfb-carousel-btn']}
                   onClick={handlePrev}
-                  disabled={items.length <= 1}
+                  disabled={populatedItems.length <= 1}
                 >
                   ‹
                 </button>
-                <span className={styles['lfb-carousel-index']}>{index + 1}/{items.length}</span>
+                <span className={styles['lfb-carousel-index']}>{index + 1}/{populatedItems.length}</span>
                 <button
                   type="button"
                   aria-label="Next first-v-last league"
                   className={styles['lfb-carousel-btn']}
                   onClick={handleNext}
-                  disabled={items.length <= 1}
+                  disabled={populatedItems.length <= 1}
                 >
                   ›
                 </button>
               </div>
             </div>
 
-            {!activeItem.leader || !activeItem.bottom ? (
-              <div className={styles['lfb-empty-state']}>
-                No first-versus-last comparison is available for this league right now.
-              </div>
-            ) : (
+            {activeItem.leader && activeItem.bottom && (
               <>
                 <div className={styles['lfb-compare-grid']}>
                   <ComparisonCard row={activeItem.leader} variant="leader" label="League leader" />
                   <ComparisonCard row={activeItem.bottom} variant="bottom" label="Bottom club" />
                 </div>
 
-                <div className={styles['lfb-spotlight-section']}>
+                {spotlightPlayers.length > 0 && (
+                  <div className={styles['lfb-spotlight-section']}>
                   <div className={styles['lfb-row-split']}>
                     <div className={styles['lfb-compact-title']}>Spotlight players</div>
                     <div className={styles['lfb-meta-text']}>
@@ -228,21 +248,16 @@ const FirstVsLastLeagueSection: React.FC<FirstVsLastLeagueSectionProps> = ({
                     </div>
                   </div>
 
-                  {activeItem.spotlight_players.length === 0 ? (
-                    <div className={styles['lfb-empty-state']}>
-                      No spotlight players are available for this league right now.
-                    </div>
-                  ) : (
-                    <div className={styles['lfb-spotlight-grid']}>
-                      {activeItem.spotlight_players.map((spotlight, spotlightIdx) => (
+                  <div className={styles['lfb-spotlight-grid']}>
+                      {spotlightPlayers.map((spotlight, spotlightIdx) => (
                         <SpotlightCard
                           key={`${activeItem.competition.id}-${spotlight.player.id ?? spotlightIdx}`}
                           item={spotlight}
                         />
                       ))}
                     </div>
-                  )}
                 </div>
+                )}
               </>
             )}
 

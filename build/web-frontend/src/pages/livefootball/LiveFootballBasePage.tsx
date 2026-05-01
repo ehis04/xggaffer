@@ -94,7 +94,6 @@ const LiveFootballBasePage: React.FC = () => {
                 updatedAt={overview.top_performing_teams.updated_at}
                 items={overview.top_performing_teams.items}
                 variant="team"
-                emptyMessage="No top performing team cards are available right now."
               />
 
               <TrendSection
@@ -105,7 +104,6 @@ const LiveFootballBasePage: React.FC = () => {
                 updatedAt={overview.top_performing_scorers.updated_at}
                 items={overview.top_performing_scorers.items}
                 variant="player"
-                emptyMessage="No top performing scorer cards are available right now."
               />
 
               <TrendSection
@@ -116,7 +114,6 @@ const LiveFootballBasePage: React.FC = () => {
                 updatedAt={overview.latest_hat_tricks.updated_at}
                 items={overview.latest_hat_tricks.items}
                 variant="player"
-                emptyMessage="No recent hat-trick cards are available right now."
               />
 
               <TrendSection
@@ -127,7 +124,6 @@ const LiveFootballBasePage: React.FC = () => {
                 updatedAt={overview.strikers_with_a_lull.updated_at}
                 items={overview.strikers_with_a_lull.items}
                 variant="player"
-                emptyMessage="No striker lull cards are available right now."
               />
 
               <LeagueMatchesSection
@@ -137,7 +133,6 @@ const LiveFootballBasePage: React.FC = () => {
                 actionTo="/livefootball/matches"
                 groups={overview.recent_matches_by_league}
                 tab="recent"
-                emptyMessage="No recent match groups are available right now."
               />
 
               <LeagueMatchesSection
@@ -147,7 +142,6 @@ const LiveFootballBasePage: React.FC = () => {
                 actionTo="/livefootball/matches"
                 groups={overview.upcoming_matches_by_league}
                 tab="upcoming"
-                emptyMessage="No upcoming match groups are available right now."
               />
 
               <FirstVsLastLeagueSection
@@ -156,7 +150,6 @@ const LiveFootballBasePage: React.FC = () => {
                 actionLabel="View leagues"
                 actionTo="/livefootball/leagues"
                 items={overview.first_vs_last_by_league}
-                emptyMessage="No first-versus-last league comparisons are available right now."
               />
             </>
           )}

@@ -28,6 +28,23 @@ const formatSyncedAt = (value?: string | null): string | null => {
   return date.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
 };
 
+const hasTeamName = (row: LiveFootballLeagueSnapshotCard['top_rows'][number]): boolean =>
+  Boolean((row.team.short_name || row.team.name || '').trim());
+
+const hasPopulatedSnapshotRow = (row: LiveFootballLeagueSnapshotCard['top_rows'][number]): boolean =>
+  hasTeamName(row)
+  && row.position !== null
+  && row.position !== undefined
+  && row.played !== null
+  && row.played !== undefined
+  && row.goal_difference !== null
+  && row.goal_difference !== undefined
+  && row.points !== null
+  && row.points !== undefined;
+
+const hasCompleteSnapshot = (card: LiveFootballLeagueSnapshotCard): boolean =>
+  card.top_rows.some(hasPopulatedSnapshotRow) && card.bottom_rows.some(hasPopulatedSnapshotRow);
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -37,31 +54,32 @@ interface Props {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const RotatingLeaguePreviewCard: React.FC<Props> = ({ cards }) => {
+  const populatedCards = cards.filter(hasCompleteSnapshot);
   const [index, setIndex]               = useState(0);
   const [timerResetKey, setTimerResetKey] = useState(0);
   const pausedRef                        = useRef(false);
 
   useEffect(() => {
-    if (index > cards.length - 1) setIndex(0);
-  }, [cards, index]);
+    if (index > populatedCards.length - 1) setIndex(0);
+  }, [populatedCards.length, index]);
 
   useEffect(() => {
-    if (cards.length <= 1) return;
+    if (populatedCards.length <= 1) return;
     const interval = window.setInterval(() => {
-      if (!pausedRef.current) setIndex((c) => (c + 1) % cards.length);
+      if (!pausedRef.current) setIndex((c) => (c + 1) % populatedCards.length);
     }, AUTO_ROTATE_MS);
     return () => window.clearInterval(interval);
-  }, [cards, timerResetKey]);
+  }, [populatedCards.length, timerResetKey]);
 
-  if (cards.length === 0) return null;
+  if (populatedCards.length === 0) return null;
 
-  const activeCard   = cards[index];
+  const activeCard   = populatedCards[index];
   const syncedAtLabel = formatSyncedAt(activeCard.synced_at);
   const actionTo     = buildLiveFootballLink(activeCard.cta.path, activeCard.cta.query);
 
   const resetTimer = () => setTimerResetKey((k) => k + 1);
-  const handlePrev = () => { setIndex((c) => (c - 1 + cards.length) % cards.length); resetTimer(); };
-  const handleNext = () => { setIndex((c) => (c + 1) % cards.length); resetTimer(); };
+  const handlePrev = () => { setIndex((c) => (c - 1 + populatedCards.length) % populatedCards.length); resetTimer(); };
+  const handleNext = () => { setIndex((c) => (c + 1) % populatedCards.length); resetTimer(); };
 
   return (
     <div
@@ -75,8 +93,8 @@ const RotatingLeaguePreviewCard: React.FC<Props> = ({ cards }) => {
         actionTo={actionTo}
         meta={
           <span className={styles['lfb-meta-text']}>
-            {cards.length > 1
-              ? `League ${index + 1} of ${cards.length}`
+            {populatedCards.length > 1
+              ? `League ${index + 1} of ${populatedCards.length}`
               : 'Single league preview'}
             {syncedAtLabel ? ` • Updated ${syncedAtLabel}` : ''}
           </span>
@@ -100,7 +118,7 @@ const RotatingLeaguePreviewCard: React.FC<Props> = ({ cards }) => {
                   </div>
                 </div>
 
-                {cards.length > 1 && (
+                {populatedCards.length > 1 && (
                   <div className={styles['lfb-carousel-controls']}>
                     <button
                       type="button"
@@ -111,7 +129,7 @@ const RotatingLeaguePreviewCard: React.FC<Props> = ({ cards }) => {
                       ‹
                     </button>
                     <span className={styles['lfb-carousel-index']}>
-                      {index + 1}/{cards.length}
+                      {index + 1}/{populatedCards.length}
                     </span>
                     <button
                       type="button"
@@ -131,10 +149,10 @@ const RotatingLeaguePreviewCard: React.FC<Props> = ({ cards }) => {
                 <div className={styles['lfb-snapshot-column']}>
                   <div className={styles['lfb-inline-pill']}>Top 3</div>
                   {activeCard.top_rows.length === 0 ? (
-                    <div className={styles['lfb-empty-state']}>No top-row preview available.</div>
+                    null
                   ) : (
                     <div className={styles['lfb-snapshot-list']}>
-                      {activeCard.top_rows.map((row) => (
+                      {activeCard.top_rows.filter(hasPopulatedSnapshotRow).map((row) => (
                         <div
                           key={`top-${row.team.id ?? row.team.name}-${row.position ?? 'na'}`}
                           className={styles['lfb-snapshot-row']}
@@ -159,10 +177,10 @@ const RotatingLeaguePreviewCard: React.FC<Props> = ({ cards }) => {
                 <div className={styles['lfb-snapshot-column']}>
                   <div className={styles['lfb-inline-pill']}>Bottom 3</div>
                   {activeCard.bottom_rows.length === 0 ? (
-                    <div className={styles['lfb-empty-state']}>No bottom-row preview available.</div>
+                    null
                   ) : (
                     <div className={styles['lfb-snapshot-list']}>
-                      {activeCard.bottom_rows.map((row) => (
+                      {activeCard.bottom_rows.filter(hasPopulatedSnapshotRow).map((row) => (
                         <div
                           key={`bottom-${row.team.id ?? row.team.name}-${row.position ?? 'na'}`}
                           className={styles['lfb-snapshot-row']}

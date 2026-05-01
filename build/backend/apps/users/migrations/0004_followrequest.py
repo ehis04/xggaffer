@@ -41,6 +41,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='followrequest',
-            constraint=models.CheckConstraint(condition=models.Q(('follower', models.F('following')), _negated=True), name='prevent_self_follow_request'),
+            constraint=models.CheckConstraint(check=~models.Q(follower=models.F('following')), name='prevent_self_follow_request'),
         ),
     ]

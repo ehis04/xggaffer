@@ -202,15 +202,11 @@
 
 .articleImage {
   height: 104px;
-  display: grid;
-  place-items: center;
   overflow: hidden;
   border-radius: 10px;
   background:
     repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.035) 0 10px, transparent 10px 20px),
     #10251f;
-  color: #8ba69c;
-  font-size: 13px;
 }
 
 .articleImage img {

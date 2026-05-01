@@ -107,6 +107,18 @@ const calendarToUpdate = (item: ClubCalendarFeedItem): ClubUpdateItem | null => 
   };
 };
 
+const HomeArticleImage = ({ src }: { src?: string | null }) => {
+  const [failed, setFailed] = useState(false);
+
+  if (!src || failed) return null;
+
+  return (
+    <div className={styles.articleImage}>
+      <img src={src} alt="" onError={() => setFailed(true)} />
+    </div>
+  );
+};
+
 const HomePage = () => {
   const navigate = useNavigate();
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -283,9 +295,7 @@ const HomePage = () => {
                   className={styles.articleCard}
                   onClick={() => navigate(`/articles/${article.id}`)}
                 >
-                  <div className={styles.articleImage}>
-                    {article.image_url ? <img src={article.image_url} alt="" /> : <span>article image</span>}
-                  </div>
+                  <HomeArticleImage src={article.image_url} />
                   <div className={styles.articleMeta}>
                     <span className={styles.topicPill}>{article.topics[0]?.name ?? "Analysis"}</span>
                     <span>{article.site.name}</span>

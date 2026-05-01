@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { TeamSwitcher } from '../../common/components/TeamSwitcher';
 import { FreshnessBadge } from '../../common/components/FreshnessBadge';
 import { SectionSkeleton } from '../../common/components/SectionSkeleton';
 import NullStatePlaceholder from '../../components/widgets/NullStatePlaceholder';
@@ -60,6 +61,7 @@ function normaliseTeamName(name: string): string {
 export default function SquadIntelligenceHub() {
   const { teamSlug = '' } = useParams<{ teamSlug: string }>();
   const teamName = decodeURIComponent(teamSlug);
+  const navigate = useNavigate();
 
   const [fixtures, setFixtures] = useState<FixtureOption[]>([]);
   const [fixturesLoading, setFixturesLoading] = useState(true);
@@ -211,6 +213,13 @@ export default function SquadIntelligenceHub() {
         <h1 className={styles.title}>{teamName}</h1>
         <p className={styles.subtitle}>Squad Intelligence</p>
       </header>
+
+      <div className={styles.content}>
+        <TeamSwitcher
+          currentTeam={teamName}
+          onSelect={team => navigate(`/squad/${encodeURIComponent(team)}`)}
+        />
+      </div>
 
       {fixturesLoading && <SectionSkeleton rows={2} />}
 

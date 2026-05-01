@@ -29,7 +29,7 @@ const formatUpdatedAt = (value?: string | null): string | null => {
 
 const formatFormLabel = (value?: string | null): string => {
   const cleaned = (value || '').trim().replace(/\s*,\s*/g, '-');
-  return cleaned || 'No form data';
+  return cleaned;
 };
 
 const getFormTokens = (value?: string | null): string[] => {
@@ -51,6 +51,28 @@ const hasPlayer = (
   item: LiveFootballTrendTeamCard | LiveFootballTrendPlayerCard,
 ): item is LiveFootballTrendPlayerCard => 'player' in item;
 
+const hasVisibleTeamCardData = (item: LiveFootballTrendTeamCard): boolean =>
+  Boolean((item.team.short_name || item.team.name || '').trim())
+  && Boolean((item.competition.name || '').trim())
+  && Boolean((item.summary || '').trim())
+  && Boolean((item.metric_label || '').trim())
+  && Boolean((item.metric_value || '').trim());
+
+const hasVisiblePlayerCardData = (item: LiveFootballTrendPlayerCard): boolean =>
+  Boolean((item.player.short_name || item.player.name || '').trim())
+  && Boolean((item.team.short_name || item.team.name || '').trim())
+  && Boolean((item.summary || '').trim());
+
+const hasVisibleTrendCardData = (
+  item: LiveFootballTrendTeamCard | LiveFootballTrendPlayerCard,
+  variant: 'team' | 'player',
+): boolean => {
+  if (variant === 'team') {
+    return !hasPlayer(item) && hasVisibleTeamCardData(item as LiveFootballTrendTeamCard);
+  }
+  return hasPlayer(item) && hasVisiblePlayerCardData(item);
+};
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -60,7 +82,6 @@ interface Props {
   actionTo: string;
   items: Array<LiveFootballTrendTeamCard | LiveFootballTrendPlayerCard>;
   updatedAt?: string | null;
-  emptyMessage: string;
   variant?: 'team' | 'player';
 }
 
@@ -73,10 +94,12 @@ const TrendSection: React.FC<Props> = ({
   actionTo,
   items,
   updatedAt,
-  emptyMessage,
   variant = 'player',
 }) => {
   const updatedAtLabel = formatUpdatedAt(updatedAt);
+  const populatedItems = items.filter((item) => hasVisibleTrendCardData(item, variant));
+
+  if (populatedItems.length === 0) return null;
 
   return (
     <SectionFrame
@@ -90,14 +113,12 @@ const TrendSection: React.FC<Props> = ({
         ) : undefined
       }
     >
-      {items.length === 0 ? (
-        <div className={styles['lfb-empty-state']}>{emptyMessage}</div>
-      ) : (
-        <div className={styles['lfb-trend-grid']}>
-          {items.map((item, i) => {
+      <div className={styles['lfb-trend-grid']}>
+          {populatedItems.map((item, i) => {
             const ctaTo = item.cta
               ? buildLiveFootballLink(item.cta.path, item.cta.query)
               : null;
+            const formTokens = getFormTokens((item as LiveFootballTrendTeamCard).form_label);
 
             return (
               <article key={i} className={`${styles['lfb-info-card']} ${styles['lfb-card-fill']}`}>
@@ -117,24 +138,20 @@ const TrendSection: React.FC<Props> = ({
                       )}
                     </div>
 
-                    {getFormTokens((item as LiveFootballTrendTeamCard).form_label).length > 0 ? (
+                    {formTokens.length > 0 && (
                       <div
                         className={styles['lfb-form-pill-row']}
                         aria-label={`Recent form ${formatFormLabel((item as LiveFootballTrendTeamCard).form_label)}`}
                       >
                         <span className={styles['lfb-meta-text']}>Recent form</span>
                         <div className={styles['lfb-form-pill-list']}>
-                          {getFormTokens((item as LiveFootballTrendTeamCard).form_label).map(
-                            (token, tokenIdx) => (
-                              <span key={`${i}-${token}-${tokenIdx}`} className={formPillClass(token)}>
-                                {token}
-                              </span>
-                            ),
-                          )}
+                          {formTokens.map((token, tokenIdx) => (
+                            <span key={`${i}-${token}-${tokenIdx}`} className={formPillClass(token)}>
+                              {token}
+                            </span>
+                          ))}
                         </div>
                       </div>
-                    ) : (
-                      <div className={styles['lfb-meta-text']}>Recent form: No form data</div>
                     )}
                   </>
                 ) : hasPlayer(item) ? (
@@ -170,7 +187,6 @@ const TrendSection: React.FC<Props> = ({
             );
           })}
         </div>
-      )}
     </SectionFrame>
   );
 };

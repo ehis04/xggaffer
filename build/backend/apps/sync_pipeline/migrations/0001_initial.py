@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'indexes': [models.Index(fields=['surface', 'is_active'], name='sync_pipeli_surface_a88a83_idx')],
-                'constraints': [models.UniqueConstraint(fields=('surface',), name='uniq_active_snapshot_per_surface')],
+                'constraints': [models.UniqueConstraint(condition=models.Q(('is_active', True)), fields=('surface',), name='uniq_active_snapshot_per_surface')],
             },
         ),
         migrations.CreateModel(

@@ -45,6 +45,18 @@ const isFinishedStatus = (value?: string | null): boolean => {
   return ['FINISHED', 'AWARDED', 'AFTER_EXTRA_TIME', 'PENALTY_SHOOTOUT'].includes(raw);
 };
 
+const hasTeamName = (team: LiveFootballLeagueMatchPreview['items'][number]['home_team']): boolean =>
+  Boolean((team.short_name || team.name || '').trim());
+
+const hasVisibleMatchData = (match: LiveFootballLeagueMatchPreview['items'][number]): boolean =>
+  hasTeamName(match.home_team) && hasTeamName(match.away_team);
+
+const getPopulatedItems = (group: LiveFootballLeagueMatchPreview) =>
+  group.items.filter(hasVisibleMatchData);
+
+const hasVisibleMatchGroup = (group: LiveFootballLeagueMatchPreview): boolean =>
+  Boolean((group.competition.name || '').trim()) && getPopulatedItems(group).length > 0;
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface LeagueMatchesSectionProps {
@@ -54,7 +66,6 @@ interface LeagueMatchesSectionProps {
   actionTo?: string;
   groups: LiveFootballLeagueMatchPreview[];
   tab: 'recent' | 'upcoming';
-  emptyMessage: string;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -66,28 +77,23 @@ const LeagueMatchesSection: React.FC<LeagueMatchesSectionProps> = ({
   actionTo,
   groups,
   tab,
-  emptyMessage,
 }) => {
+  const populatedGroups = groups.filter(hasVisibleMatchGroup);
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    if (index > groups.length - 1) setIndex(0);
-  }, [groups, index]);
+    if (index > populatedGroups.length - 1) setIndex(0);
+  }, [populatedGroups.length, index]);
 
-  if (groups.length === 0) {
-    return (
-      <SectionFrame title={title} subtitle={subtitle} actionLabel={actionLabel} actionTo={actionTo}>
-        <div className={styles['lfb-empty-state']}>{emptyMessage}</div>
-      </SectionFrame>
-    );
-  }
+  if (populatedGroups.length === 0) return null;
 
-  const activeGroup    = groups[index];
+  const activeGroup    = populatedGroups[index];
+  const activeItems    = getPopulatedItems(activeGroup);
   const syncedAtLabel  = formatSyncedAt(activeGroup.synced_at);
   const groupActionTo  = buildLiveFootballLink(activeGroup.cta.path, activeGroup.cta.query);
 
-  const handlePrev = () => setIndex((c) => (c - 1 + groups.length) % groups.length);
-  const handleNext = () => setIndex((c) => (c + 1) % groups.length);
+  const handlePrev = () => setIndex((c) => (c - 1 + populatedGroups.length) % populatedGroups.length);
+  const handleNext = () => setIndex((c) => (c + 1) % populatedGroups.length);
 
   return (
     <SectionFrame
@@ -96,7 +102,7 @@ const LeagueMatchesSection: React.FC<LeagueMatchesSectionProps> = ({
       actionLabel={actionLabel}
       actionTo={actionTo}
       meta={
-        <span className={styles['lfb-meta-text']}>League {index + 1} of {groups.length}</span>
+        <span className={styles['lfb-meta-text']}>League {index + 1} of {populatedGroups.length}</span>
       }
     >
       <div className={styles['lfb-carousel-shell']}>
@@ -118,17 +124,17 @@ const LeagueMatchesSection: React.FC<LeagueMatchesSectionProps> = ({
                 aria-label={`Previous ${tab} league`}
                 className={styles['lfb-carousel-btn']}
                 onClick={handlePrev}
-                disabled={groups.length <= 1}
+                disabled={populatedGroups.length <= 1}
               >
                 ‹
               </button>
-              <span className={styles['lfb-carousel-index']}>{index + 1}/{groups.length}</span>
+              <span className={styles['lfb-carousel-index']}>{index + 1}/{populatedGroups.length}</span>
               <button
                 type="button"
                 aria-label={`Next ${tab} league`}
                 className={styles['lfb-carousel-btn']}
                 onClick={handleNext}
-                disabled={groups.length <= 1}
+                disabled={populatedGroups.length <= 1}
               >
                 ›
               </button>
@@ -136,13 +142,8 @@ const LeagueMatchesSection: React.FC<LeagueMatchesSectionProps> = ({
           </div>
 
           {/* Match list */}
-          {activeGroup.items.length === 0 ? (
-            <div className={styles['lfb-empty-state']}>
-              No {tab} matches available for this league right now.
-            </div>
-          ) : (
-            <div className={styles['lfb-match-list']}>
-              {activeGroup.items.map((match, matchIndex) => {
+          <div className={styles['lfb-match-list']}>
+              {activeItems.map((match, matchIndex) => {
                 const kickoffLabel = formatKickoff(match.utc_date);
                 const fixtureLabel = `${match.home_team.name} vs ${match.away_team.name}`;
                 const statusLabel  = normaliseStatusLabel(match.status);
@@ -193,7 +194,6 @@ const LeagueMatchesSection: React.FC<LeagueMatchesSectionProps> = ({
                 );
               })}
             </div>
-          )}
 
           {/* Footer */}
           <div className={styles['lfb-match-section-footer']}>
