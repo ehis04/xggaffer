@@ -1,5 +1,7 @@
 import { roleColors, statusColors } from "../../pages/coaching/clubs/MyClubsPage";
 import type { MiniClubCardProps } from "../../pages/coaching/clubs/MyClubsPage";
+import { SharePostButton } from "../Social/SharePostButton";
+import { buildClubSharePost } from "../Social/shareTemplates";
 import styles from '../../pages/coaching/clubs/css/MyClubsPage.module.css'
 
 export const MiniClubCard: React.FC<MiniClubCardProps> = ({
@@ -90,6 +92,17 @@ export const MiniClubCard: React.FC<MiniClubCardProps> = ({
           <span className={styles.miniCardStatLbl}>SESSIONS</span>
         </div>
       </div>
+
+      {!isTrashView && (
+        <div
+          className={styles.miniCardActions}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <SharePostButton textBody={buildClubSharePost(club)}>
+            Share club
+          </SharePostButton>
+        </div>
+      )}
 
       {isTrashView && (
         <div

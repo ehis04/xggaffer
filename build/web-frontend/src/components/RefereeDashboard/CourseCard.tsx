@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { ActiveCourseProgress } from "./ActiveCourseProgress";
+import { SharePostButton } from "../Social/SharePostButton";
+import { buildLawCourseCompletedPost } from "../Social/shareTemplates";
 import "./css/CourseCard.css";
 import type {
   CourseStatus,
@@ -103,7 +105,6 @@ export const CourseCard = ({ course }: LawCourseCardProps) => {
         {/* ── Hover panel ── */}
         <div
           className={`course-card-hover course-card-hover--${course.status}`}
-          aria-hidden="true"
         >
           <span className="cc-hover-law">Law {course.law_number}</span>
           <p className="cc-hover-title">{course.title}</p>
@@ -118,9 +119,18 @@ export const CourseCard = ({ course }: LawCourseCardProps) => {
           )}
 
           {course.status === "completed" && (
-            <span className="cc-hover-complete-note">
-              {course.clauses_read} / {course.total_clauses} clauses read
-            </span>
+            <>
+              <span className="cc-hover-complete-note">
+                {course.clauses_read} / {course.total_clauses} clauses read
+              </span>
+              <SharePostButton
+                className="cc-share-button"
+                textBody={buildLawCourseCompletedPost(course)}
+                title={`Share Law ${course.law_number} completion`}
+              >
+                Share completion
+              </SharePostButton>
+            </>
           )}
         </div>
 

@@ -29,6 +29,7 @@ export const COMMUNITY = {
   DELETE_POST:            (postId: number) => `/community/my-post/${postId}/`,
   DELETE_COMMENT:         (commentId: number) => `/community/my-comment/${commentId}/`,
   LIKE_POST:              (postId: number) => `/community/posts/${postId}/like/`,
+  REPORT_POST:            (postId: number) => `/community/posts/${postId}/report/`,
   POST_COMMENTS:          (postId: number) => `/community/posts/${postId}/comments/`,
   CREATE_COMMENT:         (postId: number) => `/community/post/${postId}/create/comment/`,
   LIKE_COMMENT:           (commentId: number) => `/community/comment/${commentId}/like/`,

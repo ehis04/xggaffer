@@ -77,8 +77,10 @@ export interface NotificationItem {
   created_at: string;
   triggered_by: Author;
   target_kind: 'post' | 'comment' | 'followrequest' | null;
+  target_id: number | null;
   post_id: number | null;
   comment_id: number | null;
+  follow_request_status: 'P' | 'A' | 'D' | null;
 }
 
 export interface NotificationsParams {
@@ -148,6 +150,14 @@ export const communityApi = {
     apiClient.post<{ liked: boolean; no_of_likes: number }>(
       `/community/posts/${postId}/like/`
     ),
+
+  reportPost: (postId: number, reason = '') =>
+    apiClient.post<{
+      detail: string;
+      created: boolean;
+      report_count: number;
+      moderation_status: 'OK' | 'UR' | 'R';
+    }>(COMMUNITY.REPORT_POST(postId), { reason }),
 
   getPostComments: (postId: number) =>
     apiClient.get<Comment[]>(`/community/posts/${postId}/comments/`),

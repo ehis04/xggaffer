@@ -30,6 +30,7 @@ export interface UserProfileResponse {
   }>;
   is_following: boolean;
   followed_by: boolean;
+  follow_request_pending?: boolean;
 }
 
 export const usersApi = {
@@ -63,13 +64,33 @@ export const usersApi = {
     apiClient.get<Array<{ id: number; role: string; role_display: string; created_at: string }>>('/users/profile/role/'),
 
   followUser: (username: string) =>
-    apiClient.post<{ message: string; following: boolean }>(`/users/profile/${username}/follow/`),
+    apiClient.post<{
+      message: string;
+      following: boolean;
+      follow_request_pending?: boolean;
+      follow_request_id?: number;
+    }>(`/users/profile/${username}/follow/`),
 
   unfollowUser: (username: string) =>
-    apiClient.delete<{ message: string; following: boolean }>(`/users/profile/${username}/follow/`),
+    apiClient.delete<{ message: string; following: boolean; follow_request_pending?: boolean }>(`/users/profile/${username}/follow/`),
 
   getFollowStatus: (username: string) =>
-    apiClient.get<{ is_following: boolean; followed_by: boolean; username: string }>(`/users/profile/${username}/follow-status/`),
+    apiClient.get<{
+      is_following: boolean;
+      followed_by: boolean;
+      follow_request_pending: boolean;
+      username: string;
+    }>(`/users/profile/${username}/follow-status/`),
+
+  acceptFollowRequest: (requestId: number) =>
+    apiClient.post<{ message: string; status: 'A' | 'P' | 'D' }>(
+      `/users/follow-requests/${requestId}/accept/`
+    ),
+
+  declineFollowRequest: (requestId: number) =>
+    apiClient.post<{ message: string; status: 'A' | 'P' | 'D' }>(
+      `/users/follow-requests/${requestId}/decline/`
+    ),
 
   getFollowers: (username: string) =>
     apiClient.get<UserProfileResponse[]>(`/users/profile/${username}/followers/`),

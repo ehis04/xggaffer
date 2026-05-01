@@ -9,6 +9,8 @@ import StyleProfileCard from '../../components/widgets/StyleProfileCard';
 import { fetchTacticalWidget } from '../../services/api/widgetApi';
 import type { TacticalWidgetPayload } from '../../services/api/widgetApi';
 import styles from './css/TacticalScoutingDashboard.module.css';
+import { Sidebar } from '../../components/Navigation/SideBar';
+import { SocialUserButtons } from '../../components/Social/SocialUserButtons';
 
 export default function TacticalScoutingDashboard() {
   const { teamSlug = '' } = useParams<{ teamSlug: string }>();
@@ -44,6 +46,19 @@ export default function TacticalScoutingDashboard() {
 
   return (
     <div className={styles.page}>
+      <div className={styles.Sidebar}>
+        <Sidebar />
+      </div>
+
+      <div className={styles.base}>
+        <header className={styles.Header}>
+          <div className={styles.Left}>Odds Comparisson</div>
+          <div className={styles.Middle}></div>
+          <div className={styles.Right}>
+            <SocialUserButtons />
+          </div>
+        </header>
+
       <header className={styles.header}>
         <h1 className={styles.title}>{teamName}</h1>
         {freshness && <FreshnessBadge freshness={freshness} />}
@@ -72,6 +87,7 @@ export default function TacticalScoutingDashboard() {
           <ZoneHeatmap zoneProfiles={tacticalData.zone_profiles} team={teamName} />
         </div>
       )}
+      </div>
     </div>
   );
 }

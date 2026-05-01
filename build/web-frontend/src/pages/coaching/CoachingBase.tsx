@@ -4,7 +4,7 @@ import styles from "./css/CoachingBase.module.css";
 import { Sidebar } from "../../components/Navigation/SideBar";
 import { SocialUserButtons } from "../../components/Social/SocialUserButtons";
 
-interface Section {
+export interface Section {
   icon: ReactElement;
   title: string;
   description: string;
@@ -12,7 +12,7 @@ interface Section {
   path: string;
 }
 
-const clubIcon = (
+export const clubIcon = (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
@@ -25,7 +25,7 @@ const clubIcon = (
   </svg>
 );
 
-const searchIcon = (
+export const searchIcon = (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
@@ -38,7 +38,7 @@ const searchIcon = (
   </svg>
 );
 
-const playerIcon = (
+export const playerIcon = (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
@@ -52,7 +52,7 @@ const playerIcon = (
   </svg>
 );
 
-const compareIcon = (
+export const compareIcon = (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
@@ -66,7 +66,7 @@ const compareIcon = (
   </svg>
 );
 
-const predictionsIcon = (
+export const predictionsIcon = (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"

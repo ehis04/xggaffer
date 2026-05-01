@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, UserProfile, UserRole, Follow, Visibility
+from .models import User, UserProfile, UserRole, Follow, FollowRequest, FollowRequestStatus, Visibility
 from django.contrib.auth import get_user_model
 from apps.community.models import ModerationStatus, Post
 
@@ -64,6 +64,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     roles = UserRoleSerializer(many=True, read_only=True)
     is_following = serializers.SerializerMethodField()
     followed_by = serializers.SerializerMethodField()
+    follow_request_pending = serializers.SerializerMethodField()
     active_role_display = serializers.CharField(source='get_active_role_display', read_only=True)
     posts_count = serializers.SerializerMethodField()
     profile_image = serializers.SerializerMethodField()
@@ -74,7 +75,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'display_name', 'profile_image', 'bio', 'gender',
                   'date_of_birth', 'visibility', 'followers_count', 
                   'following_count', 'created_at', 'updated_at', 
-                  'roles', 'active_role', 'active_role_display', 'is_following', 'followed_by','posts_count']
+                  'roles', 'active_role', 'active_role_display', 'is_following',
+                  'followed_by', 'follow_request_pending', 'posts_count']
         read_only_fields = [
             'id', 'user', 'followers_count', 'following_count', 'created_at', 'updated_at', 'posts_count',
             'active_role', 'active_role_display'
@@ -114,6 +116,22 @@ class UserProfileSerializer(serializers.ModelSerializer):
         try:
             requester_profile = request.user.profile
             return Follow.objects.filter(follower=obj, following=requester_profile).exists()
+        except UserProfile.DoesNotExist:
+            return False
+
+    def get_follow_request_pending(self, obj):
+        request = self.context.get('request')
+
+        if not request or not request.user.is_authenticated:
+            return False
+
+        try:
+            requester_profile = request.user.profile
+            return FollowRequest.objects.filter(
+                follower=requester_profile,
+                following=obj,
+                status=FollowRequestStatus.PENDING,
+            ).exists()
         except UserProfile.DoesNotExist:
             return False
         

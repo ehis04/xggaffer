@@ -36,6 +36,8 @@ import ZoneHeatmap from '../../components/widgets/ZoneHeatmap';
 import StyleProfileCard from '../../components/widgets/StyleProfileCard';
 import { fetchTacticalWidget } from '../../services/api/widgetApi';
 import type { TacticalWidgetPayload } from '../../services/api/widgetApi';
+import { Sidebar } from '../../components/Navigation/SideBar';
+import { SocialUserButtons } from '../../components/Social/SocialUserButtons';
 
 const DEFAULT_LEAGUE = 'EPL';
 const COVERAGE_NOTICE = 'Tactical analysis powered by StatsBomb Open Data. Full profile available for La Liga teams only.' as const;
@@ -306,6 +308,20 @@ export default function MatchIntelligenceHub() {
   if (!fixtureResolved) {
     return (
       <div className={styles.page}>
+        <div className={styles.Sidebar}>
+          <Sidebar />
+        </div>
+
+        <div className={styles.base}>
+          <header className={styles.Header}>
+            <div className={styles.Left}>Odds Comparisson</div>
+            <div className={styles.Middle}></div>
+            <div className={styles.Right}>
+              <SocialUserButtons />
+            </div>
+          </header>
+
+          <div className={styles.emptyState}>
         <NullStatePlaceholder
           icon="chart"
           message="Fixture not found"
@@ -313,6 +329,8 @@ export default function MatchIntelligenceHub() {
         <Link to="/predictions/odds" className={styles.backLink}>
           ← Back to odds
         </Link>
+          </div>
+        </div>
       </div>
     );
   }
@@ -332,6 +350,19 @@ export default function MatchIntelligenceHub() {
 
   return (
     <div className={styles.page}>
+      <div className={styles.Sidebar}>
+        <Sidebar />
+      </div>
+
+      <div className={styles.base}>
+        <header className={styles.Header}>
+          <div className={styles.Left}>Odds Comparisson</div>
+          <div className={styles.Middle}></div>
+          <div className={styles.Right}>
+            <SocialUserButtons />
+          </div>
+        </header>
+
       <header className={styles.header}>
         <h1 className={styles.title}>
           {homeTeam} vs {awayTeam}
@@ -509,6 +540,7 @@ export default function MatchIntelligenceHub() {
           )}
         </section>
 
+      </div>
       </div>
     </div>
   );

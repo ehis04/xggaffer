@@ -1,7 +1,16 @@
 import apiClient from "../../services/api/client";
-import { COMMUNITY } from "../../services/api/endpoints";
+import { COMMUNITY, REFEREE } from "../../services/api/endpoints";
+import { clubsApi } from "../../services/api";
+import { useAuth } from "../../context/useAuth";
+import {
+  buildClubSharePost,
+  buildLawCourseCompletedPost,
+} from "../Social/shareTemplates";
 import "./css/CreatePost.css";
 import { useState } from "react";
+import type { Club } from "../../types/club";
+import type { DashboardData } from "../../pages/referee/types/RefereeTypes";
+import type { LawCourse } from "../RefereeDashboard/types/RefereeDashboardTypes";
 
 interface CreatePostProps {
   onPost?: (content: string) => void;
@@ -14,10 +23,19 @@ export const CreatePost = ({
   placeholder = "Start Typing...",
   maxLength = 400,
 }: CreatePostProps) => {
+  const { user } = useAuth();
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [visibility, setVisibility] = useState<"PB" | "F" | "PR">("PB");
+  const [openMenu, setOpenMenu] = useState<"courses" | "clubs" | null>(null);
+  const [completedCourses, setCompletedCourses] = useState<LawCourse[]>([]);
+  const [ownedClubs, setOwnedClubs] = useState<Club[]>([]);
+  const [courseLoading, setCourseLoading] = useState(false);
+  const [clubLoading, setClubLoading] = useState(false);
+  const [courseLoadAttempted, setCourseLoadAttempted] = useState(false);
+  const [clubLoadAttempted, setClubLoadAttempted] = useState(false);
 
   const toggleVisibility = () => {
     setVisibility((prev) => {
@@ -34,7 +52,7 @@ export const CreatePost = ({
           xmlns="http://www.w3.org/2000/svg"
           width="16"
           height="16"
-          fill="currentColor"
+          fill="white"
           className="bi bi-globe2"
           viewBox="0 0 16 16"
         >
@@ -47,7 +65,7 @@ export const CreatePost = ({
           xmlns="http://www.w3.org/2000/svg"
           width="16"
           height="16"
-          fill="currentColor"
+          fill="white"
           className="bi bi-people"
           viewBox="0 0 16 16"
         >
@@ -60,7 +78,7 @@ export const CreatePost = ({
           xmlns="http://www.w3.org/2000/svg"
           width="16"
           height="16"
-          fill="currentColor"
+          fill="white"
           className="bi bi-lock"
           viewBox="0 0 16 16"
         >
@@ -89,13 +107,17 @@ export const CreatePost = ({
 
     setIsSubmitting(true);
     setError(null);
+    setNotice(null);
 
     try {
-      const data = await apiClient.post(COMMUNITY.CREATE_POST, {
+      const data = await apiClient.post<{ moderation_status?: "OK" | "UR" | "R" }>(COMMUNITY.CREATE_POST, {
           text_body: content,
           visibility: visibility,
       });
       console.log(data);
+      if (data.moderation_status === "UR") {
+        setNotice("Your post has been sent for review.");
+      }
       if (onPost) {
         onPost(content);
       }
@@ -116,6 +138,70 @@ export const CreatePost = ({
     }
   };
 
+  const useTemplate = (template: string) => {
+    if (template.length <= maxLength) {
+      setContent(template);
+      setNotice(null);
+      setOpenMenu(null);
+    } else {
+      setNotice("That template is longer than the post limit.");
+    }
+  };
+
+  const loadCompletedCourses = async () => {
+    if (courseLoadAttempted || courseLoading) return;
+
+    try {
+      setCourseLoading(true);
+      setCourseLoadAttempted(true);
+      const dashboard = await apiClient.get<DashboardData>(REFEREE.DASHBOARD);
+      setCompletedCourses(
+        dashboard.courses.filter((course) => course.status === "completed"),
+      );
+    } catch (error) {
+      console.error("Couldn't load completed courses:", error);
+      setNotice("Couldn't load your completed courses.");
+    } finally {
+      setCourseLoading(false);
+    }
+  };
+
+  const loadOwnedClubs = async () => {
+    if (clubLoadAttempted || clubLoading) return;
+
+    try {
+      setClubLoading(true);
+      setClubLoadAttempted(true);
+      const clubs = await clubsApi.myClubs();
+      setOwnedClubs(
+        clubs.filter(
+          (club) =>
+            !club.is_trashed &&
+            (club.creator === user?.id ||
+              club.creator_username === user?.username),
+        ),
+      );
+    } catch (error) {
+      console.error("Couldn't load owned clubs:", error);
+      setNotice("Couldn't load your clubs.");
+    } finally {
+      setClubLoading(false);
+    }
+  };
+
+  const toggleMenu = (menu: "courses" | "clubs") => {
+    const nextMenu = openMenu === menu ? null : menu;
+    setOpenMenu(nextMenu);
+
+    if (nextMenu === "courses") {
+      void loadCompletedCourses();
+    }
+
+    if (nextMenu === "clubs") {
+      void loadOwnedClubs();
+    }
+  };
+
   return (
     <div className="createPost-container">
       <div className="create-text-box">
@@ -127,19 +213,54 @@ export const CreatePost = ({
               onChange={handleTextAreaChange}
               disabled={isSubmitting}
             ></textarea>
+            {notice && <div className="create-post-notice">{notice}</div>}
             <div className="attachments">
-              <button type="button">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="currentColor"
-                  className="bi bi-image-alt"
-                  viewBox="0 0 16 16"
+              <div className="create-post-template-menu">
+                <button
+                  type="button"
+                  onClick={() => toggleMenu("courses")}
+                  title="Share a completed course"
+                  aria-expanded={openMenu === "courses"}
                 >
-                  <path d="M7 2.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0m4.225 4.053a.5.5 0 0 0-.577.093l-3.71 4.71-2.66-2.772a.5.5 0 0 0-.63.062L.002 13v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4.5z" />
-                </svg>
-              </button>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="white"
+                    className="bi bi-mortarboard"
+                    viewBox="0 0 16 16"
+                  >
+                    <path d="M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.917l7.5 3a.5.5 0 0 0 .372 0L14 7.14V11.5a.5.5 0 0 0 1 0V6.739l.686-.275a.5.5 0 0 0 .025-.917z" />
+                    <path d="M4.176 9.032a.5.5 0 0 0-.656.475v1.88a2 2 0 0 0 1.052 1.762l2.5 1.345a2 2 0 0 0 1.856 0l2.5-1.345a2 2 0 0 0 1.052-1.762v-1.88a.5.5 0 0 0-.656-.475l-3.638 1.455a.5.5 0 0 1-.372 0z" />
+                  </svg>
+                </button>
+                {openMenu === "courses" && (
+                  <div className="create-post-dropdown">
+                    {courseLoading && (
+                      <div className="create-post-dropdown-empty">
+                        Loading courses...
+                      </div>
+                    )}
+                    {!courseLoading && completedCourses.length === 0 && (
+                      <div className="create-post-dropdown-empty">
+                        No completed courses yet.
+                      </div>
+                    )}
+                    {!courseLoading &&
+                      completedCourses.map((course) => (
+                        <button
+                          key={course.law_number}
+                          type="button"
+                          onClick={() =>
+                            useTemplate(buildLawCourseCompletedPost(course))
+                          }
+                        >
+                          Law {course.law_number}: {course.title}
+                        </button>
+                      ))}
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={toggleVisibility}
@@ -147,18 +268,49 @@ export const CreatePost = ({
               >
                 {getVisibilityIcon()}
               </button>
-              <button type="button">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="currentColor"
-                  className="bi bi-bar-chart"
-                  viewBox="0 0 16 16"
+              <div className="create-post-template-menu">
+                <button
+                  type="button"
+                  onClick={() => toggleMenu("clubs")}
+                  title="Share one of your clubs"
+                  aria-expanded={openMenu === "clubs"}
                 >
-                  <path d="M4 11H2v3h2zm5-4H7v7h2zm5-5v12h-2V2zm-2-1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM6 7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1zm-5 4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1z" />
-                </svg>
-              </button>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="white"
+                    className="bi bi-shield"
+                    viewBox="0 0 16 16"
+                  >
+                    <path d="M5.338 1.59 8 0l2.662 1.59 3.023.337.336 3.022L16 7.612l-1.979 2.662-.336 3.022-3.023.337L8 15.223l-2.662-1.59-3.023-.337-.336-3.022L0 7.612 1.979 4.95l.336-3.022zM8 4.5a3.112 3.112 0 1 0 0 6.224A3.112 3.112 0 0 0 8 4.5" />
+                  </svg>
+                </button>
+                {openMenu === "clubs" && (
+                  <div className="create-post-dropdown">
+                    {clubLoading && (
+                      <div className="create-post-dropdown-empty">
+                        Loading clubs...
+                      </div>
+                    )}
+                    {!clubLoading && ownedClubs.length === 0 && (
+                      <div className="create-post-dropdown-empty">
+                        No owned clubs found.
+                      </div>
+                    )}
+                    {!clubLoading &&
+                      ownedClubs.map((club) => (
+                        <button
+                          key={club.id}
+                          type="button"
+                          onClick={() => useTemplate(buildClubSharePost(club))}
+                        >
+                          {club.name}
+                        </button>
+                      ))}
+                  </div>
+                )}
+              </div>
               <button
                 type="submit"
                 className="send-post"
@@ -168,7 +320,7 @@ export const CreatePost = ({
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
                   height="16"
-                  fill="currentColor"
+                  fill="white"
                   className="bi bi-arrow-up-circle-fill"
                   viewBox="0 0 16 16"
                 >

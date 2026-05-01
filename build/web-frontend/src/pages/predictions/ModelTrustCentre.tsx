@@ -16,6 +16,8 @@ import {
   PREDICTION_LEAGUE_OPTIONS,
 } from '../../utils/footballSeason';
 import styles from './css/ModelTrustCentre.module.css';
+import { Sidebar } from '../../components/Navigation/SideBar';
+import { SocialUserButtons } from '../../components/Social/SocialUserButtons';
 
 const DEFAULT_LEAGUE_FILTER = '';
 
@@ -88,6 +90,19 @@ export default function ModelTrustCentre() {
 
   return (
     <div className={styles.page}>
+      <div className={styles.Sidebar}>
+        <Sidebar />
+      </div>
+
+      <div className={styles.base}>
+        <header className={styles.Header}>
+          <div className={styles.Left}>Odds Comparisson</div>
+          <div className={styles.Middle}></div>
+          <div className={styles.Right}>
+            <SocialUserButtons />
+          </div>
+        </header>
+
       <header className={styles.header}>
         <div className={styles.headerCopy}>
           <p className={styles.kicker}>Prediction Intelligence</p>
@@ -239,6 +254,7 @@ export default function ModelTrustCentre() {
           </section>
         </div>
       )}
+      </div>
     </div>
   );
 }

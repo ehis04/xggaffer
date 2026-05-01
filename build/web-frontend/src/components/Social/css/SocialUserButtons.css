@@ -118,3 +118,45 @@
   color: #6b7280;
   font-size: 12px;
 }
+
+.notifications-follow-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.notifications-follow-action {
+  border: 1px solid var(--brand-light-green-border);
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+}
+
+.notifications-follow-action.primary {
+  background: #022a15;
+  border-color: #022a15;
+  color: #ffffff;
+}
+
+.notifications-follow-action.secondary {
+  background: #d63a3a9f;
+  color: var(--primary-text);
+}
+
+.notifications-follow-action:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.notifications-follow-reviewed {
+  display: inline-block;
+  margin-top: 10px;
+  background: transparent;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 8px;
+  margin-right: 10px;}
