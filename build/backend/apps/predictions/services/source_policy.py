@@ -21,8 +21,12 @@ MERGED_PLAYERS_CSV = DATA_ROOT / "players" / "merged" / "all_leagues_all_seasons
 MERGED_MATCHES_CSV = DATA_ROOT / "matches" / "merged" / "all_leagues_all_seasons_matches_merged.csv"
 
 
-def latest_available_season(df: pd.DataFrame, season_col: str = "season", default: str = "2024") -> str:
-    seasons = pd.to_numeric(df.get(season_col), errors="coerce").dropna().astype(int)
+def latest_available_season(df: pd.DataFrame, season_col: str = "season", default: str = "2025") -> str:
+    if season_col not in df.columns:
+        return default
+
+    season_keys = df[season_col].map(season_group_key)
+    seasons = pd.to_numeric(season_keys, errors="coerce").dropna().astype(int)
     if seasons.empty:
         return default
     return str(int(seasons.max()))
@@ -41,6 +45,23 @@ def season_tokens(season: str | int | None) -> set[str]:
 
     if len(text) == 4 and text.isdigit():
         year = int(text)
+        if 1000 <= year <= 1999 or year > 2099:
+            start_full = f"20{text[:2]}"
+            end_short = text[2:]
+            tokens.update(
+                {
+                    text,
+                    start_full,
+                    f"{start_full}{end_short}",
+                    f"{start_full}-{end_short}",
+                    f"{start_full}/{end_short}",
+                    f"{text[:2]}{end_short}",
+                    f"{text[:2]}/{end_short}",
+                    f"{text[:2]}-{end_short}",
+                }
+            )
+            return {token for token in tokens if token}
+
         start_short = str(year)[-2:]
         end_short = str(year + 1)[-2:]
         tokens.update(
@@ -83,6 +104,8 @@ def season_group_key(season: str | int | None) -> str:
         return ""
 
     digits = "".join(ch for ch in text if ch.isdigit())
+    if len(digits) == 4 and not text.startswith("20"):
+        return f"20{digits[:2]}"
     if len(digits) >= 4:
         return digits[:4]
     return text

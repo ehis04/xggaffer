@@ -149,6 +149,19 @@ def user_can_create_requested_club_type(user, club_type):
     return True
 
 
+class CanLeaveClub(BypassablePermission):
+    """Permission to leave a club. Users cannot leave if they are owner or admin."""
+    def has_object_permission(self, request, view, obj):
+        if self.should_bypass():
+            return True
+        if not request.user or not request.user.is_authenticated:
+            return False
+        # obj is the ClubMembership
+        if obj.role in [ClubMembership.Role.OWNER, ClubMembership.Role.ADMIN]:
+            return False
+        return True
+
+
 def user_can_request_player_membership(user):
     if should_bypass_permissions():
         return True
@@ -229,6 +242,34 @@ class CanManageOwnClubTrash(BasePermission):
             return True
 
         return user_can_manage_club_trash(request.user, obj)
+
+
+class CanLeaveClub(BasePermission):
+    message = (
+        'You cannot leave a club you own or admin. '
+        'Owners and admins must delete the club instead.'
+    )
+
+    def has_permission(self, request, view):
+        if should_bypass_permissions():
+            return True
+        return bool(request.user and request.user.is_authenticated)
+
+    def has_object_permission(self, request, view, obj):
+        if should_bypass_permissions():
+            return True
+
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        # obj is the ClubMembership instance
+        membership = obj
+        # Owners and admins cannot leave - they must delete the club
+        if membership.role in [ClubMembership.Role.OWNER, ClubMembership.Role.ADMIN]:
+            return False
+
+        return True
+
 
 class CanCreateClub(BasePermission):
     message = 'You do not have permission to create this club.'

@@ -10,6 +10,7 @@ from apps.predictions.services.base_handler import EngineHandler, QueryPayload
 from apps.predictions.services.intent_types import IntentClass, ParsedQuery
 from apps.predictions.services.source_policy import (
     apply_source_priority,
+    filter_by_season_tokens,
     latest_available_season,
     source_coverage_metadata,
 )
@@ -67,8 +68,8 @@ class RankingsHandler(EngineHandler):
         try:
             df = pd.read_csv(TEAMS_CSV_PATH)
             season = parsed_query.season or latest_available_season(df, default=DEFAULT_SEASON)
-            mask = (df["league"] == league) & (df["season"] == int(season))
-            season_df = df[mask].copy()
+            season_df = df[df["league"] == league].copy()
+            season_df = filter_by_season_tokens(season_df, season)
             season_df, used_sources = apply_source_priority(
                 season_df,
                 dedupe_keys=["league", "season", "team"],

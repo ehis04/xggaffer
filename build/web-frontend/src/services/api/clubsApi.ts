@@ -607,6 +607,22 @@ export const clubsApi = {
     },
   },
 
+  leaveClub: async (clubId: number, membershipId: number): Promise<void> => {
+    return apiClient.post<void>(`/clubs/${clubId}/memberships/${membershipId}/leave/`, {});
+  },
+
+  getMyMembership: async (clubId: number, userId?: number) => {
+    const response = await apiClient.get<{ results: Array<{ id: number; role: string; user: number }> }>(
+      `/clubs/${clubId}/memberships/`,
+      { page_size: 1 }
+    );
+    const memberships = response.results || [];
+    if (typeof userId === 'number') {
+      return memberships.find((m) => m.user === userId) || null;
+    }
+    return memberships[0] || null;
+  },
+
 };
 
 

@@ -46,6 +46,43 @@ def test_season_extraction(router: QueryRouter) -> None:
     assert result.season == "2022"
 
 
+def test_current_season_uses_latest_data_season(router: QueryRouter) -> None:
+    result = router.route("who wins the league this season")
+    assert result.season == "2025"
+
+
+def test_slash_season_extraction(router: QueryRouter) -> None:
+    result = router.route("EPL table 2025/26")
+    assert result.intent == IntentClass.TEAM_RANKINGS
+    assert result.season == "2025"
+
+
+def test_short_slash_season_extraction(router: QueryRouter) -> None:
+    result = router.route("Salah stats 25/26")
+    assert result.intent == IntentClass.PLAYER_STATS
+    assert result.season == "2025"
+
+
+def test_common_team_aliases(router: QueryRouter) -> None:
+    result = router.route("who wins Man U vs Liv this season")
+    assert result.intent == IntentClass.MATCH_PREDICTION
+    assert result.home_team == "Manchester United"
+    assert result.away_team == "Liverpool"
+
+
+def test_spurs_alias(router: QueryRouter) -> None:
+    result = router.route("who wins Spurs v Arsenal")
+    assert result.intent == IntentClass.MATCH_PREDICTION
+    assert result.home_team in {"Tottenham Hotspur", "Tottenham"}
+    assert result.away_team == "Arsenal"
+
+
+def test_team_performance_routes_to_form(router: QueryRouter) -> None:
+    result = router.route("how has Liverpool performed this season")
+    assert result.intent == IntentClass.FORM_ANALYSIS
+    assert result.team == "Liverpool"
+
+
 def test_elo_query_single_team(router: QueryRouter) -> None:
     result = router.route("what is Arsenal elo rating")
     assert result.intent == IntentClass.ELO_QUERY

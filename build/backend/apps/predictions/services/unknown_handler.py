@@ -41,7 +41,7 @@ CAPABILITIES_SUMMARY: dict = {
         "example": "What is xG?",
     },
     "supported_leagues": ["EPL", "La_Liga", "Bundesliga", "Serie_A", "Ligue_1"],
-    "supported_seasons": "2014-2024",
+    "supported_seasons": "2014-2025/26",
 }
 
 

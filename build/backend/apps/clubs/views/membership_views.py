@@ -8,6 +8,7 @@ from ..models import Club, ClubInvitation, ClubJoinRequest, ClubMembership
 from ..permissions import (
     CanCreateClubInvitation,
     CanCreateJoinRequest,
+    CanLeaveClub,
     CanManageClubContent,
     CanRespondToClubInvitation,
     CanReviewClubJoinRequest,
@@ -351,3 +352,18 @@ class ClubMembershipViewSet(viewsets.ModelViewSet):
             club_id=club_pk,
             invited_by=self.request.user,
         )
+
+    @action(detail=True, methods=['post'])
+    def leave(self, request, club_pk=None, pk=None):
+        """Allow a user to leave a club if they are not owner or admin."""
+        membership = self.get_object()
+        self.check_object_permissions(request, membership)
+
+        if membership.role in [ClubMembership.Role.OWNER, ClubMembership.Role.ADMIN]:
+            return Response(
+                {'detail': 'Owners and admins cannot leave a club. Transfer ownership or demote first.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        membership.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

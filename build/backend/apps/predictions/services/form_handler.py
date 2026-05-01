@@ -9,6 +9,7 @@ from apps.predictions.services.base_handler import EngineHandler, QueryPayload
 from apps.predictions.services.intent_types import IntentClass, ParsedQuery
 from apps.predictions.services.source_policy import (
     apply_source_priority,
+    filter_by_season_tokens,
     latest_available_season,
     source_coverage_metadata,
 )
@@ -47,9 +48,8 @@ class FormHandler(EngineHandler):
             df = df[df["is_finished"] == True]
             df["date"] = pd.to_datetime(df["date"], errors="coerce")
 
-            season_df = df[
-                (df["league"] == league) & (df["season"] == int(season))
-            ]
+            season_df = df[df["league"] == league]
+            season_df = filter_by_season_tokens(season_df, season)
             season_df, used_sources = apply_source_priority(
                 season_df,
                 dedupe_keys=["league", "season", "date", "home_team", "away_team"],

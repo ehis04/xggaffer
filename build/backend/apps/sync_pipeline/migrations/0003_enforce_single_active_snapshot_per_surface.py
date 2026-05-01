@@ -4,6 +4,10 @@ from django.db.models import Q
 from django.utils import timezone
 
 
+CONSTRAINT_NAME = 'uniq_active_snapshot_per_surface'
+TABLE_NAME = 'sync_pipeline_publishedsnapshot'
+
+
 def collapse_duplicate_active_snapshots(apps, schema_editor):
     PublishedSnapshot = apps.get_model('sync_pipeline', 'PublishedSnapshot')
     now = timezone.now()
@@ -36,6 +40,26 @@ def collapse_duplicate_active_snapshots(apps, schema_editor):
         )
 
 
+def drop_existing_active_snapshot_constraint(apps, schema_editor):
+    PublishedSnapshot = apps.get_model('sync_pipeline', 'PublishedSnapshot')
+
+    if schema_editor.connection.vendor != 'postgresql':
+        try:
+            schema_editor.remove_constraint(
+                PublishedSnapshot,
+                models.UniqueConstraint(fields=('surface',), name=CONSTRAINT_NAME),
+            )
+        except Exception:
+            pass
+        return
+
+    with schema_editor.connection.cursor() as cursor:
+        cursor.execute(
+            f'ALTER TABLE "{TABLE_NAME}" DROP CONSTRAINT IF EXISTS "{CONSTRAINT_NAME}"'
+        )
+        cursor.execute(f'DROP INDEX IF EXISTS "{CONSTRAINT_NAME}"')
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -47,12 +71,26 @@ class Migration(migrations.Migration):
             collapse_duplicate_active_snapshots,
             migrations.RunPython.noop,
         ),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunPython(
+                    drop_existing_active_snapshot_constraint,
+                    migrations.RunPython.noop,
+                ),
+            ],
+            state_operations=[
+                migrations.RemoveConstraint(
+                    model_name='publishedsnapshot',
+                    name=CONSTRAINT_NAME,
+                ),
+            ],
+        ),
         migrations.AddConstraint(
             model_name='publishedsnapshot',
             constraint=models.UniqueConstraint(
                 fields=('surface',),
                 condition=Q(is_active=True),
-                name='uniq_active_snapshot_per_surface',
+                name=CONSTRAINT_NAME,
             ),
         ),
     ]

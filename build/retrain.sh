@@ -95,6 +95,15 @@ if [ "$SKIP_SYNC" = false ]; then
             || { log "WARNING: WhoScored players failed for $league $SEASON — continuing"; }
     done
 
+    separator "STEP 2B: REBUILD MERGED DATA VIEWS"
+
+    log "Exporting merged raw and processed CSV views for model/runtime data..."
+    python data_collection/scripts/export_merged_views.py \
+        --layers raw processed \
+        --sources understat sofascore whoscored \
+        --datasets matches players teams team_summaries \
+        || { log "WARNING: export_merged_views exited with errors — continuing"; }
+
 else
     log "Skipping data sync (--skip-sync passed)"
 fi

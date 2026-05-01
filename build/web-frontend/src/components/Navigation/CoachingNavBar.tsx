@@ -6,6 +6,7 @@ export type ClubTab =
   | 'players'
   | 'formations'
   | 'schedule'
+  | 'training'
   | 'season'
   | 'members'
   | 'tactics';
@@ -14,6 +15,7 @@ const TABS: { value: ClubTab; label: string }[] = [
   { value: 'dashboard',  label: 'Dashboard'  },
   { value: 'players',    label: 'Players'    },
   { value: 'formations', label: 'Formations' },
+  { value: 'training',   label: 'Training'   },
   { value: 'schedule',   label: 'Schedule'   },
   { value: 'season',     label: 'Season'     },
   { value: 'members',    label: 'Members'    },

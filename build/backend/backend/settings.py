@@ -122,6 +122,7 @@ INSTALLED_APPS = [
     "apps.players.playerProfile",
     "apps.clubs",
     "apps.tactics",
+    "apps.training",
     "apps.playerdata",
     "apps.livefootball",
     "apps.sync_pipeline.apps.SyncPipelineConfig",

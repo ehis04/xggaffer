@@ -22,6 +22,7 @@ import { ResourceNotFoundPage } from '../../status/ResourceNotFoundpage';
 const DashboardTab  = lazy(() => import('./tabs/DashboardTab'));
 const PlayersTab    = lazy(() => import('./tabs/PlayersTab'));
 const FormationsTab = lazy(() => import('./tabs/FormationsTab'));
+const TrainingTab   = lazy(() => import('./tabs/TrainingTab'));
 const ScheduleTab   = lazy(() => import('./tabs/ScheduleTab'));
 const SeasonTab     = lazy(() => import('./tabs/SeasonTab'));
 const MembersTab    = lazy(() => import('./tabs/MembersTab'));
@@ -179,6 +180,7 @@ export const IndividualClubBase = () => {
     switch (activeTab) {
       case 'players':    return <PlayersTab    ctx={ctx} />;
       case 'formations': return <FormationsTab ctx={ctx} />;
+      case 'training':   return <TrainingTab   ctx={ctx} />;
       case 'schedule':   return <ScheduleTab   ctx={ctx} />;
       case 'season':     return <SeasonTab     ctx={ctx} />;
       case 'members':    return <MembersTab    ctx={ctx} />;

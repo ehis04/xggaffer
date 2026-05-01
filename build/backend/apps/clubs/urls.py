@@ -18,6 +18,7 @@ from .views import (
     ClubSeasonResultDetailView,
 )
 from apps.tactics.urls import register_tactics_routes
+from apps.training.urls import register_training_routes
 from apps.teamsheets.views import TeamsheetViewSet, TeamsheetPlayerViewSet
 
 
@@ -37,6 +38,7 @@ clubs_router.register(r'resources', ClubResourceViewSet, basename='club-resource
 clubs_router.register(r'import-jobs', ClubImportJobViewSet, basename='club-import-job')
 
 tactics_routers = register_tactics_routes(clubs_router)
+training_routers = register_training_routes(clubs_router)
 
 teamsheets_router = NestedDefaultRouter(clubs_router, r'teamsheets', lookup='teamsheet')
 teamsheets_router.register(r'players', TeamsheetPlayerViewSet, basename='teamsheet-player')
@@ -73,4 +75,5 @@ urlpatterns = [
         name='club-season-result-detail',
     ),
     *[path('', include(tactics_router.urls)) for tactics_router in tactics_routers],
+    *[path('', include(training_router.urls)) for training_router in training_routers],
 ]

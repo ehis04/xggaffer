@@ -63,6 +63,63 @@ fi
 
 mkdir -p "$LOG_DIR"
 
+# ── Kill any existing workers for this project (safeguard) ───────────────────
+# This ensures no duplicate workers are created by finding all celery processes
+# that reference the backend module and killing them before starting fresh.
+
+kill_existing_workers() {
+    log "Checking for existing workers..."
+    local killed=0
+    
+    # Find all celery worker processes for this backend
+    for pid in $(pgrep -f "celery.*backend" 2>/dev/null || true); do
+        if kill -0 "$pid" 2>/dev/null; then
+            # Verify it's actually a celery worker for our project
+            local cmdline
+            cmdline=$(cat /proc/$pid/cmdline 2>/dev/null | tr '\0' ' ')
+            if [[ "$cmdline" == *"$BACKEND_DIR"* ]] || [[ "$cmdline" == *"-A backend"* ]]; then
+                warn "  Killing existing worker PID $pid"
+                kill "$pid" 2>/dev/null || true
+                killed=1
+            fi
+        fi
+    done
+    
+    # Also kill any celery beat processes for this backend
+    for pid in $(pgrep -f "celery.*beat" 2>/dev/null || true); do
+        if kill -0 "$pid" 2>/dev/null; then
+            local cmdline
+            cmdline=$(cat /proc/$pid/cmdline 2>/dev/null | tr '\0' ' ')
+            if [[ "$cmdline" == *"$BACKEND_DIR"* ]] || [[ "$cmdline" == *"-A backend"* ]]; then
+                warn "  Killing existing beat PID $pid"
+                kill "$pid" 2>/dev/null || true
+                killed=1
+            fi
+        fi
+    done
+    
+    # Also kill any Django runserver processes for this project
+    for pid in $(pgrep -f "manage.py runserver" 2>/dev/null || true); do
+        if kill -0 "$pid" 2>/dev/null; then
+            local cmdline
+            cmdline=$(cat /proc/$pid/cmdline 2>/dev/null | tr '\0' ' ')
+            if [[ "$cmdline" == *"$BACKEND_DIR"* ]]; then
+                warn "  Killing existing runserver PID $pid"
+                kill "$pid" 2>/dev/null || true
+                killed=1
+            fi
+        fi
+    done
+    
+    if [[ $killed -eq 1 ]]; then
+        log "  Waiting for processes to terminate..."
+        sleep 2
+    fi
+}
+
+# Run the safeguard to kill any existing workers before starting new ones
+kill_existing_workers
+
 # Kill any leftover workers from a previous run
 if [[ -f "$PID_FILE" ]]; then
     warn "Found existing .worker_pids — killing stale workers first..."

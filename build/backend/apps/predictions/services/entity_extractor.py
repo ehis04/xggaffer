@@ -8,13 +8,14 @@ import pandas as pd
 from rapidfuzz import fuzz, process
 
 from apps.predictions.services.intent_types import IntentClass
+from apps.predictions.services.source_policy import season_group_key
 
 logger = logging.getLogger(__name__)
 
 FUZZY_THRESHOLD = 75
 MAX_TEAMS_PER_QUERY = 2
 MIN_SEASON = 2014
-MAX_SEASON = 2024
+MAX_SEASON = 2026
 
 TEAM_TOKEN_STOP_WORDS: frozenset[str] = frozenset({
     "fc", "cf", "sc", "ac", "as", "afc", "club", "football",
@@ -24,11 +25,29 @@ TEAM_ALIASES: dict[str, tuple[str, ...]] = {
     "barca": ("Barcelona", "FC Barcelona"),
     "man city": ("Manchester City",),
     "city": ("Manchester City",),
+    "mci": ("Manchester City",),
+    "man united": ("Manchester United",),
+    "man utd": ("Manchester United",),
+    "man u": ("Manchester United",),
+    "mu": ("Manchester United",),
+    "utd": ("Manchester United",),
+    "liverpool": ("Liverpool",),
+    "liv": ("Liverpool",),
+    "spurs": ("Tottenham Hotspur", "Tottenham"),
+    "tottenham": ("Tottenham Hotspur", "Tottenham"),
+    "ars": ("Arsenal",),
+    "che": ("Chelsea",),
+    "cfc": ("Chelsea",),
     "psg": ("PSG", "Paris Saint Germain"),
     "dortmund": ("Borussia Dortmund",),
     "bayern": ("Bayern Munich",),
     "inter": ("Inter", "Inter Milan"),
+    "milan": ("Milan", "AC Milan"),
+    "ac milan": ("Milan", "AC Milan"),
+    "juve": ("Juventus",),
     "real": ("Real Madrid",),
+    "rm": ("Real Madrid",),
+    "atleti": ("Atletico Madrid", "Atlético Madrid"),
 }
 
 TEAMS_CSV_PATH = (
@@ -101,11 +120,15 @@ class EntityExtractor:
         self._canonical_teams_lower: set[str] = set()
         self._resolved_aliases: dict[str, str] = {}
         self._canonical_players: list[str] = []
+        self._latest_season = "2025"
         try:
             df = pd.read_csv(TEAMS_CSV_PATH)
             self._canonical_teams = sorted(df["team"].dropna().unique().tolist())
             self._canonical_teams_lower = {team.lower() for team in self._canonical_teams}
             self._resolved_aliases = self._build_alias_map()
+            season_keys = pd.to_numeric(df["season"].map(season_group_key), errors="coerce").dropna()
+            if not season_keys.empty:
+                self._latest_season = str(int(season_keys.max()))
         except Exception as exc:
             logger.warning("EntityExtractor could not load teams CSV: %s", exc)
         try:
@@ -189,11 +212,20 @@ class EntityExtractor:
     def extract_season(self, query: str) -> str | None:
         current_season_pattern = re.compile(r"\b(this season|current season)\b", re.IGNORECASE)
         if current_season_pattern.search(query):
-            return "2024"
+            return self._latest_season
+
+        split_season_pattern = re.compile(r"\b(\d{2}|\d{4})\s*[/\-]\s*(\d{2}|\d{4})\b")
+        split_match = split_season_pattern.search(query)
+        if split_match:
+            start_raw = split_match.group(1)
+            start_year = int(start_raw) + 2000 if len(start_raw) == 2 else int(start_raw)
+            if MIN_SEASON <= start_year <= MAX_SEASON:
+                return str(start_year)
+
         year_pattern = re.compile(r"\b(\d{4})\b")
         for match in year_pattern.finditer(query):
             year = int(match.group(1))
-            if MIN_SEASON <= year <= MAX_SEASON:
+            if MIN_SEASON <= year <= MAX_SEASON and str(year) in {self._latest_season, *[str(y) for y in range(MIN_SEASON, int(self._latest_season) + 1)]}:
                 return str(year)
         return None
 
@@ -240,7 +272,11 @@ class EntityExtractor:
         teams = self.extract_teams(query)
         league = self.extract_league(query)
         season = self.extract_season(query)
-        player_name = self.extract_player(query, teams)
+        player_name = (
+            self.extract_player(query, teams)
+            if intent in {IntentClass.PLAYER_STATS, IntentClass.AVAILABILITY_QUERY}
+            else None
+        )
 
         home_team: str | None = None
         away_team: str | None = None

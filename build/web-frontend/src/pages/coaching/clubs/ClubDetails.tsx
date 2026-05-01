@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { clubsApi } from '../../../services/api';
+import { clubsApi, client as apiClient } from '../../../services/api';
 import { ClubCalendar } from '../../../components/Clubs';
 import ClubResourcesSection from './resources/ClubResourcesSection';
 import type {
@@ -188,6 +188,7 @@ export const ClubDetailsPage = () => {
 
   const [club, setClub] = useState<Club | null>(null);
   const [myClubIds, setMyClubIds] = useState<number[]>([]);
+  const [myMembership, setMyMembership] = useState<{ id: number; role: string } | null>(null);
   const [myJoinRequests, setMyJoinRequests] = useState<ClubJoinRequest[]>([]);
   const [reviewJoinRequests, setReviewJoinRequests] = useState<ClubJoinRequest[]>([]);
   const [reviewInvitations, setReviewInvitations] = useState<ClubInvitation[]>([]);
@@ -231,6 +232,22 @@ export const ClubDetailsPage = () => {
     const [myRequestsData, myClubsData] = await Promise.all([myRequestsPromise, myClubsPromise]);
     setMyJoinRequests(myRequestsData);
     setMyClubIds(myClubsData.map((e) => e.id));
+    
+    // Fetch current user's membership for this club
+    if (user?.id) {
+      try {
+        const membershipResponse = await apiClient.get<{ results: Array<{ id: number; role: string; user: number }> }>(
+          `/clubs/${clubRecord.id}/memberships/`,
+          { page_size: 500 }
+        );
+        const memberships = membershipResponse.results || [];
+        const myMem = memberships.find((m: { user: number }) => m.user === Number(user.id));
+        if (myMem) {
+          setMyMembership({ id: myMem.id, role: myMem.role });
+        }
+      } catch { /* Not a member */ }
+    }
+    
     setReviewJoinRequests(reviewerRequests);
     setReviewInvitations(reviewerInvitations);
     setClubPlayers(players);
@@ -288,7 +305,19 @@ export const ClubDetailsPage = () => {
   const canManageClubTrash =
     typeof user?.id === 'number' && typeof club?.creator === 'number' && user.id === club.creator;
 
+  const canLeaveClub = Boolean(
+    club && isMember && myMembership && 
+    !['owner', 'admin'].includes(myMembership.role) && !club.is_trashed
+  );
+
   const handleBackToClubs = () => navigate(`/clubs${isTrashView ? '?view=trash' : ''}`);
+
+  const handleLeaveClub = async () => {
+    if (!club || !myMembership || !window.confirm(`Leave "${club.name}"? You will need to rejoin or receive an invitation to return.`)) return;
+    try { setClubActionLoading(true); setWorkflowMessage(null); await clubsApi.leaveClub(club.id, myMembership.id); navigate('/clubs'); }
+    catch (err) { setWorkflowMessage(err instanceof Error ? err.message : 'Failed to leave club.'); }
+    finally { setClubActionLoading(false); }
+  };
 
   const handleMoveClubToTrash = async () => {
     if (!club || !window.confirm(`Move "${club.name}" to trash?`)) return;
@@ -524,6 +553,11 @@ export const ClubDetailsPage = () => {
               <button className={styles.individualClubGhostBtn}>
                 Share club
               </button>
+              {canLeaveClub && (
+                <button className={styles.individualClubDangerBtn} disabled={clubActionLoading} onClick={handleLeaveClub}>
+                  {clubActionLoading ? 'Leaving…' : 'Leave Club'}
+                </button>
+              )}
               {canManageClubTrash && !club.is_trashed && (
                 <button className={styles.individualClubDangerBtn} disabled={clubActionLoading} onClick={handleMoveClubToTrash}>
                   {clubActionLoading ? 'Moving…' : 'Move to Trash'}
