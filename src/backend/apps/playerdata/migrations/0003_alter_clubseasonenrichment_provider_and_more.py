@@ -9,7 +9,10 @@ class Migration(migrations.Migration):
         ('playerdata', '0002_playerseasonenrichment_understat_extended_metrics'),
     ]
 
-    operations = [
+    operations = []
+
+
+    superseded_operations = [
         migrations.AlterField(
             model_name='clubseasonenrichment',
             name='provider',

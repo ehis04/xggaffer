@@ -9,7 +9,10 @@ class Migration(migrations.Migration):
         ('users', '0001_initial'),
     ]
 
-    operations = [
+    operations = []
+
+
+    superseded_operations = [
         migrations.AddField(
             model_name='userprofile',
             name='active_role',

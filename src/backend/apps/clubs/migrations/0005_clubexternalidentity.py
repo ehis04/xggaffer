@@ -10,7 +10,10 @@ class Migration(migrations.Migration):
         ('clubs', '0004_alter_clubplayer_options_clubplayer_player_and_more'),
     ]
 
-    operations = [
+    operations = []
+
+
+    superseded_operations = [
         migrations.CreateModel(
             name='ClubExternalIdentity',
             fields=[

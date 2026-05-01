@@ -9,7 +9,10 @@ class Migration(migrations.Migration):
         ('clubs', '0012_club_is_trashed_club_trash_expires_at_and_more'),
     ]
 
-    operations = [
+    operations = []
+
+
+    superseded_operations = [
         migrations.AlterField(
             model_name='clubexternalidentity',
             name='provider',

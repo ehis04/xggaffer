@@ -9,7 +9,10 @@ class Migration(migrations.Migration):
         ('livefootball', '0002_savedleaguescenario_savedleaguescenariolockedfixture_and_more'),
     ]
 
-    operations = [
+    operations = []
+
+
+    superseded_operations = [
         migrations.AlterField(
             model_name='competition',
             name='provider',

@@ -9,7 +9,10 @@ class Migration(migrations.Migration):
         ('players', '0003_alter_playerexternalidentity_provider_and_more'),
     ]
 
-    operations = [
+    operations = []
+
+
+    superseded_operations = [
         migrations.AlterField(
             model_name='playerexternalidentity',
             name='provider',

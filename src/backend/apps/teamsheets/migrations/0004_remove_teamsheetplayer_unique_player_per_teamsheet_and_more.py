@@ -14,7 +14,10 @@ class Migration(migrations.Migration):
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
-    operations = [
+    operations = []
+
+
+    superseded_operations = [
         migrations.RemoveConstraint(
             model_name='teamsheetplayer',
             name='unique_player_per_teamsheet',

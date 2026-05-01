@@ -9,7 +9,10 @@ class Migration(migrations.Migration):
         ('clubs', '0002_initial'),
     ]
 
-    operations = [
+    operations = []
+
+
+    superseded_operations = [
         migrations.RemoveField(
             model_name='clubplayer',
             name='position',

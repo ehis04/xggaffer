@@ -11,7 +11,10 @@ class Migration(migrations.Migration):
         ('teamsheets', '0002_initial'),
     ]
 
-    operations = [
+    operations = []
+
+
+    superseded_operations = [
         migrations.RemoveConstraint(
             model_name='teamsheetplayer',
             name='unique_player_per_teamsheet',

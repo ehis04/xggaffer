@@ -12,7 +12,10 @@ class Migration(migrations.Migration):
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
-    operations = [
+    operations = []
+
+
+    superseded_operations = [
         migrations.AddField(
             model_name='club',
             name='is_trashed',

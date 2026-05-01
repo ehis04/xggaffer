@@ -7,7 +7,10 @@ class Migration(migrations.Migration):
         ("playerdata", "0001_initial"),
     ]
 
-    operations = [
+    operations = []
+
+
+    superseded_operations = [
         migrations.AddField(
             model_name="playerseasonenrichment",
             name="red_cards",
