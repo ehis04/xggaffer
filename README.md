@@ -35,22 +35,7 @@ xgGaffer is a full-stack football analytics and coaching platform built to make 
 
 ## System Architecture
 
-```text
-React TypeScript Frontend (Vite)
-         |
-         v
-Django REST Framework API
-         |
-    ┌────┴────┐
-    v         v
-PostgreSQL  Redis + Celery
-              (background jobs, sync pipeline, cache)
-         |
-         v
-Python ML Services (.joblib artefacts)
-```
-
-architecure image
+![xgGaffer system architecture](docs/documentation/diagrams/Architecture_Diagram.png)
 
 **Architecture principles:**
 
