@@ -99,7 +99,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, bottomItems }) => {
       ),
       label: "Social",
       onClick: () => console.log("Social clicked"),
-      link: "http://localhost:5173/social",
+      link: "/social",
     },
 
     {
@@ -123,7 +123,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, bottomItems }) => {
       ),
       label: "Coaching",
       onClick: () => console.log("Coaching clicked"),
-      link: "http://localhost:5173/coaching",
+      link: "/coaching",
     },
     {
       id: "referee",
@@ -146,7 +146,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, bottomItems }) => {
       ),
       label: "Referee",
       onClick: () => console.log("Referee clicked"),
-      link: "http://localhost:5173/referee",
+      link: "/referee",
     },
     {
       id: "articles",
@@ -165,7 +165,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, bottomItems }) => {
       ),
       label: "Articles",
       onClick: () => console.log("Articles clicked"),
-      link: "http://localhost:5173/articles",
+      link: "/articles",
     },
     {
       id: "trash",

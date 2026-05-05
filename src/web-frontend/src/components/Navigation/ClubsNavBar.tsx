@@ -12,19 +12,19 @@ export const ClubsNavBar = () => {
     {
       id: "tab1",
       label: "My Clubs",
-      onClick: () => handleTabClick("http://localhost:5173/clubs"),
+      onClick: () => handleTabClick("/clubs"),
       cls: "tab--1",
     },
     {
       id: "tab2",
       label: "Browse",
-      onClick: () => handleTabClick("http://localhost:5173/clubs/browse"),
+      onClick: () => handleTabClick("/clubs/browse"),
       cls: "tab--2",
     },
     {
       id: "tab3",
       label: "Create",
-      onClick: () => handleTabClick("http://localhost:5173/clubs/create"),
+      onClick: () => handleTabClick("/clubs/create"),
       cls: "tab--3",
     },
   ];
