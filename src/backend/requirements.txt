@@ -1,0 +1,89 @@
+Django==5.2.13
+
+# Environment & config
+python-decouple
+dj-database-url
+
+# CORS
+django-cors-headers
+djangorestframework
+djangorestframework-simplejwt
+drf-nested-routers
+
+# Media
+cloudinary
+django-cloudinary-storage
+
+# Email
+resend
+
+# Background tasks
+celery
+redis
+django-redis
+
+# PDF processing
+pdf2image
+pypdf
+Pillow
+
+# AI / LLM
+anthropic
+
+# Production helpers (commonly used)
+whitenoise
+
+# Database (PostgreSQL support)
+psycopg2-binary
+
+# ML & Data
+joblib
+feedparser
+textstat
+pandas
+playwright
+xgboost
+lifelines
+scikit-learn
+statsmodels
+beautifulsoup4
+soccerdata
+
+# Django extras
+django-allauth
+django-ckeditor-5
+django-countries
+django-etc
+django-hitcount
+django-plotly-dash
+django-taggit
+channels
+djangorestframework-simplejwt
+
+# Utilities
+python-dateutil
+requests
+urllib3
+certifi
+idna
+charset-normalizer
+PyYAML
+pydantic
+pydantic-core
+httpx
+httpcore
+anyio
+sniffio
+typing-extensions
+typing-inspection
+packaging
+click
+click-didyoumean
+click-plugins
+click-repl
+vine
+amqp
+kombu
+billiard
+vine
+prometheus-client
