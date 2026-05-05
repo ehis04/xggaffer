@@ -1,0 +1,12 @@
+export { default as client } from './client';
+export * from './auth';
+export * from './teamsheetApi';
+export * from './tacticsApi';
+export * from './trainingApi';
+export * from './lawsApi';
+export * from './communityApi';
+export * from './livefootballApi';
+export * from './playerdataApi';
+export * from './predictionsApi';
+export * from './usersApi';
+export * from './clubsApi';
