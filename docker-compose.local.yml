@@ -1,0 +1,87 @@
+services:
+  db:
+    image: postgres:16
+    container_name: xggaffer_local_db
+    environment:
+      POSTGRES_DB: xggaffer_local
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_local_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  redis:
+    image: redis:7
+    container_name: xggaffer_local_redis
+    ports:
+      - "6380:6379"
+
+  backend:
+    build:
+      context: ./build/backend
+    container_name: xggaffer_local_backend
+    env_file:
+      - ./build/backend/.env.docker.local
+    volumes:
+      - ./build/backend:/app
+      - backend_staticfiles:/app/staticfiles
+      - backend_media:/app/media
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+
+  celery_worker:
+    build:
+      context: ./build/backend
+    container_name: xggaffer_local_celery_worker
+    env_file:
+      - ./build/backend/.env.docker.local
+    volumes:
+      - ./build/backend:/app
+    depends_on:
+      - db
+      - redis
+      - backend
+    command: celery -A backend worker --loglevel=info
+
+  celery_beat:
+    build:
+      context: ./build/backend
+    container_name: xggaffer_local_celery_beat
+    env_file:
+      - ./build/backend/.env.docker.local
+    volumes:
+      - ./build/backend:/app
+    depends_on:
+      - db
+      - redis
+      - backend
+    command: celery -A backend beat --loglevel=info
+
+  frontend:
+    build:
+      context: ./build/web-frontend
+    container_name: xggaffer_local_frontend
+    env_file:
+      - ./build/web-frontend/.env.docker.local
+    volumes:
+      - ./build/web-frontend:/app
+      - frontend_node_modules:/app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    command: npm run dev -- --host 0.0.0.0
+
+volumes:
+  postgres_local_data:
+  backend_staticfiles:
+  backend_media:
+  frontend_node_modules:

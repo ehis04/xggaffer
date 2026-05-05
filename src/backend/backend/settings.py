@@ -5,14 +5,13 @@ Django configuration, authentication, storage, 3rd-party integrations, and sched
 
 import os
 import sys
-import xgboost as xgb
 from datetime import timedelta
 from pathlib import Path
 
 import cloudinary
+import dj_database_url
 from celery.schedules import crontab
-from decouple import config
-
+from decouple import Csv, config
 
 # ---------------------------------------------------------------------------
 # Base paths and Python path setup
@@ -26,18 +25,23 @@ if PREDICTIONS_APP_PATH not in sys.path:
     sys.path.append(PREDICTIONS_APP_PATH)
 
 
+def env_csv(name, default=""):
+    return config(name, default=default, cast=Csv())
+
 # ---------------------------------------------------------------------------
 # Core environment and security settings
 # ---------------------------------------------------------------------------
 
-SECRET_KEY = config("SECRET_KEY")
-DEBUG = config("DEBUG", default=False, cast=bool)
+SECRET_KEY = config("SECRET_KEY", default="LOCAL_DEV_KEY")
+DEBUG = config("DEBUG", default=True, cast=bool)
 
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    "testserver",
-]
+if not DEBUG and SECRET_KEY == "LOCAL_DEV_KEY":
+    raise RuntimeError("SECRET_KEY must be set when DEBUG=False")
+
+ALLOWED_HOSTS = env_csv(
+    "ALLOWED_HOSTS",
+    default="localhost,127.0.0.1,testserver",
+)
 
 AUTH_USER_MODEL = "users.User"
 
@@ -172,27 +176,40 @@ WSGI_APPLICATION = "backend.wsgi.application"
 # Database
 # ---------------------------------------------------------------------------
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": config("DB_NAME"),
-        "USER": config("DB_USER"),
-        "PASSWORD": config("DB_PASSWORD"),
-        "HOST": config("DB_HOST"),
-        "PORT": config("DB_PORT"),
+DATABASE_URL = config("DATABASE_URL", default="")
+
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+        )
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": config("DB_NAME", default="xggaffer"),
+            "USER": config("DB_USER", default="postgres"),
+            "PASSWORD": config("DB_PASSWORD", default=""),
+            "HOST": config("DB_HOST", default="localhost"),
+            "PORT": config("DB_PORT", default="5432"),
+        }
+    }
 
 # ---------------------------------------------------------------------------
 # Cache
 # ---------------------------------------------------------------------------
 
+REDIS_URL = config("REDIS_URL", default="redis://localhost:6379/0")
+CACHE_REDIS_URL = config("CACHE_REDIS_URL", default="redis://localhost:6379/1")
+
 CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://localhost:6379/1',
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": CACHE_REDIS_URL,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
     }
 }
@@ -234,10 +251,11 @@ USE_TZ = True
 # Static and media files
 # ---------------------------------------------------------------------------
 
-STATIC_URL = "static/"
+STATIC_URL = config("STATIC_URL", default="/static/")
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_URL = config("MEDIA_URL", default="/media/")
+MEDIA_ROOT = BASE_DIR / "media"
 
 
 # ---------------------------------------------------------------------------
@@ -273,6 +291,8 @@ CLUB_RESOURCES_CLOUDINARY_FOLDER = config(
 # ---------------------------------------------------------------------------
 
 # Local frontend origins allowed to communicate with the backend during development.
+# CSRF token must be readable by frontend JavaScript so it can be sent with requests.
+
 LOCAL_FRONTEND_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:8000",
@@ -280,15 +300,23 @@ LOCAL_FRONTEND_ORIGINS = [
     "http://127.0.0.1:5173",
 ]
 
-CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = LOCAL_FRONTEND_ORIGINS
+CORS_ALLOW_ALL_ORIGINS = config("CORS_ALLOW_ALL_ORIGINS", default=False, cast=bool)
+
+CORS_ALLOWED_ORIGINS = env_csv(
+    "CORS_ALLOWED_ORIGINS",
+    default="http://localhost:3000,http://localhost:8000,http://localhost:5173,http://127.0.0.1:5173",
+)
+
 CORS_ALLOW_CREDENTIALS = True
 
-# CSRF token must be readable by frontend JavaScript so it can be sent with requests.
-CSRF_COOKIE_SAMESITE = "Lax"
-CSRF_COOKIE_SECURE = False
-CSRF_COOKIE_HTTPONLY = False
-CSRF_TRUSTED_ORIGINS = LOCAL_FRONTEND_ORIGINS
+CSRF_TRUSTED_ORIGINS = env_csv(
+    "CSRF_TRUSTED_ORIGINS",
+    default="http://localhost:3000,http://localhost:8000,http://localhost:5173,http://127.0.0.1:5173",
+)
+
+CSRF_COOKIE_SAMESITE = config("CSRF_COOKIE_SAMESITE", default="Lax")
+CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=False, cast=bool)
+CSRF_COOKIE_HTTPONLY = config("CSRF_COOKIE_HTTPONLY", default=False, cast=bool)
 
 
 # ---------------------------------------------------------------------------
@@ -313,9 +341,8 @@ REST_FRAMEWORK = {
 # Session and JWT cookie configuration
 # ---------------------------------------------------------------------------
 
-SESSION_COOKIE_SAMESITE = "Lax"
-SESSION_COOKIE_SECURE = False
-
+SESSION_COOKIE_SAMESITE = config("SESSION_COOKIE_SAMESITE", default="Lax")
+SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=False, cast=bool)
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
@@ -332,10 +359,10 @@ AUTH_COOKIE_ACCESS = "access_token"
 AUTH_COOKIE_REFRESH = "refresh_token"
 
 # Store auth cookies as HttpOnly so they are not accessible from client-side JavaScript.
-AUTH_COOKIE_SECURE = False
+AUTH_COOKIE_SECURE = config("AUTH_COOKIE_SECURE", default=SESSION_COOKIE_SECURE, cast=bool)
 AUTH_COOKIE_HTTP_ONLY = True
 AUTH_COOKIE_PATH = "/"
-AUTH_COOKIE_SAMESITE = "Lax"
+AUTH_COOKIE_SAMESITE = config("AUTH_COOKIE_SAMESITE", default="Lax")
 
 AUTH_COOKIE_ACCESS_MAX_AGE = 60 * 15
 AUTH_COOKIE_REFRESH_MAX_AGE = 60 * 60 * 24 * 7
@@ -401,9 +428,9 @@ UNDERSTAT_USER_AGENT = config(
 # Celery configuration
 # ---------------------------------------------------------------------------
 
-CELERY_BROKER_URL = "redis://localhost:6379/0"
-CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
-CELERY_TIMEZONE = "UTC"
+CELERY_BROKER_URL = config("CELERY_BROKER_URL", default=REDIS_URL)
+CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND", default=REDIS_URL)
+CELERY_TIMEZONE = config("CELERY_TIMEZONE", default="UTC")
 
 # Scheduled background jobs for scraping and housekeeping.
 CELERY_BEAT_SCHEDULE = {
@@ -539,6 +566,15 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
+ENABLE_CELERY_BEAT_SCHEDULE = config(
+    "ENABLE_CELERY_BEAT_SCHEDULE",
+    default=True,
+    cast=bool,
+)
+
+if not ENABLE_CELERY_BEAT_SCHEDULE:
+    CELERY_BEAT_SCHEDULE = {}
+
 # ---------------------------------------------------------------------------
 # Data pipeline provider policy
 # ---------------------------------------------------------------------------
@@ -612,3 +648,20 @@ LOG_LEVEL_PIPELINE = config('LOG_LEVEL_PIPELINE', default='WARNING')
 # ---------------------------------------------------------------------------
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ---------------------------------------------------------------------------
+# Deployment security settings
+# ---------------------------------------------------------------------------
+
+SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=False, cast=bool)
+
+SECURE_HSTS_SECONDS = config("SECURE_HSTS_SECONDS", default=0, cast=int)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = config(
+    "SECURE_HSTS_INCLUDE_SUBDOMAINS",
+    default=False,
+    cast=bool,
+)
+SECURE_HSTS_PRELOAD = config("SECURE_HSTS_PRELOAD", default=False, cast=bool)
+
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"

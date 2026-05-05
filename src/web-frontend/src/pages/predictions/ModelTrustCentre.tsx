@@ -18,6 +18,7 @@ import {
 import styles from './css/ModelTrustCentre.module.css';
 import { Sidebar } from '../../components/Navigation/SideBar';
 import { SocialUserButtons } from '../../components/Social/SocialUserButtons';
+import { PredictionsNavbar } from '../../components/Navigation/predictionsNavbar';
 
 const DEFAULT_LEAGUE_FILTER = '';
 
@@ -97,7 +98,7 @@ export default function ModelTrustCentre() {
       <div className={styles.base}>
         <header className={styles.Header}>
           <div className={styles.Left}>Odds Comparisson</div>
-          <div className={styles.Middle}></div>
+          <div className={styles.Middle}><PredictionsNavbar /></div>
           <div className={styles.Right}>
             <SocialUserButtons />
           </div>

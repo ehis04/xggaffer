@@ -20,6 +20,7 @@ import { WHATIF_WIN_POINTS, WHATIF_DRAW_POINTS, WHATIF_LOSS_POINTS } from '../..
 import styles from './css/SeasonProjectionCentre.module.css';
 import { Sidebar } from '../../components/Navigation/SideBar';
 import { SocialUserButtons } from '../../components/Social/SocialUserButtons';
+import { PredictionsNavbar } from '../../components/Navigation/predictionsNavbar';
 
 const VALID_LEAGUE_CODES = ['PL', 'PD', 'BL1', 'SA', 'FL1'] as const;
 type LeagueCode = typeof VALID_LEAGUE_CODES[number];
@@ -174,7 +175,7 @@ export default function SeasonProjectionCentre() {
       <div className={styles.base}>
         <header className={styles.Header}>
           <div className={styles.Left}>Odds Comparisson</div>
-          <div className={styles.Middle}></div>
+          <div className={styles.Middle}><PredictionsNavbar/></div>
           <div className={styles.Right}>
             <SocialUserButtons />
           </div>
