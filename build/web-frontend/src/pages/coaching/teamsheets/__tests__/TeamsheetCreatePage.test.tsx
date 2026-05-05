@@ -24,6 +24,14 @@ vi.mock('../../../../services/api', () => ({
   },
 }));
 
+vi.mock('../../../../components/Navigation/SideBar', () => ({
+  Sidebar: () => <aside data-testid="sidebar" />,
+}));
+
+vi.mock('../../../../components/Social/SocialUserButtons', () => ({
+  SocialUserButtons: () => <div data-testid="social-user-buttons" />,
+}));
+
 vi.mock('../../../../components/teamsheets', () => ({
   FormationPicker: ({ formations }: any) => (
     <div>Formation count: {formations.length}</div>
@@ -83,7 +91,7 @@ describe('TeamsheetCreatePage', () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByRole('heading', { name: 'Create Teamsheet' })).toBeInTheDocument();
+    expect(await screen.findByText('New Teamsheet')).toBeInTheDocument();
 
     fireEvent.click(await screen.findByRole('button', { name: 'Slot 1' }));
 

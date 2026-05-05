@@ -22,6 +22,14 @@ vi.mock('../../../context/useAuth', () => ({
   useAuth: () => ({ user: { id: 1 } }),
 }));
 
+vi.mock('../../../components/Navigation/SideBar', () => ({
+  Sidebar: () => <aside data-testid="sidebar" />,
+}));
+
+vi.mock('../../../components/Social/SocialUserButtons', () => ({
+  SocialUserButtons: () => <div data-testid="social-user-buttons" />,
+}));
+
 vi.mock('../../../components/teamsheets', () => ({
   Pitch: ({ players }: { players: { display_name: string }[] }) => (
     <div data-testid="pitch">
@@ -133,7 +141,7 @@ describe('TeamsheetDetailPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Low')).toBeInTheDocument();
+      expect(screen.getByText('Fit')).toBeInTheDocument();
     });
   });
 
@@ -160,8 +168,8 @@ describe('TeamsheetDetailPage', () => {
       expect(screen.getByTestId('teamsheet-header')).toBeInTheDocument();
     });
 
-    expect(screen.queryByText('Low')).not.toBeInTheDocument();
-    expect(screen.queryByText('High')).not.toBeInTheDocument();
+    expect(screen.queryByText('Fit')).not.toBeInTheDocument();
+    expect(screen.queryByText('Out')).not.toBeInTheDocument();
   });
 
   it('preserves existing teamsheet content after availability loads', async () => {
@@ -175,7 +183,7 @@ describe('TeamsheetDetailPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Test Teamsheet')).toBeInTheDocument();
       expect(screen.getAllByText('John Smith').length).toBeGreaterThan(0);
-      expect(screen.getByText('Medium')).toBeInTheDocument();
+      expect(screen.getByText('Doubt')).toBeInTheDocument();
     });
 
     expect(chatQuery).toHaveBeenCalledTimes(1);

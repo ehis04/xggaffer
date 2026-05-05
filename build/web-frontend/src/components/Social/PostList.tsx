@@ -74,6 +74,19 @@ export const PostList: React.FC<PostListProps> = ({
     }
   };
 
+  const handleReport = async (post: PostData) => {
+    try {
+      const result = await communityApi.reportPost(post.id);
+      if (result.moderation_status === "UR") {
+        setPosts((currentPosts) =>
+          currentPosts.filter((currentPost) => currentPost.id !== post.id)
+        );
+      }
+    } catch (error) {
+      console.error("Couldn't report post: ", error);
+    }
+  };
+
   return (
     <div className="post-list-container">
       {postsPB.map((post) => (
@@ -85,6 +98,7 @@ export const PostList: React.FC<PostListProps> = ({
           onProfileClick={onProfileClick}
           onPostClick={onPostClick}
           onDelete={handleDelete}
+          onReport={handleReport}
         />
       ))}
     </div>

@@ -36,7 +36,7 @@ describe('InternalPlayerComparisonPage', () => {
     vi.clearAllMocks();
 
     browseClubsMock.mockResolvedValue([
-      { id: 22, name: 'Manchester United', club_type: 'system_professional' },
+      { id: 22, name: 'Manchester United FC', club_type: 'system_professional' },
       { id: 33, name: 'Real Madrid CF', club_type: 'system_professional' },
     ]);
 
@@ -45,6 +45,16 @@ describe('InternalPlayerComparisonPage', () => {
         return Promise.resolve({
           data: {
             results: [
+              {
+                player: {
+                  id: 21,
+                  display_name: 'Jude Bellingham',
+                  full_name: 'Jude Bellingham',
+                  position: 'AM',
+                  nationality: 'England',
+                },
+                club: { id: 33, name: 'Real Madrid CF' },
+              },
               {
                 player: {
                   id: 21,
@@ -72,7 +82,17 @@ describe('InternalPlayerComparisonPage', () => {
                   position: 'AM',
                   nationality: 'Portugal',
                 },
-                club: { id: 22, name: 'Manchester United' },
+                club: { id: 22, name: 'Manchester United FC' },
+              },
+              {
+                player: {
+                  id: 22,
+                  display_name: 'Bruno Fernandes',
+                  full_name: 'Bruno Fernandes',
+                  position: 'AM',
+                  nationality: 'Portugal',
+                },
+                club: { id: 22, name: 'Manchester United FC' },
               },
             ],
           },
@@ -111,7 +131,7 @@ describe('InternalPlayerComparisonPage', () => {
           },
           club: {
             id: 22,
-            name: 'Manchester United',
+            name: 'Manchester United FC',
           },
           context: {
             competition_id: 1,
@@ -168,10 +188,12 @@ describe('InternalPlayerComparisonPage', () => {
 
     const madridButtons = await screen.findAllByRole('button', { name: 'Real Madrid CF' });
     fireEvent.click(madridButtons[0]);
+    expect(await screen.findAllByRole('button', { name: /Jude Bellingham/i })).toHaveLength(1);
     fireEvent.click(await screen.findByRole('button', { name: /Jude Bellingham/i }));
 
-    const unitedButtons = await screen.findAllByRole('button', { name: 'Manchester United' });
+    const unitedButtons = await screen.findAllByRole('button', { name: 'Manchester United FC' });
     fireEvent.click(unitedButtons[0]);
+    expect(await screen.findAllByRole('button', { name: /Bruno Fernandes/i })).toHaveLength(1);
     fireEvent.click(await screen.findByRole('button', { name: /Bruno Fernandes/i }));
 
     await waitFor(() => {

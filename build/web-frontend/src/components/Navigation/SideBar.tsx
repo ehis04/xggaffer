@@ -21,12 +21,12 @@ interface SidebarProps {
 }
 
 export interface User {
-    id: number;
-    username: string;
-    email: string;
-    first_name: string;
-    last_name: string;
-  };
+  id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+}
 
 export interface UserRole {
   id: number;
@@ -49,10 +49,7 @@ export interface UserData {
   created_at: string;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({
-  items,
-  bottomItems,
-}) => {
+export const Sidebar: React.FC<SidebarProps> = ({ items, bottomItems }) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
@@ -82,8 +79,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </svg>
       ),
       label: "Home",
-      onClick: () => console.log("Home clicked"),
-      link: "",
+      onClick: () => navigate("/home"),
+      link: "/home",
     },
     {
       id: "social",
@@ -104,25 +101,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       onClick: () => console.log("Social clicked"),
       link: "http://localhost:5173/social",
     },
-    {
-      id: "explore",
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          fill="currentColor"
-          className="bi bi-compass"
-          viewBox="0 0 16 16"
-        >
-          <path d="M8 16.016a7.5 7.5 0 0 0 1.962-14.74A1 1 0 0 0 9 0H7a1 1 0 0 0-.962 1.276A7.5 7.5 0 0 0 8 16.016m6.5-7.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0" />
-          <path d="m6.94 7.44 4.95-2.83-2.83 4.95-4.949 2.83 2.828-4.95z" />
-        </svg>
-      ),
-      label: "Explore",
-      onClick: () => console.log("Explore clicked"),
-      link: "",
-    },
+
     {
       id: "coaching",
       icon: (
@@ -191,7 +170,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       id: "trash",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-trash3" viewBox="0 0 16 16">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          fill="currentColor"
+          className="bi bi-trash3"
+          viewBox="0 0 16 16"
+        >
           <path d="M6.5 1h3a1 1 0 0 1 1 1V3h3.5a.5.5 0 0 1 0 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4H2a.5.5 0 0 1 0-1H5.5V2a1 1 0 0 1 1-1Zm1 2h1V2h-1v1ZM4 4v9a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4H4Zm2.5 2.5a.5.5 0 0 1 1 0V12a.5.5 0 0 1-1 0V6.5Zm3 0a.5.5 0 0 1 1 0V12a.5.5 0 0 1-1 0V6.5Z" />
         </svg>
       ),

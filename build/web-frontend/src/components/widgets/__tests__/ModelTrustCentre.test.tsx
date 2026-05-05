@@ -39,6 +39,10 @@ vi.mock('../../../components/widgets/CalibrationChart', () => ({
   default: () => <div data-testid="calibration-chart" />,
 }));
 
+vi.mock('../../../components/widgets/ConfidenceAccuracyChart', () => ({
+  default: () => <div data-testid="confidence-accuracy-chart" />,
+}));
+
 vi.mock('../../../components/widgets/BiggestMissesPanel', () => ({
   default: () => <div data-testid="biggest-misses-panel" />,
 }));
@@ -70,6 +74,12 @@ const MOCK_DATA: ModelTrustData = {
   ],
   recent_form: { count: 20, accuracy: 0.60 },
   biggest_misses: [],
+  market_comparison: {
+    market_accuracy: 0.512,
+    model_accuracy_vs_market: 0.031,
+    total_evaluated: 100,
+  },
+  confidence_distribution: [],
 };
 
 function makePayload(
@@ -134,7 +144,7 @@ describe('ModelTrustCentre', () => {
     vi.mocked(fetchModelTrustWidget).mockResolvedValueOnce(makePayload(MOCK_DATA));
     renderPage();
     await waitFor(() => {
-      expect(screen.getByTestId('calibration-chart')).toBeInTheDocument();
+      expect(screen.getByTestId('confidence-accuracy-chart')).toBeInTheDocument();
     });
   });
 
@@ -142,7 +152,7 @@ describe('ModelTrustCentre', () => {
     vi.mocked(fetchModelTrustWidget).mockResolvedValueOnce(makePayload(MOCK_DATA));
     renderPage();
     await waitFor(() => {
-      expect(screen.getByTestId('biggest-misses-panel')).toBeInTheDocument();
+      expect(screen.getAllByTestId('biggest-misses-panel')).toHaveLength(2);
     });
   });
 

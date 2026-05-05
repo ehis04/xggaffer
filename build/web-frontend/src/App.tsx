@@ -26,6 +26,9 @@ import { ResetPasswordPage } from "./pages/setup/ResetPasswordPage";
 // --- User Profile ---
 import { UserProfilePage } from "./pages/user/UserProfilePage";
 
+// --- Home ---
+import HomePage from "./pages/home/HomePage";
+
 // --- Social Feed ---
 import { SocialPage } from "./pages/social/SocialPage";
 import { PostDetailPage } from "./pages/social/PostDetailPage";
@@ -92,7 +95,7 @@ function App() {
               <Route
                 path="/"
                 element={
-                  <PublicOnlyRoute redirectTo="/social" useFrom={false}>
+                  <PublicOnlyRoute redirectTo="/home" useFrom={false}>
                     <LandingPage />
                   </PublicOnlyRoute>
                 }
@@ -115,6 +118,9 @@ function App() {
               {/* === Protected Routes (verified users) === */}
               <Route element={<ProtectedRoute />}>
                 <Route element={<AuthenticatedLayout />}>
+
+                  {/* --- Home --- */}
+                  <Route path="/home" element={<HomePage />} />
 
                   {/* --- Social Feed --- */}
                   <Route path="/social" element={<SocialPage />} />

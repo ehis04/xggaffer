@@ -8,6 +8,11 @@ from apps.predictions.services.unknown_handler import CAPABILITIES_SUMMARY
 
 
 def build_payload(parsed_query: ParsedQuery, handler_result: QueryPayload) -> dict:
+    engine_data = handler_result.engine_data
+    if parsed_query.intent == IntentClass.ODDS_COMPARISON and isinstance(engine_data, dict):
+        engine_data = {**engine_data}
+        engine_data.setdefault("benchmark", None)
+
     payload = {
         "intent": parsed_query.intent.value,
         "entities": {
@@ -18,7 +23,7 @@ def build_payload(parsed_query: ParsedQuery, handler_result: QueryPayload) -> di
             "league": parsed_query.league,
             "season": parsed_query.season,
         },
-        "engine_data": handler_result.engine_data,
+        "engine_data": engine_data,
         "partial": handler_result.partial,
         "error": handler_result.error,
         "timestamp": datetime.datetime.utcnow().isoformat() + "Z",

@@ -59,7 +59,7 @@ def validate_predictions_snapshot() -> tuple[bool, list[str]]:
     warnings = []
     if ModelArtefactRecord.objects.filter(is_active=True).count() == 0:
         warnings.append('No active ModelArtefactRecord found for any algorithm.')
-    return True, warnings
+    return not warnings, warnings
 
 
 def run_predictions_publication() -> None:

@@ -86,12 +86,14 @@ log "Checking Django system..."
 
 start_worker() {
     local name="$1"; local queues="$2"; local concurrency="$3"
+    local max_tasks="${4:-100}"       # recycle child after N tasks — prevents memory accumulation
+    local max_mem="${5:-300000}"      # recycle child if it exceeds this many KB (300 MB default)
     local logfile="$LOG_DIR/${name}.log"
 
     # Include global site-packages for packages like feedparser not in venv
     export PYTHONPATH="${HOME}/.local/lib/python3.10/site-packages:${PYTHONPATH:-}"
 
-    log "  Starting worker: ${name}  queues=[${queues}]  concurrency=${concurrency}"
+    log "  Starting worker: ${name}  queues=[${queues}]  concurrency=${concurrency}  max-tasks=${max_tasks}  max-mem=${max_mem}KB"
     touch "$logfile"
     cd "$BACKEND_DIR" && celery -A backend worker \
         -Q "$queues" \
@@ -100,6 +102,8 @@ start_worker() {
         -n "${name}@%h" \
         --logfile="$logfile" \
         --pidfile="" \
+        --max-tasks-per-child="$max_tasks" \
+        --max-memory-per-child="$max_mem" \
         >> "$logfile" 2>&1 &
     local worker_pid=$!
     cd "$SCRIPT_DIR"
@@ -108,29 +112,28 @@ start_worker() {
 }
 
 # ── launch workers ───────────────────────────────────────────────────────────
+#
+# Consolidated from 7 workers to 3 to cut idle RAM usage.
+# Before: 7 main processes + 12 forked children = ~19 processes.
+# After:  3 main processes +  4 forked children = ~7 processes.
+#
+#   args: name  queues  concurrency  max-tasks-per-child  max-memory-per-child(KB)
 
 log "Starting Celery workers..."
 
-# Football-data.org  — strict rate limit, must be single-threaded
-start_worker "worker_football_data"  "queue_football_data"  1
+# Data ingest — football-data.org (every 15 min, rate-limited), native stats (every 2h),
+# transfermarkt (weekly). All naturally sequential; c=1 is correct for each individually.
+# Recycle child every 100 tasks or 250 MB to contain any memory creep.
+start_worker "worker_data"        "queue_football_data,queue_native_stats,queue_transfermarkt"  1  100  250000
 
-# Understat scraper
-start_worker "worker_understat"      "queue_understat"       2
+# Browser scrapers — understat (every 6h), sofascore (every 3h), whoscored (daily 04:00).
+# Schedules don't overlap so c=1 is fine. Scraper processes can bloat; recycle at 200 MB.
+start_worker "worker_scrapers"    "queue_understat,queue_sofascore,queue_whoscored"              1   20  200000
 
-# SofaScore scraper (soccerdata)
-start_worker "worker_sofascore"      "queue_sofascore"       2
-
-# WhoScored scraper (soccerdata)
-start_worker "worker_whoscored"      "queue_whoscored"       2
-
-# Transfermarkt scraper — low-traffic weekly DOB backfill
-start_worker "worker_transfermarkt"  "queue_transfermarkt"   1
-
-# Native stats (internal DB aggregation, fast)
-start_worker "worker_native_stats"   "queue_native_stats"    2
-
-# Publication rebuilds (snapshot writes)
-start_worker "worker_publication"    "queue_publication"     2
+# Publication — quick snapshot rebuilds (every 30 min) + slow recommendation generation
+# (~4 min). Keep c=2 so a running recommendation task doesn't block a rebuild.
+# Recycle at 500 MB because the recommendation task loads ML model artefacts.
+start_worker "worker_publication" "queue_publication"                                           2   50  500000
 
 # ── beat scheduler ───────────────────────────────────────────────────────────
 
@@ -195,6 +198,11 @@ log "  Beat log:   $BEAT_LOG"
 log ""
 log "  To stop everything:  ./start_workers.sh stop"
 log "  To tail all logs:    tail -f $LOG_DIR/*.log"
+log ""
+log "Workers (3 total, down from 7):"
+log "  worker_data        [queue_football_data, queue_native_stats, queue_transfermarkt]  c=1"
+log "  worker_scrapers    [queue_understat, queue_sofascore, queue_whoscored]              c=1"
+log "  worker_publication [queue_publication]                                              c=2"
 log ""
 log "Sources covered:"
 log "  ✓ Football-data.org  (fixtures, metadata, scorers/squads)  — every 15 min"

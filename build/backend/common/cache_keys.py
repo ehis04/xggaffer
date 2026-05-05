@@ -11,6 +11,7 @@ CACHE_TTL_TEAMS = 3600
 CACHE_TTL_ODDS_FIXTURES = 300
 CACHE_TTL_ODDS_TEAMS = 3600
 CACHE_TTL_CHAT = 3600
+CACHE_TTL_PREDICT = 600
 
 # Keep cache surface names in one place for API and command parity.
 KNOWN_CACHE_SURFACES = ("livefootball", "predictions", "odds", "chat", "playerdata", "clubs")

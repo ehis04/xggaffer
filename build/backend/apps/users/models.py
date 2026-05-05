@@ -197,7 +197,7 @@ class Follow(models.Model):
                 name='unique_follow_relationship'
             ),
             models.CheckConstraint(
-                condition=~Q(follower=F('following')),
+                check=~Q(follower=F('following')),
                 name='prevent_self_follow'
             )
         ]
@@ -216,28 +216,62 @@ class Follow(models.Model):
         if self.follower == self.following:
             raise ValidationError("You can't follow yourself.")
     
-    # saves the follow relationship and increments follower and following counters when the row is first created
+    # validates the follow relationship before saving; counters are maintained by signals
     def save(self, *args, **kwargs):
-        is_new = self._state.adding
         self.full_clean()
         super().save(*args, **kwargs)
-        
-        if is_new:
-            UserProfile.objects.filter(pk=self.follower_id).update(
-                following_count=F('following_count') + 1
+
+
+class FollowRequestStatus(models.TextChoices):
+    PENDING = 'P', 'Pending'
+    ACCEPTED = 'A', 'Accepted'
+    DECLINED = 'D', 'Declined'
+
+
+# stores a pending request to follow a private profile
+class FollowRequest(models.Model):
+    follower = models.ForeignKey(
+        UserProfile,
+        on_delete=models.CASCADE,
+        related_name='sent_follow_requests'
+    )
+    following = models.ForeignKey(
+        UserProfile,
+        on_delete=models.CASCADE,
+        related_name='received_follow_requests'
+    )
+    status = models.CharField(
+        max_length=1,
+        choices=FollowRequestStatus.choices,
+        default=FollowRequestStatus.PENDING
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Follow Request'
+        verbose_name_plural = 'Follow Requests'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['follower', 'following'],
+                name='unique_follow_request'
+            ),
+            models.CheckConstraint(
+                check=~Q(follower=F('following')),
+                name='prevent_self_follow_request'
             )
-            UserProfile.objects.filter(pk=self.following_id).update(
-                followers_count=F('followers_count') + 1
-            )
-    # deletes the follow relationship and decrements follower and following counters
-    def delete(self, *args, **kwargs):
-        follower_id = self.follower_id
-        following_id = self.following_id
-        super().delete(*args, **kwargs)
-        
-        UserProfile.objects.filter(pk=follower_id).update(
-            following_count=F('following_count') - 1
-        )
-        UserProfile.objects.filter(pk=following_id).update(
-            followers_count=F('followers_count') - 1
-        )
+        ]
+        indexes = [
+            models.Index(fields=['following', 'status', '-created_at']),
+            models.Index(fields=['follower', 'status', '-created_at']),
+        ]
+        ordering = ['-created_at']
+
+    def __str__(self):
+        follower_name = self.follower.user.username or self.follower.user.email
+        following_name = self.following.user.username or self.following.user.email
+        return f"{follower_name} requested to follow {following_name}"
+
+    def clean(self):
+        if self.follower == self.following:
+            raise ValidationError("You can't request to follow yourself.")

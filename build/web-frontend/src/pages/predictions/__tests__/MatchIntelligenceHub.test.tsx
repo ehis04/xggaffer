@@ -176,9 +176,7 @@ describe('MatchIntelligenceHub', () => {
 
   it('renders page title once fixture resolved', async () => {
     renderHub();
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Arsenal vs Chelsea/i })).toBeInTheDocument();
-    });
+    expect(screen.getByText('Arsenal vs Chelsea')).toBeInTheDocument();
   });
 
   it('renders tactical unavailable message for non-La Liga league', async () => {

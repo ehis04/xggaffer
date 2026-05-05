@@ -13,7 +13,7 @@ const normalizeForCompare = (value: string): string =>
   value
     .toLowerCase()
     .replace(/\s+/g, ' ')
-    .replace(/[.,!?;:\"'()\[\]{}]/g, '')
+    .replace(/[.,!?;:"'()[\]{}]/g, '')
     .trim();
 
 const extractParagraphs = (value: string): string[] => {

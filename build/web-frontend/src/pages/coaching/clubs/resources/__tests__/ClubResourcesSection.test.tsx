@@ -187,6 +187,7 @@ describe('ClubResourcesSection', () => {
 
     await screen.findByText('Analysis Pack');
 
+    fireEvent.click(screen.getByRole('button', { name: '+ Upload file' }));
     fireEvent.click(screen.getByRole('button', { name: 'Upload resource' }));
 
     expect(
@@ -212,7 +213,7 @@ describe('ClubResourcesSection', () => {
 
     expect(screen.getByText('Club visible', { selector: 'span' })).toBeInTheDocument();
     expect(screen.getAllByText('Completed').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Opened count').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Opened:').length).toBeGreaterThan(0);
     expect(screen.getByText('2')).toBeInTheDocument();
     expect(screen.getByText('1')).toBeInTheDocument();
   });
@@ -277,7 +278,7 @@ describe('ClubResourcesSection', () => {
 
     now = 6_000;
 
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    fireEvent.click(screen.getByRole('button', { name: /Close/i }));
 
     await flushAsyncWork();
 

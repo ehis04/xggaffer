@@ -392,7 +392,11 @@ const MyClubsPage: React.FC = () => {
 
   const handleSetView = (view: "active" | "trash") => {
     setWorkflowMessage(null);
-    view === "trash" ? setSearchParams({ view: "trash" }) : setSearchParams({});
+    if (view === "trash") {
+      setSearchParams({ view: "trash" });
+    } else {
+      setSearchParams({});
+    }
   };
 
   if (loading)

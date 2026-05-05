@@ -16,7 +16,6 @@ const ALLOWED_BROWSE_CLUBS = [
   'juventus fc',
 ] as const;
 
-const ALLOWED_BROWSE_CLUB_SET = new Set<string>(ALLOWED_BROWSE_CLUBS);
 const ALLOWED_BROWSE_CLUB_ORDER = new Map<string, number>(
   ALLOWED_BROWSE_CLUBS.map((name, idx) => [name, idx])
 );
@@ -29,14 +28,6 @@ const normalizeClubName = (name: string): string =>
     .replace(/[^a-z0-9 ]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-
-const isPopulatedSystemClub = (club: Club): boolean => {
-  if (club.club_type && club.club_type !== 'system_professional') {
-    return false;
-  }
-
-  return ALLOWED_BROWSE_CLUB_SET.has(normalizeClubName(club.name));
-};
 
 const getRequestStatusLabel = (status: ClubJoinRequest["status"]) => {
   const map: Record<string, string> = {
@@ -115,7 +106,13 @@ const BrowseClubCard: React.FC<BrowseClubCardProps> = ({
           )}
         </div>
         <div className={styles.clubCardInfo}>
-          <div className={styles.clubCardName}>{club.name}</div>
+          <button
+            type="button"
+            className={styles.clubCardName}
+            onClick={() => onView(club)}
+          >
+            {club.name}
+          </button>
           {club.city && (
             <div className={styles.clubCardLocation}>
               {club.city}{club.country ? `, ${club.country}` : ""}
@@ -202,7 +199,7 @@ const BrowseClubsPage: React.FC = () => {
         clubsApi.browse(search ? { search } : undefined),
         clubsApi.listMyJoinRequests(),
       ]);
-      const targetClubs = clubsData.filter(isPopulatedSystemClub);
+      const targetClubs = clubsData.filter((club) => (club as any).is_trashed !== true);
       const playerLists = await Promise.all(
         targetClubs.map(async (club) => {
           try {
@@ -455,7 +452,7 @@ const BrowseClubsPage: React.FC = () => {
                     </>
                   )}
                   {selectedClub.join_policy === "invite_only" && (
-                    <div className={styles.noticeBlock}>This club is invite only. No self-service request flow is available.</div>
+                    <div className={styles.noticeBlock}>This club is invite only. No self-service request flow is available from browse.</div>
                   )}
                   {selectedClub.join_policy === "system_managed" && (
                     <div className={styles.noticeBlock}>This club is system managed and not claimable through ordinary membership workflows.</div>

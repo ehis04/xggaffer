@@ -488,7 +488,6 @@ def _apply_player_filters(
     if search:
         queryset = queryset.filter(
             Q(player__display_name__icontains=search)
-            | Q(player__full_name__icontains=search)
             | Q(player__first_name__icontains=search)
             | Q(player__last_name__icontains=search)
             | Q(club__name__icontains=search)

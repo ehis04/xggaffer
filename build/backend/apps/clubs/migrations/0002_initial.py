@@ -3,6 +3,7 @@
 import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
+from django.db.models import Q
 
 
 class Migration(migrations.Migration):
@@ -316,7 +317,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='clubjoinrequest',
-            constraint=models.UniqueConstraint(fields=('club', 'user'), name='unique_pending_join_request_per_user_club'),
+            constraint=models.UniqueConstraint(condition=Q(status='pending'), fields=('club', 'user'), name='unique_pending_join_request_per_user_club'),
         ),
         migrations.AddIndex(
             model_name='clubplayerinjury',
@@ -400,7 +401,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='fixture',
-            constraint=models.UniqueConstraint(fields=('club', 'external_fixture_id'), name='unique_nonblank_external_fixture_id_per_club'),
+            constraint=models.UniqueConstraint(condition=~Q(external_fixture_id=''), fields=('club', 'external_fixture_id'), name='unique_nonblank_external_fixture_id_per_club'),
         ),
         migrations.AddIndex(
             model_name='clubseasonresult',

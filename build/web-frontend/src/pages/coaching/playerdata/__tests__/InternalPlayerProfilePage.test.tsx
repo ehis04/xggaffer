@@ -35,7 +35,7 @@ describe('InternalPlayerProfilePage', () => {
     vi.clearAllMocks();
 
     browseClubsMock.mockResolvedValue([
-      { id: 11, name: 'Arsenal', club_type: 'system_professional', division: 'Premier League' },
+      { id: 11, name: 'Real Madrid CF', club_type: 'system_professional', division: 'La Liga' },
     ]);
 
     listEnrichedPlayersMock.mockImplementation(({ search }: { search?: string }) => {
@@ -56,7 +56,20 @@ describe('InternalPlayerProfilePage', () => {
               },
               club: {
                 id: 11,
-                name: 'Arsenal',
+                name: 'Real Madrid CF',
+              },
+            },
+            {
+              player: {
+                id: 12,
+                display_name: 'Bukayo Saka',
+                full_name: 'Bukayo Saka',
+                position: 'RW',
+                nationality: 'England',
+              },
+              club: {
+                id: 11,
+                name: 'Real Madrid CF',
               },
             },
           ],
@@ -77,7 +90,7 @@ describe('InternalPlayerProfilePage', () => {
         },
         club: {
           id: 11,
-          name: 'Arsenal',
+          name: 'Real Madrid CF',
         },
         context: {
           season: '2024/2025',
@@ -129,7 +142,8 @@ describe('InternalPlayerProfilePage', () => {
       screen.getByText('Select a club above or search by name to browse players.')
     ).toBeInTheDocument();
 
-    fireEvent.click(await screen.findByRole('button', { name: /Arsenal/i }, { timeout: 10000 }));
+    fireEvent.click(await screen.findByRole('button', { name: /Real Madrid CF/i }, { timeout: 10000 }));
+    expect(await screen.findAllByRole('button', { name: /Bukayo Saka/i }, { timeout: 10000 })).toHaveLength(1);
     fireEvent.click(await screen.findByRole('button', { name: /Bukayo Saka/i }, { timeout: 10000 }));
 
     await waitFor(() => {

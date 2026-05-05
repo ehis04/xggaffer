@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
+from django.db.models import Q
 from django.utils import timezone
 
 
@@ -124,6 +125,7 @@ class ClubJoinRequest(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['club', 'user'],
+                condition=Q(status='pending'),
                 name='unique_pending_join_request_per_user_club'
             )
         ]

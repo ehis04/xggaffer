@@ -627,6 +627,9 @@ const TeamsheetCreatePage: React.FC = () => {
                   <div className={styles.TTSCreateSlotDetail}>
                     <div className={styles.TTSCreateSlotDetailHead}>
                       <div>
+                        <div className={styles.TTSCreateSlotDetailSub}>
+                          Selected Slot
+                        </div>
                         <div className={styles.TTSCreateSlotDetailTitle}>
                           {selectedSlotState.position_label} ·{" "}
                           {selectedSlotState.is_substitute

@@ -3,6 +3,10 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import MyClubsPage from '../MyClubsPage';
 
+vi.mock('../../../../context/useAuth', () => ({
+  useAuth: () => ({ user: { id: 99, email: 'player@example.com' } }),
+}));
+
 const { mockNavigate, mockClubsApi, mockApiClient } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
   mockClubsApi: {
@@ -36,6 +40,10 @@ vi.mock('../../../../services/api', () => ({
 
 vi.mock('../../../../services/api/client', () => ({
   default: mockApiClient,
+}));
+
+vi.mock('../../../../components/Navigation/SideBar', () => ({
+  Sidebar: () => <div data-testid="sidebar" />,
 }));
 
 describe('MyClubsPage', () => {
@@ -104,7 +112,7 @@ describe('MyClubsPage', () => {
     expect(screen.getByText('Request Club')).toBeInTheDocument();
     expect(screen.getByText(/Pending review/i)).toBeInTheDocument();
 
-    expect(screen.getByText('My Invitations')).toBeInTheDocument();
+    expect(screen.getByText('Pending invites')).toBeInTheDocument();
     expect(screen.getByText('Invite Club')).toBeInTheDocument();
     expect(screen.getByText(/Pending response/i)).toBeInTheDocument();
   });

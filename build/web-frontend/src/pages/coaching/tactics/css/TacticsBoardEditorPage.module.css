@@ -1,204 +1,255 @@
 .page {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    color: var(--primary-text);
+  display: grid;
+  grid-template-columns: 220px 1fr 260px;
+  grid-template-rows: auto auto 1fr auto;
+  height: 100vh;
+  overflow: hidden;
+  background: #080f09;
+  color: rgba(255, 255, 255, 0.88);
+  font-family: 'Geist', 'Inter', system-ui, sans-serif;
 }
 
-.feedbackState {
-    display: grid;
-    gap: 12px;
-    padding: 20px;
-    border: 1px solid var(--brand-green-border);
-    border-radius: 16px;
-    background: linear-gradient(180deg, rgba(35, 57, 43, 0.98), rgba(25, 43, 35, 0.98));
-    color: var(--primary-text);
+/* ── BoardToolbar: always first child, spans full width ── */
+.page > *:first-child {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  /* Guarantee it sits in a single contained row */
+  min-height: 0;
+  overflow: visible;
 }
 
-.feedbackTitle {
-    margin: 0;
-}
-
-.feedbackText {
-    margin: 0;
-    color: var(--secondary-text);
-}
-
+/* ── Hero strip (row 2, full width) ── */
 .heroCard {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 16px;
-    flex-wrap: wrap;
-    padding: 20px;
-    border-radius: 18px;
-    border: 1px solid var(--brand-green-border);
-    background:
-        radial-gradient(circle at top right, rgba(52, 211, 153, 0.12), transparent 28%),
-        linear-gradient(180deg, rgba(35, 57, 43, 0.98), rgba(25, 43, 35, 0.98));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+  height: 44px;
+  min-height: 44px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.025);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
 }
 
 .heroCopy {
-    display: grid;
-    gap: 10px;
-    max-width: 760px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .heroTitle {
-    margin: 0;
-    font-size: clamp(1.65rem, 2vw, 2.1rem);
-    color: var(--primary-text);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.88);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
 }
 
 .heroText {
-    margin: 0;
-    color: var(--secondary-text);
-    line-height: 1.6;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.30);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Hidden on the compact strip – only show in full hero layouts */
 .heroSupportingText {
-    margin: 0;
-    color: var(--tertiary-text);
-    line-height: 1.55;
+  display: none;
 }
 
 .heroActions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-    justify-content: flex-end;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .heroPill {
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 999px;
-    padding: 7px 11px;
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--primary-text);
-    font-size: 0.88rem;
-    text-transform: capitalize;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.14rem 0.52rem;
+  background: rgba(34, 197, 94, 0.10);
+  border: 1px solid rgba(34, 197, 94, 0.22);
+  border-radius: 20px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #4ade80;
+  white-space: nowrap;
+  text-transform: capitalize;
 }
 
-.utilityButton,
-.successButton,
-.dangerButton {
-    padding: 8px 12px;
-    border-radius: 999px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
-}
-
-.utilityButton {
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    background: rgba(255, 255, 255, 0.05);
-    color: #ffffff;
-}
-
-.utilityButton:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.11);
-}
-
-.successButton {
-    border: 1px solid rgba(167, 243, 208, 0.36);
-    background: linear-gradient(180deg, rgba(22, 101, 52, 0.92), rgba(21, 128, 61, 0.92));
-    color: #ffffff;
-}
-
-.successButton:hover:not(:disabled) {
-    background: linear-gradient(180deg, rgba(21, 128, 61, 0.96), rgba(34, 197, 94, 0.92));
-}
-
-.dangerButton {
-    border: 1px solid rgba(248, 113, 113, 0.4);
-    background: rgba(127, 29, 29, 0.52);
-    color: #ffffff;
-}
-
-.dangerButton:hover:not(:disabled) {
-    background: rgba(153, 27, 27, 0.68);
-}
-
-.utilityButton:active:not(:disabled),
-.successButton:active:not(:disabled),
-.dangerButton:active:not(:disabled) {
-    transform: translateY(1px);
-}
-
-.utilityButton:disabled,
-.successButton:disabled,
-.dangerButton:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-}
-
+/* ── Full-width error banner (row 2, stacks under hero) ── */
 .errorBanner {
-    margin-bottom: 0;
-    padding: 12px 14px;
-    border: 1px solid rgba(248, 113, 113, 0.35);
-    border-radius: 12px;
-    background: rgba(127, 29, 29, 0.28);
-    color: #fecaca;
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    align-items: center;
-    flex-wrap: wrap;
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0.36rem 16px;
+  background: rgba(239, 68, 68, 0.10);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.18);
+  font-size: 0.77rem;
+  color: #fca5a5;
 }
 
-.readOnlyBlock {
-    pointer-events: auto;
-    opacity: 1;
-}
-
-.readOnlyMuted {
-    pointer-events: none;
-    opacity: 0.72;
-}
-
+/* ── Full-width trash banner (between hero and editor) ── */
 .trashBanner {
-    margin-bottom: 0;
-    padding: 12px 14px;
-    border-radius: 12px;
-    background: rgba(127, 29, 29, 0.3);
-    border: 1px solid rgba(248, 113, 113, 0.35);
-    color: #fecaca;
-    line-height: 1.55;
+  grid-column: 1 / -1;
+  padding: 0.36rem 16px;
+  background: rgba(251, 191, 36, 0.07);
+  border-bottom: 1px solid rgba(251, 191, 36, 0.14);
+  font-size: 0.73rem;
+  color: #fbbf24;
+  line-height: 1.4;
 }
 
 .trashBannerMeta {
-    color: #f8fafc;
+  opacity: 0.75;
 }
 
+/* ── ToolPalette wrapper: col 1, row 4 ── */
+.readOnlyBlock {
+  grid-column: 1;
+  grid-row: 4;
+  background: #0c1510;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.readOnlyMuted {
+  opacity: 0.42;
+  pointer-events: none;
+  filter: grayscale(0.25);
+}
+
+/* ── Editor grid: col 2-3, rows 3-4 ── */
 .editorGrid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
-    gap: 20px;
-    align-items: start;
+  grid-column: 2 / 4;
+  grid-row: 3 / 5;
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  overflow: hidden;
+  min-height: 0;
 }
 
+/* ── Canvas panel (centre of editorGrid) ── */
 .canvasPanel {
-    border: 1px solid var(--brand-green-border);
-    border-radius: 18px;
-    padding: 16px;
-    background: linear-gradient(180deg, rgba(35, 57, 43, 0.96), rgba(25, 43, 35, 0.98));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow: hidden;
+  background: #0b130c;
+  border-left: 1px solid rgba(255, 255, 255, 0.04);
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-@media (max-width: 960px) {
-    .editorGrid {
-        grid-template-columns: 1fr;
-    }
+/* ── Shared button styles ── */
+.utilityButton {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.65rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.70);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+.utilityButton:hover {
+  background: rgba(255, 255, 255, 0.11);
+  color: #fff;
 }
 
-@media (max-width: 768px) {
-    .heroCard {
-        padding: 16px;
-    }
+.dangerButton {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.65rem;
+  background: rgba(239, 68, 68, 0.10);
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  border-radius: 6px;
+  color: #fca5a5;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s;
+  white-space: nowrap;
+}
+.dangerButton:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.20);
+}
+.dangerButton:disabled {
+  opacity: 0.40;
+  cursor: not-allowed;
+}
 
-    .heroActions {
-        justify-content: flex-start;
-    }
+.successButton {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.65rem;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.26);
+  border-radius: 6px;
+  color: #4ade80;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s;
+  white-space: nowrap;
+}
+.successButton:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.22);
+}
+.successButton:disabled {
+  opacity: 0.40;
+  cursor: not-allowed;
+}
+
+/* ── Loading / error feedback states ── */
+.feedbackState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 100vh;
+  background: #080f09;
+  color: rgba(255, 255, 255, 0.60);
+  font-family: 'Geist', 'Inter', system-ui, sans-serif;
+  padding: 24px;
+  text-align: center;
+}
+
+.feedbackTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.82);
+  margin: 0;
+}
+
+.feedbackText {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.38);
+  margin: 0;
+  max-width: 420px;
+  line-height: 1.55;
 }

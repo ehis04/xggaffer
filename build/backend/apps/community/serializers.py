@@ -1,12 +1,12 @@
 from rest_framework import serializers
 from .models import Post, Comment, HashTag, PostTag, Notification, Like
-from apps.users.models import User
+from apps.users.models import FollowRequest, User
 
 # serializes post data for creating and returning posts
 class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
-        fields = ['id', 'author', 'text_body', 'visibility', 'attachments_count', 'created_at', 'no_of_likes', 'no_of_comments']
+        fields = ['id', 'author', 'text_body', 'visibility', 'attachments_count', 'created_at', 'no_of_likes', 'no_of_comments', 'moderation_status']
         read_only_fields = ['id', 'author', 'moderation_status', 'no_of_likes', 'attachments_count', 'created_at', 'no_of_comments']
 
 # seializes comment data for creating and returning comments
@@ -98,7 +98,7 @@ class ExplorePostSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Post
-        fields = ['id', 'author', 'text_body', 'created_at', 'no_of_likes', 'no_of_comments', 'visibility', 'post_tags', 'recent_comments', 'is_liked', 'hashtags', 'time_since_posted', 'type', 'ranked_score', 'popularity', 'recency_scaled']
+        fields = ['id', 'author', 'text_body', 'created_at', 'no_of_likes', 'no_of_comments', 'visibility', 'moderation_status', 'post_tags', 'recent_comments', 'is_liked', 'hashtags', 'time_since_posted', 'type', 'ranked_score', 'popularity', 'recency_scaled']
         read_only_fields = ['id', 'author', 'created_at', 'no_of_likes', 'no_of_comments', 'attachments_count', 'type']
     
     # identifies the feed item as a post
@@ -151,8 +151,10 @@ class CommentResponseSerializer(serializers.ModelSerializer):
 class NotificationListSerializer(serializers.ModelSerializer):
     triggered_by = PostAuthorSerializer(read_only=True)
     target_kind = serializers.SerializerMethodField()
+    target_id = serializers.IntegerField(source="object_id", read_only=True)
     post_id = serializers.SerializerMethodField()
     comment_id = serializers.SerializerMethodField()
+    follow_request_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Notification
@@ -163,8 +165,10 @@ class NotificationListSerializer(serializers.ModelSerializer):
             "created_at",
             "triggered_by",
             "target_kind",
+            "target_id",
             "post_id",
             "comment_id",
+            "follow_request_status",
         ]
 
     def get_target_kind(self, obj):
@@ -186,5 +190,11 @@ class NotificationListSerializer(serializers.ModelSerializer):
         target = obj.content_object
         if isinstance(target, Comment):
             return target.id
+        return None
+
+    def get_follow_request_status(self, obj):
+        target = obj.content_object
+        if isinstance(target, FollowRequest):
+            return target.status
         return None
 

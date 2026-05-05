@@ -18,6 +18,9 @@ import type {
 import liveFootballApi from '../../services/api/livefootballApi';
 import { WHATIF_WIN_POINTS, WHATIF_DRAW_POINTS, WHATIF_LOSS_POINTS } from '../../components/widgets/WhatIfPanel';
 import styles from './css/SeasonProjectionCentre.module.css';
+import { Sidebar } from '../../components/Navigation/SideBar';
+import { SocialUserButtons } from '../../components/Social/SocialUserButtons';
+import { PredictionsNavbar } from '../../components/Navigation/predictionsNavbar';
 
 const VALID_LEAGUE_CODES = ['PL', 'PD', 'BL1', 'SA', 'FL1'] as const;
 type LeagueCode = typeof VALID_LEAGUE_CODES[number];
@@ -165,6 +168,19 @@ export default function SeasonProjectionCentre() {
 
   return (
     <div className={styles.page}>
+      <div className={styles.Sidebar}>
+        <Sidebar />
+      </div>
+
+      <div className={styles.base}>
+        <header className={styles.Header}>
+          <div className={styles.Left}>Odds Comparisson</div>
+          <div className={styles.Middle}><PredictionsNavbar/></div>
+          <div className={styles.Right}>
+            <SocialUserButtons />
+          </div>
+        </header>
+
       <header className={styles.header}>
         <h1 className={styles.title}>Pre-Season Projection Centre</h1>
       </header>
@@ -264,6 +280,7 @@ export default function SeasonProjectionCentre() {
           </p>
         </div>
       )}
+      </div>
     </div>
   );
 }

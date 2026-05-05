@@ -70,7 +70,7 @@ const hasScore = (fixture: CompetitionFixtureItem): boolean =>
   fixture.away_score !== undefined;
 
 const renderScore = (fixture: CompetitionFixtureItem): string =>
-  hasScore(fixture) ? `${fixture.home_score} – ${fixture.away_score}` : 'vs';
+  hasScore(fixture) ? `${fixture.home_score} - ${fixture.away_score}` : 'vs';
 
 const fixtureKey = (fixture: CompetitionFixtureItem): string =>
   `${fixture.home_team.name}|${fixture.away_team.name}|${fixture.kickoff_at}`;
@@ -86,9 +86,11 @@ interface FixtureCardProps {
 const FixtureCard: React.FC<FixtureCardProps> = ({ fixture, probs, predictionsLoading }) => {
   const live = isLiveStatus(fixture.status);
   const scored = hasScore(fixture);
+  const fixtureLabel = `${getTeamLabel(fixture.home_team)} v ${getTeamLabel(fixture.away_team)}`;
 
   return (
     <article className={`${styles['lffp-fixture-card']} ${live ? styles['lffp-fixture-card--live'] : ''}`}>
+      <div>{fixtureLabel}</div>
       {/* Status row */}
       <div className={styles['lffp-fixture-meta']}>
         <span className={`${styles['lffp-status-badge']} ${live ? styles['lffp-status-badge--live'] : ''}`}>

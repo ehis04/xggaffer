@@ -6,6 +6,9 @@ import FileAttachment from '../../components/predictions/FileAttachment';
 import type { FileAttachmentData } from '../../components/predictions/FileAttachment';
 import SessionExport from '../../components/predictions/SessionExport';
 import styles from './css/PredictionPage.module.css';
+import { Sidebar } from '../../components/Navigation/SideBar';
+import { SocialUserButtons } from '../../components/Social/SocialUserButtons';
+import { PredictionsNavbar } from '../../components/Navigation/predictionsNavbar';
 
 const PREDICTION_STARTER_QUERIES = [
   'Predict Arsenal vs Chelsea this weekend',
@@ -41,6 +44,18 @@ export default function PredictionPage() {
 
   return (
     <div className={styles.predictionPageRoot}>
+      <div className={styles.Sidebar}>
+        <Sidebar />
+      </div>
+      <div className={styles.base}>
+        <header className={styles.Header}>
+          <div className={styles.Left}>Predictions Chat</div>
+          <div className={styles.Middle}><PredictionsNavbar/></div>
+          <div className={styles.Right}>
+            <SocialUserButtons />
+          </div>
+        </header>
+
       <div className={styles.predictionToolbar}>
         <span className={styles.predictionToolbarLeft}>{SESSION_LABEL}</span>
         <div className={styles.predictionToolbarRight}>
@@ -93,6 +108,7 @@ export default function PredictionPage() {
           />
         </div>
       </div>
+    </div>
     </div>
   );
 }

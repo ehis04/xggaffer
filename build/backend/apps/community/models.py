@@ -43,6 +43,7 @@ def function_targets():
     return (
         models.Q(app_label="community", model="post")
         | models.Q(app_label="community", model="comment")
+        | models.Q(app_label="users", model="follow")
         | models.Q(app_label="users", model="followrequest")
     )
 
@@ -63,6 +64,50 @@ class Post(models.Model):
     
     def __str__(self):
         return f"Post {self.id} Created by {self.author.username}"
+
+
+# stores words or phrases that automatically send a post to moderation review
+class BannedWord(models.Model):
+    term = models.CharField(max_length=100, unique=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("Banned Word")
+        verbose_name_plural = _("Banned Words")
+        ordering = ("term",)
+        indexes = [models.Index(fields=["is_active", "term"])]
+
+    def save(self, *args, **kwargs):
+        if self.term:
+            self.term = self.term.strip().lower()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.term
+
+
+# stores user reports against posts and prevents duplicate reports from a user
+class PostReport(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="reports", db_index=True)
+    reporter = models.ForeignKey(User, on_delete=models.CASCADE, related_name="post_reports", db_index=True)
+    reason = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("Post Report")
+        verbose_name_plural = _("Post Reports")
+        constraints = [
+            models.UniqueConstraint(fields=["post", "reporter"], name="unique_post_report_per_user"),
+        ]
+        indexes = [
+            models.Index(fields=["post", "-created_at"]),
+            models.Index(fields=["reporter", "-created_at"]),
+        ]
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"{self.reporter.username} reported post {self.post_id}"
 
 # tracks that a user has viewed a specific post
 class PostView(models.Model):
@@ -289,7 +334,7 @@ class Block(models.Model):
         verbose_name_plural = _("Blocks")
         constraints = [
             models.UniqueConstraint(fields=["blocker", "blocked_user"], name="uniq_blocker_blocked"),
-            models.CheckConstraint(condition=~Q(blocker=F("blocked_user")), name="no_self_block"),
+            models.CheckConstraint(check=~Q(blocker=F("blocked_user")), name="no_self_block"),
         ]
         indexes = [models.Index(fields=["blocker", "blocked_user"])]
 

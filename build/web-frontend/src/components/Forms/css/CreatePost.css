@@ -1,6 +1,6 @@
 .createPost-container {
     width: 100%;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 3px solid var(--brand-lightest-green-border);
 }
 
 .create-text-box {
@@ -26,11 +26,19 @@
     margin-bottom: 12px;
 }
 
+.create-post-notice {
+  margin: 0 10px 12px;
+  color: #7c2d12;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .attachments {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding-top: 2px;
+  position: relative;
 }
 
 .send-post {
@@ -62,10 +70,59 @@
 }
 
 .create-text-box .attachments button:hover {
-    background-color: #f1f1f1;
+    background-color: #f1f1f135;
     cursor: pointer;
 }
 
 .create-text-box .attachments .send-post:hover {
     color: #026eda;
+}
+
+.create-post-template-menu {
+  position: relative;
+}
+
+.create-post-dropdown {
+  position: absolute;
+  left: 0;
+  bottom: 38px;
+  z-index: 20;
+  width: min(280px, calc(100vw - 48px));
+  max-height: 230px;
+  overflow-y: auto;
+  padding: 6px;
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 8px;
+  background: var(--brand-lightest-green);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+}
+
+.create-post-template-menu:last-of-type .create-post-dropdown {
+  left: auto;
+  right: 0;
+}
+
+.create-text-box .attachments .create-post-dropdown button {
+  width: 100%;
+  height: auto;
+  min-height: 34px;
+  justify-content: flex-start;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: var(--primary-text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.create-text-box .attachments .create-post-dropdown button:hover {
+  background: var(--brand-light-green);
+}
+
+.create-post-dropdown-empty {
+  padding: 10px;
+  color: var(--secondary-text);
+  font-size: 12px;
+  line-height: 1.4;
 }
