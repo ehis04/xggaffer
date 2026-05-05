@@ -21,6 +21,13 @@ function getCsrfToken(): string | null {
   return null;
 }
 
+async function ensureCsrfToken(): Promise<void> {
+  if (getCsrfToken()) return;
+  await fetch(`${API_BASE_URL}/users/auth/csrf/`, {
+    credentials: 'include',
+  });
+}
+
 let isRefreshing = false;
 let refreshPromise: Promise<boolean> | null = null;
 
@@ -88,6 +95,7 @@ class ApiClient {
 
     const method = (fetchOptions.method || 'GET').toUpperCase();
     if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+      await ensureCsrfToken();
       const csrfToken = getCsrfToken();
       if (csrfToken) {
         headers['X-CSRFToken'] = csrfToken;
