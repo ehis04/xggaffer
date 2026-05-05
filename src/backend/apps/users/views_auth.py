@@ -6,6 +6,10 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from django.contrib.auth import authenticate
 from django.conf import settings
+from django.middleware.csrf import get_token
+from django.http import JsonResponse
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_GET
 
 from .serializers import UserSerializer
 from .services.cookie_service import (
@@ -235,3 +239,8 @@ class ResetPasswordView(APIView):
                 {'error': 'Failed to reset password'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+@ensure_csrf_cookie
+@require_GET
+def csrf_token_view(request):
+    return JsonResponse({'csrfToken': get_token(request)})
