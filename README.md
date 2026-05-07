@@ -64,6 +64,11 @@ The match outcome model achieved **~55.5% accuracy** on a three-class problem (h
 
 > Large generated datasets and model artefacts may need to be regenerated separately — refer to the Technical Guide for instructions.
 
+Large local ML datasets are distributed separately because the GitLab project
+storage quota is limited. See [DATA_ACCESS.md](DATA_ACCESS.md) for the data
+archive download/extraction steps, model test commands, retraining commands,
+and data collection commands.
+
 ---
 
 ## Repository Structure

@@ -18,12 +18,31 @@ logger = logging.getLogger(__name__)
 
 def resolve_latest_lineup_model() -> Path:
     pattern = 'lineup_xgboost_*.joblib'
-    model_files = sorted(MODELS_DIR.glob(pattern), key=lambda f: f.stat().st_mtime)
+    model_files = sorted(MODELS_DIR.glob(pattern))
 
     if not model_files:
         raise FileNotFoundError(
             f'No lineup model artifacts found in {MODELS_DIR}'
         )
+
+    for path in reversed(model_files):
+        try:
+            artifact = joblib.load(path)
+        except Exception:
+            logger.warning("Skipping unreadable lineup artifact: %s", path)
+            continue
+
+        metrics = artifact.get('metrics', {}) if isinstance(artifact, dict) else {}
+        accuracy = metrics.get('accuracy')
+        baseline = metrics.get('persistence_baseline')
+
+        if (
+            accuracy is not None
+            and baseline is not None
+            and np.isfinite(float(accuracy))
+            and np.isfinite(float(baseline))
+        ):
+            return path
 
     return model_files[-1]
 

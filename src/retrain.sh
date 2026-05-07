@@ -12,6 +12,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="$SCRIPT_DIR/backend"
+PREDICTIONS_PKG_DIR="$BACKEND_DIR/apps/predictions"
 
 SKIP_SYNC=false
 SKIP_TRAIN=false
@@ -28,6 +29,11 @@ SEASON=2025
 
 log() { echo "[$(date '+%H:%M:%S')] $*"; }
 separator() { echo ""; echo "================================================================"; echo "$*"; echo "================================================================"; }
+run_data_collection_script() {
+    local module_name="$1"
+    shift
+    python3 -c 'import runpy, sys; sys.path.append("'"$PREDICTIONS_PKG_DIR"'"); sys.argv=["'"$module_name.py"'"] + sys.argv[1:]; runpy.run_module("data_collection.scripts.'"$module_name"'", run_name="__main__")' "$@"
+}
 
 cd "$BACKEND_DIR"
 
@@ -49,7 +55,7 @@ if [ "$SKIP_SYNC" = false ]; then
 
     for league in "${LEAGUES[@]}"; do
         log "Syncing Understat — $league $SEASON"
-        python manage.py sync_understat_league_season --league-code "$league" --season "$SEASON" || {
+        python3 manage.py sync_understat_league_season --league-code "$league" --season "$SEASON" || {
             log "WARNING: Understat sync failed for $league $SEASON — continuing"
         }
     done
@@ -61,7 +67,7 @@ if [ "$SKIP_SYNC" = false ]; then
     separator "STEP 2: COLLECT SOURCE DATASETS ($SEASON) → CSV FILES"
 
     log "Collecting Understat matches, players, teams for season $SEASON..."
-    python data_collection/scripts/collect_all.py \
+    run_data_collection_script collect_all \
         --sources understat \
         --datasets matches players teams \
         --leagues "${LEAGUES[@]}" \
@@ -69,7 +75,7 @@ if [ "$SKIP_SYNC" = false ]; then
         || { log "WARNING: collect_all (understat) exited with errors — continuing"; }
 
     log "Collecting SofaScore matches, players, teams for season $SEASON..."
-    python data_collection/scripts/collect_all.py \
+    run_data_collection_script collect_all \
         --sources sofascore \
         --datasets matches players teams \
         --leagues "${LEAGUES[@]}" \
@@ -77,7 +83,7 @@ if [ "$SKIP_SYNC" = false ]; then
         || { log "WARNING: collect_all (sofascore) exited with errors — continuing"; }
 
     log "Collecting WhoScored matches and teams for season $SEASON..."
-    python data_collection/scripts/collect_all.py \
+    run_data_collection_script collect_all \
         --sources whoscored \
         --datasets matches teams \
         --leagues "${LEAGUES[@]}" \
@@ -87,7 +93,7 @@ if [ "$SKIP_SYNC" = false ]; then
     log "Collecting WhoScored player events per league (one at a time to avoid OOM)..."
     for league in "${LEAGUES[@]}"; do
         log "  WhoScored players — $league $SEASON"
-        python data_collection/scripts/collect_all.py \
+        run_data_collection_script collect_all \
             --sources whoscored \
             --datasets players \
             --leagues "$league" \
@@ -98,7 +104,7 @@ if [ "$SKIP_SYNC" = false ]; then
     separator "STEP 2B: REBUILD MERGED DATA VIEWS"
 
     log "Exporting merged raw and processed CSV views for model/runtime data..."
-    python data_collection/scripts/export_merged_views.py \
+    run_data_collection_script export_merged_views \
         --layers raw processed \
         --sources understat sofascore whoscored \
         --datasets matches players teams team_summaries \
@@ -116,39 +122,39 @@ if [ "$SKIP_TRAIN" = false ]; then
     separator "STEP 3: RETRAIN MODELS"
 
     log "Training match outcome model (logistic regression)..."
-    python apps/predictions/ml/models/match_outcome/train.py \
+    python3 apps/predictions/ml/models/match_outcome/train.py \
         --model logistic_regression \
         2>&1 | tee /tmp/train_match_outcome.log
     log "Match outcome model trained. Log: /tmp/train_match_outcome.log"
 
     log "Training scoreline model (Poisson GLM)..."
-    python apps/predictions/ml/models/scoreline/train.py \
+    python3 apps/predictions/ml/models/scoreline/train.py \
         2>&1 | tee /tmp/train_scoreline.log
     log "Scoreline model trained. Log: /tmp/train_scoreline.log"
 
     log "Training lineup prediction model..."
-    python -m apps.predictions.ml.models.lineup.train \
+    python3 -m apps.predictions.ml.models.lineup.train \
         2>&1 | tee /tmp/train_lineup.log
     log "Lineup model trained. Log: /tmp/train_lineup.log"
 
     log "Training availability (injury risk) model..."
-    python apps/predictions/ml/models/availability/train_risk.py \
+    python3 apps/predictions/ml/models/availability/train_risk.py \
         2>&1 | tee /tmp/train_availability.log
     log "Availability model trained. Log: /tmp/train_availability.log"
 
     log "Recomputing Elo ratings from match history..."
-    python -m apps.predictions.ml.engines.compute_elo \
+    python3 -m apps.predictions.ml.engines.compute_elo \
         2>&1 | tee /tmp/train_elo.log
     log "Elo ratings recomputed. Log: /tmp/train_elo.log"
 
     log "Training tactical clustering model..."
-    python -m apps.predictions.ml.models.tactical.train_clustering \
+    python3 -m apps.predictions.ml.models.tactical.train_clustering \
         2>&1 | tee /tmp/train_tactical_clustering.log || {
         log "WARNING: Tactical clustering failed (WhoScored data required) — continuing"
     }
 
     log "Training tactical pass model..."
-    python -m apps.predictions.ml.models.tactical.train_pass_model \
+    python3 -m apps.predictions.ml.models.tactical.train_pass_model \
         2>&1 | tee /tmp/train_tactical_pass.log || {
         log "WARNING: Tactical pass model failed (WhoScored data required) — continuing"
     }
@@ -160,19 +166,19 @@ if [ "$SKIP_TRAIN" = false ]; then
     separator "STEP 4: REBUILD PUBLICATION SNAPSHOTS"
 
     log "Rebuilding predictions snapshot..."
-    python manage.py bootstrap_predictions_snapshot
+    python3 manage.py bootstrap_predictions_snapshot
 
     log "Rebuilding playerdata snapshot..."
-    python manage.py bootstrap_playerdata_snapshot
+    python3 manage.py bootstrap_playerdata_snapshot
 
     log "Rebuilding clubs snapshot..."
-    python manage.py bootstrap_clubs_snapshot
+    python3 manage.py bootstrap_clubs_snapshot
 
     log "Rebuilding livefootball snapshot..."
-    python manage.py bootstrap_livefootball_snapshot
+    python3 manage.py bootstrap_livefootball_snapshot
 
     log "Running season simulations..."
-    python manage.py populate_simulation_results \
+    python3 manage.py populate_simulation_results \
         2>&1 | tee /tmp/populate_simulations.log
     log "Season simulations complete. Log: /tmp/populate_simulations.log"
 

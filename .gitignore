@@ -1,0 +1,7 @@
+# Large local data archives must be uploaded outside GitLab.
+xggaffer-data.tar.gz
+xggaffer-data.zip
+*.tar.gz
+
+# GitLab cleanup helper files are local-only.
+gitlab-cleanup-commit-map-*.txt
