@@ -35,7 +35,7 @@ xgGaffer is a full-stack football analytics and coaching platform built to make 
 
 ## System Architecture
 
-![xgGaffer system architecture](docs/documentation/diagrams/Architecture_Diagram.png)
+![xgGaffer system architecture](docs/diagrams/Architecture_Diagram.png)
 
 **Architecture principles:**
 
