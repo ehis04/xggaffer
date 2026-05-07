@@ -184,6 +184,13 @@ export async function getOddsFixtures(
   );
 }
 
+export async function getTacticalTeams(): Promise<string[]> {
+  const res = await apiClient.get<{ teams: string[]; count: number }>(
+    buildPredictionsEndpoint('tactical/teams/'),
+  );
+  return res.teams ?? [];
+}
+
 export async function getOddsTeams(league: string): Promise<ApiEnvelope<OddsTeamsResponse>> {
   return withPredictionsErrorHandling(() =>
     apiClient.get<ApiEnvelope<OddsTeamsResponse>>(

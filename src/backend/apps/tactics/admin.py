@@ -1,8 +1,15 @@
+"""
+Admin configuration for tactics board models
+
+Adds searchable and filterable admin views for tactics boards, animation frames, and frame items
+"""
+
 from django.contrib import admin
 
 from apps.tactics.models import TacticsBoard, TacticsBoardFrame, TacticsBoardItem
 
 
+# Inline admin rows for frames inside a tactics board
 class TacticsBoardFrameInline(admin.TabularInline):
     model = TacticsBoardFrame
     extra = 0
@@ -11,6 +18,7 @@ class TacticsBoardFrameInline(admin.TabularInline):
     show_change_link = True
 
 
+# Admin view for tactics boards
 @admin.register(TacticsBoard)
 class TacticsBoardAdmin(admin.ModelAdmin):
     list_display = (
@@ -43,6 +51,7 @@ class TacticsBoardAdmin(admin.ModelAdmin):
     ordering = ('-updated_at',)
 
 
+# Admin view for tactics board frames
 @admin.register(TacticsBoardFrame)
 class TacticsBoardFrameAdmin(admin.ModelAdmin):
     list_display = (
@@ -61,6 +70,7 @@ class TacticsBoardFrameAdmin(admin.ModelAdmin):
     ordering = ('board', 'frame_index')
 
 
+# Admin view for items placed on tactics board frames
 @admin.register(TacticsBoardItem)
 class TacticsBoardItemAdmin(admin.ModelAdmin):
     list_display = (

@@ -1,3 +1,7 @@
+"""
+Application configuration for the teamsheets app
+"""
+
 from django.apps import AppConfig
 
 

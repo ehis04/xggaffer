@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from apps.predictions.ml.features import rolling
 from apps.predictions.ml.features.rolling import (
     ROLLING_STATS,
     ROLLING_WINDOWS,
@@ -38,6 +39,91 @@ def full_features():
     except FileNotFoundError:
         pytest.skip("Match data files not available")
     return df
+
+
+def _write_match_csv(path, rows):
+    frame = pd.DataFrame(rows)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    frame.to_csv(path, index=False)
+
+
+def test_load_match_history_keeps_secondary_source_future_fixtures(tmp_path, monkeypatch):
+    processed_dir = tmp_path / "processed" / "matches"
+    legacy_dir = tmp_path / "raw" / "understat" / "matches"
+    merged_file = tmp_path / "processed" / "matches" / "merged" / "all.csv"
+    legacy_merged_file = tmp_path / "raw" / "understat" / "merged" / "all.csv"
+
+    monkeypatch.setattr(rolling, "PROCESSED_MATCHES_DIR", processed_dir)
+    monkeypatch.setattr(rolling, "LEGACY_MATCHES_DIR", legacy_dir)
+    monkeypatch.setattr(rolling, "MERGED_MATCHES_FILE", merged_file)
+    monkeypatch.setattr(rolling, "LEGACY_MERGED_MATCHES_FILE", legacy_merged_file)
+
+    common = {
+        "league": "EPL",
+        "season": "2025",
+        "home_xa": 0.5,
+        "away_xa": 0.4,
+        "home_shots": 10,
+        "away_shots": 8,
+        "home_key_passes": 7,
+        "away_key_passes": 5,
+        "home_xpts": 2.0,
+        "away_xpts": 0.8,
+    }
+    played_understat = {
+        **common,
+        "match_id": "u-1",
+        "date": "2025-08-15",
+        "home_team": "Arsenal",
+        "away_team": "Chelsea",
+        "home_goals": 2,
+        "away_goals": 1,
+        "home_xg": 1.8,
+        "away_xg": 0.9,
+    }
+    played_sofascore_duplicate = {
+        **played_understat,
+        "match_id": "s-1",
+        "home_goals": 9,
+        "away_goals": 9,
+    }
+    future_sofascore_only = {
+        **common,
+        "match_id": "s-2",
+        "date": "2026-05-24",
+        "home_team": "Brighton & Hove Albion",
+        "away_team": "Tottenham Hotspur",
+        "home_goals": np.nan,
+        "away_goals": np.nan,
+        "home_xg": np.nan,
+        "away_xg": np.nan,
+    }
+
+    _write_match_csv(
+        processed_dir / "2025" / "matches_understat_EPL_2025_canonical.csv",
+        [played_understat],
+    )
+    _write_match_csv(
+        processed_dir / "2025" / "matches_sofascore_EPL_2025_canonical.csv",
+        [played_sofascore_duplicate, future_sofascore_only],
+    )
+
+    matches = load_match_history(["EPL"], ["2025"])
+
+    assert len(matches) == 2
+    played = matches[
+        (matches["home_team"] == "Arsenal")
+        & (matches["away_team"] == "Chelsea")
+    ].iloc[0]
+    assert played["match_id"] == "u-1"
+    assert played["home_goals"] == 2
+
+    future = matches[
+        (matches["home_team"] == "Brighton")
+        & (matches["away_team"] == "Tottenham")
+    ].iloc[0]
+    assert future["match_id"] == "s-2"
+    assert pd.isna(future["home_goals"])
 
 
 

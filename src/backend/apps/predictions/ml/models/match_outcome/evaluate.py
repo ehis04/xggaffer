@@ -320,6 +320,12 @@ def print_walk_forward_summary(results_df):
     metrics = ['accuracy', 'brier', 'log_loss', 'ece']
 
     print(f"\n{'Walk-Forward Temporal Cross-Validation':=^70}")
+
+    if results_df.empty:
+        print("  No folds completed (insufficient data — check Elo CSV coverage and odds data).")
+        print('=' * 70)
+        return
+
     print(f"{'Season':<10} {'Train':>7} {'Test':>6} {'Acc':>7} "
           f"{'Brier':>7} {'LogLoss':>8} {'ECE':>6} {'D_Rec':>6}")
     print('-' * 70)

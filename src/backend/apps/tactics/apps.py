@@ -1,3 +1,7 @@
+"""
+Application configuration for the tactics app
+"""
+
 from django.apps import AppConfig
 
 

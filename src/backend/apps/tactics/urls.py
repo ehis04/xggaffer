@@ -1,3 +1,9 @@
+"""
+Nested URL route registration for tactics boards
+
+Registers board, frame, and item viewsets under the club routes using nested DRF routers
+"""
+
 from rest_framework_nested.routers import NestedDefaultRouter
 
 from apps.tactics.views import (

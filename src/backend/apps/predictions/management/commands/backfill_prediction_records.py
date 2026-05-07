@@ -157,7 +157,6 @@ class Command(BaseCommand):
                     home_team=home,
                     away_team=away,
                     league_code=league_code,
-                    actual_result__isnull=False,
                 ).exists()
 
                 if already_exists:

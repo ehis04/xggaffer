@@ -1,7 +1,15 @@
+"""
+Admin configuration for teamsheet models
+
+Adds inline player editing and searchable admin views for teamsheets and teamsheet player assignments
+"""
+
 from django.contrib import admin
+
 from .models import *
 
 
+# Inline admin rows for players assigned to a teamsheet
 class TeamsheetPlayerInline(admin.TabularInline):
     model = TeamsheetPlayer
     extra = 0
@@ -19,6 +27,7 @@ class TeamsheetPlayerInline(admin.TabularInline):
     ordering = ['is_substitute', 'slot_number']
 
 
+# Admin view for teamsheets
 @admin.register(Teamsheet)
 class TeamsheetAdmin(admin.ModelAdmin):
     list_display = [
@@ -60,15 +69,18 @@ class TeamsheetAdmin(admin.ModelAdmin):
         }),
     ]
 
+    # Return the number of starters on a teamsheet
     def starter_count(self, obj):
         return obj.starter_count
     starter_count.short_description = 'Starters'
 
+    # Return the number of substitutes on a teamsheet
     def substitute_count(self, obj):
         return obj.substitute_count
     substitute_count.short_description = 'Subs'
 
 
+# Admin view for individual teamsheet player rows
 @admin.register(TeamsheetPlayer)
 class TeamsheetPlayerAdmin(admin.ModelAdmin):
     list_display = [
@@ -111,10 +123,12 @@ class TeamsheetPlayerAdmin(admin.ModelAdmin):
         }),
     ]
 
+    # Return the resolved player display name
     def display_name(self, obj):
         return obj.display_name
     display_name.short_description = 'Display Name'
 
+    # Return whether the row is linked to a club player
     def is_linked(self, obj):
         return obj.is_linked
     is_linked.boolean = True

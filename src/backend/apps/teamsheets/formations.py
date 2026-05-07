@@ -1,15 +1,28 @@
+"""
+Formation templates for teamsheets and tactics boards
+
+Defines pitch coordinates for supported formations and provides helper functions for available formations and template validation
+"""
+
 from typing import TypedDict
 
+
+# Typed shape for one formation slot
 class PositionSlot(TypedDict):
-    slot: int          
-    position: str     
-    x: float          
-    y: float          
+    slot: int
+    position: str
+    x: float
+    y: float
+
+
+# ---------------------------------------------------------------------------
+# Pitch coordinate constants
+# ---------------------------------------------------------------------------
 
 Y_GOALKEEPER = 5
 Y_DEFENSIVE_LINE = 20
-Y_FULLBACK_LINE = 25      
-Y_WINGBACK_LINE = 30          
+Y_FULLBACK_LINE = 25
+Y_WINGBACK_LINE = 30
 Y_HOLDING_MID = 35
 Y_CENTRAL_MID = 45
 Y_WIDE_MID = 50
@@ -25,8 +38,13 @@ X_WIDE_RIGHT = 85
 X_TOUCHLINE_LEFT = 10
 X_TOUCHLINE_RIGHT = 90
 
+
+# ---------------------------------------------------------------------------
+# Formation templates
+# ---------------------------------------------------------------------------
+
 FORMATION_TEMPLATES: dict[str, list[PositionSlot]] = {
-    # 3 Back 
+    # Three-back formations
     '343': [
         {'slot': 1,  'position': 'GK',  'x': X_CENTER,      'y': Y_GOALKEEPER},
         {'slot': 2,  'position': 'CB',  'x': 70,            'y': Y_DEFENSIVE_LINE},
@@ -55,7 +73,7 @@ FORMATION_TEMPLATES: dict[str, list[PositionSlot]] = {
         {'slot': 11, 'position': 'ST',  'x': X_HALF_LEFT,       'y': Y_FORWARD_LINE},
     ],
 
-    # 4 Back
+    # Four-back formations
     '442': [
         {'slot': 1,  'position': 'GK',  'x': X_CENTER,      'y': Y_GOALKEEPER},
         {'slot': 2,  'position': 'RB',  'x': X_WIDE_RIGHT,  'y': Y_FULLBACK_LINE},
@@ -98,7 +116,6 @@ FORMATION_TEMPLATES: dict[str, list[PositionSlot]] = {
         {'slot': 11, 'position': 'ST',  'x': X_CENTER,      'y': Y_STRIKER_LINE},
     ],
 
-    #fix 
     '424': [
         {'slot': 1,  'position': 'GK',  'x': X_CENTER,      'y': Y_GOALKEEPER},
         {'slot': 2,  'position': 'RB',  'x': X_WIDE_RIGHT,  'y': Y_FULLBACK_LINE},
@@ -127,7 +144,6 @@ FORMATION_TEMPLATES: dict[str, list[PositionSlot]] = {
         {'slot': 11, 'position': 'ST',  'x': X_CENTER,      'y': Y_STRIKER_LINE},
     ],
 
-    #fix 
     '4222': [
         {'slot': 1,  'position': 'GK',  'x': X_CENTER,      'y': Y_GOALKEEPER},
         {'slot': 2,  'position': 'RB',  'x': X_WIDE_RIGHT,  'y': Y_FULLBACK_LINE},
@@ -170,7 +186,7 @@ FORMATION_TEMPLATES: dict[str, list[PositionSlot]] = {
         {'slot': 11, 'position': 'ST',  'x': X_HALF_LEFT,   'y': Y_STRIKER_LINE},
     ],
 
-    # 5 Back
+    # Five-back formations
     '532': [
         {'slot': 1,  'position': 'GK',  'x': X_CENTER,          'y': Y_GOALKEEPER},
         {'slot': 2,  'position': 'RWB', 'x': X_TOUCHLINE_RIGHT, 'y': Y_WINGBACK_LINE},
@@ -185,7 +201,6 @@ FORMATION_TEMPLATES: dict[str, list[PositionSlot]] = {
         {'slot': 11, 'position': 'ST',  'x': X_HALF_LEFT,       'y': Y_FORWARD_LINE},
     ],
 
-    #fix 
     '523': [
         {'slot': 1,  'position': 'GK',  'x': X_CENTER,          'y': Y_GOALKEEPER},
         {'slot': 2,  'position': 'RWB', 'x': X_TOUCHLINE_RIGHT, 'y': Y_WINGBACK_LINE},
@@ -200,7 +215,6 @@ FORMATION_TEMPLATES: dict[str, list[PositionSlot]] = {
         {'slot': 11, 'position': 'ST',  'x': X_HALF_LEFT,       'y': Y_FORWARD_LINE},
     ],
 
-    #fix 
     '5221': [
         {'slot': 1,  'position': 'GK',  'x': X_CENTER,          'y': Y_GOALKEEPER},
         {'slot': 2,  'position': 'RWB', 'x': X_TOUCHLINE_RIGHT, 'y': Y_WINGBACK_LINE},
@@ -215,7 +229,6 @@ FORMATION_TEMPLATES: dict[str, list[PositionSlot]] = {
         {'slot': 11, 'position': 'ST',  'x': X_HALF_LEFT,       'y': Y_FORWARD_LINE},
     ],
 
-    #fix 
     '5212': [
         {'slot': 1,  'position': 'GK',  'x': X_CENTER,          'y': Y_GOALKEEPER},
         {'slot': 2,  'position': 'RWB', 'x': X_TOUCHLINE_RIGHT, 'y': Y_WINGBACK_LINE},
@@ -231,10 +244,17 @@ FORMATION_TEMPLATES: dict[str, list[PositionSlot]] = {
     ],
 }
 
+
+# ---------------------------------------------------------------------------
+# Formation helper functions
+# ---------------------------------------------------------------------------
+
+# Return the coordinate template for a formation code
 def get_formation_template(formation_code: str) -> list[PositionSlot]:
     return FORMATION_TEMPLATES.get(formation_code, [])
 
 
+# Return available formation codes with user-friendly labels
 def get_available_formations() -> list[tuple[str, str]]:
     display_names = {
         '343': '3-4-3',
@@ -257,6 +277,7 @@ def get_available_formations() -> list[tuple[str, str]]:
     return [(code, display_names.get(code, code)) for code in FORMATION_TEMPLATES.keys()]
 
 
+# Validate a formation template for slot count, slot sequence, coordinates, and goalkeeper count
 def validate_formation_template(template: list[PositionSlot]) -> list[str]:
     errors = []
     

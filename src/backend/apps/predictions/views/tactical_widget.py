@@ -75,11 +75,27 @@ def _build_static_freshness(base_freshness: dict) -> dict:
     return result
 
 
+_TEAM_NAME_MAP = {
+    # EPL — odds/fixture names → tactical data names
+    "Manchester City": "Man City",
+    "Manchester United": "Man Utd",
+    "Newcastle United": "Newcastle",
+    "Wolverhampton Wanderers": "Wolves",
+    # La Liga — odds/fixture names → tactical data names
+    "Atletico Madrid": "Atletico",
+    "Alaves": "Deportivo Alaves",
+    "Levante": "Levante UD",
+}
+
+
 class TacticalSummaryWidgetView(WidgetBaseView):
     widget_intent = "tactical-summary"
 
     def get_widget_data(self, request: Request) -> dict:
-        team = request.query_params.get("team", "").strip()
+        team = _TEAM_NAME_MAP.get(
+            request.query_params.get("team", "").strip(),
+            request.query_params.get("team", "").strip(),
+        )
 
         if not team:
             from rest_framework.exceptions import ValidationError

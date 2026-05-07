@@ -3,9 +3,25 @@ from __future__ import annotations
 from django.conf import settings
 
 from apps.sync_pipeline.selectors import compute_surface_freshness
+from common.freshness import compute_freshness
 from common.response_envelope import build_degraded_envelope, build_envelope
 
 SURFACE = 'predictions'
+ODDS_SLA_SECONDS = 21600
+
+
+def build_odds_envelope(data, league: str | None = None, warnings: list | None = None) -> dict:
+    from apps.predictions.models import FixtureOddsSnapshot
+    qs = FixtureOddsSnapshot.objects
+    if league:
+        qs = qs.filter(league=league)
+    latest_fetched_at = qs.order_by('-fetched_at').values_list('fetched_at', flat=True).first()
+    freshness = compute_freshness(
+        source_fetched_at=latest_fetched_at,
+        snapshot_published_at=latest_fetched_at,
+        sla_seconds=ODDS_SLA_SECONDS,
+    )
+    return build_envelope(data, freshness, warnings=warnings)
 
 
 def build_predictions_envelope(data, warnings: list | None = None) -> dict:

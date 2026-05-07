@@ -1,6 +1,15 @@
+"""
+Service helpers for tactics board creation, duplication, and frame management
+
+Keeps tactics board business logic outside the viewsets, including initial frame creation, teamsheet imports, opponent formations, and safe reindexing
+"""
+
+import copy
+
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Prefetch
+
 from apps.teamsheets.formations import get_formation_template
 from apps.teamsheets.models import Teamsheet, TeamsheetPlayer
 from apps.tactics.models import (
@@ -10,11 +19,20 @@ from apps.tactics.models import (
     TacticsBoardItem,
 )
 
-import copy
+
+# ---------------------------------------------------------------------------
+# Tactics service configuration
+# ---------------------------------------------------------------------------
 
 OPPONENT_IMPORT_FRAME_INDEX = 0
 PITCH_COORDINATE_MAX = 100
 
+
+# ---------------------------------------------------------------------------
+# Board and frame creation helpers
+# ---------------------------------------------------------------------------
+
+# Create a tactics board with its required initial frame
 @transaction.atomic
 def create_board_with_initial_frame(
     *,
@@ -57,6 +75,7 @@ def create_board_with_initial_frame(
     return board
 
 
+# Create a new frame and optionally copy items from an existing frame
 @transaction.atomic
 def create_frame_for_board(
     *,
@@ -82,7 +101,6 @@ def create_frame_for_board(
         notes=notes,
     )
 
-    # Copy items from a previous frame if requested
     if copy_items_from_frame_index is not None:
         source_frame = board.frames.filter(
             frame_index=copy_items_from_frame_index
@@ -117,6 +135,8 @@ def create_frame_for_board(
     update_board_type_for_frame_count(board)
     return frame
 
+
+# Create a board item after validating linked player ownership
 @transaction.atomic
 def create_item_for_frame(*, frame, **validated_data):
     linked_player = validated_data.get('linked_player')
@@ -132,11 +152,13 @@ def create_item_for_frame(*, frame, **validated_data):
     return item
 
 
+# Refresh a board type based on its frame count
 def update_board_type_for_frame_count(board):
     board.update_board_type(save=True)
     return board
 
 
+# Delete a frame and reindex later frames if the board still has at least one frame
 @transaction.atomic
 def delete_frame_and_reindex_if_allowed(frame):
     board = frame.board
@@ -158,6 +180,12 @@ def delete_frame_and_reindex_if_allowed(frame):
     update_board_type_for_frame_count(board)
     return board
 
+
+# ---------------------------------------------------------------------------
+# Board import and formation helpers
+# ---------------------------------------------------------------------------
+
+# Create a tactics board from an existing teamsheet
 @transaction.atomic
 def create_board_from_teamsheet(
     *,
@@ -223,6 +251,8 @@ def create_board_from_teamsheet(
 
     return board
 
+
+# Add an opponent formation to the first frame of a tactics board
 @transaction.atomic
 def add_opponent_formation(
     *,
@@ -275,6 +305,12 @@ def add_opponent_formation(
 
     return board
 
+
+# ---------------------------------------------------------------------------
+# Duplication helpers
+# ---------------------------------------------------------------------------
+
+# Duplicate a frame and insert it after the source frame
 @transaction.atomic
 def duplicate_frame(*, frame):
     board = frame.board
@@ -328,6 +364,8 @@ def duplicate_frame(*, frame):
     update_board_type_for_frame_count(board)
     return duplicated_frame
 
+
+# Duplicate a full tactics board including frames and items
 @transaction.atomic
 def duplicate_board(
     *,

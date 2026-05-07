@@ -22,14 +22,14 @@ class SimulationHandler(EngineHandler):
             if season is None:
                 latest = (
                     SimulationResult.objects.filter(league=league)
-                    .order_by("-season", "-computed_at")
+                    .order_by("-season", "-freeze_date", "-computed_at")
                     .first()
                 )
                 season = latest.season if latest is not None else DEFAULT_SEASON
 
             record = (
                 SimulationResult.objects.filter(league=league, season=season)
-                .order_by("-computed_at")
+                .order_by("-freeze_date", "-computed_at")
                 .first()
             )
 

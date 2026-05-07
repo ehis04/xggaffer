@@ -1,3 +1,9 @@
+"""
+Tests for tactics board permissions
+
+Checks club membership access rules for reading and creating tactics boards
+"""
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory
@@ -6,6 +12,7 @@ from apps.clubs.models import Club, ClubMembership
 from apps.tactics.permissions import TacticsBoardPermission
 
 
+# Create a test club with compatibility for newer club model fields
 def create_test_club(user, name='Permission Club'):
     club_kwargs = {
         'name': name,
@@ -26,12 +33,18 @@ def create_test_club(user, name='Permission Club'):
     return Club.objects.create(**club_kwargs)
 
 
+# Minimal view object used for permission checks
 class DummyView:
+
+    # Store route keyword arguments for permission tests
     def __init__(self, club_pk):
         self.kwargs = {'club_pk': club_pk}
 
 
+# Tests for tactics board permission checks
 class TacticsBoardPermissionTests(TestCase):
+
+    # Create users, memberships, and the permission instance
     def setUp(self):
         self.factory = APIRequestFactory()
         self.permission = TacticsBoardPermission()
@@ -76,24 +89,28 @@ class TacticsBoardPermissionTests(TestCase):
 
         self.view = DummyView(self.club.id)
 
+    # Check non-members cannot read tactics boards
     def test_non_member_is_denied_read(self):
         request = self.factory.get('/api/clubs/1/tactics-boards/')
         request.user = self.non_member
 
         self.assertFalse(self.permission.has_permission(request, self.view))
 
+    # Check viewers cannot create tactics boards
     def test_viewer_is_denied_create(self):
         request = self.factory.post('/api/clubs/1/tactics-boards/', {}, format='json')
         request.user = self.viewer
 
         self.assertFalse(self.permission.has_permission(request, self.view))
 
+    # Check coaches can create tactics boards
     def test_coach_is_allowed_create(self):
         request = self.factory.post('/api/clubs/1/tactics-boards/', {}, format='json')
         request.user = self.coach
 
         self.assertTrue(self.permission.has_permission(request, self.view))
 
+    # Check owners can create tactics boards
     def test_owner_is_allowed_create(self):
         request = self.factory.post('/api/clubs/1/tactics-boards/', {}, format='json')
         request.user = self.owner

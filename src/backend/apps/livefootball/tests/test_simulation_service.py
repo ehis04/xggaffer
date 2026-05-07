@@ -115,6 +115,74 @@ def _sample_matches() -> pd.DataFrame:
     return frame
 
 
+def _sample_matches_with_explicit_remaining() -> pd.DataFrame:
+    rows = [
+        {
+            "match_id": 1,
+            "date": "2023-08-10",
+            "home_team": "Arsenal",
+            "away_team": "Chelsea",
+            "home_goals": 2,
+            "away_goals": 1,
+            "home_xg": 1.8,
+            "away_xg": 0.9,
+            "home_xa": 1.2,
+            "away_xa": 0.7,
+            "home_shots": 15,
+            "away_shots": 8,
+            "home_key_passes": 11,
+            "away_key_passes": 6,
+            "home_xpts": 2.3,
+            "away_xpts": 0.5,
+            "league": "EPL",
+            "season": "2023",
+        },
+        {
+            "match_id": 2,
+            "date": "2024-08-10",
+            "home_team": "Arsenal",
+            "away_team": "Chelsea",
+            "home_goals": 1,
+            "away_goals": 0,
+            "home_xg": 1.2,
+            "away_xg": 0.8,
+            "home_xa": 0.9,
+            "away_xa": 0.5,
+            "home_shots": 12,
+            "away_shots": 7,
+            "home_key_passes": 8,
+            "away_key_passes": 4,
+            "home_xpts": 2.0,
+            "away_xpts": 0.7,
+            "league": "EPL",
+            "season": "2024",
+        },
+        {
+            "match_id": 3,
+            "date": "2024-08-20",
+            "home_team": "Chelsea",
+            "away_team": "Arsenal",
+            "home_goals": None,
+            "away_goals": None,
+            "home_xg": None,
+            "away_xg": None,
+            "home_xa": None,
+            "away_xa": None,
+            "home_shots": None,
+            "away_shots": None,
+            "home_key_passes": None,
+            "away_key_passes": None,
+            "home_xpts": None,
+            "away_xpts": None,
+            "league": "EPL",
+            "season": "2024",
+        },
+    ]
+    frame = pd.DataFrame(rows)
+    frame["date"] = pd.to_datetime(frame["date"])
+    return frame
+
+
 @override_settings(CACHES=TEST_CACHES)
 class SimulationServiceTests(SimpleTestCase):
     @patch(
@@ -262,6 +330,22 @@ class SimulationServiceTests(SimpleTestCase):
         self.assertEqual(len(prepared.remaining_fixtures), 10)
         self.assertEqual(prepared.remaining_fixtures_source, "synthetic_round_robin")
         self.assertEqual(prepared.data_cutoff_date, "2024-08-12")
+
+    @patch(
+        "apps.livefootball.services.simulation._load_simulation_match_history",
+        return_value=_sample_matches_with_explicit_remaining(),
+    )
+    def test_current_expected_mode_uses_explicit_remaining_fixtures(self, _mock_loader) -> None:
+        context = _build_context("EPL", "2024", "current_expected", 100)
+        prepared = _prepare_simulation_data(context)
+
+        self.assertEqual(len(prepared.actual_results), 1)
+        self.assertEqual(len(prepared.remaining_fixtures), 1)
+        self.assertEqual(prepared.remaining_fixtures_source, "historical_schedule")
+        self.assertEqual(
+            prepared.remaining_fixtures[0],
+            {"home_team": "Chelsea", "away_team": "Arsenal"},
+        )
 
     @patch(
         "apps.livefootball.services.simulation._load_simulation_match_history",

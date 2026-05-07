@@ -1,7 +1,14 @@
+"""
+Serializers for tactics board frames
+
+Returns frames with nested items and validates frame creation, frame updates, and optional item copying from another frame
+"""
+
 from apps.tactics.models import TacticsBoardFrame
 from rest_framework import serializers
 
 
+# Serializer for reading tactics board frames with their items
 class TacticsBoardFrameSerializer(serializers.ModelSerializer):
     items = serializers.SerializerMethodField()
 
@@ -17,6 +24,7 @@ class TacticsBoardFrameSerializer(serializers.ModelSerializer):
             'items',
         ]
 
+    # Return prefetched frame items where available to avoid extra queries
     def get_items(self, obj):
         from apps.tactics.serializers.item import TacticsBoardItemSerializer
 
@@ -27,6 +35,7 @@ class TacticsBoardFrameSerializer(serializers.ModelSerializer):
         return TacticsBoardItemSerializer(items, many=True).data
 
 
+# Serializer for creating and updating tactics board frames
 class TacticsBoardFrameWriteSerializer(serializers.ModelSerializer):
     copy_items_from_frame_index = serializers.IntegerField(
         required=False,
@@ -50,6 +59,7 @@ class TacticsBoardFrameWriteSerializer(serializers.ModelSerializer):
             'board': {'required': False},
         }
 
+    # Validate that the frame belongs to the nested board context
     def validate(self, attrs):
         attrs = super().validate(attrs)
 
@@ -70,6 +80,7 @@ class TacticsBoardFrameWriteSerializer(serializers.ModelSerializer):
 
         return attrs
 
+    # Validate that the source frame exists before copying items
     def validate_copy_items_from_frame_index(self, value):
         if value is None:
             return value
@@ -85,6 +96,7 @@ class TacticsBoardFrameWriteSerializer(serializers.ModelSerializer):
 
         return value
 
+    # Create a frame through the tactics service layer
     def create(self, validated_data):
         copy_from_index = validated_data.pop('copy_items_from_frame_index', None)
         board = self.context.get('board')

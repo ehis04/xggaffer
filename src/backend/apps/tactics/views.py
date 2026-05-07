@@ -1,3 +1,9 @@
+"""
+Viewsets for tactics board, frame, and item APIs
+
+Provides club-scoped CRUD operations, teamsheet imports, opponent formation imports, duplication, and creator-owned trash actions
+"""
+
 from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import models
@@ -36,11 +42,19 @@ from apps.tactics.services import (
 )
 
 
+# ---------------------------------------------------------------------------
+# Shared context helpers
+# ---------------------------------------------------------------------------
+
+# Shared helper for resolving clubs, boards, frames, and serializer context
 class TacticsContextMixin:
+
+    # Return the club from the nested route
     def get_club(self):
         club_pk = self.kwargs.get('club_pk')
         return get_object_or_404(Club, pk=club_pk)
 
+    # Return the active board from the nested route
     def get_board(self):
         board_pk = self.kwargs.get('board_pk')
         if board_pk is None:
@@ -58,6 +72,7 @@ class TacticsContextMixin:
             is_trashed=False,
         )
 
+    # Return the active frame from the nested route
     def get_frame(self):
         frame_pk = self.kwargs.get('frame_pk')
         if frame_pk is None:
@@ -71,6 +86,7 @@ class TacticsContextMixin:
             board__is_trashed=False,
         )
 
+    # Add club, board, and frame objects to serializer context
     def get_serializer_context(self):
         context = super().get_serializer_context()
 
@@ -89,6 +105,7 @@ class TacticsContextMixin:
 
         return context
 
+    # Convert Django validation errors into DRF validation errors
     def _raise_drf_validation_error(self, exc):
         if hasattr(exc, 'message_dict'):
             raise ValidationError(exc.message_dict)
@@ -97,17 +114,23 @@ class TacticsContextMixin:
         raise ValidationError(str(exc))
 
 
+# ---------------------------------------------------------------------------
+# Tactics board viewset
+# ---------------------------------------------------------------------------
+
+# Viewset for club-scoped tactics board operations
 class TacticsBoardViewSet(TacticsContextMixin, viewsets.ModelViewSet):
     permission_classes = [TacticsBoardPermission]
     pagination_class = None
 
+    # Resolve requested trash filtering mode
     def _get_trash_mode(self) -> str:
         value = (self.request.query_params.get('trash') or '').strip().lower()
         if value in {'only', 'include'}:
             return value
         return 'exclude'
 
-
+    # Build the board queryset with frames and items prefetched
     def _build_board_queryset(self, include_trashed=False):
         item_queryset = TacticsBoardItem.objects.select_related(
             'linked_player'
@@ -163,11 +186,11 @@ class TacticsBoardViewSet(TacticsContextMixin, viewsets.ModelViewSet):
 
         return queryset.filter(is_trashed=False)
 
-
+    # Return the board queryset for normal viewset actions
     def get_queryset(self):
         return self._build_board_queryset(include_trashed=False)
 
-
+    # Get a board for trash, restore, and permanent delete actions
     def _get_board_for_action(self, pk, *, require_trashed=None):
         board = get_object_or_404(
             self._build_board_queryset(include_trashed=True),
@@ -183,6 +206,7 @@ class TacticsBoardViewSet(TacticsContextMixin, viewsets.ModelViewSet):
 
         return board
 
+    # Choose the serializer for the current board action
     def get_serializer_class(self):
         if self.action == 'list':
             return TacticsBoardListSerializer
@@ -190,6 +214,7 @@ class TacticsBoardViewSet(TacticsContextMixin, viewsets.ModelViewSet):
             return TacticsBoardWriteSerializer
         return TacticsBoardDetailSerializer
 
+    # Add the current club to board serializer context
     def get_serializer_context(self):
         context = super(viewsets.ModelViewSet, self).get_serializer_context()
         club_pk = self.kwargs.get('club_pk')
@@ -199,6 +224,7 @@ class TacticsBoardViewSet(TacticsContextMixin, viewsets.ModelViewSet):
 
         return context
 
+    # Create a new tactics board for the club
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -206,7 +232,6 @@ class TacticsBoardViewSet(TacticsContextMixin, viewsets.ModelViewSet):
         club = self.get_club()
         board_data = dict(serializer.validated_data)
 
-        # Check tactics board creation limit
         create_limit = getattr(settings, 'TACTICS_BOARD_CREATE_LIMIT_PER_USER', 10)
         user_board_count = TacticsBoard.objects.filter(
             club_id=club.pk,
@@ -233,6 +258,7 @@ class TacticsBoardViewSet(TacticsContextMixin, viewsets.ModelViewSet):
         )
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
+    # Create a new tactics board from a teamsheet
     @action(detail=False, methods=['post'], url_path='from-teamsheet')
     def from_teamsheet(self, request, *args, **kwargs):
         serializer = FromTeamsheetBoardActionSerializer(data=request.data)
@@ -256,6 +282,7 @@ class TacticsBoardViewSet(TacticsContextMixin, viewsets.ModelViewSet):
         )
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
+    # Add an opponent formation to the board
     @action(detail=True, methods=['post'], url_path='add-opponent-formation')
     def add_opponent_formation(self, request, *args, **kwargs):
         serializer = AddOpponentFormationActionSerializer(data=request.data)
@@ -277,6 +304,7 @@ class TacticsBoardViewSet(TacticsContextMixin, viewsets.ModelViewSet):
         )
         return Response(response_serializer.data, status=status.HTTP_200_OK)
 
+    # Duplicate an existing tactics board
     @action(detail=True, methods=['post'], url_path='duplicate')
     def duplicate(self, request, *args, **kwargs):
         serializer = DuplicateBoardActionSerializer(data=request.data)
@@ -299,6 +327,7 @@ class TacticsBoardViewSet(TacticsContextMixin, viewsets.ModelViewSet):
         )
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
+    # Move a tactics board to creator-owned trash
     @action(detail=True, methods=['post'], url_path='trash')
     def trash(self, request, *args, **kwargs):
         serializer = TacticsBoardTrashActionSerializer(data=request.data or {})
@@ -313,7 +342,7 @@ class TacticsBoardViewSet(TacticsContextMixin, viewsets.ModelViewSet):
         )
         return Response(response_serializer.data, status=status.HTTP_200_OK)
 
-
+    # Restore a tactics board from trash
     @action(detail=True, methods=['post'], url_path='restore')
     def restore(self, request, *args, **kwargs):
         serializer = TacticsBoardTrashActionSerializer(data=request.data or {})
@@ -328,7 +357,7 @@ class TacticsBoardViewSet(TacticsContextMixin, viewsets.ModelViewSet):
         )
         return Response(response_serializer.data, status=status.HTTP_200_OK)
 
-
+    # Permanently delete a trashed tactics board
     @action(detail=True, methods=['delete'], url_path='permanent-delete')
     def permanent_delete(self, request, *args, **kwargs):
         board = self._get_board_for_action(kwargs.get('pk'), require_trashed=True)
@@ -341,9 +370,11 @@ class TacticsBoardViewSet(TacticsContextMixin, viewsets.ModelViewSet):
         board.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    # Save board updates
     def perform_update(self, serializer):
         serializer.save()
 
+    # Move board deletions to trash instead of deleting immediately
     def perform_destroy(self, instance):
         if not instance.can_be_trashed_by(self.request.user):
             raise PermissionDenied(
@@ -353,10 +384,16 @@ class TacticsBoardViewSet(TacticsContextMixin, viewsets.ModelViewSet):
         instance.move_to_trash(self.request.user)
 
 
+# ---------------------------------------------------------------------------
+# Tactics board frame viewset
+# ---------------------------------------------------------------------------
+
+# Viewset for frames within a tactics board
 class TacticsBoardFrameViewSet(TacticsContextMixin, viewsets.ModelViewSet):
     permission_classes = [TacticsBoardPermission]
     pagination_class = None
 
+    # Return frames for the current active board
     def get_queryset(self):
         item_queryset = TacticsBoardItem.objects.select_related(
             'linked_player'
@@ -374,11 +411,13 @@ class TacticsBoardFrameViewSet(TacticsContextMixin, viewsets.ModelViewSet):
             )
         ).order_by('frame_index', 'id')
 
+    # Choose the serializer for the current frame action
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
             return TacticsBoardFrameWriteSerializer
         return TacticsBoardFrameSerializer
 
+    # Create a new frame for the current board
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -398,15 +437,18 @@ class TacticsBoardFrameViewSet(TacticsContextMixin, viewsets.ModelViewSet):
         )
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
+    # Save frame updates
     def perform_update(self, serializer):
         serializer.save()
 
+    # Delete a frame and reindex the remaining frames
     def perform_destroy(self, instance):
         try:
             delete_frame_and_reindex_if_allowed(instance)
         except DjangoValidationError as exc:
             self._raise_drf_validation_error(exc)
 
+    # Duplicate a frame within the current board
     @action(detail=True, methods=['post'], url_path='duplicate')
     def duplicate(self, request, *args, **kwargs):
         frame = self.get_object()
@@ -423,10 +465,16 @@ class TacticsBoardFrameViewSet(TacticsContextMixin, viewsets.ModelViewSet):
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
 
+# ---------------------------------------------------------------------------
+# Tactics board item viewset
+# ---------------------------------------------------------------------------
+
+# Viewset for items within a tactics board frame
 class TacticsBoardItemViewSet(TacticsContextMixin, viewsets.ModelViewSet):
     permission_classes = [TacticsBoardPermission]
     pagination_class = None
 
+    # Return items for the current active frame
     def get_queryset(self):
         return TacticsBoardItem.objects.filter(
             frame_id=self.kwargs.get('frame_pk'),
@@ -440,11 +488,13 @@ class TacticsBoardItemViewSet(TacticsContextMixin, viewsets.ModelViewSet):
             'linked_player',
         ).order_by('z_index', 'id')
 
+    # Choose the serializer for the current item action
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
             return TacticsBoardItemWriteSerializer
         return TacticsBoardItemSerializer
 
+    # Create a new item for the current frame
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -467,11 +517,13 @@ class TacticsBoardItemViewSet(TacticsContextMixin, viewsets.ModelViewSet):
         )
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
+    # Save item updates and convert model validation errors to API errors
     def perform_update(self, serializer):
         try:
             serializer.save()
         except DjangoValidationError as exc:
             self._raise_drf_validation_error(exc)
 
+    # Delete an item from the current frame
     def perform_destroy(self, instance):
         instance.delete()

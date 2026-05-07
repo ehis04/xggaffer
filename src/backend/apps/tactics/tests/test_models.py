@@ -1,9 +1,14 @@
+"""
+Tests for tactics board models and service helpers
+
+Checks board creation, frame rules, coordinate validation, teamsheet imports, opponent formations, and duplication behaviour
+"""
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.test import TestCase
-
 
 from apps.tactics.models import TacticsBoard, TacticsBoardFrame, TacticsBoardItem
 from apps.clubs.models import Club, ClubPlayer
@@ -20,6 +25,7 @@ from apps.teamsheets.formations import get_formation_template
 from apps.teamsheets.models import Teamsheet, TeamsheetPlayer
 
 
+# Create a test club with compatibility for newer club model fields
 def create_test_club(user, name='Test Club'):
     club_kwargs = {
         'name': name,
@@ -40,7 +46,10 @@ def create_test_club(user, name='Test Club'):
     return Club.objects.create(**club_kwargs)
 
 
+# Tests for tactics board model constraints and frame behaviour
 class TacticsBoardModelTests(TestCase):
+
+    # Create a user and club for model tests
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             email='tactics-models@example.com',
@@ -48,6 +57,7 @@ class TacticsBoardModelTests(TestCase):
         )
         self.club = create_test_club(self.user)
 
+    # Check frame index uniqueness is enforced per board
     def test_frame_index_must_be_unique_per_board(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -62,6 +72,7 @@ class TacticsBoardModelTests(TestCase):
                 label='Duplicate frame zero',
             )
 
+    # Check coordinates below the pitch minimum are rejected
     def test_coordinate_validators_reject_minus_one(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -81,6 +92,7 @@ class TacticsBoardModelTests(TestCase):
         with self.assertRaises(ValidationError):
             item.full_clean()
 
+    # Check coordinates above the pitch maximum are rejected
     def test_coordinate_validators_reject_one_hundred_and_one(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -100,6 +112,7 @@ class TacticsBoardModelTests(TestCase):
         with self.assertRaises(ValidationError):
             item.full_clean()
 
+    # Check a board with one frame remains static
     def test_board_creation_with_one_frame_is_static(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -112,6 +125,7 @@ class TacticsBoardModelTests(TestCase):
         self.assertEqual(board.frames.count(), 1)
         self.assertEqual(board.board_type, TacticsBoard.BoardType.STATIC)
 
+    # Check a second frame changes the board to animated
     def test_adding_second_frame_changes_board_type_to_animated(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -126,6 +140,7 @@ class TacticsBoardModelTests(TestCase):
         self.assertEqual(board.frames.count(), 2)
         self.assertEqual(board.board_type, TacticsBoard.BoardType.ANIMATED)
 
+    # Check returning to one frame changes the board back to static
     def test_returning_to_one_frame_changes_board_type_back_to_static(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -142,6 +157,7 @@ class TacticsBoardModelTests(TestCase):
         self.assertEqual(board.board_type, TacticsBoard.BoardType.STATIC)
         self.assertEqual(board.frames.get().frame_index, 0)
 
+    # Check the final frame cannot be deleted
     def test_deleting_final_frame_is_blocked(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -153,7 +169,11 @@ class TacticsBoardModelTests(TestCase):
         with self.assertRaises(ValidationError):
             delete_frame_and_reindex_if_allowed(frame)
 
+
+# Tests for creating tactics boards from teamsheets
 class CreateBoardFromTeamsheetServiceTests(TestCase):
+
+    # Create a user, club, and linked club player for import tests
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             email='tactics-imports@example.com',
@@ -171,6 +191,7 @@ class CreateBoardFromTeamsheetServiceTests(TestCase):
             created_by=self.user,
         )
 
+    # Create a complete teamsheet with starters and one substitute
     def _create_complete_teamsheet(self, club=None):
         if club is None:
             club = self.club
@@ -239,6 +260,7 @@ class CreateBoardFromTeamsheetServiceTests(TestCase):
 
         return teamsheet
 
+    # Check teamsheet imports create player items for starters only
     def test_create_board_from_teamsheet_imports_starters_only(self):
         teamsheet = self._create_complete_teamsheet()
 
@@ -270,6 +292,7 @@ class CreateBoardFromTeamsheetServiceTests(TestCase):
         custom_item = items.get(label='Custom 2')
         self.assertEqual(custom_item.shirt_number, 22)
 
+    # Check teamsheets from another club cannot be imported
     def test_create_board_from_teamsheet_rejects_cross_club_teamsheet(self):
         other_club = create_test_club(self.user, name='Other Club')
         teamsheet = self._create_complete_teamsheet(club=other_club)
@@ -282,7 +305,11 @@ class CreateBoardFromTeamsheetServiceTests(TestCase):
                 title='Should Fail',
             )
 
+
+# Tests for adding opponent formations to boards
 class AddOpponentFormationServiceTests(TestCase):
+
+    # Create a board with an initial frame for opponent import tests
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             email='tactics-opponent@example.com',
@@ -295,6 +322,7 @@ class AddOpponentFormationServiceTests(TestCase):
             title='Opponent Import Board',
         )
 
+    # Check adding an opponent formation creates eleven away player items
     def test_add_opponent_formation_creates_eleven_away_items(self):
         board = add_opponent_formation(
             board=self.board,
@@ -310,6 +338,7 @@ class AddOpponentFormationServiceTests(TestCase):
         self.assertEqual(board.away_formation, '433')
         self.assertEqual(away_items.count(), 11)
 
+    # Check the away goalkeeper is mirrored to the top of the pitch
     def test_add_opponent_formation_mirrors_goalkeeper_y_to_top(self):
         board = add_opponent_formation(
             board=self.board,
@@ -326,6 +355,7 @@ class AddOpponentFormationServiceTests(TestCase):
         self.assertEqual(goalkeeper.x, 50)
         self.assertEqual(goalkeeper.y, 95)
 
+    # Check opponent import preserves formation x positions
     def test_add_opponent_formation_preserves_template_x_values(self):
         board = add_opponent_formation(
             board=self.board,
@@ -342,6 +372,7 @@ class AddOpponentFormationServiceTests(TestCase):
         self.assertEqual(right_back.x, 85)
         self.assertEqual(right_back.y, 75)
 
+    # Check invalid formation codes are rejected
     def test_add_opponent_formation_rejects_invalid_code(self):
         with self.assertRaises(ValidationError):
             add_opponent_formation(
@@ -349,6 +380,7 @@ class AddOpponentFormationServiceTests(TestCase):
                 formation='999',
             )
 
+    # Check the same frame cannot receive opponent players twice
     def test_add_opponent_formation_rejects_repeated_import_on_same_frame(self):
         add_opponent_formation(
             board=self.board,
@@ -361,7 +393,11 @@ class AddOpponentFormationServiceTests(TestCase):
                 formation='442',
             )
 
+
+# Tests for duplicating tactics board frames
 class DuplicateFrameServiceTests(TestCase):
+
+    # Create a multi-frame board with source items for duplication tests
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             email='tactics-duplicate-frame@example.com',
@@ -405,6 +441,7 @@ class DuplicateFrameServiceTests(TestCase):
             style={'stroke_width': 3},
         )
 
+    # Check duplicated frames are inserted after the source frame
     def test_duplicate_frame_inserts_new_frame_immediately_after_source(self):
         duplicated_frame = duplicate_frame(frame=self.source_frame)
 
@@ -415,6 +452,7 @@ class DuplicateFrameServiceTests(TestCase):
         self.assertEqual(duplicated_frame.frame_index, 1)
         self.assertEqual(frame_indices, [0, 1, 2, 3])
 
+    # Check duplicating a frame shifts later frame indexes
     def test_duplicate_frame_shifts_later_frames_correctly(self):
         duplicated_frame = duplicate_frame(frame=self.source_frame)
 
@@ -425,12 +463,14 @@ class DuplicateFrameServiceTests(TestCase):
         self.assertEqual(self.second_frame.frame_index, 2)
         self.assertEqual(self.third_frame.frame_index, 3)
 
+    # Check all source frame items are copied
     def test_duplicate_frame_copies_all_items(self):
         duplicated_frame = duplicate_frame(frame=self.source_frame)
 
         self.assertEqual(self.source_frame.items.count(), 2)
         self.assertEqual(duplicated_frame.items.count(), 2)
 
+    # Check duplicated items preserve stable IDs while getting new database IDs
     def test_duplicate_frame_preserves_stable_id_exactly(self):
         duplicated_frame = duplicate_frame(frame=self.source_frame)
 
@@ -455,6 +495,7 @@ class DuplicateFrameServiceTests(TestCase):
             self.assertEqual(duplicated_item.z_index, source_item.z_index)
             self.assertEqual(duplicated_item.style, source_item.style)
 
+    # Check duplicating a frame keeps the board type accurate
     def test_duplicate_frame_keeps_board_type_correct(self):
         duplicated_frame = duplicate_frame(frame=self.source_frame)
 
@@ -464,7 +505,11 @@ class DuplicateFrameServiceTests(TestCase):
         self.assertEqual(self.board.frames.count(), 4)
         self.assertEqual(self.board.board_type, TacticsBoard.BoardType.ANIMATED)
 
+
+# Tests for duplicating full tactics boards
 class DuplicateBoardServiceTests(TestCase):
+
+    # Create a source board with frames, items, and metadata for duplication tests
     def setUp(self):
         self.owner = get_user_model().objects.create_user(
             email='tactics-duplicate-board-owner@example.com',
@@ -543,6 +588,7 @@ class DuplicateBoardServiceTests(TestCase):
             style={'stroke_width': 3},
         )
 
+    # Check full board duplication preserves metadata, frames, and item counts
     def test_duplicate_board_copies_metadata_frames_and_items(self):
         duplicated_board = duplicate_board(
             board=self.source_board,
@@ -574,6 +620,7 @@ class DuplicateBoardServiceTests(TestCase):
             self.assertEqual(duplicated_frame.notes, source_frame.notes)
             self.assertEqual(duplicated_frame.items.count(), source_frame.items.count())
 
+    # Check duplicated board items preserve stable IDs
     def test_duplicate_board_preserves_stable_id_exactly(self):
         duplicated_board = duplicate_board(
             board=self.source_board,
@@ -609,6 +656,7 @@ class DuplicateBoardServiceTests(TestCase):
                 self.assertEqual(duplicated_item.z_index, source_item.z_index)
                 self.assertEqual(duplicated_item.style, source_item.style)
 
+    # Check edits to duplicated items do not affect the source board
     def test_duplicate_board_is_independent_after_creation(self):
         duplicated_board = duplicate_board(
             board=self.source_board,

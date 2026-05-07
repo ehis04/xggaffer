@@ -78,7 +78,7 @@ class TrainingSessionPlayerSerializer(serializers.ModelSerializer):
 
 
 class TrainingSessionListSerializer(serializers.ModelSerializer):
-    assigned_player_count = serializers.IntegerField(read_only=True)
+    assigned_player_count = serializers.SerializerMethodField()
     attended_count = serializers.IntegerField(read_only=True)
     block_count = serializers.SerializerMethodField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
@@ -117,6 +117,10 @@ class TrainingSessionListSerializer(serializers.ModelSerializer):
         if hasattr(obj, 'prefetched_blocks'):
             return len(obj.prefetched_blocks)
         return obj.blocks.count()
+
+    def get_assigned_player_count(self, obj):
+        # Prefer annotated value if present, else fallback to property
+        return getattr(obj, 'assigned_player_count_db', getattr(obj, 'assigned_player_count', 0))
 
 
 class TrainingSessionDetailSerializer(TrainingSessionListSerializer):

@@ -1,3 +1,9 @@
+"""
+Models for tactics boards, frames, and pitch items
+
+Stores tactical diagrams, animations, player markers, drawing items, and creator-owned trash behaviour for club tactics boards
+"""
+
 from datetime import timedelta
 from uuid import uuid4
 
@@ -7,6 +13,10 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
+
+# ---------------------------------------------------------------------------
+# Tactics board configuration
+# ---------------------------------------------------------------------------
 
 COORDINATE_MIN = 0
 COORDINATE_MAX = 100
@@ -25,11 +35,19 @@ SIZE_VALIDATORS = [
 ]
 
 
+# ---------------------------------------------------------------------------
+# Tactics board models
+# ---------------------------------------------------------------------------
+
+# Main tactics board model linked to a club and optional teamsheet
 class TacticsBoard(models.Model):
+
+    # Available board modes
     class BoardType(models.TextChoices):
         STATIC = 'static', 'Static'
         ANIMATED = 'animated', 'Animated'
 
+    # Available pitch layout orientations
     class PitchOrientation(models.TextChoices):
         VERTICAL = 'vertical', 'Vertical'
         HORIZONTAL = 'horizontal', 'Horizontal'
@@ -96,9 +114,11 @@ class TacticsBoard(models.Model):
             models.Index(fields=['is_trashed', 'trash_expires_at']),
         ]
 
+    # Return a readable tactics board label
     def __str__(self) -> str:
         return f'{self.title} ({self.club.name})'
 
+    # Validate that linked teamsheets belong to the same club
     def clean(self):
         super().clean()
 
@@ -111,6 +131,7 @@ class TacticsBoard(models.Model):
                 'linked_teamsheet': 'Linked teamsheet must belong to the same club.',
             })
 
+    # Update the board type based on the number of frames
     def update_board_type(self, save: bool = True) -> str:
         frame_count = self.frames.count()
         next_type = (
@@ -126,6 +147,7 @@ class TacticsBoard(models.Model):
 
         return self.board_type
 
+    # Check whether a user can move the board to trash
     def can_be_trashed_by(self, user) -> bool:
         return bool(
             user
@@ -134,12 +156,15 @@ class TacticsBoard(models.Model):
             and self.created_by_id == user.id
         )
 
+    # Check whether a user can restore the board from trash
     def can_be_restored_by(self, user) -> bool:
         return self.can_be_trashed_by(user)
 
+    # Check whether a user can permanently delete the board
     def can_be_permanently_deleted_by(self, user) -> bool:
         return self.can_be_trashed_by(user)
 
+    # Check whether the board has passed its trash retention window
     def is_trash_expired(self) -> bool:
         return bool(
             self.is_trashed
@@ -147,9 +172,11 @@ class TacticsBoard(models.Model):
             and self.trash_expires_at <= timezone.now()
         )
 
+    # Get the per-user tactics board trash limit
     def _get_trash_limit(self) -> int:
         return int(getattr(settings, 'TACTICS_BOARD_TRASH_LIMIT_PER_USER', 50))
 
+    # Validate that the creator has not exceeded the trash limit
     def _validate_trash_limit(self):
         limit = self._get_trash_limit()
         active_trashed_count = TacticsBoard.objects.filter(
@@ -162,6 +189,7 @@ class TacticsBoard(models.Model):
                 f'You have reached the tactics board trash limit of {limit} items.'
             )
 
+    # Move the board into creator-owned trash
     def move_to_trash(self, user, commit=True):
         if not self.can_be_trashed_by(user):
             raise ValidationError('Only the tactics board creator can move this board to trash.')
@@ -192,6 +220,7 @@ class TacticsBoard(models.Model):
 
         return self
 
+    # Restore the board from trash
     def restore_from_trash(self, user=None, commit=True):
         if user is not None and not self.can_be_restored_by(user):
             raise ValidationError('Only the tactics board creator can restore this board.')
@@ -215,6 +244,7 @@ class TacticsBoard(models.Model):
         return self
 
 
+# Animation frame model for one state of a tactics board
 class TacticsBoardFrame(models.Model):
     board = models.ForeignKey(
         TacticsBoard,
@@ -238,9 +268,11 @@ class TacticsBoardFrame(models.Model):
             models.Index(fields=['board', 'frame_index']),
         ]
 
+    # Return a readable tactics board frame label
     def __str__(self) -> str:
         return f'{self.board.title} - Frame {self.frame_index}'
 
+    # Prevent deletion when it would leave a board with no frames
     def _validate_not_last_frame(self) -> None:
         if not self.board_id:
             return
@@ -249,12 +281,16 @@ class TacticsBoardFrame(models.Model):
         if remaining_frame_count == 0:
             raise ValidationError('A tactics board must always have at least one frame.')
 
+    # Delete a frame after validating the board still has a frame
     def delete(self, *args, **kwargs):
         self._validate_not_last_frame()
         return super().delete(*args, **kwargs)
 
 
+# Item model for players, balls, arrows, zones, lines, and text on a board frame
 class TacticsBoardItem(models.Model):
+
+    # Available drawable item types
     class ItemType(models.TextChoices):
         PLAYER = 'player', 'Player'
         BALL = 'ball', 'Ball'
@@ -263,6 +299,7 @@ class TacticsBoardItem(models.Model):
         ZONE = 'zone', 'Zone'
         TEXT = 'text', 'Text'
 
+    # Available team ownership labels for board items
     class TeamSide(models.TextChoices):
         HOME = 'home', 'Home'
         AWAY = 'away', 'Away'
@@ -320,9 +357,11 @@ class TacticsBoardItem(models.Model):
             models.Index(fields=['stable_id']),
         ]
 
+    # Return a readable board item label
     def __str__(self) -> str:
         return f'{self.item_type} on frame {self.frame_id}'
 
+    # Validate that linked players belong to the board club
     def clean(self):
         super().clean()
 

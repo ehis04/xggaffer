@@ -34,8 +34,10 @@ interface BrowseClubCardProps {
   onView: (club: Club) => void;
   onRequestToJoin: (club: Club) => void;
   onToggleFollow: (club: Club) => void;
+  onCopy: (club: Club) => void;
   isRequesting: boolean;
   isFollowing: boolean;
+  isCopying: boolean;
   existingRequest?: ClubJoinRequest;
 }
 
@@ -44,8 +46,10 @@ const BrowseClubCard: React.FC<BrowseClubCardProps> = ({
   onView,
   onRequestToJoin,
   onToggleFollow,
+  onCopy,
   isRequesting,
   isFollowing,
+  isCopying,
   existingRequest,
 }) => {
   const initials = club.name.slice(0, 2).toUpperCase();
@@ -136,6 +140,13 @@ const BrowseClubCard: React.FC<BrowseClubCardProps> = ({
         >
           {isFollowing ? "Saving..." : club.is_followed ? "Following" : "Follow"}
         </button>
+        <button
+          className={styles.requestBtn}
+          disabled={isCopying}
+          onClick={() => onCopy(club)}
+        >
+          {isCopying ? "Copying…" : "Copy Club"}
+        </button>
         {hasActiveRequest ? (
           <div className={styles.requestedPill}>
             {getRequestStatusLabel(existingRequest!.status)}
@@ -173,6 +184,7 @@ const BrowseClubsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [requestingClubId, setRequestingClubId] = useState<number | null>(null);
   const [followingClubId, setFollowingClubId] = useState<number | null>(null);
+  const [copyingClubId, setCopyingClubId] = useState<number | null>(null);
 
   const [searchInput, setSearchInput] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
@@ -308,6 +320,19 @@ const BrowseClubsPage: React.FC = () => {
       setWorkflowMessage(err instanceof Error ? err.message : "Failed to update club follow.");
     } finally {
       setFollowingClubId(null);
+    }
+  };
+
+  const handleCopyClub = async (club: Club) => {
+    try {
+      setCopyingClubId(club.id);
+      setWorkflowMessage(null);
+      const newClub = await clubsApi.duplicate(club.id, { include_players: false, visibility: "private" });
+      navigate(`/clubs/${newClub.id}/`);
+    } catch (err) {
+      setWorkflowMessage(err instanceof Error ? err.message : "Failed to copy club.");
+    } finally {
+      setCopyingClubId(null);
     }
   };
 
@@ -528,8 +553,10 @@ const BrowseClubsPage: React.FC = () => {
                   onView={handleViewClub}
                   onRequestToJoin={handleRequestToJoin}
                   onToggleFollow={handleToggleFollow}
+                  onCopy={handleCopyClub}
                   isRequesting={requestingClubId === club.id}
                   isFollowing={followingClubId === club.id}
+                  isCopying={copyingClubId === club.id}
                   existingRequest={latestRequestForClub(club.id)}
                 />
               ))}

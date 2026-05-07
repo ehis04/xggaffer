@@ -19,7 +19,7 @@ from common.cache_keys import (
     CACHE_TTL_PREDICT,
 )
 
-from .envelope import build_predictions_envelope
+from .envelope import build_odds_envelope, build_predictions_envelope
 from .serializers import (
     AvailableTeamsRequestSerializer,
     ChatRequestSerializer,
@@ -398,7 +398,7 @@ class SimulationView(APIView):
             from .ml.models.simulation.prepare_fixtures import prepare_remaining_fixtures
             from .ml.models.simulation.simulate import aggregate_results, simulate_season
 
-            all_seasons = [str(y) for y in range(2014, 2025)]
+            all_seasons = [str(y) for y in range(2014, 2026)]
             matches = load_match_history([league], all_seasons)
 
             actual, remaining, features = prepare_remaining_fixtures(
@@ -510,7 +510,7 @@ class WhatIfSimulationView(APIView):
                 simulate_with_locked_results,
             )
 
-            all_seasons = [str(y) for y in range(2014, 2025)]
+            all_seasons = [str(y) for y in range(2014, 2026)]
             matches = load_match_history([league], all_seasons)
 
             actual, remaining, features = prepare_remaining_fixtures(

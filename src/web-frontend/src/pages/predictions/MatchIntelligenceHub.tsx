@@ -41,8 +41,8 @@ import { Sidebar } from '../../components/Navigation/SideBar';
 import { SocialUserButtons } from '../../components/Social/SocialUserButtons';
 
 const DEFAULT_LEAGUE = 'EPL';
-const COVERAGE_NOTICE = 'Tactical analysis powered by StatsBomb Open Data. Full profile available for La Liga teams only.' as const;
-const LA_LIGA_CODES = new Set(['LL', 'PD', 'LA_LIGA', 'LALIGA', 'ES', 'SPA']);
+const COVERAGE_NOTICE = 'Tactical analysis powered by StatsBomb Open Data. Coverage includes Premier League and La Liga teams.' as const;
+const TACTICAL_LEAGUE_CODES = new Set(['LL', 'PD', 'LA_LIGA', 'LALIGA', 'ES', 'SPA', 'EPL', 'PL', 'PREMIER_LEAGUE', 'PREMIER LEAGUE']);
 
 function normalizeTeamName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -55,8 +55,8 @@ function isPastFixtureDate(dateStr: string): boolean {
   return fixtureEndUtc < Date.now();
 }
 
-function isLaLigaLeague(code: string): boolean {
-  return LA_LIGA_CODES.has(code.toUpperCase().replace(/[^A-Z0-9]/g, '_'));
+function hasTacticalCoverage(code: string): boolean {
+  return TACTICAL_LEAGUE_CODES.has(code.toUpperCase().replace(/[^A-Z0-9]/g, '_'));
 }
 
 interface BlockState<T> {
@@ -373,7 +373,7 @@ export default function MatchIntelligenceHub() {
   const awayAvailability = awayAvail.data?.data ?? null;
   const homePredictedLineup = homeLineup.data?.data ?? null;
   const awayPredictedLineup = awayLineup.data?.data ?? null;
-  const tacticalAvailable = isLaLigaLeague(leagueCode);
+  const tacticalAvailable = hasTacticalCoverage(leagueCode);
 
   return (
     <div className={styles.page}>

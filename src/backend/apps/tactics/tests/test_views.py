@@ -1,3 +1,9 @@
+"""
+Tests for tactics board API viewsets
+
+Checks club-scoped board access, board creation, teamsheet imports, opponent formation imports, frame duplication, and permissions
+"""
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework import status
@@ -9,6 +15,8 @@ from apps.tactics.services import create_board_with_initial_frame, create_frame_
 from apps.teamsheets.formations import get_formation_template
 from apps.teamsheets.models import Teamsheet, TeamsheetPlayer
 
+
+# Create a test club with compatibility for newer club model fields
 def create_test_club(user, name='View Club'):
     club_kwargs = {
         'name': name,
@@ -29,7 +37,10 @@ def create_test_club(user, name='View Club'):
     return Club.objects.create(**club_kwargs)
 
 
+# Tests for tactics board API endpoints
 class TacticsBoardViewSetTests(TestCase):
+
+    # Create users, clubs, and memberships for tactics API tests
     def setUp(self):
         self.client = APIClient()
 
@@ -78,6 +89,7 @@ class TacticsBoardViewSetTests(TestCase):
             is_active=True,
         )
 
+    # Create a board with two frames and sample items
     def _create_board_with_multiple_frames(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -121,6 +133,7 @@ class TacticsBoardViewSetTests(TestCase):
 
         return board
 
+    # Create a complete teamsheet with starters and one substitute
     def _create_complete_teamsheet(self, club=None):
         if club is None:
             club = self.club
@@ -185,6 +198,7 @@ class TacticsBoardViewSetTests(TestCase):
 
         return teamsheet
 
+    # Check a coach can duplicate a board and preserve structure
     def test_coach_can_duplicate_board_returns_201_and_preserves_structure(self):
         board = self._create_board_with_multiple_frames()
 
@@ -225,6 +239,7 @@ class TacticsBoardViewSetTests(TestCase):
         ]
         self.assertEqual(duplicated_stable_ids, source_stable_ids)
 
+    # Check viewers cannot duplicate boards
     def test_viewer_cannot_duplicate_board_returns_403(self):
         board = self._create_board_with_multiple_frames()
 
@@ -240,6 +255,7 @@ class TacticsBoardViewSetTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    # Check non-members cannot duplicate boards
     def test_non_member_cannot_duplicate_board_returns_403(self):
         board = self._create_board_with_multiple_frames()
 
@@ -254,7 +270,8 @@ class TacticsBoardViewSetTests(TestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        
+
+    # Check creating a board also creates frame zero
     def test_create_board_returns_201_and_auto_creates_frame_zero(self):
         self.client.force_authenticate(user=self.owner)
 
@@ -274,6 +291,7 @@ class TacticsBoardViewSetTests(TestCase):
         self.assertEqual(len(response.data['frames']), 1)
         self.assertEqual(response.data['frames'][0]['frame_index'], 0)
 
+    # Check animated board type can be accepted on creation
     def test_create_board_accepts_animated_board_type(self):
         self.client.force_authenticate(user=self.owner)
 
@@ -293,6 +311,7 @@ class TacticsBoardViewSetTests(TestCase):
         self.assertEqual(response.data['pitch_orientation'], 'horizontal')
         self.assertEqual(len(response.data['frames']), 1)
 
+    # Check list responses are scoped to the club route
     def test_list_only_returns_boards_for_the_scoped_club(self):
         board_a = create_board_with_initial_frame(
             club=self.club,
@@ -313,6 +332,7 @@ class TacticsBoardViewSetTests(TestCase):
         returned_ids = {item['id'] for item in response.data}
         self.assertEqual(returned_ids, {board_a.id})
 
+    # Check board detail responses include nested frames and items
     def test_retrieve_returns_nested_frames_and_items(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -344,6 +364,7 @@ class TacticsBoardViewSetTests(TestCase):
             'Press here',
         )
 
+    # Check creating an item under a frame works
     def test_create_item_under_frame_works(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -377,6 +398,7 @@ class TacticsBoardViewSetTests(TestCase):
             ).exists()
         )
 
+    # Check non-members cannot access private club tactics boards
     def test_non_member_access_is_denied(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -392,6 +414,7 @@ class TacticsBoardViewSetTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    # Check coaches can create a board from a teamsheet
     def test_coach_can_create_board_from_teamsheet_returns_201(self):
         teamsheet = self._create_complete_teamsheet()
 
@@ -425,6 +448,7 @@ class TacticsBoardViewSetTests(TestCase):
             any(item.get('label') == 'Bench Player' for item in frame_zero['items'])
         )
 
+    # Check viewers cannot create boards from teamsheets
     def test_viewer_cannot_create_board_from_teamsheet_returns_403(self):
         teamsheet = self._create_complete_teamsheet()
 
@@ -441,6 +465,7 @@ class TacticsBoardViewSetTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    # Check non-members cannot create boards from teamsheets
     def test_non_member_is_denied_for_from_teamsheet(self):
         teamsheet = self._create_complete_teamsheet()
 
@@ -457,6 +482,7 @@ class TacticsBoardViewSetTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    # Check teamsheet imports only include starters
     def test_from_teamsheet_only_imports_starters(self):
         teamsheet = self._create_complete_teamsheet()
 
@@ -479,6 +505,7 @@ class TacticsBoardViewSetTests(TestCase):
         self.assertEqual(len(frame_zero['items']), 11)
         self.assertNotIn('Bench Player', labels)
 
+    # Check coaches can add opponent formations
     def test_coach_can_add_opponent_formation_returns_200_and_creates_eleven_away_items(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -516,6 +543,7 @@ class TacticsBoardViewSetTests(TestCase):
         self.assertEqual(goalkeeper['x'], 50)
         self.assertEqual(goalkeeper['y'], 95)
 
+    # Check invalid opponent formations return validation errors
     def test_add_opponent_formation_invalid_code_returns_400(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -536,6 +564,7 @@ class TacticsBoardViewSetTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('formation', response.data)
 
+    # Check viewers cannot add opponent formations
     def test_viewer_cannot_add_opponent_formation_returns_403(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -555,6 +584,7 @@ class TacticsBoardViewSetTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    # Check non-members cannot add opponent formations
     def test_non_member_is_denied_for_add_opponent_formation(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -574,6 +604,7 @@ class TacticsBoardViewSetTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    # Check repeated opponent formation imports are rejected
     def test_repeated_add_opponent_formation_returns_400(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -603,6 +634,7 @@ class TacticsBoardViewSetTests(TestCase):
         self.assertEqual(second_response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('formation', second_response.data)
 
+    # Check frame duplication returns a new frame and preserves stable IDs
     def test_frame_duplicate_returns_201_and_preserves_stable_id(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -660,6 +692,7 @@ class TacticsBoardViewSetTests(TestCase):
             self.assertEqual(source_item.team_side, duplicated_item['team_side'])
             self.assertEqual(source_item.label, duplicated_item['label'])
 
+    # Check frame duplication shifts later frames correctly
     def test_frame_duplicate_shifts_later_frames_correctly(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -687,6 +720,7 @@ class TacticsBoardViewSetTests(TestCase):
         self.assertEqual(second_frame.frame_index, 2)
         self.assertEqual(third_frame.frame_index, 3)
 
+    # Check viewers cannot duplicate frames
     def test_viewer_cannot_duplicate_frame_returns_403(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -705,6 +739,7 @@ class TacticsBoardViewSetTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    # Check non-members cannot duplicate frames
     def test_non_member_cannot_duplicate_frame_returns_403(self):
         board = create_board_with_initial_frame(
             club=self.club,

@@ -1,7 +1,17 @@
+"""
+Serializers for tactics board frame items
+
+Validates player markers, balls, arrows, lines, zones, and text items before they are stored on a tactics board frame
+"""
+
 from apps.clubs.models import ClubPlayer
 from apps.tactics.models import TacticsBoardItem
 from rest_framework import serializers
 
+
+# ---------------------------------------------------------------------------
+# Item validation configuration
+# ---------------------------------------------------------------------------
 
 ARROW_LIKE_ITEM_TYPES = {
     TacticsBoardItem.ItemType.ARROW,
@@ -62,6 +72,11 @@ TEAM_SIDE_RULES = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Item serializers
+# ---------------------------------------------------------------------------
+
+# Serializer for a compact linked club player summary
 class LinkedClubPlayerSummarySerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(read_only=True)
 
@@ -77,6 +92,7 @@ class LinkedClubPlayerSummarySerializer(serializers.ModelSerializer):
         ]
 
 
+# Serializer for reading tactics board items
 class TacticsBoardItemSerializer(serializers.ModelSerializer):
     player_summary = serializers.SerializerMethodField()
 
@@ -104,12 +120,14 @@ class TacticsBoardItemSerializer(serializers.ModelSerializer):
             'player_summary',
         ]
 
+    # Return a compact linked player summary when the item is linked to a club player
     def get_player_summary(self, obj):
         if not obj.linked_player:
             return None
         return LinkedClubPlayerSummarySerializer(obj.linked_player).data
 
 
+# Serializer for creating and updating tactics board items
 class TacticsBoardItemWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = TacticsBoardItem
@@ -138,6 +156,7 @@ class TacticsBoardItemWriteSerializer(serializers.ModelSerializer):
             'frame': {'required': False},
         }
 
+    # Validate item-specific required fields and remove fields not used by the selected item type
     def validate(self, attrs):
         attrs = super().validate(attrs)
 
@@ -223,6 +242,7 @@ class TacticsBoardItemWriteSerializer(serializers.ModelSerializer):
 
         return attrs
 
+    # Validate that the item belongs to the nested frame and board context
     def _validate_nested_context(self, attrs):
         board = self.context.get('board')
         frame = self.context.get('frame')

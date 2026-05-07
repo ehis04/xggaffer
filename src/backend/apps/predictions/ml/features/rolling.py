@@ -10,7 +10,8 @@ LEGACY_MATCHES_DIR = DATA_DIR / "raw" / "understat" / "matches"
 MERGED_MATCHES_FILE = DATA_DIR / "processed" / "matches" / "merged" / "all_leagues_all_seasons_matches_merged.csv"
 LEGACY_MERGED_MATCHES_FILE = DATA_DIR / "raw" / "understat" / "merged" / "all_leagues_all_seasons_matches.csv"
 
-SOURCE_PREFERENCE = ["understat", "sofascore"]
+SOURCE_PREFERENCE = ["understat", "sofascore", "whoscored"]
+TEAM_CANONICAL_FALLBACK_SOURCES = ["understat", "sofascore", "football_data_org"]
 
 ROLLING_WINDOWS = [5, 10, 20]
 EWM_HALF_LIVES = [5, 10, 20]
@@ -56,6 +57,14 @@ def _source_priority(path) -> int:
     return len(SOURCE_PREFERENCE)
 
 
+def _source_from_path(path) -> str:
+    name = path.stem
+    for src in SOURCE_PREFERENCE:
+        if f"_{src}_" in name:
+            return src
+    return "understat"
+
+
 def _row_source_priority(series: pd.Series) -> pd.Series:
     source_order = {source: index for index, source in enumerate(SOURCE_PREFERENCE)}
     return series.map(lambda value: source_order.get(str(value), len(SOURCE_PREFERENCE)))
@@ -64,14 +73,38 @@ def _row_source_priority(series: pd.Series) -> pd.Series:
 try:
     from data_collection.config.team_name_mappings import to_canonical as _raw_to_canonical
 
-    def _canonicalize_team(name: str) -> str:
-        try:
-            return _raw_to_canonical(name, "understat")
-        except KeyError:
-            return name
-except ImportError:
-    def _canonicalize_team(name: str) -> str:
+    def _canonicalize_team(name: str, source: str = "understat") -> str:
+        for candidate_source in [source, *TEAM_CANONICAL_FALLBACK_SOURCES]:
+            try:
+                return _raw_to_canonical(name, candidate_source)
+            except KeyError:
+                continue
         return name
+except ImportError:
+    def _canonicalize_team(name: str, source: str = "understat") -> str:
+        return name
+
+
+def _canonicalize_team_columns(df: pd.DataFrame, source: str) -> pd.DataFrame:
+    for column in ["home_team", "away_team"]:
+        if column in df.columns:
+            df[column] = df[column].map(lambda value: _canonicalize_team(value, source))
+    return df
+
+
+def _filter_rows_to_season_window(df: pd.DataFrame, season: str) -> pd.DataFrame:
+    try:
+        start_year = int(season)
+    except (TypeError, ValueError):
+        return df
+
+    if "date" not in df.columns:
+        return df
+
+    dates = pd.to_datetime(df["date"], format="mixed", dayfirst=False, errors="coerce")
+    season_start = pd.Timestamp(year=start_year, month=7, day=1)
+    season_end = pd.Timestamp(year=start_year + 1, month=6, day=30)
+    return df.loc[(dates >= season_start) & (dates <= season_end)].copy()
 
 
 
@@ -99,18 +132,31 @@ def load_match_history(
                     key=_source_priority,
                 )
                 if candidates:
-                    chosen = candidates[0]
-                    df = pd.read_csv(chosen)
-                    if "source_match_id" in df.columns and "match_id" not in df.columns:
-                        df = df.rename(columns={"source_match_id": "match_id"})
-                    dfs.append(df)
+                    for candidate in candidates:
+                        df = pd.read_csv(candidate)
+                        source = _source_from_path(candidate)
+                        if "source_match_id" in df.columns and "match_id" not in df.columns:
+                            df = df.rename(columns={"source_match_id": "match_id"})
+                        df = _filter_rows_to_season_window(df, season)
+                        df["league"] = league
+                        df["season"] = season
+                        df["_source_priority"] = _source_priority(candidate)
+                        df = _canonicalize_team_columns(df, source)
+                        if df.empty:
+                            continue
+                        dfs.append(df)
                     loaded_combos.add((league, season))
                     found = True
 
             if not found:
                 legacy_path = LEGACY_MATCHES_DIR / f"{league.lower()}_{season}_matches.csv"
                 if legacy_path.exists():
-                    dfs.append(pd.read_csv(legacy_path))
+                    df = pd.read_csv(legacy_path)
+                    df["league"] = league
+                    df["season"] = season
+                    df["_source_priority"] = 0
+                    df = _canonicalize_team_columns(df, "understat")
+                    dfs.append(df)
                     loaded_combos.add((league, season))
 
     # Use merged data only as a backfill for league/season pairs with no
@@ -149,6 +195,19 @@ def load_match_history(
                 & (merged["season"] == season)
             ]
             if not subset.empty:
+                subset = subset.copy()
+                if "source" in subset.columns:
+                    for source_name in subset["source"].dropna().astype(str).unique():
+                        mask = subset["source"].astype(str) == source_name
+                        subset.loc[mask, ["home_team", "away_team"]] = _canonicalize_team_columns(
+                            subset.loc[mask].copy(),
+                            source_name,
+                        )[["home_team", "away_team"]]
+                if "_source_priority" not in subset.columns:
+                    if "source" in subset.columns:
+                        subset["_source_priority"] = _row_source_priority(subset["source"])
+                    else:
+                        subset["_source_priority"] = len(SOURCE_PREFERENCE)
                 dfs.append(subset)
                 loaded_combos.add((league, season))
 
@@ -161,8 +220,19 @@ def load_match_history(
     matches = pd.concat(dfs, ignore_index=True)
     matches["date"] = pd.to_datetime(matches["date"], format="mixed", dayfirst=False).dt.normalize()
     matches["season"] = matches["season"].astype(str).map(_normalize_season)
-    matches["home_team"] = matches["home_team"].map(_canonicalize_team)
-    matches["away_team"] = matches["away_team"].map(_canonicalize_team)
+    matches = _canonicalize_team_columns(matches, "understat")
+
+    dedupe_columns = [
+        column
+        for column in ["league", "season", "date", "home_team", "away_team"]
+        if column in matches.columns
+    ]
+    if "_source_priority" in matches.columns and dedupe_columns:
+        matches = (
+            matches
+            .sort_values(["_source_priority", *dedupe_columns], kind="stable")
+            .drop_duplicates(subset=dedupe_columns, keep="first")
+        )
 
     available = [c for c in MATCH_LOAD_COLUMNS if c in matches.columns]
     matches = matches[available]
@@ -266,7 +336,7 @@ def compute_team_rolling_features(
         features["rolling_wins_5"] = int((wins_tail["points"] == 3).sum())
 
     if "xgd" in prior.columns and len(prior) >= MIN_SLOPE_PERIODS:
-        slope_data = prior["xgd"].tail(SLOPE_WINDOW).values
+        slope_data = prior["xgd"].dropna().tail(SLOPE_WINDOW).values
         features["xgd_slope"] = _xgd_slope(slope_data)
     else:
         features["xgd_slope"] = 0.0

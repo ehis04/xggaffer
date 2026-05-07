@@ -1,3 +1,9 @@
+"""
+Tests for tactics board trash API behaviour
+
+Checks list filtering, retrieval rules, soft delete, restore, permanent delete, and access blocking for trashed boards
+"""
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework import status
@@ -8,6 +14,7 @@ from apps.tactics.models import TacticsBoardItem
 from apps.tactics.services import create_board_with_initial_frame, create_frame_for_board, create_item_for_frame
 
 
+# Create a test club with compatibility for newer club model fields
 def create_test_club(user, name='Tactics Trash API Club'):
     club_kwargs = {
         'name': name,
@@ -28,7 +35,10 @@ def create_test_club(user, name='Tactics Trash API Club'):
     return Club.objects.create(**club_kwargs)
 
 
+# Tests for tactics board trash API endpoints
 class TacticsBoardTrashApiTests(TestCase):
+
+    # Create users, memberships, active board, and trashed boards for API tests
     def setUp(self):
         self.client = APIClient()
 
@@ -99,6 +109,7 @@ class TacticsBoardTrashApiTests(TestCase):
         )
         self.other_users_trashed_board.move_to_trash(self.other_creator)
 
+    # Check normal lists exclude trashed boards
     def test_default_list_excludes_trashed_boards(self):
         self.client.force_authenticate(user=self.creator)
 
@@ -109,6 +120,7 @@ class TacticsBoardTrashApiTests(TestCase):
         self.assertIn(self.active_board.id, returned_ids)
         self.assertNotIn(self.trashed_board.id, returned_ids)
 
+    # Check trash-only lists return only the current user's trashed boards
     def test_list_trash_only_returns_only_trashed_boards(self):
         self.client.force_authenticate(user=self.creator)
 
@@ -122,6 +134,7 @@ class TacticsBoardTrashApiTests(TestCase):
         self.assertNotIn(self.active_board.id, returned_ids)
         self.assertIn(self.trashed_board.id, returned_ids)
 
+    # Check include mode returns active and current-user trashed boards
     def test_list_trash_include_returns_active_and_trashed_boards(self):
         self.client.force_authenticate(user=self.creator)
 
@@ -135,6 +148,7 @@ class TacticsBoardTrashApiTests(TestCase):
         self.assertIn(self.active_board.id, returned_ids)
         self.assertIn(self.trashed_board.id, returned_ids)
 
+    # Check default retrieve hides trashed boards
     def test_default_retrieve_returns_404_for_trashed_board(self):
         self.client.force_authenticate(user=self.creator)
 
@@ -144,6 +158,7 @@ class TacticsBoardTrashApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    # Check trash-only retrieve can load the current user's trashed board
     def test_retrieve_with_trash_only_can_load_trashed_board(self):
         self.client.force_authenticate(user=self.creator)
 
@@ -156,6 +171,7 @@ class TacticsBoardTrashApiTests(TestCase):
         self.assertEqual(response.data['id'], self.trashed_board.id)
         self.assertTrue(response.data['is_trashed'])
 
+    # Check a creator can trash a board through the action endpoint
     def test_creator_can_trash_board_via_action(self):
         self.client.force_authenticate(user=self.creator)
 
@@ -169,6 +185,7 @@ class TacticsBoardTrashApiTests(TestCase):
         self.active_board.refresh_from_db()
         self.assertTrue(self.active_board.is_trashed)
 
+    # Check a non-creator coach cannot trash another user's board
     def test_non_creator_coach_cannot_trash_board(self):
         self.client.force_authenticate(user=self.coach)
 
@@ -182,6 +199,7 @@ class TacticsBoardTrashApiTests(TestCase):
         self.active_board.refresh_from_db()
         self.assertFalse(self.active_board.is_trashed)
 
+    # Check DELETE soft-deletes a board for the creator
     def test_delete_soft_deletes_for_creator(self):
         self.client.force_authenticate(user=self.creator)
 
@@ -193,6 +211,7 @@ class TacticsBoardTrashApiTests(TestCase):
         self.active_board.refresh_from_db()
         self.assertTrue(self.active_board.is_trashed)
 
+    # Check creators can restore their own trashed boards
     def test_restore_works_for_creator(self):
         self.client.force_authenticate(user=self.creator)
 
@@ -206,6 +225,7 @@ class TacticsBoardTrashApiTests(TestCase):
         self.trashed_board.refresh_from_db()
         self.assertFalse(self.trashed_board.is_trashed)
 
+    # Check permanent delete requires the board to already be trashed
     def test_permanent_delete_requires_trashed_board(self):
         self.client.force_authenticate(user=self.creator)
 
@@ -218,6 +238,7 @@ class TacticsBoardTrashApiTests(TestCase):
             self.active_board.__class__.objects.filter(id=self.active_board.id).exists()
         )
 
+    # Check permanent delete removes a trashed board
     def test_permanent_delete_removes_trashed_board(self):
         self.client.force_authenticate(user=self.creator)
 
@@ -230,6 +251,7 @@ class TacticsBoardTrashApiTests(TestCase):
             self.trashed_board.__class__.objects.filter(id=self.trashed_board.id).exists()
         )
 
+    # Check trashed boards block nested frame access
     def test_trashed_board_blocks_frame_access(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -247,6 +269,7 @@ class TacticsBoardTrashApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    # Check trashed boards block nested item access
     def test_trashed_board_blocks_item_access(self):
         board = create_board_with_initial_frame(
             club=self.club,
@@ -272,6 +295,7 @@ class TacticsBoardTrashApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    # Check trash-only lists do not include another user's trashed boards
     def test_trash_only_list_returns_only_current_users_trashed_boards(self):
         self.client.force_authenticate(user=self.creator)
 
@@ -286,6 +310,7 @@ class TacticsBoardTrashApiTests(TestCase):
         self.assertIn(self.trashed_board.id, returned_ids)
         self.assertNotIn(self.other_users_trashed_board.id, returned_ids)
 
+    # Check trash-only retrieve cannot load another user's trashed board
     def test_retrieve_with_trash_only_cannot_load_someone_elses_trashed_board(self):
         self.client.force_authenticate(user=self.creator)
 

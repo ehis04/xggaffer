@@ -16,13 +16,13 @@ cache:
   key: "$CI_COMMIT_REF_SLUG"
   paths:
     - .cache/pip/
-    - build/web-frontend/node_modules/
+    - src/web-frontend/node_modules/
 
 frontend_check:
   stage: frontend
   image: node:20
   before_script:
-    - cd build/web-frontend
+    - cd src/web-frontend
     - npm ci
   script:
     - npx tsc --noEmit
@@ -31,7 +31,7 @@ frontend_check:
     when: on_success
     expire_in: 1 week
     paths:
-      - build/web-frontend/dist/
+      - src/web-frontend/dist/
 
 backend_check:
   stage: backend
@@ -61,7 +61,7 @@ backend_check:
 
     CLUB_RESOURCES_USE_CLOUDINARY: "False"
   before_script:
-    - cd build/backend
+    - cd src/backend
     - python -m pip install --upgrade pip
     - pip install -r requirements.txt
   script:

@@ -65,7 +65,7 @@ class TrainingSessionViewSet(TrainingContextMixin, viewsets.ModelViewSet):
             Prefetch('blocks', queryset=block_queryset, to_attr='prefetched_blocks'),
             Prefetch('players', queryset=player_queryset),
         ).annotate(
-            assigned_player_count=Count('players', distinct=True),
+            assigned_player_count_db=Count('players', distinct=True),
             attended_count=Count(
                 'players',
                 filter=Q(players__attendance_status=TrainingSessionPlayer.AttendanceStatus.ATTENDED),

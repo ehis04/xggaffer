@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import patch
+import datetime
 
 import pytest
 from django.test import override_settings
@@ -10,6 +12,7 @@ from apps.predictions.services.chat_service import FALLBACK_RESPONSE, HANDLER_MA
 from apps.predictions.services.intent_types import IntentClass
 from apps.predictions.services.narrator import LLMNarrator
 from apps.predictions.services.base_handler import QueryPayload
+from apps.predictions.services.simulation_handler import SimulationHandler
 
 @pytest.fixture
 def client():
@@ -132,6 +135,44 @@ class TestHandleChatQuery:
         assert result["used_fallback"] is True
         assert result["structured_data"]["partial"] is True
         assert result["structured_data"]["error"] == "odds handler down"
+
+
+class TestSimulationHandler:
+    def test_uses_latest_freeze_date_not_latest_computed_snapshot(self):
+        class QuerySetStub:
+            def __init__(self, record):
+                self.record = record
+                self.order_fields = None
+
+            def order_by(self, *fields):
+                self.order_fields = fields
+                return self
+
+            def first(self):
+                return self.record
+
+        selected_record = SimpleNamespace(
+            season="2025",
+            freeze_date=datetime.date(2026, 5, 5),
+            results=[{"team": "Live Projection"}],
+            n_simulations=5000,
+        )
+        queryset = QuerySetStub(selected_record)
+
+        parsed_query = type(
+            "ParsedQueryStub",
+            (),
+            {"league": "EPL", "season": "2025"},
+        )()
+
+        with patch("apps.predictions.models.SimulationResult") as simulation_result:
+            simulation_result.objects.filter.return_value = queryset
+            payload = SimulationHandler().handle(parsed_query)
+
+        assert payload.partial is False
+        assert payload.engine_data["freeze_date"] == "2026-05-05"
+        assert payload.engine_data["table"] == [{"team": "Live Projection"}]
+        assert queryset.order_fields == ("-freeze_date", "-computed_at")
 
 
 class TestNarrator:

@@ -92,21 +92,17 @@ def prepare_fixture_features(
         home_elo = current_elos.get(home, 1500)
         away_elo = current_elos.get(away, 1500)
 
+        _hxg = home_feats.get("rolling_xg_10")
+        _hxga = home_feats.get("rolling_xga_10")
+        _axg = away_feats.get("rolling_xg_10")
+        _axga = away_feats.get("rolling_xga_10")
         rows.append({
             "home_team": home,
             "away_team": away,
-            "home_rolling_xg_10": home_feats.get(
-                "rolling_xg_10", FALLBACK_XG,
-            ),
-            "away_rolling_xga_10": away_feats.get(
-                "rolling_xga_10", FALLBACK_XGA,
-            ),
-            "away_rolling_xg_10": away_feats.get(
-                "rolling_xg_10", FALLBACK_XG,
-            ),
-            "home_rolling_xga_10": home_feats.get(
-                "rolling_xga_10", FALLBACK_XGA,
-            ),
+            "home_rolling_xg_10": FALLBACK_XG if (_hxg is None or pd.isna(_hxg)) else _hxg,
+            "away_rolling_xga_10": FALLBACK_XGA if (_axga is None or pd.isna(_axga)) else _axga,
+            "away_rolling_xg_10": FALLBACK_XG if (_axg is None or pd.isna(_axg)) else _axg,
+            "home_rolling_xga_10": FALLBACK_XGA if (_hxga is None or pd.isna(_hxga)) else _hxga,
             "elo_difference": home_elo - away_elo,
         })
 
