@@ -64,6 +64,7 @@ class ResendVerificationEmailView(APIView):
 
 # Verifies a user's email address using a verification token submitted from the frontend
 class VerifyEmailView(APIView):
+    authentication_classes = []
     permission_classes = [AllowAny]
     # Validates the token, checks expiry, and marks the matching user email as verified
     def post(self, request):
@@ -76,14 +77,19 @@ class VerifyEmailView(APIView):
             )
 
         try:
-            user = User.objects.get(verification_token=token)
+            user = User.objects.get(verification_token=token, is_active=True)
         except User.DoesNotExist:
             return Response(
                 {'error': 'Invalid or expired verification link. Please request a new verification email.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Check if already verified
+        if not user.is_token_valid():
+            return Response(
+                {'error': 'Verification token has expired'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         if user.email_verified:
             return Response(
                 {
@@ -91,12 +97,6 @@ class VerifyEmailView(APIView):
                     'already_verified': True
                 },
                 status=status.HTTP_200_OK
-            )
-
-        if not user.is_token_valid():
-            return Response(
-                {'error': 'Verification token has expired'},
-                status=status.HTTP_400_BAD_REQUEST
             )
 
         user.verify_email()

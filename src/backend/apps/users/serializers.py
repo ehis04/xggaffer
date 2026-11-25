@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 from .models import User, UserProfile, UserRole, Follow, FollowRequest, FollowRequestStatus, Visibility
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
@@ -10,6 +11,13 @@ UserModel = get_user_model()
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
     username = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    email = serializers.EmailField(
+        validators=[UniqueValidator(
+            queryset=UserModel.objects.all(),
+            lookup="iexact",
+            message="This email is already registered. Sign in or reset your password.",
+        )],
+    )
     class Meta:
         model = UserModel
         fields = ['username', 'email', 'first_name', 'last_name', 'password']
@@ -23,11 +31,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         user = UserModel.objects.create_user(
             username=username,
             email=validated_data['email'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name'],
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
             password=validated_data['password'],
         )
-        user.save()
         return user
 
 # serializes a single role attached to a user profile
@@ -73,6 +80,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
     active_role_display = serializers.CharField(source='get_active_role_display', read_only=True)
     posts_count = serializers.SerializerMethodField()
     profile_image = serializers.SerializerMethodField()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get("request")
+        if request is None or request.user.pk != instance.user_id:
+            for field in ("email", "email_verified"):
+                data["user"].pop(field, None)
+            data.pop("date_of_birth", None)
+        return data
     
     # the complete profile response returned by profile detail endpoints
     class Meta:

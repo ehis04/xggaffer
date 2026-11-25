@@ -7,6 +7,16 @@ const PROFILE_RETRY_COOLDOWN_MS = 5000;
 let cachedUserData: UserData | null = null;
 let pendingUserProfileRequest: Promise<UserData | null> | null = null;
 let lastProfileFetchFailureAt = 0;
+let profileSession = 0;
+let profileOwner: number | null | undefined;
+
+export function resetUserProfileCache(userId?: number | null) {
+  profileSession += 1;
+  profileOwner = userId;
+  cachedUserData = null;
+  pendingUserProfileRequest = null;
+  lastProfileFetchFailureAt = 0;
+}
 
 const mapUserData = (data: UserData): UserData => ({
   user: data.user,
@@ -26,6 +36,8 @@ const mapUserData = (data: UserData): UserData => ({
 export const getUserProfile = async (
   setUserData: (userData: UserData) => void,
 ) => {
+  const session = profileSession;
+  if (profileOwner === null) return;
   if (cachedUserData) {
     setUserData(cachedUserData);
     return;
@@ -40,25 +52,30 @@ export const getUserProfile = async (
       pendingUserProfileRequest = apiClient
         .get<UserData>(USERS.PROFILE)
         .then((data) => {
+          if (session !== profileSession || (profileOwner !== undefined && data.user.id !== profileOwner)) {
+            return null;
+          }
           cachedUserData = mapUserData(data);
           lastProfileFetchFailureAt = 0;
           return cachedUserData;
         })
         .catch((error) => {
+          if (session !== profileSession) return null;
           lastProfileFetchFailureAt = Date.now();
           console.error("Couldn't get user's profile", error);
           return null;
         })
         .finally(() => {
-          pendingUserProfileRequest = null;
+          if (session === profileSession) pendingUserProfileRequest = null;
         });
     }
 
     const userData = await pendingUserProfileRequest;
-    if (userData) {
+    if (userData && session === profileSession) {
       setUserData(userData);
     }
   } catch (error) {
+    if (session !== profileSession) return;
     lastProfileFetchFailureAt = Date.now();
     console.error("Couldn't get user's profile", error);
   }

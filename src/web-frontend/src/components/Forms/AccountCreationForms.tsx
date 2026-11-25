@@ -2,7 +2,6 @@ import "./css/AccountCreationForms.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import apiClient from "../../services/api/client";
-import authApi from "../../services/api/auth";
 import { useAuth } from "../../context/useAuth";
 
 type RoleKey = "Player" | "Coach" | "Referee" | "Fan";
@@ -84,7 +83,7 @@ const ROLES: RoleConfig[] = [
   },
 ];
 
-const STEPS = ["Choose Role", "Create Profile", "Verify Email"];
+const STEPS = ["Choose role", "Set up profile"];
 
 interface StepDotsProps {
   current: number;
@@ -116,10 +115,11 @@ const ChooseRoleStep = ({ selected, onSelect, onNext, error }: ChooseRoleStepPro
         <button
           key={label}
           type="button"
+          aria-pressed={selected === label}
           className={`ac-role-option ${selected === label ? "ac-role-option--selected" : ""}`}
           onClick={() => onSelect(label)}
         >
-          <span className="ac-role-label">{label}</span>
+          <span className="ac-role-label">{label}</span>{' '}
           <span className="ac-role-desc">{desc}</span>
         </button>
       ))}
@@ -210,62 +210,20 @@ const CreateProfileStep = ({ role, values, onChange, onNext, onBack, isLoading, 
   </div>
 );
 
-interface VerifyEmailStepProps {
-  email: string;
-  onResend: () => void;
-  onCheckStatus: () => void;
-  resendLabel: string;
-  resendDisabled: boolean;
-  checkingStatus: boolean;
-  error: string;
-}
-
-const VerifyEmailStep = ({ email, onResend, onCheckStatus, resendLabel, resendDisabled, checkingStatus, error }: VerifyEmailStepProps) => (
-  <div className="ac-form-card">
-    <div className="ac-verify-icon">Email</div>
-    <h2 className="ac-form-title">Verify Your Email</h2>
-    <p className="ac-form-subtitle">
-      A verification link has been sent to <strong>{email || "your email address"}</strong>. Check your inbox and click the link to activate your account.
-    </p>
-
-    {error && <div className="ac-error-message">{error}</div>}
-
-    <button type="button" className="ac-submit-button" onClick={onCheckStatus} disabled={checkingStatus}>
-      {checkingStatus ? "Checking..." : "I Have Verified My Email"}
-    </button>
-
-    <button type="button" className="ac-resend-button" onClick={onResend} disabled={resendDisabled}>
-      {resendLabel}
-    </button>
-
-    <StepDots current={2} />
-  </div>
-);
-
-interface AccountCreationFormsProps {
-  onSwitchToLogin?: () => void;
-  userEmail?: string;
-}
 
 const numberOrZero = (value: string | undefined) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-export const AccountCreationForms = ({ onSwitchToLogin, userEmail = "" }: AccountCreationFormsProps) => {
+export const AccountCreationForms = () => {
   const [step, setStep] = useState(0);
   const [selectedRole, setSelectedRole] = useState<RoleKey | null>(null);
   const [profileValues, setProfileValues] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [resendLabel, setResendLabel] = useState("Resend Email");
-  const [resendDisabled, setResendDisabled] = useState(false);
-  const [checkingStatus, setCheckingStatus] = useState(false);
-
   const navigate = useNavigate();
-  const { refreshUser } = useAuth();
-
-  void onSwitchToLogin;
+  const { isEmailVerified } = useAuth();
 
   const roleConfig = ROLES.find((r) => r.label === selectedRole);
 
@@ -343,7 +301,7 @@ export const AccountCreationForms = ({ onSwitchToLogin, userEmail = "" }: Accoun
     try {
       await apiClient.post("/users/profile/role/", { role: roleConfig.value });
       await saveRoleDetails(roleConfig);
-      setStep(2);
+      navigate(isEmailVerified ? "/home" : "/verify-email", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred. Please try again.");
     } finally {
@@ -351,40 +309,6 @@ export const AccountCreationForms = ({ onSwitchToLogin, userEmail = "" }: Accoun
     }
   };
 
-  const handleResend = async () => {
-    setResendDisabled(true);
-    setError("");
-    try {
-      await authApi.resendVerificationEmail();
-      setResendLabel("Sent!");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to resend verification email.");
-      setResendLabel("Resend Email");
-    } finally {
-      setTimeout(() => {
-        setResendLabel("Resend Email");
-        setResendDisabled(false);
-      }, 3000);
-    }
-  };
-
-  const handleCheckStatus = async () => {
-    setCheckingStatus(true);
-    setError("");
-    try {
-      const status = await authApi.getVerificationStatus();
-      await refreshUser();
-      if (status.email_verified) {
-        navigate("/social", { replace: true });
-      } else {
-        setError("Your email is not verified yet. Click the link in your inbox, then try again.");
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not check verification status.");
-    } finally {
-      setCheckingStatus(false);
-    }
-  };
 
   const handleFieldChange = (id: string, value: string) => {
     setProfileValues((prev) => ({ ...prev, [id]: value }));
@@ -420,17 +344,6 @@ export const AccountCreationForms = ({ onSwitchToLogin, userEmail = "" }: Accoun
         />
       )}
 
-      {step === 2 && (
-        <VerifyEmailStep
-          email={userEmail}
-          onResend={handleResend}
-          onCheckStatus={handleCheckStatus}
-          resendLabel={resendLabel}
-          resendDisabled={resendDisabled}
-          checkingStatus={checkingStatus}
-          error={error}
-        />
-      )}
     </div>
   );
 };

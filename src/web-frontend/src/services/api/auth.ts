@@ -26,6 +26,7 @@ export interface RegisterData {
 export interface AuthResponse {
   user: User;
   message: string;
+  verification_email_sent?: boolean;
 }
 
 export interface VerificationStatus {

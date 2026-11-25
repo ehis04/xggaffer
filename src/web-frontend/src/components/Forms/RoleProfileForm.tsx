@@ -47,7 +47,7 @@ export const RoleProfileForm = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const navigate = useNavigate();
-  const { sendVerificationEmail } = useAuth();
+  const { isEmailVerified } = useAuth();
 
   useEffect(() => {
     fetchUserRoles();
@@ -87,13 +87,21 @@ export const RoleProfileForm = () => {
     }));
   };
 
-  const completeOnboarding = async () => {
+  const completeOnboarding = () => {
+    navigate(isEmailVerified ? '/home' : '/verify-email', { replace: true });
+  };
+
+  const handleRefereeSetup = async () => {
+    setError('');
+    setIsLoading(true);
     try {
-      await sendVerificationEmail();
+      await apiClient.post('/referee/profile/create/', {});
+      completeOnboarding();
     } catch (err) {
-      console.error('Failed to send verification email:', err);
+      setError(err instanceof Error ? err.message : 'Could not set up referee training');
+    } finally {
+      setIsLoading(false);
     }
-    navigate('/verify-email');
   };
 
   const handleCoachSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -109,7 +117,7 @@ export const RoleProfileForm = () => {
         club_name: coachFormData.club_name,
       });
 
-      await completeOnboarding();
+      completeOnboarding();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred during coach profile creation');
     } finally {
@@ -131,7 +139,7 @@ export const RoleProfileForm = () => {
         weight_kg: Number(playerFormData.weight_kg),
       });
 
-      await completeOnboarding();
+      completeOnboarding();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred during player profile creation');
     } finally {
@@ -381,13 +389,14 @@ export const RoleProfileForm = () => {
       {currentRole === 'R' && (
         <div className="role-profile-form">
           <h2>Referee Profile</h2>
-          <p>Referee profile creation coming soon.</p>
+          <p>Start referee training with the default profile.</p>
           <button
             type="button"
             className="button-submit"
-            onClick={() => completeOnboarding()}
+            onClick={handleRefereeSetup}
+            disabled={isLoading}
           >
-            Continue
+            {isLoading ? 'Setting up…' : 'Set up referee training'}
           </button>
         </div>
       )}

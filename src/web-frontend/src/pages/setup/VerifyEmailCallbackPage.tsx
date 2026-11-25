@@ -1,12 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { authApi } from '../../services/api/auth';
-import { useAuth } from '../../context/useAuth';
+import styles from './css/VerifyEmail.module.css';
 
 export function VerifyEmailCallbackPage() {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const { refreshUser } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
   const [alreadyVerified, setAlreadyVerified] = useState(false);
@@ -30,26 +28,20 @@ export function VerifyEmailCallbackPage() {
         setStatus('success');
         setAlreadyVerified(response.already_verified || false);
 
-        await refreshUser();
-
-        setTimeout(() => {
-          navigate('/social', { replace: true });
-        }, 2000);
       } catch (err: unknown) {
         setStatus('error');
-        setError((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Verification failed');
+        setError(err instanceof Error ? err.message : 'Verification failed');
       }
     };
 
     verifyEmail();
-  }, [navigate, refreshUser, searchParams]);
+  }, [searchParams]);
 
   if (status === 'loading') {
     return (
-      <div className="verify-callback">
-        <div className="verify-callback-card">
-          <div className="loading-spinner" />
-          <p>Verifying your email...</p>
+      <div className={styles.page}>
+        <div className={styles.card}>
+          <p role="status">Verifying your email…</p>
         </div>
       </div>
     );
@@ -57,27 +49,22 @@ export function VerifyEmailCallbackPage() {
 
   if (status === 'success') {
     return (
-      <div className="verify-callback">
-        <div className="verify-callback-card success">
+      <div className={styles.page}>
+        <div className={styles.card}>
           <h1>{alreadyVerified ? 'Already Verified!' : 'Email Verified!'}</h1>
-          <p>
-            {alreadyVerified
-              ? 'Your email is already verified. Redirecting to social page...'
-              : 'Your email has been verified successfully. Redirecting to social page...'}
-          </p>
+          <p>Return to your original signup tab and check verification, or sign in to the account you verified.</p>
+          <Link to="/" state={{ showLogin: true }} className={styles.primary}>Return to xgGaffer</Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="verify-callback">
-      <div className="verify-callback-card error">
+    <div className={styles.page}>
+      <div className={styles.card}>
         <h1>Verification Failed</h1>
-        <p>{error}</p>
-        <button onClick={() => navigate('/')} className="btn-primary">
-          Go to Home
-        </button>
+        <p role="alert">{error}</p>
+        <Link to="/" state={{ showLogin: true }} className={styles.primary}>Return to sign in</Link>
       </div>
     </div>
   );

@@ -44,7 +44,7 @@ export const SignUpForm = ({ onSwitchToLogin }: SignUpFormProps = {}) => {
     setIsLoading(true);
 
     try {
-      await register({
+      const verificationEmailSent = await register({
         email: formData.email,
         username: formData.username || undefined,
         first_name: formData.first_name,
@@ -52,8 +52,7 @@ export const SignUpForm = ({ onSwitchToLogin }: SignUpFormProps = {}) => {
         password: formData.password,
       });
 
-      // New users should always start the setup flow at profile creation.
-      navigate('/create/profile', { replace: true });
+      navigate('/verify-email', { replace: true, state: { verificationEmailSent, newSignup: true } });
     } catch (err) {
       const apiError = err as Error & { data?: Record<string, string[]> };
       if (apiError.data && typeof apiError.data === 'object') {

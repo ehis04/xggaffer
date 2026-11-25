@@ -2,6 +2,7 @@ import './css/ProfileCreation.css';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../services/api/client';
+import { AppError } from '../../common/AppError';
 import type { FormEvent } from 'react';
 
 interface ProfileData {
@@ -39,12 +40,18 @@ export const ProfileCreation = () => {
     setIsLoading(true);
 
     try {
-      await apiClient.post('/users/profile/create/', {
+      const profile = {
         display_name: formData.display_name,
         gender: formData.gender,
         date_of_birth: formData.date_of_birth || null,
         bio: formData.bio || '',
-      });
+      };
+      try {
+        await apiClient.patch('/users/profile/', profile);
+      } catch (error) {
+        if (!(error instanceof AppError) || error.status !== 404) throw error;
+        await apiClient.post('/users/profile/create/', profile);
+      }
 
       navigate('/create/profile/role');
     } catch (err) {

@@ -37,7 +37,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
-    email_verified = models.BooleanField(default=True)
+    email_verified = models.BooleanField(default=False)
     verification_token = models.CharField(max_length=100, blank=True, null=True)
     token_created_at = models.DateTimeField(blank=True, null=True)
     password_reset_token = models.CharField(max_length=100, blank=True, null=True)
@@ -62,7 +62,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     def generate_verification_token(self):
         self.verification_token = secrets.token_urlsafe(32)
         self.token_created_at = timezone.now()
-        self.save()
+        self.save(update_fields=["verification_token", "token_created_at"])
         return self.verification_token
     #checks whether the email verification token exists and is still within the 24 hour expiry time
     def is_token_valid(self):
@@ -73,7 +73,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     # marks the user's email address as verified
     def verify_email(self):
         self.email_verified = True
-        self.save()
+        self.save(update_fields=["email_verified"])
     # creates a secure password reset token and stores the time it was generated
     def generate_password_reset_token(self):
         self.password_reset_token = secrets.token_urlsafe(32)

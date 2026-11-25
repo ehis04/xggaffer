@@ -55,7 +55,7 @@ class UserRegisterView(APIView):
         user = serializer.save()
 
         from .services.email_service import send_verification_email
-        send_verification_email(user)
+        verification_email_sent = send_verification_email(user)
 
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
@@ -65,6 +65,7 @@ class UserRegisterView(APIView):
 
         response = Response({
             'user': user_data,
+            'verification_email_sent': verification_email_sent,
             'message': 'User registered successfully'
         }, status=status.HTTP_201_CREATED)
 
@@ -601,6 +602,8 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 
     # Returns only the current user's profile for list requests and non-superuser profiles for detail requests
     def get_queryset(self):
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return UserProfile.objects.filter(user=self.request.user).select_related('user')
         if self.action == 'list':
             return UserProfile.objects.filter(
                 user=self.request.user
@@ -615,11 +618,6 @@ class UserProfileViewSet(viewsets.ModelViewSet):
             return UserProfileUpdateSerializer
         return UserProfileSerializer
 
-    # Forces update actions to operate only on the authenticated user's own profile
-    def get_object(self):
-        if self.action in ['update', 'partial_update']:
-            return get_object_or_404(UserProfile, user=self.request.user)
-        return super().get_object()
     # Creates the current user's profile or returns their existing profile if one already exists
     def create(self, request, *args, **kwargs):
         existing_profile = UserProfile.objects.filter(user=request.user).first()
@@ -634,51 +632,9 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     # Follows or unfollows the selected user depending on whether the request method is POST or DELETE
     @action(detail=True, methods=['post', 'delete'], url_path='follow')
     def follow(self, request, username=None):
-        try:
-            follower_profile = request.user.profile
-        except UserProfile.DoesNotExist:
-            return Response(
-                {"error": "You have to create a profile before following users."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        following_profile = get_object_or_404(
-            UserProfile.objects.select_related("user"), user__username=username
-        )
-
-        if follower_profile.id == following_profile.id:
-            return Response(
-                {"error": "You can't follow yourself"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if request.method == 'POST':
-            follow, created = Follow.objects.get_or_create(
-                follower=follower_profile, following=following_profile
-            )
-            if created:
-                return Response(
-                    {"message": f"You have followed {username}", "following": True},
-                    status=status.HTTP_201_CREATED,
-                )
-            return Response(
-                {"message": f"Already following {username}", "following": True},
-                status=status.HTTP_200_OK,
-            )
-
-        elif request.method == 'DELETE':
-            deleted_count, _ = Follow.objects.filter(
-                follower=follower_profile, following=following_profile
-            ).delete()
-            if deleted_count > 0:
-                return Response(
-                    {"message": f"Unfollowed {username}", "following": False},
-                    status=status.HTTP_200_OK,
-                )
-            return Response(
-                {"message": f"Not following {username}", "following": False},
-                status=status.HTTP_200_OK,
-            )
+        view = FollowUserView()
+        handler = view.post if request.method == "POST" else view.delete
+        return handler(request, username)
             
     # Returns whether the authenticated user follows the selected user and whether the selected user follows them back
     @action(detail=True, methods=['get'], url_path='follow-status')

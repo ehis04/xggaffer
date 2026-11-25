@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requireVerified = true }: ProtectedRouteProps) {
-  const { isAuthenticated, isEmailVerified, isLoading } = useAuth();
+  const { user, isAuthenticated, isEmailVerified, isLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [checkingProfile, setCheckingProfile] = useState(true);
@@ -19,7 +19,7 @@ export function ProtectedRoute({ children, requireVerified = true }: ProtectedRo
     let mounted = true;
 
     const verifyProfile = async () => {
-      if (!isAuthenticated) {
+      if (!isAuthenticated || (requireVerified && !isEmailVerified)) {
         if (mounted) setCheckingProfile(false);
         return;
       }
@@ -36,10 +36,12 @@ export function ProtectedRoute({ children, requireVerified = true }: ProtectedRo
 
       try {
         const profile = await usersApi.getMyProfile();
+        if (!mounted) return;
         if (!profile.roles || profile.roles.length === 0) {
           navigate('/create/profile/role', { replace: true });
         }
       } catch (err: unknown) {
+        if (!mounted) return;
         const apiErr = err as { response?: { status?: number }; status?: number };
         const status = apiErr?.response?.status ?? apiErr?.status;
         if (status === 404) {
@@ -57,7 +59,7 @@ export function ProtectedRoute({ children, requireVerified = true }: ProtectedRo
     return () => {
       mounted = false;
     };
-  }, [isAuthenticated, location.pathname, navigate]);
+  }, [user?.id, isAuthenticated, isEmailVerified, location.pathname, navigate, requireVerified]);
 
   if (isLoading || checkingProfile) {
     return <FullPageLoader />;

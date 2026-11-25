@@ -20,6 +20,12 @@ function extractDetail(data: unknown): string | null {
     const obj = data as Record<string, unknown>;
     if (typeof obj.detail === "string") return obj.detail;
     if (typeof obj.message === "string") return obj.message;
+    if (typeof obj.error === "string") return obj.error;
+    const validationMessages = Object.values(obj)
+      .filter(Array.isArray)
+      .flat()
+      .filter((value): value is string => typeof value === "string");
+    if (validationMessages.length) return validationMessages.join(" ");
   }
   return null;
 }

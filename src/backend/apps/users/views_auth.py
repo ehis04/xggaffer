@@ -11,9 +11,12 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.middleware.csrf import get_token
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_GET
+from django.utils.decorators import method_decorator
 
 from .serializers import UserSerializer
+from .models import User
 from .services.cookie_service import (
     set_auth_cookies,
     clear_auth_cookies,
@@ -80,6 +83,8 @@ class CookieTokenRefreshView(APIView):
         
         try:
             refresh = RefreshToken(refresh_token)
+            user_id = refresh.payload.get(settings.SIMPLE_JWT.get('USER_ID_CLAIM', 'user_id'))
+            user = User.objects.get(pk=user_id, is_active=True)
 
             access_token = str(refresh.access_token)
 
@@ -92,9 +97,6 @@ class CookieTokenRefreshView(APIView):
                     except AttributeError:
                         pass
                 
-                from .models import User
-                user_id = refresh.access_token.payload.get('user_id')
-                user = User.objects.get(id=user_id)
                 new_refresh = RefreshToken.for_user(user)
                 new_refresh_token = str(new_refresh)
                 access_token = str(new_refresh.access_token)
@@ -104,7 +106,7 @@ class CookieTokenRefreshView(APIView):
             
             return response
             
-        except TokenError:
+        except (TokenError, User.DoesNotExist):
             return Response(
                 {'error': 'Invalid or expired refresh token'},
                 status=status.HTTP_401_UNAUTHORIZED
@@ -116,8 +118,10 @@ class CookieTokenRefreshView(APIView):
             )
 
 # Logs the user out by blacklisting the refresh token and clearing auth cookies
+@method_decorator(csrf_protect, name='dispatch')
 class LogoutView(APIView):
-    permission_classes = [IsAuthenticated]
+    authentication_classes = []
+    permission_classes = [AllowAny]
     # blacklists the current refresh token, then removes authentication cookies from the response
     def post(self, request):
         refresh_token = get_refresh_token_from_cookie(request)

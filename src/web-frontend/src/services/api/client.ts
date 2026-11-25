@@ -30,6 +30,22 @@ async function ensureCsrfToken(): Promise<void> {
 
 let isRefreshing = false;
 let refreshPromise: Promise<boolean> | null = null;
+let sessionRevision = 0;
+let sessionTransition = false;
+
+export async function changeApiSession<T>(action: () => Promise<T>): Promise<T> {
+  if (sessionTransition) throw new Error('An account change is already in progress.');
+  sessionTransition = true;
+  sessionRevision += 1;
+  try {
+    // A completed refresh can set cookies, so finish it before changing accounts.
+    await refreshPromise;
+    return await action();
+  } finally {
+    sessionRevision += 1;
+    sessionTransition = false;
+  }
+}
 
 async function attemptTokenRefresh(): Promise<boolean> {
   if (isRefreshing && refreshPromise) {
@@ -42,6 +58,7 @@ async function attemptTokenRefresh(): Promise<boolean> {
       const response = await fetch(`${API_BASE_URL}/users/auth/refresh/`, {
         method: 'POST',
         credentials: 'include',
+        signal: AbortSignal.timeout(DEFAULT_REQUEST_TIMEOUT_MS),
         headers: {
           'Content-Type': 'application/json',
           ...(getCsrfToken() && { 'X-CSRFToken': getCsrfToken()! }),
@@ -72,6 +89,7 @@ class ApiClient {
     isRetry = false
   ): Promise<T> {
     const { params, ...fetchOptions } = options;
+    const revision = sessionRevision;
 
     let url = `${this.baseUrl}${endpoint}`;
 
@@ -125,10 +143,10 @@ class ApiClient {
       window.clearTimeout(timeoutId);
     });
 
-    if (response.status === 401 && !isRetry) {
+    if (response.status === 401 && !isRetry && !sessionTransition && revision === sessionRevision) {
       if (!endpoint.includes('/auth/refresh')) {
         const refreshed = await attemptTokenRefresh();
-        if (refreshed) {
+        if (refreshed && !sessionTransition && revision === sessionRevision) {
           return this.request<T>(endpoint, options, true);
         }
       }

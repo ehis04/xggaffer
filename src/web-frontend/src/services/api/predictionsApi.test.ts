@@ -127,7 +127,7 @@ describe('predictionsApi', () => {
     expect(error).toBeInstanceOf(PredictionsApiError);
     expect(error!.name).toBe('PredictionsApiError');
     expect(error!.status).toBe(404);
-    expect(error!.message).toContain('HTTP 404');
+    expect(error!.message).toBe('Odds comparison unavailable for this fixture.');
   });
 
   it('throws a typed API error when the backend returns an error payload', async () => {
@@ -143,6 +143,6 @@ describe('predictionsApi', () => {
     expect(error).toBeInstanceOf(PredictionsApiError);
     expect(error!.name).toBe('PredictionsApiError');
     expect(error!.status).toBe(503);
-    expect(error!.message).toContain('HTTP 503');
+    expect(error!.message).toBe('Model not available.');
   });
 });
