@@ -11,6 +11,8 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
+from common.pagination import StandardPageNumberPagination
+
 from apps.livefootball.models import CompetitionFixture, CompetitionTableRow, TeamDirectoryEntry
 from apps.playerdata.models import ClubSeasonEnrichment, PlayerSeasonEnrichment
 from apps.players.models import ExternalProvider, Player, PlayerExternalIdentity
@@ -196,7 +198,7 @@ def get_understat_enrichment_prefetch():
 
 class ClubViewSet(viewsets.ModelViewSet):
     serializer_class = ClubSerializer
-    pagination_class = None  # Disable pagination for club list
+    pagination_class = StandardPageNumberPagination
 
     def get_permissions(self):
         if self.action in ['create', 'duplicate']:
@@ -281,8 +283,6 @@ class ClubViewSet(viewsets.ModelViewSet):
                 listed_filter,
                 is_trashed=False,
             )
-            if scope == 'browse':
-                queryset = apply_featured_fan_club_filter(queryset)
             return apply_club_search_filter(queryset, search)
 
         member_club_ids = ClubMembership.objects.filter(
@@ -315,9 +315,6 @@ class ClubViewSet(viewsets.ModelViewSet):
             active_filter,
             is_trashed=False,
         ).distinct()
-
-        if scope == 'browse':
-            active_queryset = apply_featured_fan_club_filter(active_queryset)
 
         if trash_mode == 'include' and scope not in {'browse', 'followed'}:
             queryset = base_queryset.filter(

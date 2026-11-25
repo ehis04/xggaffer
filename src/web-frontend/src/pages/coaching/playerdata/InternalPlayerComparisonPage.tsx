@@ -14,6 +14,14 @@ import { formatSeasonDisplay, getCurrentFootballSeason } from "../../../utils/fo
 import { dedupeEnrichedPlayers, getEnrichedPlayerListKey } from "./playerListUtils";
 import styles from "./css/InternalPlayerComparisonPage.module.css";
 
+const ALLOWED_PRO_CLUBS = [
+  'Manchester United FC',
+  'Paris Saint-Germain FC',
+  'FC Bayern München',
+  'Real Madrid CF',
+  'Juventus FC',
+];
+
 const ComparisonMetricGroup: React.FC<{
   group: PlayerOverviewComparisonMetricGroup;
 }> = ({ group }) => {
@@ -221,8 +229,6 @@ const InternalPlayerComparisonPage: React.FC = () => {
   const [comparisonError, setComparisonError] = useState<string | null>(null);
 
   // Filter to only show these specific clubs (matching exact names from database)
-  const ALLOWED_CLUBS = ['Manchester United FC', 'Paris Saint-Germain FC', 'FC Bayern München', 'Real Madrid CF', 'Juventus FC'];
-
   useEffect(() => {
     clubsApi
       .browse()
@@ -230,7 +236,7 @@ const InternalPlayerComparisonPage: React.FC = () => {
         setProClubs(
           clubs.filter((club) => 
             club.club_type === "system_professional" && 
-            ALLOWED_CLUBS.includes(club.name)
+            ALLOWED_PRO_CLUBS.includes(club.name)
           ),
         ),
       )

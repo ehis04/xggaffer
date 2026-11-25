@@ -172,23 +172,28 @@ describe('MatchIntelligenceHub', () => {
 
   it('renders SectionSkeleton during fixture resolution', () => {
     vi.mocked(fetchMatchPredictionWidget).mockReturnValueOnce(new Promise(() => {}));
-    renderHub();
+    const { unmount } = renderHub();
     expect(screen.getAllByTestId('section-skeleton').length).toBeGreaterThan(0);
+    unmount();
   });
 
   it('renders NullStatePlaceholder for missing home/away params', () => {
-    renderHub('?league=EPL');
+    const { unmount } = renderHub('?league=EPL');
     expect(screen.getByTestId('null-placeholder')).toBeInTheDocument();
     expect(screen.getByText(/fixture not found/i)).toBeInTheDocument();
+    unmount();
   });
 
   it('renders page title once fixture resolved', async () => {
     renderHub();
     expect(screen.getByText('Arsenal vs Chelsea')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getAllByTestId('zone-heatmap').length).toBeGreaterThan(0);
+    });
   });
 
-  it('renders tactical unavailable message for non-La Liga league', async () => {
-    renderHub('?home=Arsenal&away=Chelsea&league=EPL');
+  it('renders tactical unavailable message for an unsupported league', async () => {
+    renderHub('?home=Inter&away=Milan&league=SA');
     await waitFor(() => {
       expect(screen.getByText(/tactical data not available for this league/i)).toBeInTheDocument();
     });
@@ -209,9 +214,9 @@ describe('MatchIntelligenceHub', () => {
     });
   });
  
-  it('Block 6 renders NullStatePlaceholder for non-La Liga fixture (leagueCode=PL)', async () => {
+  it('Block 6 renders NullStatePlaceholder for an unsupported fixture (leagueCode=SA)', async () => {
     vi.mocked(fetchMatchPredictionWidget).mockResolvedValueOnce(makeMatchEnvelope());
-    renderHub('?home=Arsenal&away=Chelsea&league=PL&date=2025-05-01');
+    renderHub('?home=Inter&away=Milan&league=SA&date=2025-05-01');
     await waitFor(() => {
       expect(screen.getByText(/tactical data not available for this league/i)).toBeInTheDocument();
     });

@@ -416,6 +416,10 @@ class SimulationServiceTests(SimpleTestCase):
             self.assertAlmostEqual(total_probability, 1.0, places=3)
 
     @patch(
+        "apps.livefootball.services.simulation._predict_score_lambdas",
+        side_effect=_dynamic_lambdas,
+    )
+    @patch(
         "apps.livefootball.services.simulation._build_fixture_outcome_probabilities",
         return_value=[],
     )
@@ -437,6 +441,7 @@ class SimulationServiceTests(SimpleTestCase):
         _mock_loader,
         _mock_versions,
         _mock_outcomes,
+        _mock_lambdas,
     ) -> None:
         result = simulate_league_season("EPL", "2024", "current_expected", simulation_count=20)
 

@@ -3,10 +3,10 @@ from __future__ import annotations
 import logging
 import threading
 from datetime import date as date_type
-from pathlib import Path
 
 import pandas as pd
 
+from apps.predictions.data_paths import PROCESSED_DATA_ROOT
 from apps.predictions.services.base_handler import EngineHandler, QueryPayload
 from apps.predictions.services.intent_types import IntentClass, ParsedQuery
 from apps.predictions.services.source_policy import (
@@ -21,27 +21,15 @@ DEFAULT_LEAGUE = "EPL"
 DEFAULT_SEASON = "2025"
 
 PLAYERS_CSV_PATH = (
-    Path(__file__).resolve().parents[4]
-    / "data"
-    / "processed"
+    PROCESSED_DATA_ROOT
     / "players"
     / "merged"
     / "all_leagues_all_seasons_players_merged.csv"
 )
 
-LINEUP_FEATURES_PATH = (
-    Path(__file__).resolve().parents[4]
-    / "data"
-    / "processed"
-    / "lineup_features.csv"
-)
+LINEUP_FEATURES_PATH = PROCESSED_DATA_ROOT / "lineup_features.csv"
 
-INJURY_SPELLS_PATH = (
-    Path(__file__).resolve().parents[4]
-    / "data"
-    / "processed"
-    / "injury_spells.csv"
-)
+INJURY_SPELLS_PATH = PROCESSED_DATA_ROOT / "injury_spells.csv"
 
 _RISK_DEFAULTS: dict[str, float] = {
     "minutes_last_7d": 0.0,

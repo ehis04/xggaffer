@@ -445,7 +445,7 @@ const DashboardTab = ({ ctx }: Props) => {
       }
     };
     void load();
-  }, [clubId, retryKey, ctx.club.latest_understat_summary]);
+  }, [clubId, retryKey, ctx.club.latest_understat_summary, ctx.club.name]);
 
   useEffect(() => {
     if (selectedPlayerId === null) {

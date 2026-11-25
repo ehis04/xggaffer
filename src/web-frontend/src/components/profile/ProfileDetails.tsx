@@ -9,7 +9,7 @@ export const ProfileDetails = () => {
   useEffect(() => {
     if (!username) return;
     getProfile(setUserData, username);
-  });
+  }, [username]);
 
   return (
     <div className="profile-details-container">

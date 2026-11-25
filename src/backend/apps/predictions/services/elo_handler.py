@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import logging
 from datetime import date
-from pathlib import Path
 
+from apps.predictions.data_paths import PROCESSED_DATA_ROOT
 from apps.predictions.services.base_handler import EngineHandler, QueryPayload
 from apps.predictions.services.intent_types import IntentClass, ParsedQuery
 from apps.predictions.services.source_policy import source_coverage_metadata
@@ -11,9 +11,7 @@ from apps.predictions.services.source_policy import source_coverage_metadata
 _logger = logging.getLogger(__name__)
 
 ELO_HISTORY_PATH = (
-    Path(__file__).resolve().parents[4]
-    / "data"
-    / "processed"
+    PROCESSED_DATA_ROOT
     / "elo_ratings.csv"
 )
 

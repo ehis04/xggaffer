@@ -5,12 +5,12 @@ from pathlib import Path
 
 import pandas as pd
 
+from apps.predictions.data_paths import PROCESSED_DATA_ROOT
+
 _logger = logging.getLogger(__name__)
 
 ELO_CSV_PATH: Path = (
-    Path(__file__).resolve().parents[4]
-    / "data"
-    / "processed"
+    PROCESSED_DATA_ROOT
     / "elo_ratings.csv"
 )
 

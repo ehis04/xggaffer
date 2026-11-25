@@ -3,5 +3,15 @@ xggaffer-data.tar.gz
 xggaffer-data.zip
 *.tar.gz
 
+# Local deployment secrets
+.env
+.env.*
+!.env.*.example
+!src/backend/.dockerignore
+!src/web-frontend/.dockerignore
+
+# Local production backups
+backups/
+
 # GitLab cleanup helper files are local-only.
 gitlab-cleanup-commit-map-*.txt

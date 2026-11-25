@@ -6,8 +6,13 @@ API route prefixes are registered and feature-specific routing is delegated to e
 from django.contrib import admin
 from django.urls import path, include
 
+from backend import health
+
 
 urlpatterns = [
+    path('health/live/', health.live, name='health-live'),
+    path('health/ready/', health.ready, name='health-ready'),
+
     # Django admin
     path('admin/', admin.site.urls),
 

@@ -97,5 +97,10 @@ describe('AppError', () => {
       const err = AppError.fromResponse(404, {});
       expect(err).toBeInstanceOf(AppError);
     });
+
+    it('retains a request ID for support correlation', () => {
+      const err = AppError.fromResponse(500, {}, 'edge-request-42');
+      expect(err.requestId).toBe('edge-request-42');
+    });
   });
 });

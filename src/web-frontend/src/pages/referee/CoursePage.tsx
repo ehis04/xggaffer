@@ -56,6 +56,7 @@ export const CoursePage = () => {
   const flatItems = useMemo(() => sections.flatMap((s) => s.items), [sections]);
 
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  const [currentItemId, setCurrentItemId] = useState("");
 
   useEffect(() => {
     if (flatItems.length > 0) {
@@ -66,7 +67,6 @@ export const CoursePage = () => {
       );
     }
   }, [flatItems]);
-  const [currentItemId, setCurrentItemId] = useState("");
 
   useEffect(() => {
     if (flatItems.length > 0 && !currentItemId) {
@@ -76,7 +76,7 @@ export const CoursePage = () => {
           "",
       );
     }
-  }, [flatItems]);
+  }, [flatItems, currentItemId]);
 
   const currentIndex = flatItems.findIndex((i) => i.id === currentItemId);
   const currentItem = flatItems[currentIndex];
@@ -106,7 +106,7 @@ export const CoursePage = () => {
     apiClient
       .post(REFEREE.PROGRESS_COMPLETE, { item_id: Number(currentItemId) })
       .catch((err) => console.error("Failed to mark clause complete:", err));
-  }, [currentItemId]);
+  }, [completedIds, currentItem, currentItemId]);
 
   const [scenarioSelections, setScenarioSelections] = useState<
     Record<string, string>

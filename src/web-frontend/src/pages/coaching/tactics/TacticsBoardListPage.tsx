@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { tacticsBoardApi } from '../../../services/api';
 import type { TacticsBoardListItem, TacticsBoardType, TacticsPitchOrientation } from '../../../types/tactics';
@@ -73,7 +73,7 @@ const TacticsBoardListPage: React.FC = () => {
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
-  const loadBoards = async () => {
+  const loadBoards = useCallback(async () => {
     if (!Number.isInteger(numericClubId) || numericClubId <= 0) {
       setBoards([]);
       setError('Invalid club ID.');
@@ -95,11 +95,11 @@ const TacticsBoardListPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isTrashView, numericClubId]);
 
   useEffect(() => {
     void loadBoards();
-  }, [numericClubId, isTrashView]);
+  }, [loadBoards]);
 
   const handleBack = () => {
     navigate(`/clubs/${numericClubId}`);

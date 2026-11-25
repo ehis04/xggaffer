@@ -39,7 +39,7 @@ class Club(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=False)
     badge = models.ImageField(
-        upload_to='../media/clubs/badges/',
+        upload_to='clubs/badges/',
         blank=True,
         null=True
     )

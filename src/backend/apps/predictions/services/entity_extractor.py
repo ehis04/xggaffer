@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import logging
 import re
-from pathlib import Path
 
 import pandas as pd
 from rapidfuzz import fuzz, process
 
+from apps.predictions.data_paths import PROCESSED_DATA_ROOT
 from apps.predictions.services.intent_types import IntentClass
 from apps.predictions.services.source_policy import season_group_key
 
@@ -51,18 +51,14 @@ TEAM_ALIASES: dict[str, tuple[str, ...]] = {
 }
 
 TEAMS_CSV_PATH = (
-    Path(__file__).resolve().parents[4]
-    / "data"
-    / "processed"
+    PROCESSED_DATA_ROOT
     / "teams"
     / "merged"
     / "all_leagues_all_seasons_teams_merged.csv"
 )
 
 PLAYERS_CSV_PATH = (
-    Path(__file__).resolve().parents[4]
-    / "data"
-    / "processed"
+    PROCESSED_DATA_ROOT
     / "players"
     / "merged"
     / "all_leagues_all_seasons_players_merged.csv"

@@ -1,7 +1,29 @@
+name: xggaffer-local
+
+x-backend-environment: &backend-environment
+  DJANGO_SETTINGS_MODULE: backend.settings
+  SECRET_KEY: local-development-only
+  DEBUG: "True"
+  DATABASE_URL: postgresql://postgres:postgres@db:5432/xggaffer_local
+  REDIS_URL: redis://redis:6379/0
+  CACHE_REDIS_URL: redis://redis:6379/1
+  CELERY_BROKER_URL: redis://redis:6379/0
+  CELERY_RESULT_BACKEND: redis://redis:6379/0
+  ALLOWED_HOSTS: localhost,127.0.0.1,backend
+  CSRF_TRUSTED_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+  CORS_ALLOWED_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+  CLUB_RESOURCES_USE_CLOUDINARY: "False"
+  ENABLE_CELERY_BEAT_SCHEDULE: "False"
+  XGGAFFER_DATA_DIR: /app/data
+
+x-backend-service: &backend-service
+  build:
+    context: ./src/backend
+  environment: *backend-environment
+
 services:
   db:
     image: postgres:16
-    container_name: xggaffer_local_db
     environment:
       POSTGRES_DB: xggaffer_local
       POSTGRES_USER: postgres
@@ -10,78 +32,74 @@ services:
       - postgres_local_data:/var/lib/postgresql/data
     ports:
       - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d xggaffer_local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   redis:
-    image: redis:7
-    container_name: xggaffer_local_redis
+    image: redis:7-alpine
     ports:
       - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   backend:
-    build:
-      context: ./build/backend
-    container_name: xggaffer_local_backend
-    env_file:
-      - ./build/backend/.env.docker.local
+    <<: *backend-service
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
     volumes:
-      - ./build/backend:/app
-      - backend_staticfiles:/app/staticfiles
-      - backend_media:/app/media
+      - ./src/backend:/app
+      - ./src/data:/app/data
+      - backend_local_media:/app/media
     ports:
       - "8000:8000"
     depends_on:
-      - db
-      - redis
-    command: >
-      sh -c "python manage.py migrate &&
-             python manage.py collectstatic --noinput &&
-             python manage.py runserver 0.0.0.0:8000"
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready/', timeout=5)"
+      interval: 10s
+      timeout: 6s
+      retries: 10
+      start_period: 30s
 
   celery_worker:
-    build:
-      context: ./build/backend
-    container_name: xggaffer_local_celery_worker
-    env_file:
-      - ./build/backend/.env.docker.local
+    <<: *backend-service
+    command: celery -A backend worker --loglevel=info --concurrency=1
     volumes:
-      - ./build/backend:/app
+      - ./src/backend:/app
+      - ./src/data:/app/data
+      - backend_local_media:/app/media
     depends_on:
-      - db
-      - redis
-      - backend
-    command: celery -A backend worker --loglevel=info
-
-  celery_beat:
-    build:
-      context: ./build/backend
-    container_name: xggaffer_local_celery_beat
-    env_file:
-      - ./build/backend/.env.docker.local
-    volumes:
-      - ./build/backend:/app
-    depends_on:
-      - db
-      - redis
-      - backend
-    command: celery -A backend beat --loglevel=info
+      backend:
+        condition: service_healthy
 
   frontend:
     build:
-      context: ./build/web-frontend
-    container_name: xggaffer_local_frontend
-    env_file:
-      - ./build/web-frontend/.env.docker.local
+      context: ./src/web-frontend
     volumes:
-      - ./build/web-frontend:/app
+      - ./src/web-frontend:/app
       - frontend_node_modules:/app/node_modules
     ports:
       - "5173:5173"
     depends_on:
-      - backend
-    command: npm run dev -- --host 0.0.0.0
+      backend:
+        condition: service_healthy
+    command: npm run dev -- --host 0.0.0.0 --port 5173
 
 volumes:
   postgres_local_data:
-  backend_staticfiles:
-  backend_media:
+  backend_local_media:
   frontend_node_modules:

@@ -29,7 +29,7 @@ const LiveFootballBasePage: React.FC = () => {
 
   useEffect(() => {
     if (envelope) markDataReceived();
-  }, [envelope]);
+  }, [envelope, markDataReceived]);
 
   const overview = envelope?.data ?? null;
 

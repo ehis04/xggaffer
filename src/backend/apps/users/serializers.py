@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import User, UserProfile, UserRole, Follow, FollowRequest, FollowRequestStatus, Visibility
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
 from apps.community.models import ModerationStatus, Post
 
 UserModel = get_user_model()
@@ -12,6 +13,10 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserModel
         fields = ['username', 'email', 'first_name', 'last_name', 'password']
+
+    def validate_password(self, value):
+        validate_password(value)
+        return value
     # creates a new user using the custom UserManager and falls back to email when no username is provided
     def create(self, validated_data):
         username = validated_data.get("username") or validated_data["email"]

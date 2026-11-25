@@ -1,5 +1,5 @@
 
-from django.db import migrations, models
+from django.db import migrations
 
 
 class Migration(migrations.Migration):
@@ -8,50 +8,12 @@ class Migration(migrations.Migration):
         ('predictions', '0002_matchfeature'),
     ]
 
+    # CurrentEloRating, EloRating, and their indexes are already part of the
+    # current 0001_initial migration. Recreating them here prevents a clean
+    # database from migrating. MatchFeature was introduced by 0002 and still
+    # needs to be removed from both migration state and the database.
     operations = [
-        migrations.CreateModel(
-            name='CurrentEloRating',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('team', models.CharField(max_length=100, unique=True)),
-                ('league', models.CharField(max_length=50)),
-                ('elo', models.FloatField()),
-                ('last_match_date', models.DateField()),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-            ],
-            options={
-                'ordering': ['-elo'],
-            },
-        ),
-        migrations.CreateModel(
-            name='EloRating',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('team', models.CharField(max_length=100)),
-                ('league', models.CharField(max_length=50)),
-                ('season', models.CharField(max_length=10)),
-                ('date', models.DateField()),
-                ('match_id', models.CharField(max_length=50)),
-                ('elo_before', models.FloatField()),
-                ('elo_after', models.FloatField()),
-            ],
-            options={
-                'ordering': ['date'],
-            },
-        ),
         migrations.DeleteModel(
             name='MatchFeature',
-        ),
-        migrations.AddIndex(
-            model_name='elorating',
-            index=models.Index(fields=['team', 'date'], name='predictions_team_df3fa5_idx'),
-        ),
-        migrations.AddIndex(
-            model_name='elorating',
-            index=models.Index(fields=['league', 'season'], name='predictions_league_d585af_idx'),
-        ),
-        migrations.AddIndex(
-            model_name='elorating',
-            index=models.Index(fields=['team', '-date'], name='predictions_team_6e0689_idx'),
         ),
     ]

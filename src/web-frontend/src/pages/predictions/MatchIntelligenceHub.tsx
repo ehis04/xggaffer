@@ -274,7 +274,7 @@ export default function MatchIntelligenceHub() {
       setMarketLoading(false);
       setMarketRetrying(false);
     }
-  }, [homeTeam, awayTeam, leagueCode, season, fixtureDate]);
+  }, [homeTeam, awayTeam, leagueCode, fixtureDate]);
 
   const loadSquadBlock = useCallback(async function loadSquadBlock(isRetry = false) {
     if (!fixtureDate) {

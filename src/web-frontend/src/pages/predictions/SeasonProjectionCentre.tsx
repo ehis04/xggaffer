@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FreshnessBadge } from '../../common/components/FreshnessBadge';
 import { SectionSkeleton } from '../../common/components/SectionSkeleton';
@@ -98,7 +98,7 @@ export default function SeasonProjectionCentre() {
     setWhatIfAdjustments([]);
   }
 
-  async function fetchData(isRetry = false) {
+  const fetchData = useCallback(async (isRetry = false) => {
     if (isRetry) setRetrying(true);
     else setLoading(true);
     setError(false);
@@ -112,13 +112,13 @@ export default function SeasonProjectionCentre() {
       setLoading(false);
       setRetrying(false);
     }
-  }
+  }, [leagueCode]);
 
   useEffect(() => {
     resetWhatIf();
     setView(DEFAULT_VIEW);
     fetchData();
-  }, [leagueCode]);
+  }, [fetchData, leagueCode]);
 
   useEffect(() => {
     let cancelled = false;

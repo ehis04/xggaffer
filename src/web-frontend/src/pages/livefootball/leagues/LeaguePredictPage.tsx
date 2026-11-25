@@ -59,7 +59,7 @@ const LeaguePredictPage: React.FC = () => {
   });
   const meta = metaEnvelope?.data ?? null;
 
-  const leagues = meta?.leagues ?? [];
+  const leagues = useMemo(() => meta?.leagues ?? [], [meta?.leagues]);
 
   const selectedLeague = useMemo<LeagueMetaItem | null>(() => {
     if (leagues.length === 0) {

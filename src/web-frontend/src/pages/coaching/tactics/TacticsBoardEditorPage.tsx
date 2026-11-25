@@ -340,6 +340,10 @@ const TacticsBoardEditorPage: React.FC = () => {
     frames: state.board?.frames ?? [],
     initialFrameIndex: state.activeFrameIndex,
   });
+  const loadBoardRef = useRef(loadBoard);
+  const resetPlaybackRef = useRef(playback.reset);
+  loadBoardRef.current = loadBoard;
+  resetPlaybackRef.current = playback.reset;
 
   const playbackRenderFrame = useMemo(() => {
     if (!playback.activePair || !playback.activePair.targetFrame) {
@@ -411,9 +415,9 @@ const TacticsBoardEditorPage: React.FC = () => {
           numericBoardId,
           isTrashView ? { trash: 'only' } : undefined
         );
-        loadBoard(data);
+        loadBoardRef.current(data);
         setPersistedBoard(data);
-        playback.reset(data.frames[0]?.frame_index ?? 0);
+        resetPlaybackRef.current(data.frames[0]?.frame_index ?? 0);
       } catch (err) {
         setPageError(err instanceof Error ? err.message : 'Failed to load tactics board.');
       } finally {

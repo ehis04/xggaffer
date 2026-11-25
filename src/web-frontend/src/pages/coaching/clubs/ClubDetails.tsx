@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { clubsApi, client as apiClient } from '../../../services/api';
 import { ClubCalendar } from '../../../components/Clubs';
@@ -216,7 +216,7 @@ export const ClubDetailsPage = () => {
   const [reviewNoteByRequest, setReviewNoteByRequest] = useState<Record<number, string>>({});
   const [revokeNoteByInvitation, setRevokeNoteByInvitation] = useState<Record<number, string>>({});
 
-  const reloadClubWorkflowData = async (clubRecord: Club) => {
+  const reloadClubWorkflowData = useCallback(async (clubRecord: Club) => {
     const myRequestsPromise = clubsApi.listMyJoinRequests();
     const myClubsPromise = clubsApi.myClubs();
     let reviewerRequests: ClubJoinRequest[] = [];
@@ -252,9 +252,9 @@ export const ClubDetailsPage = () => {
     setReviewInvitations(reviewerInvitations);
     setClubPlayers(players);
     setReviewAccess(hasReviewAccess);
-  };
+  }, [user?.id]);
 
-  const reloadSchedulingData = async (clubRecord: Club) => {
+  const reloadSchedulingData = useCallback(async (clubRecord: Club) => {
     try {
       setScheduleLoading(true); setScheduleError(null);
       const [calendarData, eventData, fixtureData] = await Promise.all([
@@ -267,7 +267,7 @@ export const ClubDetailsPage = () => {
       setCalendarFeed([]); setEvents([]); setFixtures([]);
       setScheduleError(err instanceof Error ? err.message : 'Failed to load scheduling data.');
     } finally { setScheduleLoading(false); }
-  };
+  }, []);
 
   useEffect(() => {
     const fetchClub = async () => {
@@ -282,7 +282,7 @@ export const ClubDetailsPage = () => {
       } finally { setLoading(false); }
     };
     if (Number.isFinite(numericClubId)) void fetchClub();
-  }, [numericClubId, isTrashView]);
+  }, [numericClubId, isTrashView, reloadClubWorkflowData, reloadSchedulingData]);
 
   const tags = useMemo(() => (club ? buildTags(club) : []), [club]);
   const metaParts = useMemo(

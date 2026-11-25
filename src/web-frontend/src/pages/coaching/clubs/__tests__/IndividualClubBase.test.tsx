@@ -27,6 +27,14 @@ vi.mock('../../../../context/useAuth', () => ({
   useAuth: () => ({ user: { id: 10 } }),
 }));
 
+vi.mock('../../../../components/Navigation/SideBar', () => ({
+  Sidebar: () => null,
+}));
+
+vi.mock('../../../../components/Social/SocialUserButtons', () => ({
+  SocialUserButtons: () => null,
+}));
+
 const club = {
   id: 1,
   name: 'Reviewer Club',

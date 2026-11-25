@@ -5,7 +5,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from django.contrib.auth import authenticate
+from django.contrib.auth.password_validation import validate_password
 from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.middleware.csrf import get_token
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -205,9 +207,11 @@ class ResetPasswordView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        if len(new_password) < 8:
+        try:
+            validate_password(new_password)
+        except DjangoValidationError as exc:
             return Response(
-                {'error': 'Password must be at least 8 characters long'},
+                {'error': list(exc.messages)},
                 status=status.HTTP_400_BAD_REQUEST
             )
         

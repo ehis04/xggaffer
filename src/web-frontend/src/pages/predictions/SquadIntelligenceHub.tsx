@@ -156,7 +156,7 @@ export default function SquadIntelligenceHub() {
       .finally(() => { if (!cancelled) setFixturesLoading(false); });
 
     return () => { cancelled = true; };
-  }, [teamSlug]);
+  }, [teamSlug, teamName]);
 
   const selectedFixture = fixtures[selectedIdx] ?? null;
 
@@ -189,7 +189,7 @@ export default function SquadIntelligenceHub() {
       .finally(() => { if (!cancelled) setOpponentLineupLoading(false); });
 
     return () => { cancelled = true; };
-  }, [teamName, selectedFixture?.date, selectedFixture?.league, selectedFixture?.season]);
+  }, [teamName, selectedFixture]);
 
   const availData = availability?.data ?? null;
   const lineupData = lineup?.data ?? null;

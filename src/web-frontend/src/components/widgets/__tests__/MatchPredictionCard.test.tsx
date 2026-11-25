@@ -76,11 +76,12 @@ function renderCard(props = {}) {
 describe('MatchPredictionCard', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('renders team names', () => {
+  it('renders team names', async () => {
     vi.mocked(fetchMatchPredictionWidget).mockResolvedValueOnce(makeEnvelope());
     renderCard();
     expect(screen.getByText('Arsenal')).toBeInTheDocument();
     expect(screen.getByText('Chelsea')).toBeInTheDocument();
+    expect(await screen.findByTestId('probability-bar')).toBeInTheDocument();
   });
 
   it('shows skeleton while loading', () => {

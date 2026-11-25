@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 
+from apps.predictions.data_paths import PROCESSED_DATA_ROOT
 from common.freshness import FreshnessPayload, compute_freshness
 
 ELO_SNAPSHOT_PATH = (
-    Path(__file__).resolve().parents[4]
-    / "data"
-    / "processed"
+    PROCESSED_DATA_ROOT
     / "elo_ratings.csv"
 )
 

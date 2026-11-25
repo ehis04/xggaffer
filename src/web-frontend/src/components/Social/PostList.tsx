@@ -2,7 +2,7 @@ import "./css/PostList.css";
 import { Post } from "./Post";
 import type { PostData } from "./Post";
 import apiClient from "../../services/api/client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { COMMUNITY } from "../../services/api/endpoints";
 import communityApi, { type PaginatedResponse } from "../../services/api/communityApi";
 import { getPostsUrl, type PostListType } from "./functions/getPosts";
@@ -28,7 +28,7 @@ export const PostList: React.FC<PostListProps> = ({
 }) => {
   const [posts, setPosts] = useState<PostData[]>([]);
 
-  const getPosts = async () => {
+  const getPosts = useCallback(async () => {
     try {
       const url = getPostsUrl(postListType, username);
       const data = await apiClient.get<PaginatedResponse<PostData>>(url);
@@ -38,11 +38,11 @@ export const PostList: React.FC<PostListProps> = ({
       console.error("Couldn't get posts: ", error);
       throw error;
     }
-  };
+  }, [postListType, username]);
 
   useEffect(() => {
     getPosts();
-  }, [postListType, username, refreshTrigger]);
+  }, [getPosts, refreshTrigger]);
 
   const postsPB = posts.filter((item) => item.type === "post");
 

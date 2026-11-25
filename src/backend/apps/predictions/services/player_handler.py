@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 
 import pandas as pd
 
+from apps.predictions.data_paths import PROCESSED_DATA_ROOT
 from apps.predictions.services.base_handler import EngineHandler, QueryPayload
 from apps.predictions.services.intent_types import IntentClass, ParsedQuery
 from apps.predictions.services.source_policy import (
@@ -17,9 +17,7 @@ from apps.predictions.services.source_policy import (
 _logger = logging.getLogger(__name__)
 
 PLAYERS_CSV_PATH = (
-    Path(__file__).resolve().parents[4]
-    / "data"
-    / "processed"
+    PROCESSED_DATA_ROOT
     / "players"
     / "merged"
     / "all_leagues_all_seasons_players_merged.csv"

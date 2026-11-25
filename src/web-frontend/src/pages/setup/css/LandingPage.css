@@ -6,7 +6,7 @@ body, html {
 
 .landingPage {
     display: flex;
-    background: url('../../../images/background/pitch.png') center center/cover no-repeat;
+    background: url('../../../images/background/pitch.webp') center center/cover no-repeat;
     min-height: 100vh;
     flex-direction: column;
 }

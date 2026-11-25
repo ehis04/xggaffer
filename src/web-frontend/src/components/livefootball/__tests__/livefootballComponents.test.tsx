@@ -98,7 +98,7 @@ describe('livefootball presentational components', () => {
     expect(screen.getByText('61')).toBeInTheDocument();
   });
 
-  it('renders previous and upcoming fixtures', () => {
+  it('renders previous and upcoming fixtures', async () => {
     vi.mocked(predictMatch).mockResolvedValue({
       home_team: 'Arsenal',
       away_team: 'Chelsea',
@@ -120,6 +120,7 @@ describe('livefootball presentational components', () => {
     expect(screen.getByText('Spurs v Arsenal')).toBeInTheDocument();
     expect(screen.getByText('2 - 1')).toBeInTheDocument();
     expect(screen.getByText('Scheduled')).toBeInTheDocument();
+    await waitFor(() => expect(predictMatch).toHaveBeenCalled());
   });
 
   it('renders top scorers', () => {

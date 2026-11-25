@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { clubsApi } from "../../../services/api";
 import type { Club, ClubJoinRequest } from "../../../types/club";
@@ -195,7 +195,7 @@ const BrowseClubsPage: React.FC = () => {
   const [ageFilter, setAgeFilter] = useState<AgeFilter>("All");
   const [showFilters, setShowFilters] = useState(false);
 
-  const loadData = async (search?: string) => {
+  const loadData = useCallback(async (search?: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -227,18 +227,17 @@ const BrowseClubsPage: React.FC = () => {
 
       setClubs(visibleClubs);
       setMyJoinRequests(requestsData);
-      if (selectedClub) {
-        const refreshedSelection = visibleClubs.find((club) => club.id === selectedClub.id) || null;
-        setSelectedClub(refreshedSelection);
-      }
+      setSelectedClub((current) => current
+        ? visibleClubs.find((club) => club.id === current.id) || null
+        : null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load clubs");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { void loadData(activeSearch); }, [activeSearch]);
+  useEffect(() => { void loadData(activeSearch); }, [activeSearch, loadData]);
 
   const filteredClubs = useMemo(() => {
     return clubs.filter((club) => {

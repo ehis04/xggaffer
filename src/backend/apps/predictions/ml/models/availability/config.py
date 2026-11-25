@@ -1,26 +1,9 @@
 from __future__ import annotations
 
-import os
-from pathlib import Path
+from apps.predictions.data_paths import DATA_ROOT
 
 
-def _resolve_project_root() -> Path:
-    current = Path(__file__).resolve()
-    for parent in current.parents:
-        if (parent / "backend").exists() and (parent / "data").exists():
-            return parent
-    for parent in current.parents:
-        if (parent / "data").exists():
-            return parent
-    fallback_index = min(6, len(current.parents) - 1)
-    return current.parents[fallback_index]
-
-
-_env_data_dir = os.environ.get("XGGAFFER_DATA_DIR")
-if _env_data_dir:
-    DATA_DIR = Path(_env_data_dir)
-else:
-    DATA_DIR = _resolve_project_root() / "data"
+DATA_DIR = DATA_ROOT
 
 RAW_INJURIES_DIR = DATA_DIR / "raw" / "injuries"
 RAW_DOBS_DIR = DATA_DIR / "raw" / "dobs"

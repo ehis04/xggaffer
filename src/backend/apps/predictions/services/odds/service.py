@@ -33,7 +33,14 @@ UPCOMING_ODDS_SPORT_KEY_TO_LEAGUE = {
 
 class OddsComparisonService:
     def __init__(self, *, client: TheOddsApiClient | None = None) -> None:
-        self.client = client or TheOddsApiClient()
+        self._client = client
+
+    @property
+    def client(self) -> TheOddsApiClient:
+        """Create the external client only when a live API request is needed."""
+        if self._client is None:
+            self._client = TheOddsApiClient()
+        return self._client
 
     def get_fixture_odds_comparison(
         self,

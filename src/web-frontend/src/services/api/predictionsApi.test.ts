@@ -46,9 +46,11 @@ function createJsonResponse(body: unknown, status = 200): Response {
 describe('predictionsApi', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn());
+    document.cookie = 'csrftoken=test-token; path=/';
   });
 
   afterEach(() => {
+    document.cookie = 'csrftoken=; Max-Age=0; path=/';
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
@@ -86,7 +88,7 @@ describe('predictionsApi', () => {
       method: 'POST',
       credentials: 'include',
     });
-    expect(JSON.parse(String(options?.body))).toEqual(mockPredictionRequest);
+    expect(JSON.parse(String(options?.body))).toEqual({ top_factors: 5, ...mockPredictionRequest });
     expect(result.prediction).toBe('Home');
     expect(result.probabilities.home).toBe(0.61);
   });

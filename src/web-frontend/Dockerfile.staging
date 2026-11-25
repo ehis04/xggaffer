@@ -2,14 +2,14 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
-COPY package*.json ./
-
-RUN npm install
+COPY package.json package-lock.json ./
+RUN npm ci --include=dev \
+    && test -x node_modules/.bin/tsc
 
 COPY . .
 
 ARG VITE_API_URL=/api
-ENV VITE_API_URL=$VITE_API_BASE_URL
+ENV VITE_API_URL=${VITE_API_URL}
 
 RUN npm run build
 

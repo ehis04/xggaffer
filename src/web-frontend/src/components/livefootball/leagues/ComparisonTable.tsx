@@ -59,24 +59,18 @@ const ComparisonTable: React.FC<ComparisonTableProps> = ({
     return { byTeamId, byTeamName };
   }, [actualRows]);
 
-  const resolveActualPlayedForExpected = (row: LeagueExpectedTableRow): number | null => {
-    if (typeof row.team.id === 'number') {
-      const byId = actualPlayedLookup.byTeamId.get(row.team.id);
-      if (byId !== undefined) {
-        return byId;
-      }
-    }
-
-    const loweredName = (row.team.name || '').trim().toLowerCase();
-    if (!loweredName) {
-      return null;
-    }
-
-    const byName = actualPlayedLookup.byTeamName.get(loweredName);
-    return byName !== undefined ? byName : null;
-  };
-
   const expectedLeagueRows = useMemo<LeagueTableRow[]>(() => {
+    const resolveActualPlayedForExpected = (row: LeagueExpectedTableRow): number | null => {
+      if (typeof row.team.id === 'number') {
+        const byId = actualPlayedLookup.byTeamId.get(row.team.id);
+        if (byId !== undefined) return byId;
+      }
+
+      const loweredName = (row.team.name || '').trim().toLowerCase();
+      if (!loweredName) return null;
+      return actualPlayedLookup.byTeamName.get(loweredName) ?? null;
+    };
+
     return expectedRows.map((row) => {
       const simulatedPlayed = Math.round(row.simulated_wins + row.simulated_draws + row.simulated_losses);
       const actualPlayed = isPreSeasonToDate ? resolveActualPlayedForExpected(row) : null;

@@ -1,5 +1,6 @@
-import os
 from pathlib import Path
+
+from apps.predictions.data_paths import DATA_ROOT
 
 from .enums import (
     DATASET_MATCHES,
@@ -11,10 +12,6 @@ from .enums import (
     SOURCE_WHOSCORED,
 )
 
-
-_BUILD_ROOT = Path(__file__).resolve().parents[5]
-_env_data_dir = os.environ.get("XGGAFFER_DATA_DIR")
-DATA_ROOT = Path(_env_data_dir) if _env_data_dir else _BUILD_ROOT / "data"
 
 RAW_ROOT = DATA_ROOT / "raw"
 PROCESSED_ROOT = DATA_ROOT / "processed"

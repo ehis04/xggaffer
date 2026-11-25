@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 from time import perf_counter
 
+from apps.predictions.data_paths import PROCESSED_DATA_ROOT
 from apps.predictions.services.availability_handler import AvailabilityHandler
 from apps.predictions.services.base_handler import EngineHandler, QueryPayload
 from apps.predictions.services.composite_handler import CompositeHandler
@@ -30,11 +30,11 @@ from apps.predictions.services.odds_handler import OddsHandler
 _logger = logging.getLogger(__name__)
 
 _CHAT_CACHE_DATA_FILES = (
-    Path(__file__).resolve().parents[4] / "data" / "processed" / "matches" / "merged" / "all_leagues_all_seasons_matches_merged.csv",
-    Path(__file__).resolve().parents[4] / "data" / "processed" / "teams" / "merged" / "all_leagues_all_seasons_teams_merged.csv",
-    Path(__file__).resolve().parents[4] / "data" / "processed" / "players" / "merged" / "all_leagues_all_seasons_players_merged.csv",
-    Path(__file__).resolve().parents[4] / "data" / "processed" / "team_season_zone_profiles.csv",
-    Path(__file__).resolve().parents[4] / "data" / "processed" / "team_match_clusters.csv",
+    PROCESSED_DATA_ROOT / "matches" / "merged" / "all_leagues_all_seasons_matches_merged.csv",
+    PROCESSED_DATA_ROOT / "teams" / "merged" / "all_leagues_all_seasons_teams_merged.csv",
+    PROCESSED_DATA_ROOT / "players" / "merged" / "all_leagues_all_seasons_players_merged.csv",
+    PROCESSED_DATA_ROOT / "team_season_zone_profiles.csv",
+    PROCESSED_DATA_ROOT / "team_match_clusters.csv",
 )
 
 _CHAT_CACHE_SCHEMA_VERSION = "2026-04-28-tactical-season-default-v4"

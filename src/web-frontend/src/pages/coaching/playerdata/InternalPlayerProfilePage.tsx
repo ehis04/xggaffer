@@ -15,6 +15,14 @@ import { getCurrentFootballSeason } from '../../../utils/footballSeason';
 import { dedupeEnrichedPlayers, getEnrichedPlayerListKey } from './playerListUtils';
 import styles from './css/InternalPlayerProfilePage.module.css';
 
+const ALLOWED_PRO_CLUBS = [
+  'Manchester United FC',
+  'Paris Saint-Germain FC',
+  'FC Bayern München',
+  'Real Madrid CF',
+  'Juventus FC',
+];
+
 const getMetricValue = (
   metric: { formatted_value?: string | null; value?: number | null },
 ): string => {
@@ -297,8 +305,6 @@ const InternalPlayerProfilePage: React.FC = () => {
   }, [searchParams, players]);
 
   // Filter to only show these specific clubs (matching exact names from database)
-  const ALLOWED_CLUBS = ['Manchester United FC', 'Paris Saint-Germain FC', 'FC Bayern München', 'Real Madrid CF', 'Juventus FC'];
-
   useEffect(() => {
     const load = async () => {
       try {
@@ -306,7 +312,7 @@ const InternalPlayerProfilePage: React.FC = () => {
         setProClubs(
           clubs.filter((club) => 
             club.club_type === 'system_professional' && 
-            ALLOWED_CLUBS.includes(club.name)
+            ALLOWED_PRO_CLUBS.includes(club.name)
           ),
         );
       } catch {

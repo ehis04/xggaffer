@@ -130,11 +130,12 @@ function renderCentre(leagueCode = 'PL') {
 describe('SeasonProjectionCentre', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('renders league selector tabs', () => {
+  it('renders league selector tabs', async () => {
     vi.mocked(fetchProjectedTableWidget).mockResolvedValueOnce(makeEnvelope(MOCK_DATA));
     renderCentre();
     expect(screen.getByRole('button', { name: /premier league/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /la liga/i })).toBeInTheDocument();
+    expect(await screen.findByTestId('simulated-league-table')).toBeInTheDocument();
   });
 
   it('renders SectionSkeleton during load', () => {

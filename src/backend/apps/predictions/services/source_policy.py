@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 import pandas as pd
+
+from apps.predictions.data_paths import PROCESSED_DATA_ROOT
 
 SOURCE_PRIORITY = [
     "sofascore",
@@ -14,7 +14,7 @@ SOURCE_PRIORITY = [
 
 SOURCE_PRIORITY_RANK = {source: idx for idx, source in enumerate(SOURCE_PRIORITY)}
 
-DATA_ROOT = Path(__file__).resolve().parents[4] / "data" / "processed"
+DATA_ROOT = PROCESSED_DATA_ROOT
 
 MERGED_TEAMS_CSV = DATA_ROOT / "teams" / "merged" / "all_leagues_all_seasons_teams_merged.csv"
 MERGED_PLAYERS_CSV = DATA_ROOT / "players" / "merged" / "all_leagues_all_seasons_players_merged.csv"

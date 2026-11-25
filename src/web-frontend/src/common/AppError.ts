@@ -28,18 +28,20 @@ export class AppError extends Error {
   status: number;
   code: AppErrorCode;
   detail: string;
+  requestId?: string;
 
-  constructor(status: number, code: AppErrorCode, detail: string) {
+  constructor(status: number, code: AppErrorCode, detail: string, requestId?: string) {
     super(detail);
     this.name = "AppError";
     this.status = status;
     this.code = code;
     this.detail = detail;
+    this.requestId = requestId;
   }
 
-  static fromResponse(status: number, data: unknown): AppError {
+  static fromResponse(status: number, data: unknown, requestId?: string): AppError {
     const detail = extractDetail(data) ?? `HTTP ${status}`;
     const code = resolveCode(status);
-    return new AppError(status, code, detail);
+    return new AppError(status, code, detail, requestId);
   }
 }

@@ -1,9 +1,11 @@
 workflow:
   rules:
-    - if: '$CI_COMMIT_BRANCH == "Development"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
     - when: never
 
 stages:
+  - validate
   - frontend
   - backend
 
@@ -18,6 +20,17 @@ cache:
     - .cache/pip/
     - src/web-frontend/node_modules/
 
+deployment_config_check:
+  stage: validate
+  image: docker:27-cli
+  variables:
+    ALLOW_PLACEHOLDERS: "true"
+    SKIP_DISK_CHECK: "true"
+    SKIP_CURL_CHECK: "true"
+  script:
+    - sh -n scripts/*.sh
+    - ./scripts/preflight.sh .env.staging.example
+
 frontend_check:
   stage: frontend
   image: node:20
@@ -25,7 +38,8 @@ frontend_check:
     - cd src/web-frontend
     - npm ci
   script:
-    - npx tsc --noEmit
+    - npm run lint
+    - npm test
     - npm run build
   artifacts:
     when: on_success
@@ -60,6 +74,8 @@ backend_check:
     ALLOWED_HOSTS: "localhost,127.0.0.1"
 
     CLUB_RESOURCES_USE_CLOUDINARY: "False"
+    DJANGO_SETTINGS_MODULE: "backend.settings_test"
+    PREDICTIONS_DISABLE_PREWARM: "True"
   before_script:
     - cd src/backend
     - python -m pip install --upgrade pip

@@ -514,7 +514,27 @@ class LeagueViewsTests(APITestCase):
         self.assertEqual(payload["data"]["metadata"]["actual_matchday"], 10)
         self.assertEqual(payload["data"]["actual_table"][0]["played"], 10)
 
-    def test_expected_table_endpoint_accepts_as_of_matchweek_for_current_season(self) -> None:
+    @patch("apps.livefootball.services.league_data.generate_expected_table_commentary", return_value=[])
+    @patch("apps.livefootball.services.league_data.simulate_league_season")
+    def test_expected_table_endpoint_accepts_as_of_matchweek_for_current_season(
+        self,
+        mock_simulate,
+        _mock_commentary,
+    ) -> None:
+        mock_simulate.return_value = {
+            "league": "EPL",
+            "season": "2024",
+            "mode": "as_of_matchweek",
+            "simulation_count": 20,
+            "based_on_matchweek": 10,
+            "data_cutoff_date": "2024-10-01",
+            "expected_table": [],
+            "metadata": {
+                "engine_versions": {},
+                "remaining_fixtures": 0,
+                "total_fixtures_simulated": 0,
+            },
+        }
         response = self.client.get(
             reverse(
                 "livefootball-league-expected-table",

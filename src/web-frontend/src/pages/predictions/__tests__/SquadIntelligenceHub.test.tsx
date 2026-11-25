@@ -156,7 +156,7 @@ describe('SquadIntelligenceHub', () => {
     vi.mocked(liveFootballApi.getCompetitionPreviousNextFixtures).mockResolvedValue(MOCK_FIXTURES_RES);
     renderHub();
     await waitFor(() => {
-      expect(screen.getByRole('combobox')).toBeInTheDocument();
+      expect(screen.getByLabelText('Select fixture')).toBeInTheDocument();
     });
   });
 

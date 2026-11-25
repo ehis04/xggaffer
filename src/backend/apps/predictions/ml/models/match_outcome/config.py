@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
+from apps.predictions.data_paths import DATA_ROOT
 
-
-_BUILD_ROOT = Path(__file__).resolve().parents[6]
-_env_data_dir = os.environ.get('XGGAFFER_DATA_DIR')
-DATA_DIR = Path(_env_data_dir) if _env_data_dir else _BUILD_ROOT / 'data'
+DATA_DIR = DATA_ROOT
 
 RAW_DIR = DATA_DIR / 'raw' / 'understat'
 PROCESSED_DIR = DATA_DIR / 'processed'

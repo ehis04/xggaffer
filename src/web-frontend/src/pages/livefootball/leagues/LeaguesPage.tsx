@@ -66,7 +66,7 @@ const LeaguesPage: React.FC = () => {
   const [tableLoading, setTableLoading] = useState(false);
   const [tableError, setTableError] = useState<string | null>(null);
 
-  const leagues = meta?.leagues ?? [];
+  const leagues = useMemo(() => meta?.leagues ?? [], [meta?.leagues]);
 
   const selectedLeague = useMemo<LeagueMetaItem | null>(() => {
     if (leagues.length === 0) {

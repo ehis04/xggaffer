@@ -111,7 +111,6 @@ celerybeat-schedule
 backend/celerybeat-schedule
 
 # Hidden/lock files
-.*
 !.gitignore
 !.vscode
 
@@ -171,4 +170,3 @@ data/
 *.csv
 # Include predictions ML data package
 !backend/apps/predictions/ml/data/
-!backend/apps/predictions/ml/data/**

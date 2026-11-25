@@ -136,7 +136,11 @@ class ApiClient {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw AppError.fromResponse(response.status, error);
+      throw AppError.fromResponse(
+        response.status,
+        error,
+        response.headers.get('X-Request-ID') ?? undefined,
+      );
     }
 
     if (response.status === 204) {

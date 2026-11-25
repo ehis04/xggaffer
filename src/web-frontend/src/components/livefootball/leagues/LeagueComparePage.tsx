@@ -105,7 +105,7 @@ const LeagueComparePage: React.FC = () => {
     };
   }, []);
 
-  const leagues = meta?.leagues ?? [];
+  const leagues = useMemo(() => meta?.leagues ?? [], [meta?.leagues]);
 
   const selectedLeague = useMemo<LeagueMetaItem | null>(() => {
     if (leagues.length === 0) {

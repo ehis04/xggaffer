@@ -1,6 +1,7 @@
 // --- Framework & Core ---
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { lazy, Suspense, type ComponentType } from "react";
 import "./App.css";
 
 // --- Query Client ---
@@ -10,78 +11,63 @@ import { queryClient } from "./common/query/queryClient";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { PublicOnlyRoute } from "./components/auth/PublicOnlyRoute";
 import { RouteErrorBoundary } from "./pages/status/RouteErrorBoundary";
-import { NotFoundPage } from "./pages/status/NotFoundPage";
 import AuthenticatedLayout from "./utils/AuthenticatedLayout";
 
-// --- Account Registration & Auth Flow ---
-import LandingPage from "./pages/setup/LandingPage";
-import ProfileCreationPage from "./pages/setup/ProfileCreationPage";
-import { RoleAssignPage } from "./pages/setup/RoleAssignPage";
-import { RoleProfilePage } from "./pages/setup/RoleProfilePage";
-import { VerifyEmailPromptPage } from "./pages/setup/VerifyEmailPromptPage";
-import { VerifyEmailCallbackPage } from "./pages/setup/VerifyEmailCallbackPage";
-import { ForgotPasswordPage } from "./pages/setup/ForgotPasswordPage";
-import { ResetPasswordPage } from "./pages/setup/ResetPasswordPage";
+const namedPage = <T extends Record<string, unknown>, K extends keyof T>(
+  loader: () => Promise<T>,
+  exportName: K,
+) => lazy(async () => ({ default: (await loader())[exportName] as ComponentType }));
 
-// --- User Profile ---
-import { UserProfilePage } from "./pages/user/UserProfilePage";
-
-// --- Home ---
-import HomePage from "./pages/home/HomePage";
-
-// --- Social Feed ---
-import { SocialPage } from "./pages/social/SocialPage";
-import { PostDetailPage } from "./pages/social/PostDetailPage";
-import TrashPage from "./pages/social/TrashPage";
-
-// --- Articles ---
-import ArticlesPage from "./pages/articles/ArticlesPage";
-import FavouriteArticlesPage from "./pages/articles/FavouriteArticlesPage";
-import ArticleDetailPage from "./pages/articles/ArticleDetailPage";
-import ArticleProfilePage from "./pages/articles/ArticleProfilePage";
-
-// --- Refereeing & Laws ---
-import { RefereeHome } from "./pages/referee/RefereeHome";
-import { CoursePage } from "./pages/referee/CoursePage";
-
-// --- Coaching & Clubs ---
-import { CoachingBase } from "./pages/coaching/CoachingBase";
-import MyClubsPage from "./pages/coaching/clubs/MyClubsPage";
-import BrowseClubsPage from "./pages/coaching/clubs/BrowseClubPage";
-import CreateClubPage from "./pages/coaching/clubs/CreateClubPage";
-import { IndividualClubBase } from "./pages/coaching/clubs/IndividualClubBase";
-import TeamsheetCreatePage from "./pages/coaching/teamsheets/TeamsheetCreatePage";
-import TeamsheetDetailPage from "./pages/coaching/teamsheets/TeamsheetDetailPage";
-import TeamsheetEditPage from "./pages/coaching/teamsheets/TeamsheetEditPage";
-import TeamsheetListPage from "./pages/coaching/teamsheets/TeamsheetListPage";
-
-import TacticsBoardEditorPage from "./pages/coaching/tactics/TacticsBoardEditorPage";
-import InternalPlayerProfilePage from "./pages/coaching/playerdata/InternalPlayerProfilePage";
-import InternalPlayerComparisonPage from "./pages/coaching/playerdata/InternalPlayerComparisonPage";
-
-// --- Predictions & Intelligence ---
-import PredictionPage from "./pages/predictions/PredictionPage";
-import OddsComparisonPage from "./pages/predictions/OddsComparisonPage";
-import PredictionsHub from "./pages/predictions/PredictionsHub";
-import SeasonProjectionCentre from "./pages/predictions/SeasonProjectionCentre";
-import MatchIntelligenceHub from "./pages/predictions/MatchIntelligenceHub";
-import TacticalScoutingDashboard from "./pages/predictions/TacticalScoutingDashboard";
-import SquadIntelligenceHub from "./pages/predictions/SquadIntelligenceHub";
-import ModelTrustCentre from "./pages/predictions/ModelTrustCentre";
-
-// --- Live Football ---
-import LiveFootballBasePage from "./pages/livefootball/LiveFootballBasePage";
-import LiveFootballPage from "./pages/livefootball/LiveFootballPage";
-import {
-  LiveFootballClubsPage,
-  LiveFootballMatchesPage,
-  LiveFootballPlayersPage,
-} from "./pages/livefootball/LiveFootballDirectoryPages";
-import Leagues from "./pages/livefootball/leagues/LeaguesPage";
-import LeagueComparePage from "./pages/livefootball/leagues/LeagueComparePage";
-import LeagueCustomPage from "./pages/livefootball/leagues/LeagueCustomPage";
-import LeaguePredictPage from "./pages/livefootball/leagues/LeaguePredictPage";
-import { ClubDetailsPage } from "./pages/coaching/clubs/ClubDetails";
+const LandingPage = lazy(() => import("./pages/setup/LandingPage"));
+const ProfileCreationPage = lazy(() => import("./pages/setup/ProfileCreationPage"));
+const RoleAssignPage = namedPage(() => import("./pages/setup/RoleAssignPage"), "RoleAssignPage");
+const RoleProfilePage = namedPage(() => import("./pages/setup/RoleProfilePage"), "RoleProfilePage");
+const VerifyEmailPromptPage = namedPage(() => import("./pages/setup/VerifyEmailPromptPage"), "VerifyEmailPromptPage");
+const VerifyEmailCallbackPage = namedPage(() => import("./pages/setup/VerifyEmailCallbackPage"), "VerifyEmailCallbackPage");
+const ForgotPasswordPage = namedPage(() => import("./pages/setup/ForgotPasswordPage"), "ForgotPasswordPage");
+const ResetPasswordPage = namedPage(() => import("./pages/setup/ResetPasswordPage"), "ResetPasswordPage");
+const UserProfilePage = namedPage(() => import("./pages/user/UserProfilePage"), "UserProfilePage");
+const HomePage = lazy(() => import("./pages/home/HomePage"));
+const SocialPage = namedPage(() => import("./pages/social/SocialPage"), "SocialPage");
+const PostDetailPage = namedPage(() => import("./pages/social/PostDetailPage"), "PostDetailPage");
+const TrashPage = lazy(() => import("./pages/social/TrashPage"));
+const ArticlesPage = lazy(() => import("./pages/articles/ArticlesPage"));
+const FavouriteArticlesPage = lazy(() => import("./pages/articles/FavouriteArticlesPage"));
+const ArticleDetailPage = lazy(() => import("./pages/articles/ArticleDetailPage"));
+const ArticleProfilePage = lazy(() => import("./pages/articles/ArticleProfilePage"));
+const RefereeHome = namedPage(() => import("./pages/referee/RefereeHome"), "RefereeHome");
+const CoursePage = namedPage(() => import("./pages/referee/CoursePage"), "CoursePage");
+const CoachingBase = namedPage(() => import("./pages/coaching/CoachingBase"), "CoachingBase");
+const MyClubsPage = lazy(() => import("./pages/coaching/clubs/MyClubsPage"));
+const BrowseClubsPage = lazy(() => import("./pages/coaching/clubs/BrowseClubPage"));
+const CreateClubPage = lazy(() => import("./pages/coaching/clubs/CreateClubPage"));
+const IndividualClubBase = namedPage(() => import("./pages/coaching/clubs/IndividualClubBase"), "IndividualClubBase");
+const ClubDetailsPage = namedPage(() => import("./pages/coaching/clubs/ClubDetails"), "ClubDetailsPage");
+const TeamsheetCreatePage = lazy(() => import("./pages/coaching/teamsheets/TeamsheetCreatePage"));
+const TeamsheetDetailPage = lazy(() => import("./pages/coaching/teamsheets/TeamsheetDetailPage"));
+const TeamsheetEditPage = lazy(() => import("./pages/coaching/teamsheets/TeamsheetEditPage"));
+const TeamsheetListPage = lazy(() => import("./pages/coaching/teamsheets/TeamsheetListPage"));
+const TacticsBoardEditorPage = lazy(() => import("./pages/coaching/tactics/TacticsBoardEditorPage"));
+const InternalPlayerProfilePage = lazy(() => import("./pages/coaching/playerdata/InternalPlayerProfilePage"));
+const InternalPlayerComparisonPage = lazy(() => import("./pages/coaching/playerdata/InternalPlayerComparisonPage"));
+const PredictionPage = lazy(() => import("./pages/predictions/PredictionPage"));
+const OddsComparisonPage = lazy(() => import("./pages/predictions/OddsComparisonPage"));
+const PredictionsHub = lazy(() => import("./pages/predictions/PredictionsHub"));
+const SeasonProjectionCentre = lazy(() => import("./pages/predictions/SeasonProjectionCentre"));
+const MatchIntelligenceHub = lazy(() => import("./pages/predictions/MatchIntelligenceHub"));
+const TacticalScoutingDashboard = lazy(() => import("./pages/predictions/TacticalScoutingDashboard"));
+const SquadIntelligenceHub = lazy(() => import("./pages/predictions/SquadIntelligenceHub"));
+const ModelTrustCentre = lazy(() => import("./pages/predictions/ModelTrustCentre"));
+const LiveFootballBasePage = lazy(() => import("./pages/livefootball/LiveFootballBasePage"));
+const LiveFootballPage = lazy(() => import("./pages/livefootball/LiveFootballPage"));
+const LiveFootballClubsPage = namedPage(() => import("./pages/livefootball/LiveFootballDirectoryPages"), "LiveFootballClubsPage");
+const LiveFootballMatchesPage = namedPage(() => import("./pages/livefootball/LiveFootballDirectoryPages"), "LiveFootballMatchesPage");
+const LiveFootballPlayersPage = namedPage(() => import("./pages/livefootball/LiveFootballDirectoryPages"), "LiveFootballPlayersPage");
+const Leagues = lazy(() => import("./pages/livefootball/leagues/LeaguesPage"));
+const LeagueComparePage = lazy(() => import("./pages/livefootball/leagues/LeagueComparePage"));
+const LeagueCustomPage = lazy(() => import("./pages/livefootball/leagues/LeagueCustomPage"));
+const LeaguePredictPage = lazy(() => import("./pages/livefootball/leagues/LeaguePredictPage"));
+const NotFoundPage = namedPage(() => import("./pages/status/NotFoundPage"), "NotFoundPage");
 
 function App() {
   return (
@@ -89,6 +75,7 @@ function App() {
       <BrowserRouter>
         <div className="app">
           <RouteErrorBoundary>
+            <Suspense fallback={<div role="status" aria-label="Loading page" />}>
             <Routes>
 
               {/* --- Unprotected Routes: Account Registration & Auth Flow --- */}
@@ -182,6 +169,7 @@ function App() {
               <Route path="*" element={<NotFoundPage />} />
 
             </Routes>
+            </Suspense>
           </RouteErrorBoundary>
         </div>
       </BrowserRouter>
