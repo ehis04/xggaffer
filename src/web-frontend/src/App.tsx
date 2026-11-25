@@ -148,7 +148,9 @@ function App() {
                   <Route path="/match/lookup" element={<MatchIntelligenceHub />} />
                   <Route path="/season/:leagueCode" element={<SeasonProjectionCentre />} />
                   <Route path="/tactics/:teamSlug" element={<TacticalScoutingDashboard />} />
+                  <Route path="/tactics" element={<TacticalScoutingDashboard />} />
                   <Route path="/squad/:teamSlug" element={<SquadIntelligenceHub />} />
+                  <Route path="/squad" element={<SquadIntelligenceHub />} />
                   <Route path="/trust" element={<ModelTrustCentre />} />
 
                   {/* --- Live Football --- */}

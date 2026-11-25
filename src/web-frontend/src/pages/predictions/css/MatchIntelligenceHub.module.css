@@ -80,11 +80,13 @@
   flex-shrink: 0;
 }
 
-.switcherLabel {
+.fixtureSwitcher label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--secondary-text);
-  white-space: nowrap;
 }
 
 .switcherSelect {
@@ -95,6 +97,7 @@
   color: var(--primary-text);
   background: var(--brand-card-green);
   cursor: pointer;
+  max-width: min(100%, 24rem);
 }
 
 .switcherSelect:disabled {

@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
@@ -17,6 +17,7 @@ vi.mock('../../../services/api/widgetApi', () => ({
 
 vi.mock('../../../services/api/predictionsApi', () => ({
   getOddsFixtures: vi.fn(),
+  getMatchLookupFixtures: vi.fn(),
 }));
 
 vi.mock('../../../common/components/SectionSkeleton', () => ({
@@ -91,7 +92,7 @@ import {
   fetchLineupWidget,
   fetchTacticalWidget,
 } from '../../../services/api/widgetApi';
-import { getOddsFixtures } from '../../../services/api/predictionsApi';
+import { getMatchLookupFixtures, getOddsFixtures } from '../../../services/api/predictionsApi';
 
 const FRESH = {
   source_fetched_at: null, snapshot_published_at: null,
@@ -132,6 +133,7 @@ function renderHub(search = '?home=Arsenal&away=Chelsea&league=EPL&date=2025-05-
 
 describe('MatchIntelligenceHub', () => {
   beforeEach(() => {
+    vi.mocked(getMatchLookupFixtures).mockResolvedValue([]);
     vi.clearAllMocks();
     vi.mocked(fetchMatchPredictionWidget).mockResolvedValue(makeMatchEnvelope());
     vi.mocked(fetchScorelineWidget).mockResolvedValue({
@@ -177,11 +179,20 @@ describe('MatchIntelligenceHub', () => {
     unmount();
   });
 
-  it('renders NullStatePlaceholder for missing home/away params', () => {
-    const { unmount } = renderHub('?league=EPL');
-    expect(screen.getByTestId('null-placeholder')).toBeInTheDocument();
-    expect(screen.getByText(/fixture not found/i)).toBeInTheDocument();
-    unmount();
+  it('lets users filter fixtures and opens only the selected match', async () => {
+    vi.mocked(getMatchLookupFixtures).mockResolvedValue([
+      { home_team: 'Arsenal', away_team: 'Chelsea', league: 'EPL', season: '2025', date: '2025-11-30' },
+      { home_team: 'Everton', away_team: 'Liverpool', league: 'EPL', season: '2025', date: '2026-04-19' },
+    ]);
+    renderHub('?league=EPL');
+    expect(screen.getByRole('heading', { name: 'Look up a match' })).toBeInTheDocument();
+    expect(fetchMatchPredictionWidget).not.toHaveBeenCalled();
+    await screen.findByRole('option', { name: /Arsenal vs Chelsea/ });
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Search by team' }), { target: { value: 'Liverpool' } });
+    expect(screen.queryByRole('option', { name: /Arsenal vs Chelsea/ })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Fixture' }), { target: { value: '0' } });
+    expect(await screen.findByRole('heading', { name: 'Everton vs Liverpool' })).toBeInTheDocument();
+    await waitFor(() => expect(fetchMatchPredictionWidget).toHaveBeenCalledWith('Everton', 'Liverpool', 'EPL', '2025'));
   });
 
   it('renders page title once fixture resolved', async () => {

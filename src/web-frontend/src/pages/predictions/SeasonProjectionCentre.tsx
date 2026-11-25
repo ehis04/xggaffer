@@ -174,7 +174,7 @@ export default function SeasonProjectionCentre() {
 
       <div className={styles.base}>
         <header className={styles.Header}>
-          <div className={styles.Left}>Odds Comparisson</div>
+          <div className={styles.Left}>Season Projection</div>
           <div className={styles.Middle}><PredictionsNavbar/></div>
           <div className={styles.Right}>
             <SocialUserButtons />

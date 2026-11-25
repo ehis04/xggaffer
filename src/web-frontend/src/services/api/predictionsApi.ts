@@ -184,6 +184,22 @@ export async function getOddsFixtures(
   );
 }
 
+export interface MatchLookupFixture {
+  home_team: string;
+  away_team: string;
+  league: string;
+  season: string;
+  date: string;
+}
+
+export async function getMatchLookupFixtures(league: string, season: string): Promise<MatchLookupFixture[]> {
+  const response = await apiClient.get<{ fixtures: MatchLookupFixture[] }>(
+    buildPredictionsEndpoint('fixtures/lookup/'),
+    { league, season },
+  );
+  return response.fixtures;
+}
+
 export async function getTacticalTeams(): Promise<string[]> {
   const res = await apiClient.get<{ teams: string[]; count: number }>(
     buildPredictionsEndpoint('tactical/teams/'),

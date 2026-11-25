@@ -33,6 +33,8 @@ const quickLinks = [
   { label: "Referee Training", path: "/referee", icon: "whistle" },
   { label: "Articles", path: "/articles", icon: "article" },
   { label: "Predictions", path: "/predictions/hub", icon: "predict" },
+  { label: "Match Lookup", path: "/match/lookup", icon: "predict" },
+  { label: "Live Football", path: "/livefootball", icon: "predict" },
   { label: "Coaching Hub", path: "/coaching", icon: "clipboard" },
 ];
 
@@ -276,8 +278,7 @@ const HomePage = () => {
 
         <section className={styles.jumpSection}>
           <div className={styles.sectionIntro}>
-            <h2>Jump back in</h2>
-            <p>Recently accessed sections</p>
+            <h2>Explore xgGaffer</h2>
           </div>
           <div className={styles.quickLinks}>
             {quickLinks.map((link) => (

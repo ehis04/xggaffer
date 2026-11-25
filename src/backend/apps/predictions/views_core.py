@@ -1289,6 +1289,52 @@ class OddsTeamsView(APIView):
             return response
 
 
+class MatchLookupFixturesView(APIView):
+    """List actual fixtures from the schedule and prediction snapshot."""
+
+    def get(self, request):
+        from apps.predictions.ml.features.rolling import load_match_history
+        from apps.predictions.ml.models.match_outcome.config import DEMO_SEASON
+
+        league = request.query_params.get("league", "EPL")
+        season = request.query_params.get("season", DEMO_SEASON)
+        if league not in _LEAGUE_COMPETITION_CODE or (
+            not season.isascii() or not season.isdigit() or len(season) != 4
+            or not 2014 <= int(season) <= timezone.now().year
+        ):
+            return Response({"error": "Select a supported league and season."}, status=400)
+
+        cache_key = make_cache_key("predictions", "match_lookup", league=league, season=season)
+        fixtures = cache.get(cache_key)
+        if fixtures is not None:
+            return Response({"fixtures": fixtures})
+
+        matches = set()
+        schedule = CompetitionFixture.objects.filter(
+            competition__code=_LEAGUE_COMPETITION_CODE[league],
+            season_label=season,
+            kickoff_at__isnull=False,
+        ).values_list("home_team_name", "away_team_name", "kickoff_at")
+        for home, away, kickoff in schedule:
+            matches.add((_snap_to_canonical(_lf_to_snapshot(home)), _snap_to_canonical(_lf_to_snapshot(away)), kickoff.date().isoformat()))
+
+        try:
+            history = load_match_history(leagues=[league], seasons=[season])
+        except FileNotFoundError:
+            pass
+        else:
+            for fixture in history.dropna(subset=["home_team", "away_team", "date"]).itertuples():
+                matches.add((fixture.home_team, fixture.away_team, fixture.date.date().isoformat()))
+
+        fixtures = [
+            {"home_team": home, "away_team": away, "league": league, "season": season, "date": fixture_date}
+            for home, away, fixture_date in sorted(matches, key=lambda match: (match[2], match[0], match[1]), reverse=True)
+            if home and away and home != away
+        ]
+        cache.set(cache_key, fixtures, timeout=CACHE_TTL_ODDS_FIXTURES)
+        return Response({"fixtures": fixtures})
+
+
 class OddsFixtureListView(APIView):
     permission_classes = [AllowAny]
 

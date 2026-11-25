@@ -19,7 +19,7 @@ import {
   fetchAvailabilityWidget,
   fetchLineupWidget,
 } from '../../services/api/widgetApi';
-import { getOddsFixtures } from '../../services/api/predictionsApi';
+import { getMatchLookupFixtures, getOddsFixtures, type MatchLookupFixture } from '../../services/api/predictionsApi';
 import type {
   MatchPredictionWidgetPayload,
   ScorelineWidgetPayload,
@@ -27,10 +27,12 @@ import type {
   LineupWidgetPayload,
   WidgetFreshness,
 } from '../../services/api/widgetApi';
-import type { OddsConsensus, OddsFixtureItem } from '../../types/prediction';
+import type { OddsConsensus } from '../../types/prediction';
 import {
   getCurrentFootballSeason,
   getFootballSeasonForDate,
+  liveCompetitionCodeToPredictionLeague,
+  formatSeasonDisplay,
 } from '../../utils/footballSeason';
 import styles from './css/MatchIntelligenceHub.module.css';
 import ZoneHeatmap from '../../components/widgets/ZoneHeatmap';
@@ -38,6 +40,7 @@ import StyleProfileCard from '../../components/widgets/StyleProfileCard';
 import { fetchTacticalWidget } from '../../services/api/widgetApi';
 import type { TacticalWidgetPayload } from '../../services/api/widgetApi';
 import { Sidebar } from '../../components/Navigation/SideBar';
+import { PredictionsNavbar } from '../../components/Navigation/predictionsNavbar';
 import { SocialUserButtons } from '../../components/Social/SocialUserButtons';
 
 const DEFAULT_LEAGUE = 'EPL';
@@ -45,7 +48,7 @@ const COVERAGE_NOTICE = 'Tactical analysis powered by StatsBomb Open Data. Cover
 const TACTICAL_LEAGUE_CODES = new Set(['LL', 'PD', 'LA_LIGA', 'LALIGA', 'ES', 'SPA', 'EPL', 'PL', 'PREMIER_LEAGUE', 'PREMIER LEAGUE']);
 
 function normalizeTeamName(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return name.normalize('NFD').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 function isPastFixtureDate(dateStr: string): boolean {
@@ -164,6 +167,11 @@ function TacticalBlock({ homeTeam, awayTeam }: { homeTeam: string; awayTeam: str
 }
 
 export default function MatchIntelligenceHub() {
+  const [searchParams] = useSearchParams();
+  return <MatchIntelligenceContent key={searchParams.toString()} />;
+}
+
+function MatchIntelligenceContent() {
   const [searchParams, setSearchParams] = useSearchParams();
   const homeTeam = searchParams.get('home') ?? '';
   const awayTeam = searchParams.get('away') ?? '';
@@ -171,33 +179,91 @@ export default function MatchIntelligenceHub() {
   const fixtureDate = searchParams.get('date') ?? '';
   const season = searchParams.get('season') ?? getFootballSeasonForDate(fixtureDate, getCurrentFootballSeason());
 
-  const [switcherLeague, setSwitcherLeague] = useState(leagueCode);
-  const [switchFixtures, setSwitchFixtures] = useState<OddsFixtureItem[]>([]);
-  const [switchLoading, setSwitchLoading] = useState(false);
+  const [switcherLeague, setSwitcherLeague] = useState(liveCompetitionCodeToPredictionLeague(leagueCode) ?? leagueCode);
+  const [switcherSeason, setSwitcherSeason] = useState(searchParams.get('season') ?? (fixtureDate ? season : '2025'));
+  const [teamSearch, setTeamSearch] = useState('');
+  const [switchFixtures, setSwitchFixtures] = useState<MatchLookupFixture[]>([]);
+  const [switchLoading, setSwitchLoading] = useState(true);
+  const [switchError, setSwitchError] = useState(false);
+  const [switchAttempt, setSwitchAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     setSwitchLoading(true);
+    setSwitchError(false);
     setSwitchFixtures([]);
-    getOddsFixtures(switcherLeague, 'future')
-      .then(env => { if (!cancelled) setSwitchFixtures(env.data?.fixtures ?? []); })
-      .catch(() => { if (!cancelled) setSwitchFixtures([]); })
+    getMatchLookupFixtures(switcherLeague, switcherSeason)
+      .then(fixtures => { if (!cancelled) setSwitchFixtures(fixtures); })
+      .catch(() => { if (!cancelled) setSwitchError(true); })
       .finally(() => { if (!cancelled) setSwitchLoading(false); });
     return () => { cancelled = true; };
-  }, [switcherLeague]);
+  }, [switcherLeague, switcherSeason, switchAttempt]);
 
-  function handleFixtureSwitch(fixture: OddsFixtureItem) {
+  function handleFixtureSwitch(fixture: MatchLookupFixture) {
     setSearchParams({
       home: fixture.home_team,
       away: fixture.away_team,
       league: fixture.league,
       season: fixture.season,
-      date: fixture.commence_time?.slice(0, 10) ?? '',
-      source: 'switch',
+      date: fixture.date,
+      source: 'lookup',
     });
   }
 
   const fixtureResolved = Boolean(homeTeam && awayTeam);
+  const searchTerms = teamSearch.split(/\s+/).map(normalizeTeamName).filter(Boolean);
+  const matchingFixtures = switchFixtures.filter(fixture => {
+    const teams = normalizeTeamName(`${fixture.home_team} vs ${fixture.away_team}`);
+    return searchTerms.every(term => teams.includes(term));
+  });
+  const latestSeason = Number(getCurrentFootballSeason());
+  const seasons = Array.from({ length: latestSeason - 2014 + 1 }, (_, index) => String(latestSeason - index));
+  const fixturePicker = (
+    <section className={styles.fixtureSwitcher} aria-label="Match lookup controls">
+      <label>
+        League
+        <select className={styles.switcherSelect} value={switcherLeague} onChange={event => setSwitcherLeague(event.target.value)}>
+          {PREDICTION_LEAGUE_OPTIONS.map(option => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Season
+        <select className={styles.switcherSelect} value={switcherSeason} onChange={event => setSwitcherSeason(event.target.value)}>
+          {seasons.map(option => <option key={option} value={option}>{formatSeasonDisplay(option)}</option>)}
+        </select>
+      </label>
+      <label>
+        Search by team
+        <input type="search" className={styles.switcherSelect} value={teamSearch} onChange={event => setTeamSearch(event.target.value)} />
+      </label>
+      <label>
+        Fixture
+        <select
+          className={styles.switcherSelect}
+          value=""
+          disabled={switchLoading || matchingFixtures.length === 0}
+          onChange={event => {
+            if (!event.target.value) return;
+            const fixture = matchingFixtures[Number(event.target.value)];
+            if (fixture) handleFixtureSwitch(fixture);
+          }}
+        >
+          <option value="">{switchLoading ? 'Loading fixtures…' : 'Select a fixture'}</option>
+          {matchingFixtures.map((fixture, index) => (
+            <option key={`${fixture.home_team}/${fixture.away_team}/${fixture.date}`} value={index}>
+              {fixture.home_team} vs {fixture.away_team} — {fixture.date}
+            </option>
+          ))}
+        </select>
+      </label>
+      {switchError && <InlineRetry message="Could not load fixtures." onRetry={() => setSwitchAttempt(attempt => attempt + 1)} />}
+      {!switchLoading && !switchError && matchingFixtures.length === 0 && (
+        <p role="status">{searchTerms.length ? 'No matches for that team search.' : 'No fixtures are available for this league and season.'}</p>
+      )}
+    </section>
+  );
 
   const [matchPred, setMatchPred] = useState<BlockState<MatchPredictionWidgetPayload>>(initBlock());
   const [scoreline, setScoreline] = useState<BlockState<ScorelineWidgetPayload>>(initBlock());
@@ -255,10 +321,8 @@ export default function MatchIntelligenceHub() {
       const match = fixtures.find(f => {
         const fixtureHome = normalizeTeamName(f.home_team);
         const fixtureAway = normalizeTeamName(f.away_team);
-        return (
-          (fixtureHome === targetHome && fixtureAway === targetAway)
-          || (fixtureHome === targetAway && fixtureAway === targetHome)
-        );
+        return fixtureHome === targetHome && fixtureAway === targetAway
+          && (!fixtureDate || f.commence_time?.slice(0, 10) === fixtureDate);
       });
       setMarketConsensus(match?.consensus ?? null);
       if (envelope.freshness) {
@@ -341,22 +405,19 @@ export default function MatchIntelligenceHub() {
 
         <div className={styles.base}>
           <header className={styles.Header}>
-            <div className={styles.Left}>Odds Comparisson</div>
-            <div className={styles.Middle}></div>
+            <div className={styles.Left}>Match Lookup</div>
+            <div className={styles.Middle}><PredictionsNavbar /></div>
             <div className={styles.Right}>
               <SocialUserButtons />
             </div>
           </header>
 
-          <div className={styles.emptyState}>
-        <NullStatePlaceholder
-          icon="chart"
-          message="Fixture not found"
-        />
-        <Link to="/predictions/odds" className={styles.backLink}>
-          ← Back to odds
-        </Link>
-          </div>
+          <header className={styles.header}>
+            <h1 className={styles.title}>Look up a match</h1>
+            <p>Choose a league, season, and fixture to see the available analysis.</p>
+            <Link to="/predictions/hub" className={styles.backLink}>Predictions home</Link>
+          </header>
+          {fixturePicker}
         </div>
       </div>
     );
@@ -383,47 +444,23 @@ export default function MatchIntelligenceHub() {
 
       <div className={styles.base}>
         <header className={styles.Header}>
-          <div className={styles.Left}>Odds Comparisson</div>
-          <div className={styles.Middle}></div>
+          <div className={styles.Left}>Match Lookup</div>
+          <div className={styles.Middle}><PredictionsNavbar /></div>
           <div className={styles.Right}>
             <SocialUserButtons />
           </div>
         </header>
 
-      <div className={styles.fixtureSwitcher}>
-        <span className={styles.switcherLabel}>Switch fixture</span>
-        <select
-          className={styles.switcherSelect}
-          value={switcherLeague}
-          onChange={e => setSwitcherLeague(e.target.value)}
-        >
-          {PREDICTION_LEAGUE_OPTIONS.map(o => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
-        <select
-          className={styles.switcherSelect}
-          value=""
-          disabled={switchLoading || switchFixtures.length === 0}
-          onChange={e => {
-            const f = switchFixtures[Number(e.target.value)];
-            if (f) handleFixtureSwitch(f);
-          }}
-        >
-          <option value="">{switchLoading ? 'Loading…' : 'Select fixture'}</option>
-          {switchFixtures.map((f, i) => (
-            <option key={i} value={i}>
-              {f.home_team} vs {f.away_team} — {f.commence_time?.slice(0, 10) ?? ''}
-            </option>
-          ))}
-        </select>
-      </div>
+      {fixturePicker}
 
       <header className={styles.header}>
         <h1 className={styles.title}>
           {homeTeam} vs {awayTeam}
         </h1>
-        {leagueCode && <span className={styles.leaguePill}>{leagueCode}</span>}
+        <span className={styles.leaguePill}>{leagueCode} · {formatSeasonDisplay(season)}{fixtureDate && ` · ${fixtureDate}`}</span>
+        {isPastFixtureDate(fixtureDate) && (
+          <p>Model estimates use available season data and may include matches played after this fixture.</p>
+        )}
       </header>
 
       <div className={styles.blocks}>

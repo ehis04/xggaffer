@@ -1,4 +1,5 @@
 from django.urls import path
+from .views_core import MatchLookupFixturesView
 from .views import (
     AvailableLineupTeamsView,
     AvailableTacticalTeamsView,
@@ -28,6 +29,7 @@ from .views import (
 )
 
 urlpatterns = [
+    path('fixtures/lookup/', MatchLookupFixturesView.as_view(), name='match-lookup-fixtures'),
     path('predict/', PredictMatchView.as_view(), name='predict-match'),
     path('odds/compare/', OddsComparisonView.as_view(), name='odds-comparison'),
     path('odds/fixtures/', OddsFixtureListView.as_view(), name='odds-fixture-list'),

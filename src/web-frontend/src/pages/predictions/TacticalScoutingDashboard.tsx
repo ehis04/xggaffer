@@ -16,7 +16,7 @@ import { PredictionsNavbar } from '../../components/Navigation/predictionsNavbar
 
 export default function TacticalScoutingDashboard() {
   const { teamSlug = '' } = useParams<{ teamSlug: string }>();
-  const teamName = decodeURIComponent(teamSlug);
+  const teamName = teamSlug;
   const navigate = useNavigate();
 
   const [payload, setPayload] = useState<TacticalWidgetPayload | null>(null);
@@ -41,7 +41,7 @@ export default function TacticalScoutingDashboard() {
   };
 
   useEffect(() => {
-    void loadData(teamName);
+    if (teamName) void loadData(teamName);
   }, [teamName]);
 
   const tacticalData = payload?.data ?? null;
@@ -55,7 +55,7 @@ export default function TacticalScoutingDashboard() {
 
       <div className={styles.base}>
         <header className={styles.Header}>
-          <div className={styles.Left}>Odds Comparisson</div>
+          <div className={styles.Left}>Tactical Scouting</div>
           <div className={styles.Middle}><PredictionsNavbar /></div>
           <div className={styles.Right}>
             <SocialUserButtons />
@@ -63,20 +63,21 @@ export default function TacticalScoutingDashboard() {
         </header>
 
       <header className={styles.header}>
-        <h1 className={styles.title}>{teamName}</h1>
+        <h1 className={styles.title}>{teamName || 'Choose a team to scout'}</h1>
         {freshness && <FreshnessBadge freshness={freshness} />}
       </header>
 
       <div className={styles.content}>
         <TeamSwitcher
+          tactical
           currentTeam={teamName}
           onSelect={team => navigate(`/tactics/${encodeURIComponent(team)}`)}
         />
       </div>
 
-      {loading && <SectionSkeleton rows={4} />}
+      {teamName && loading && <SectionSkeleton rows={4} />}
 
-      {!loading && error && (
+      {teamName && !loading && error && (
         <InlineRetry
           message="Failed to load tactical profile."
           onRetry={() => loadData(teamName, true)}
@@ -84,14 +85,14 @@ export default function TacticalScoutingDashboard() {
         />
       )}
 
-      {!loading && !error && !tacticalData && (
+      {teamName && !loading && !error && !tacticalData && (
         <NullStatePlaceholder
           icon="chart"
           message="No tactical profile available for this team."
         />
       )}
 
-      {!loading && !error && tacticalData && (
+      {teamName && !loading && !error && tacticalData && (
         <div className={styles.content}>
           <StyleProfileCard styleCluster={tacticalData.style_cluster} />
           <ZoneHeatmap zoneProfiles={tacticalData.zone_profiles} team={teamName} />

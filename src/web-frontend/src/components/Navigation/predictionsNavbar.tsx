@@ -1,27 +1,21 @@
 import { useNavigate } from "react-router-dom";
-import { PRED_SECTIONS, type HubContext } from "../../pages/predictions/PredictionsHub";
-import { resolveSectionPath } from "./functions/resolveSectionPath";
+import { PRED_SECTIONS } from "../../pages/predictions/PredictionsHub";
 import styles from "./css/predictionsNavbar.module.css";
 
-interface PredictionsNavbarProps {
-  context?: HubContext;
-}
-
-export const PredictionsNavbar = ({ context }: PredictionsNavbarProps) => {
+export const PredictionsNavbar = () => {
   const navigate = useNavigate();
   return (
-    <div className={styles.buttonContainer}>
-      {PRED_SECTIONS.map((section) => (
-        <button
-          key={section.title}
-          className={styles.button}
-          type="button"
-          onClick={() => navigate(resolveSectionPath(section, context))}
-          aria-label={section.label}
-        >
-          <span className={styles.cardIcon}>{section.icon}</span>
-        </button>
-      ))}
-    </div>
+    <nav aria-label="Prediction tools" className={styles.buttonContainer}>
+      <select
+        className={styles.select}
+        aria-label="Prediction tools"
+        value=""
+        onChange={event => { if (event.target.value) navigate(event.target.value); }}
+      >
+        <option value="">Prediction tools</option>
+        <option value="/predictions/hub">Predictions home</option>
+        {PRED_SECTIONS.map(section => <option key={section.path} value={section.path}>{section.title}</option>)}
+      </select>
+    </nav>
   );
 };

@@ -485,7 +485,7 @@ export default function OddsComparisonPage() {
 
       <div className={styles.base}>
         <header className={styles.Header}>
-          <div className={styles.Left}>Odds Comparisson</div>
+          <div className={styles.Left}>Odds Comparison</div>
           <div className={styles.Middle}><PredictionsNavbar/></div>
           <div className={styles.Right}>
             <SocialUserButtons />

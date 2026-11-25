@@ -7,25 +7,12 @@
   justify-content: space-around;
 }
 
-.button {
-  outline: 0 !important;
-  border: 0 !important;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  transition: all ease-in-out 0.3s;
+.select {
+  max-width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--brand-lightest-green-border);
+  border-radius: 8px;
+  background: var(--brand-card-green);
+  color: var(--primary-text);
   cursor: pointer;
-}
-
-.button:hover {
-  transform: translateY(-3px);
-}
-
-.cardIcon {
-  font-size: 30px;
 }

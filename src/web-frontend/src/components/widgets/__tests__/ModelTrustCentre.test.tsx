@@ -177,7 +177,7 @@ describe('ModelTrustCentre', () => {
   it('league filter select renders all LEAGUE_OPTIONS', () => {
     vi.mocked(fetchModelTrustWidget).mockReturnValueOnce(new Promise(() => {}));
     renderPage();
-    const select = screen.getByRole('combobox');
+    const select = screen.getByRole('combobox', { name: 'League' });
     const options = Array.from(select.querySelectorAll('option'));
     expect(options.length).toBe(6);
     expect(options[0].textContent).toBe('All leagues');
@@ -187,7 +187,7 @@ describe('ModelTrustCentre', () => {
     vi.mocked(fetchModelTrustWidget).mockResolvedValue(makePayload(null));
     renderPage();
     await waitFor(() => screen.getByTestId('null-placeholder'));
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'EPL' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'League' }), { target: { value: 'EPL' } });
     await waitFor(() => {
       expect(fetchModelTrustWidget).toHaveBeenCalledTimes(2);
       expect(fetchModelTrustWidget).toHaveBeenLastCalledWith('EPL');
@@ -200,6 +200,6 @@ describe('ModelTrustCentre', () => {
     await waitFor(() => {
       expect(fetchModelTrustWidget).toHaveBeenCalledWith('EPL');
     });
-    expect(screen.getByRole('combobox')).toHaveValue('EPL');
+    expect(screen.getByRole('combobox', { name: 'League' })).toHaveValue('EPL');
   });
 });

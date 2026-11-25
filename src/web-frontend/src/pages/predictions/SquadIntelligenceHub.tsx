@@ -61,7 +61,7 @@ function normaliseTeamName(name: string): string {
 
 export default function SquadIntelligenceHub() {
   const { teamSlug = '' } = useParams<{ teamSlug: string }>();
-  const teamName = decodeURIComponent(teamSlug);
+  const teamName = teamSlug;
   const navigate = useNavigate();
 
   const [fixtures, setFixtures] = useState<FixtureOption[]>([]);
@@ -80,6 +80,7 @@ export default function SquadIntelligenceHub() {
   const [showXI, setShowXI] = useState(false);
 
   useEffect(() => {
+    if (!teamName) return;
     let cancelled = false;
     setFixturesLoading(true);
 
@@ -203,7 +204,7 @@ export default function SquadIntelligenceHub() {
 
       <div className={styles.base}>
         <header className={styles.Header}>
-          <div className={styles.Left}>Odds Comparisson</div>
+          <div className={styles.Left}>Squad Intelligence</div>
           <div className={styles.Middle}><PredictionsNavbar /></div>
           <div className={styles.Right}>
             <SocialUserButtons />
@@ -211,7 +212,7 @@ export default function SquadIntelligenceHub() {
         </header>
 
       <header className={styles.header}>
-        <h1 className={styles.title}>{teamName}</h1>
+        <h1 className={styles.title}>{teamName || 'Choose a squad'}</h1>
         <p className={styles.subtitle}>Squad Intelligence</p>
       </header>
 
@@ -222,9 +223,9 @@ export default function SquadIntelligenceHub() {
         />
       </div>
 
-      {fixturesLoading && <SectionSkeleton rows={2} />}
+      {teamName && fixturesLoading && <SectionSkeleton rows={2} />}
 
-      {!fixturesLoading && fixtures.length === 0 && (
+      {teamName && !fixturesLoading && fixtures.length === 0 && (
         <div className={styles.content}>
           <NullStatePlaceholder
             icon="chart"
@@ -233,7 +234,7 @@ export default function SquadIntelligenceHub() {
         </div>
       )}
 
-      {!fixturesLoading && fixtures.length > 0 && (
+      {teamName && !fixturesLoading && fixtures.length > 0 && (
         <div className={styles.content}>
           <div className={styles.fixtureSelector}>
             <label className={styles.selectorLabel} htmlFor="fixture-select">
